@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 89eea8c6c8299114196ec0e901bd4ac0
+labels:
+- Accelerometer
+- Gyro
+- Parallax
+- Sensor
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

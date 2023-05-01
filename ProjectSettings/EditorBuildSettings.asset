@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/Menu/Menu.unity
+    guid: a8b40dafb7f4fa845b69993119267e2a
+  - enabled: 1
+    path: Assets/Scenes/LevelSelect/LevelSelect.unity
+    guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/CharacterSelect/selection.unity
+    guid: 8b7c0aff40c37e7409eef98feefefa6c
+  - enabled: 1
+    path: Assets/Scenes/TrainingGrounds/TrainingGrounds.unity
+    guid: 9a24e8e0a81fd78488635ca9091a25a4
+  - enabled: 1
+    path: Assets/Scenes/Moon Dungeon/Chunk 1.unity
+    guid: 4a9ac198519294c40b3f1b59290e9225
+  - enabled: 1
+    path: Assets/Scenes/Moon Dungeon/Chunk 2.unity
+    guid: 1832e82dea9e0fc418d667a9a57a0fc2
+  m_configObjects: {}

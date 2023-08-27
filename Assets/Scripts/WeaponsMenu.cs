@@ -8,7 +8,6 @@ public class WeaponsMenu : MonoBehaviour
     public GameObject[] icons;
     public GameObject[] weapons; 
 
-    
     public Player_Main movement;
     public Animator animator;
 

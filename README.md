@@ -1,5 +1,5 @@
 # BattleBomb!
- BattleBomb! is a 2D Hack n' Slash made in Unity. Made back in Summer 2021.
+ BattleBomb! is a 2D Hack n' Slash made in Unity. Made back in Summer 2019.
  
  ## Gameplay Screenshots
 ![Capture2](https://user-images.githubusercontent.com/90495366/235494477-b4b28a6f-bc10-48d4-b04b-79fdeaba79d6.png)

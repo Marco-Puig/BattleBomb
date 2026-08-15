@@ -1,0 +1,53 @@
+# EditorConfig — https://editorconfig.org
+# Applies to new code. Legacy files under Assets/Scripts, Assets/Art, Assets/AI,
+# Assets/Plugins and Assets/Standard Assets have mixed tabs/spaces; do not
+# reformat them wholesale just because an editor offers to.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{yml,yaml,json}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# Unity-serialized YAML — never touched by hand, never reformatted.
+[*.{unity,prefab,asset,mat,anim,controller,meta,inputactions}]
+trim_trailing_whitespace = false
+insert_final_newline = false
+indent_style = space
+indent_size = 2
+
+[*.cs]
+indent_style = space
+indent_size = 4
+
+# --- Naming ---------------------------------------------------------------
+dotnet_naming_rule.private_fields_camel_case.severity = suggestion
+dotnet_naming_rule.private_fields_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_camel_case.style = camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+dotnet_naming_rule.types_pascal_case.severity = suggestion
+dotnet_naming_rule.types_pascal_case.symbols = types_and_members
+dotnet_naming_rule.types_pascal_case.style = pascal_case
+dotnet_naming_symbols.types_and_members.applicable_kinds = class,struct,interface,enum,method,property,event
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# --- Style ----------------------------------------------------------------
+csharp_new_line_before_open_brace = all
+csharp_prefer_braces = true:suggestion
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_expression_bodied_methods = false:suggestion
+dotnet_sort_system_directives_first = true
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion

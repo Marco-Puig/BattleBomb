@@ -1,2 +1,112 @@
-# Auto detect text files and perform LF normalization
+# Baseline: let git detect text and normalize to LF in the repository.
+# This line predates the Redo branch — keep it so existing files are not renormalized.
 * text=auto
+
+# ---------------------------------------------------------------
+# Unity serialized assets
+# Force Text serialization is enabled (EditorSettings m_SerializationMode: 2),
+# so these are YAML and must stay text for diffs to be readable.
+# ---------------------------------------------------------------
+*.unity      text
+*.prefab     text
+*.asset      text
+*.mat        text
+*.anim       text
+*.controller text
+*.overrideController text
+*.physicMaterial     text
+*.physicsMaterial2D  text
+*.playable   text
+*.mask       text
+*.brush      text
+*.flare      text
+*.fontsettings text
+*.guiskin    text
+*.giparams   text
+*.lighting   text
+*.meta       text
+*.mixer      text
+*.preset     text
+*.renderTexture text
+*.shadervariants text
+*.spriteatlas   text
+*.terrainlayer  text
+*.signal     text
+*.asmdef     text
+*.asmref     text
+*.inputactions text
+
+# ---------------------------------------------------------------
+# Source and config
+# ---------------------------------------------------------------
+*.cs      text diff=csharp
+*.shader  text
+*.cginc   text
+*.hlsl    text
+*.compute text
+*.json    text
+*.md      text
+*.txt     text
+*.xml     text
+*.yml     text
+*.yaml    text
+
+# ---------------------------------------------------------------
+# Binary — never diff, never line-ending-convert.
+# Misdetection here silently corrupts art and audio.
+# ---------------------------------------------------------------
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.tga  binary
+*.tif  binary
+*.tiff binary
+*.bmp  binary
+*.psd  binary
+*.ai   binary
+*.eps  binary
+*.exr  binary
+*.hdr  binary
+*.pdf  binary
+*.ico  binary
+
+*.fbx  binary
+*.FBX  binary
+*.obj  binary
+*.blend binary
+*.dae  binary
+*.3ds  binary
+*.max  binary
+*.ma   binary
+*.mb   binary
+
+*.mp3  binary
+*.ogg  binary
+*.wav  binary
+*.aif  binary
+*.aiff binary
+
+*.mp4  binary
+*.mov  binary
+*.webm binary
+
+*.ttf  binary
+*.otf  binary
+
+*.dll  binary
+*.so   binary
+*.dylib binary
+*.a    binary
+*.lib  binary
+*.pdb  binary
+*.bundle binary
+*.unitypackage binary
+*.cubemap binary
+
+# ---------------------------------------------------------------
+# Git LFS is NOT enabled on this repository.
+# The pack is already ~1.5 GiB and `git lfs` is not installed locally.
+# Migrating would rewrite history and require every clone to install LFS,
+# so it is deliberately deferred. See docs/decisions/ before enabling.
+# ---------------------------------------------------------------

@@ -34,7 +34,7 @@ namespace BattleBomb.Tests.EditMode
             CombatStepResult r = CombatMachine.Step(CombatState.Ready, Press(CommandButtons.Light), Kit);
 
             Assert.That(r.AttackStarted, Is.True);
-            Assert.That(r.MovementLocked, Is.True);
+            Assert.That(r.State.Phase, Is.EqualTo(AttackPhase.Startup));
             Assert.That(r.Attack.Damage, Is.EqualTo(Kit.StepAt(0).OnLight.Damage));
         }
 
@@ -144,7 +144,7 @@ namespace BattleBomb.Tests.EditMode
 
             CombatStepResult r = CombatMachine.Step(CombatState.Ready, Press(CommandButtons.Light), Kit);
             r = Run(r, Idle, l1.TotalSteps);
-            Assert.That(r.MovementLocked, Is.False, "The attack has fully recovered.");
+            Assert.That(r.State.Phase, Is.EqualTo(AttackPhase.Ready), "The attack has fully recovered.");
 
             CombatStepResult withinWindow = Run(r, Idle, Kit.ComboWindowSteps - 2);
             withinWindow = CombatMachine.Step(withinWindow.State, Press(CommandButtons.Light), Kit);
@@ -162,7 +162,7 @@ namespace BattleBomb.Tests.EditMode
         {
             CombatStepResult r = CombatMachine.Step(CombatState.Ready, Press(CommandButtons.Heavy), Kit);
             Assert.That(r.AttackStarted, Is.False, "Held Heavy from neutral charges instead of swinging.");
-            Assert.That(r.MovementLocked, Is.True);
+            Assert.That(r.State.Phase, Is.EqualTo(AttackPhase.Charging));
 
             r = Run(r, Hold(CommandButtons.Heavy), 10);
             Assert.That(r.AttackStarted, Is.False);
@@ -190,7 +190,6 @@ namespace BattleBomb.Tests.EditMode
             CombatState stopped = r.State.WithHitstop(3);
 
             CombatStepResult frozen = CombatMachine.Step(stopped, Press(CommandButtons.Light), Kit);
-            Assert.That(frozen.MovementLocked, Is.True);
             Assert.That(frozen.State.HitstopSteps, Is.EqualTo(2));
             Assert.That(frozen.State.StepsInPhase, Is.EqualTo(stopped.StepsInPhase), "Phases do not advance.");
             Assert.That(frozen.State.Buffered, Is.EqualTo(CommandButtons.Light), "The press is remembered.");
@@ -218,8 +217,8 @@ namespace BattleBomb.Tests.EditMode
                 Idle, Idle, Idle, Idle,
             };
 
-            CombatStepResult a = new CombatStepResult(CombatState.Ready, false, false, false, default);
-            CombatStepResult b = new CombatStepResult(CombatState.Ready, false, false, false, default);
+            CombatStepResult a = new CombatStepResult(CombatState.Ready, false, false, default);
+            CombatStepResult b = new CombatStepResult(CombatState.Ready, false, false, default);
 
             foreach (PlayerCommand command in script)
             {

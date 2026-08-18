@@ -122,10 +122,12 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>
         /// The soft lunge's destination for an attack starting this step, if anything qualifies.
+        /// Only enemies — the snap never drags a swing toward the other player (Michael's
+        /// playtest), though a partner naturally in reach is still shoved.
         /// </summary>
         internal bool TryPickLungeTarget(CharacterActor attacker, in AttackTuning attack, out Vector3 target)
         {
-            CollectCandidates(attacker);
+            CollectCandidates(attacker, includePartners: false);
             int index = HitResolver.LungeTarget(attacker.Position, attacker.Facing, attack, _candidatePositions);
             target = index >= 0 ? _candidatePositions[index] : default;
             return index >= 0;
@@ -138,7 +140,7 @@ namespace BattleBomb.Gameplay.Simulation
         /// </summary>
         internal void ResolveHits(CharacterActor attacker, in AttackTuning attack)
         {
-            CollectCandidates(attacker);
+            CollectCandidates(attacker, includePartners: true);
             HitResolver.Resolve(attacker.Position, attacker.Facing, attack, _candidatePositions, _hitIndices);
 
             int attackerHitstop = 0;
@@ -172,7 +174,7 @@ namespace BattleBomb.Gameplay.Simulation
             }
         }
 
-        private void CollectCandidates(CharacterActor except)
+        private void CollectCandidates(CharacterActor except, bool includePartners)
         {
             _candidatePositions.Clear();
             _candidateOwners.Clear();
@@ -187,6 +189,11 @@ namespace BattleBomb.Gameplay.Simulation
 
                 _candidatePositions.Add(dummies[i].Position);
                 _candidateOwners.Add(dummies[i]);
+            }
+
+            if (!includePartners)
+            {
+                return;
             }
 
             IReadOnlyList<CharacterActor> actors = Characters.Ordered;

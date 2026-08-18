@@ -33,6 +33,7 @@ namespace BattleBomb.Gameplay.Characters
         private CombatState _combat = CombatState.Ready;
         private Vector3 _lungePerStep;
         private int _lungeStepsLeft;
+        private bool _attackRooted;
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -68,13 +69,27 @@ namespace BattleBomb.Gameplay.Characters
                 BeginAttack(command, combat.Attack);
             }
 
-            if (combat.MovementLocked)
+            AttackPhase phase = _combat.Phase;
+            if (phase == AttackPhase.Ready)
             {
-                StepAttackMotion(bounds);
+                _attackRooted = false;
+                _lungeStepsLeft = 0;
+                _state = CharacterMotor.Step(_state, command, _tuning, bounds, dt);
+            }
+            else if (_attackRooted)
+            {
+                // In lunge range the snap owns the body: scoot toward the target, then hold.
+                StepLungeMotion(bounds);
             }
             else
             {
-                _state = CharacterMotor.Step(_state, command, _tuning, bounds, dt);
+                // Out of range nothing roots (Michael's playtest): Lights move freely, Heavies
+                // and charging at their reduced speed, and an airborne swing hangs — vertical
+                // speed stays zeroed through startup and the hit window, recovery falls normally.
+                bool stallGravity = !_state.IsGrounded
+                    && (phase == AttackPhase.Startup || phase == AttackPhase.Active);
+                MovementTuning tuning = stallGravity ? WithoutGravity(_tuning) : _tuning;
+                _state = CharacterMotor.Step(_state, CombatMove(command, phase), tuning, bounds, dt);
             }
 
             if (combat.HitWindowOpened && _driver != null)
@@ -102,33 +117,44 @@ namespace BattleBomb.Gameplay.Characters
 
         private void BeginAttack(in PlayerCommand command, in AttackTuning attack)
         {
-            // The stick aims — and nothing else (D19). Chosen here, fixed for the whole swing.
+            // The stick aims (D19). Chosen here; a free-moving whiff may still re-aim by moving.
             Facing facing = command.Move.x > 0.01f ? Facing.Right
                 : command.Move.x < -0.01f ? Facing.Left
                 : _state.Facing;
-            _state = new MotorState(
-                _state.Position, Vector3.zero, facing, _state.IsGrounded, _state.StepsSinceGrounded,
-                _state.JumpBufferedFor);
 
             _lungePerStep = Vector3.zero;
             _lungeStepsLeft = 0;
-            if (_driver == null || !_driver.TryPickLungeTarget(this, attack, out Vector3 target))
+            _attackRooted = false;
+
+            Vector3 velocity = _state.Velocity;
+            if (!_state.IsGrounded)
             {
-                return;
+                // The air stall: the swing hangs, and recovery resumes the fall from zero.
+                velocity.y = 0f;
             }
 
-            Vector3 travel = HitResolver.LungeEnd(_state.Position, attack, target) - _state.Position;
-            if (travel.sqrMagnitude < 1e-4f)
+            Vector3 target = default;
+            bool hasTarget = _state.IsGrounded && _driver != null
+                && _driver.TryPickLungeTarget(this, attack, out target);
+            if (hasTarget)
             {
-                return;
+                _attackRooted = true;
+                velocity = Vector3.zero;
+                Vector3 travel = HitResolver.LungeEnd(_state.Position, attack, target) - _state.Position;
+                if (travel.sqrMagnitude >= 1e-4f)
+                {
+                    int steps = Mathf.Max(1, attack.StartupSteps);
+                    _lungePerStep = travel / steps;
+                    _lungeStepsLeft = steps;
+                }
             }
 
-            int steps = Mathf.Max(1, attack.StartupSteps);
-            _lungePerStep = travel / steps;
-            _lungeStepsLeft = steps;
+            _state = new MotorState(
+                _state.Position, velocity, facing, _state.IsGrounded, _state.StepsSinceGrounded,
+                _state.JumpBufferedFor);
         }
 
-        private void StepAttackMotion(in ArenaBounds bounds)
+        private void StepLungeMotion(in ArenaBounds bounds)
         {
             if (_lungeStepsLeft <= 0)
             {
@@ -141,6 +167,30 @@ namespace BattleBomb.Gameplay.Characters
                 position, Vector3.zero, _state.Facing, _state.IsGrounded, _state.StepsSinceGrounded,
                 _state.JumpBufferedFor);
         }
+
+        private PlayerCommand CombatMove(in PlayerCommand command, AttackPhase phase)
+        {
+            float scale = phase == AttackPhase.Charging
+                ? _kit.Heavy.MoveSpeedScale
+                : _combat.CurrentAttack.MoveSpeedScale;
+            return new PlayerCommand(
+                command.Frame,
+                command.Move * scale,
+                command.Held & ~CommandButtons.Jump,
+                command.Pressed & ~CommandButtons.Jump,
+                command.Released & ~CommandButtons.Jump);
+        }
+
+        private static MovementTuning WithoutGravity(in MovementTuning tuning) => new MovementTuning(
+            tuning.MaxSpeed,
+            tuning.Acceleration,
+            tuning.Deceleration,
+            tuning.DepthSpeedScale,
+            0f,
+            tuning.JumpSpeed,
+            tuning.MaxFallSpeed,
+            tuning.CoyoteSteps,
+            tuning.JumpBufferSteps);
 
         private void Awake()
         {

@@ -21,7 +21,8 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private int _maxTargets = 2;
         [SerializeField] private float _knockbackSpeed = 5f;
         [SerializeField] private float _launchSpeed;
-        [SerializeField] private int _hitstopSteps = 3;
+        [SerializeField] private int _hitstopSteps = 2;
+        [SerializeField] private float _moveSpeedScale = 1f;
 
         public static AttackSpec From(in AttackTuning tuning)
         {
@@ -38,6 +39,7 @@ namespace BattleBomb.Gameplay.Data
                 _knockbackSpeed = tuning.KnockbackSpeed,
                 _launchSpeed = tuning.LaunchSpeed,
                 _hitstopSteps = tuning.HitstopSteps,
+                _moveSpeedScale = tuning.MoveSpeedScale,
             };
             return spec;
         }
@@ -53,6 +55,7 @@ namespace BattleBomb.Gameplay.Data
             _maxTargets,
             _knockbackSpeed,
             _launchSpeed,
-            _hitstopSteps);
+            _hitstopSteps,
+            _moveSpeedScale);
     }
 }

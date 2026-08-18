@@ -81,9 +81,28 @@ namespace BattleBomb.Tests.EditMode
                 Assert.That(attack.KnockbackSpeed, Is.GreaterThanOrEqualTo(0f));
                 Assert.That(attack.LaunchSpeed, Is.GreaterThanOrEqualTo(0f));
                 Assert.That(attack.HitstopSteps, Is.GreaterThanOrEqualTo(0));
+                Assert.That(attack.MoveSpeedScale, Is.InRange(0f, 1f),
+                    "A whiff can slow movement, never speed it up or reverse it.");
                 Assert.That(attack.TotalSteps,
                     Is.EqualTo(attack.StartupSteps + attack.ActiveSteps + attack.RecoverySteps));
             }
+        }
+
+        [Test]
+        public void Whiffed_lights_move_freely_and_whiffed_heavies_are_slowed()
+        {
+            CombatKit kit = CombatKit.Default;
+
+            for (int i = 0; i < kit.ChainLength; i++)
+            {
+                Assert.That(kit.StepAt(i).OnLight.MoveSpeedScale, Is.EqualTo(1f),
+                    $"Light link {i + 1} must not hinder movement (Michael's playtest).");
+            }
+
+            Assert.That(kit.Heavy.MoveSpeedScale, Is.LessThan(1f));
+            Assert.That(kit.ChargedHeavy.MoveSpeedScale, Is.LessThan(1f));
+            Assert.That(kit.StepAt(2).OnHeavy.MoveSpeedScale, Is.LessThan(1f),
+                "The launcher is heavy-class.");
         }
 
         [Test]
@@ -119,11 +138,11 @@ namespace BattleBomb.Tests.EditMode
         {
             ComboStep[] steps =
             {
-                new ComboStep(new AttackTuning(1, 1, 1, 5f, 1f, 1f, 0f, 1, 0f, 0f, 0)),
+                new ComboStep(new AttackTuning(1, 1, 1, 5f, 1f, 1f, 0f, 1, 0f, 0f, 0, 1f)),
             };
             CombatKit kit = new CombatKit(steps, default, default, 1, 1, 1);
 
-            steps[0] = new ComboStep(new AttackTuning(9, 9, 9, 99f, 9f, 9f, 9f, 9, 9f, 9f, 9));
+            steps[0] = new ComboStep(new AttackTuning(9, 9, 9, 99f, 9f, 9f, 9f, 9, 9f, 9f, 9, 1f));
 
             Assert.That(kit.StepAt(0).OnLight.Damage, Is.EqualTo(5f));
         }

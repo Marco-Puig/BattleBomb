@@ -42,7 +42,7 @@ namespace BattleBomb.Core.Combat
                     state.Phase, state.StepsInPhase, state.ComboIndex, state.ComboWindowLeft,
                     buffered, bufferedFor, state.ChargeSteps, state.HitstopSteps - 1,
                     state.CurrentAttack);
-                return new CombatStepResult(frozen, false, false, true, state.CurrentAttack);
+                return new CombatStepResult(frozen, false, false, state.CurrentAttack);
             }
 
             switch (state.Phase)
@@ -85,7 +85,7 @@ namespace BattleBomb.Core.Combat
             CombatState idle = new CombatState(
                 AttackPhase.Ready, 0, comboIndex, comboWindowLeft,
                 buffered, bufferedFor, 0, 0, default);
-            return new CombatStepResult(idle, false, false, false, default);
+            return new CombatStepResult(idle, false, false, default);
         }
 
         private static CombatStepResult StepCharging(
@@ -99,7 +99,7 @@ namespace BattleBomb.Core.Combat
                     : state.ChargeSteps;
                 CombatState charging = new CombatState(
                     AttackPhase.Charging, 0, 0, 0, buffered, bufferedFor, charge, 0, default);
-                return new CombatStepResult(charging, false, false, true, default);
+                return new CombatStepResult(charging, false, false, default);
             }
 
             AttackTuning released = state.ChargeSteps >= kit.ChargeThresholdSteps
@@ -143,12 +143,12 @@ namespace BattleBomb.Core.Combat
                 CombatState ready = new CombatState(
                     AttackPhase.Ready, 0, state.ComboIndex, kit.ComboWindowSteps,
                     buffered, bufferedFor, 0, 0, default);
-                return new CombatStepResult(ready, false, false, false, default);
+                return new CombatStepResult(ready, false, false, default);
             }
 
             CombatState next = new CombatState(
                 phase, steps + 1, state.ComboIndex, 0, buffered, bufferedFor, 0, 0, attack);
-            return new CombatStepResult(next, false, hitWindowOpened, true, attack);
+            return new CombatStepResult(next, false, hitWindowOpened, attack);
         }
 
         private static CombatStepResult StartLight(CombatKit kit, int comboIndex)
@@ -174,7 +174,7 @@ namespace BattleBomb.Core.Combat
             {
                 CombatState charging = new CombatState(
                     AttackPhase.Charging, 0, 0, 0, CommandButtons.None, 0, 0, 0, default);
-                return new CombatStepResult(charging, false, false, true, default);
+                return new CombatStepResult(charging, false, false, default);
             }
 
             return Start(kit.Heavy, 0, CommandButtons.None, 0);
@@ -185,7 +185,7 @@ namespace BattleBomb.Core.Combat
         {
             CombatState started = new CombatState(
                 AttackPhase.Startup, 1, comboIndex, 0, buffered, bufferedFor, 0, 0, attack);
-            return new CombatStepResult(started, true, false, true, attack);
+            return new CombatStepResult(started, true, false, attack);
         }
     }
 }

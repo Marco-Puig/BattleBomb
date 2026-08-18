@@ -10,7 +10,8 @@ namespace BattleBomb.Tests.EditMode
         private static readonly AttackTuning Attack = new AttackTuning(
             startupSteps: 1, activeSteps: 1, recoverySteps: 1,
             damage: 10f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-            maxTargets: 2, knockbackSpeed: 6f, launchSpeed: 9f, hitstopSteps: 4);
+            maxTargets: 2, knockbackSpeed: 6f, launchSpeed: 9f, hitstopSteps: 4,
+            moveSpeedScale: 1f);
 
         private static readonly ElementalMultipliers Neutral = ElementalMultipliers.Neutral;
 

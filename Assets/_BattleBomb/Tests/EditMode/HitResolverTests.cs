@@ -11,7 +11,8 @@ namespace BattleBomb.Tests.EditMode
         private static readonly AttackTuning Attack = new AttackTuning(
             startupSteps: 1, activeSteps: 1, recoverySteps: 1,
             damage: 5f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-            maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 3);
+            maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 3,
+            moveSpeedScale: 1f);
 
         private static readonly Vector3 Origin = Vector3.zero;
 

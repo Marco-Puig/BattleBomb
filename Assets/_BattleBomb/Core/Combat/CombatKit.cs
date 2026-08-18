@@ -61,29 +61,35 @@ namespace BattleBomb.Core.Combat
                 new ComboStep(new AttackTuning(
                     startupSteps: 5, activeSteps: 4, recoverySteps: 8,
                     damage: 5f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-                    maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 3)),
+                    maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 2,
+                    moveSpeedScale: 1f)),
                 new ComboStep(new AttackTuning(
                     startupSteps: 4, activeSteps: 4, recoverySteps: 9,
                     damage: 6f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-                    maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 3)),
+                    maxTargets: 2, knockbackSpeed: 5f, launchSpeed: 0f, hitstopSteps: 2,
+                    moveSpeedScale: 1f)),
                 new ComboStep(
                     new AttackTuning(
                         startupSteps: 6, activeSteps: 4, recoverySteps: 14,
                         damage: 8f, reachX: 1.7f, depthTolerance: 1f, lungeDistance: 1.4f,
-                        maxTargets: 2, knockbackSpeed: 9f, launchSpeed: 0f, hitstopSteps: 4),
+                        maxTargets: 2, knockbackSpeed: 9f, launchSpeed: 0f, hitstopSteps: 2,
+                        moveSpeedScale: 1f),
                     new AttackTuning(
                         startupSteps: 8, activeSteps: 4, recoverySteps: 16,
                         damage: 8f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-                        maxTargets: 2, knockbackSpeed: 3f, launchSpeed: 9f, hitstopSteps: 5)),
+                        maxTargets: 2, knockbackSpeed: 3f, launchSpeed: 9f, hitstopSteps: 3,
+                        moveSpeedScale: 0.8f)),
             },
             heavy: new AttackTuning(
                 startupSteps: 12, activeSteps: 6, recoverySteps: 16,
                 damage: 12f, reachX: 2f, depthTolerance: 1.1f, lungeDistance: 2f,
-                maxTargets: 4, knockbackSpeed: 9f, launchSpeed: 0f, hitstopSteps: 5),
+                maxTargets: 4, knockbackSpeed: 9f, launchSpeed: 0f, hitstopSteps: 3,
+                moveSpeedScale: 0.8f),
             chargedHeavy: new AttackTuning(
                 startupSteps: 6, activeSteps: 6, recoverySteps: 20,
                 damage: 26f, reachX: 2.2f, depthTolerance: 1.1f, lungeDistance: 2.4f,
-                maxTargets: 1, knockbackSpeed: 12f, launchSpeed: 0f, hitstopSteps: 8),
+                maxTargets: 1, knockbackSpeed: 12f, launchSpeed: 0f, hitstopSteps: 4,
+                moveSpeedScale: 0.8f),
             chargeThresholdSteps: 30,
             comboWindowSteps: 12,
             inputBufferSteps: 12);

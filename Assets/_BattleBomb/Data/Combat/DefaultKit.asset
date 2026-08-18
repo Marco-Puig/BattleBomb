@@ -24,7 +24,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 5
       _launchSpeed: 0
-      _hitstopSteps: 3
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
     _hasEnder: 0
     _ender:
       _startupSteps: 5
@@ -37,7 +38,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 5
       _launchSpeed: 0
-      _hitstopSteps: 3
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
   - _light:
       _startupSteps: 4
       _activeSteps: 4
@@ -49,7 +51,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 5
       _launchSpeed: 0
-      _hitstopSteps: 3
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
     _hasEnder: 0
     _ender:
       _startupSteps: 5
@@ -62,7 +65,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 5
       _launchSpeed: 0
-      _hitstopSteps: 3
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
   - _light:
       _startupSteps: 6
       _activeSteps: 4
@@ -74,7 +78,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 9
       _launchSpeed: 0
-      _hitstopSteps: 4
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
     _hasEnder: 1
     _ender:
       _startupSteps: 8
@@ -87,7 +92,8 @@ MonoBehaviour:
       _maxTargets: 2
       _knockbackSpeed: 3
       _launchSpeed: 9
-      _hitstopSteps: 5
+      _hitstopSteps: 3
+      _moveSpeedScale: 0.8
   _heavy:
     _startupSteps: 12
     _activeSteps: 6
@@ -99,7 +105,8 @@ MonoBehaviour:
     _maxTargets: 4
     _knockbackSpeed: 9
     _launchSpeed: 0
-    _hitstopSteps: 5
+    _hitstopSteps: 3
+    _moveSpeedScale: 0.8
   _chargedHeavy:
     _startupSteps: 6
     _activeSteps: 6
@@ -111,7 +118,8 @@ MonoBehaviour:
     _maxTargets: 1
     _knockbackSpeed: 12
     _launchSpeed: 0
-    _hitstopSteps: 8
+    _hitstopSteps: 4
+    _moveSpeedScale: 0.8
   _chargeThresholdSteps: 30
   _comboWindowSteps: 12
   _inputBufferSteps: 12

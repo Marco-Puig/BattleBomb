@@ -24,6 +24,9 @@ namespace BattleBomb.Core.Combat
         public readonly int ComboWindowSteps;
         public readonly int InputBufferSteps;
 
+        /// <summary>How young a guard must be when the hit arrives to count as perfect (§2.7).</summary>
+        public readonly int PerfectBlockSteps;
+
         public CombatKit(
             ComboStep[] steps,
             AttackTuning heavy,
@@ -32,14 +35,16 @@ namespace BattleBomb.Core.Combat
             int comboWindowSteps,
             int inputBufferSteps,
             AttackTuning aerialLight = default,
-            AttackTuning aerialHeavy = default)
+            AttackTuning aerialHeavy = default,
+            int perfectBlockSteps = 8)
         {
             if (steps == null || steps.Length == 0)
             {
                 throw new ArgumentException("A combo chain needs at least one position.", nameof(steps));
             }
 
-            if (chargeThresholdSteps <= 0 || comboWindowSteps <= 0 || inputBufferSteps <= 0)
+            if (chargeThresholdSteps <= 0 || comboWindowSteps <= 0 || inputBufferSteps <= 0
+                || perfectBlockSteps <= 0)
             {
                 throw new ArgumentException("Timing windows must be positive step counts.");
             }
@@ -52,6 +57,7 @@ namespace BattleBomb.Core.Combat
             ChargeThresholdSteps = chargeThresholdSteps;
             ComboWindowSteps = comboWindowSteps;
             InputBufferSteps = inputBufferSteps;
+            PerfectBlockSteps = perfectBlockSteps;
         }
 
         public int ChainLength => _steps.Length;

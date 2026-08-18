@@ -8,7 +8,8 @@ namespace BattleBomb.Core.Combat
     /// attack is a commitment. Hitstop freezes phases and the buffer countdown alike, but a press
     /// during hitstop is still captured. Airborne, the verbs become the aerials: Light is the pop,
     /// Heavy is the slam, and nothing charges — the caller passes groundedness so the machine
-    /// stays pure.
+    /// stays pure. Held Block on the ground guards (§2.7); no attack starts while guarding, and
+    /// <c>GuardResolver</c> reads the guard's age for the perfect window.
     /// </summary>
     public static class CombatMachine
     {
@@ -54,6 +55,8 @@ namespace BattleBomb.Core.Combat
                     return StepReady(state, command, kit, isGrounded, buffered, bufferedFor);
                 case AttackPhase.Charging:
                     return StepCharging(state, command, kit, buffered, bufferedFor);
+                case AttackPhase.Guarding:
+                    return StepGuarding(state, command, buffered, bufferedFor);
                 default:
                     return StepFlight(state, command, kit, isGrounded, buffered, bufferedFor);
             }
@@ -86,6 +89,15 @@ namespace BattleBomb.Core.Combat
                 return isGrounded ? ConsumeHeavy(command, kit, comboIndex) : StartAerial(kit.AerialHeavy);
             }
 
+            if (isGrounded && command.IsHeld(CommandButtons.Block))
+            {
+                // Held Block guards (§2.7) — grounded only; the air already has jump and depth.
+                // Entering the guard forgets the combo; StepsInPhase is the guard's age.
+                CombatState guarding = new CombatState(
+                    AttackPhase.Guarding, 1, 0, 0, buffered, bufferedFor, 0, 0, default);
+                return new CombatStepResult(guarding, false, false, default);
+            }
+
             CombatState idle = new CombatState(
                 AttackPhase.Ready, 0, comboIndex, comboWindowLeft,
                 buffered, bufferedFor, 0, 0, default);
@@ -110,6 +122,24 @@ namespace BattleBomb.Core.Combat
                 ? kit.ChargedHeavy
                 : kit.Heavy;
             return Start(released, 0, buffered, bufferedFor);
+        }
+
+        private static CombatStepResult StepGuarding(
+            in CombatState state, in PlayerCommand command,
+            CommandButtons buffered, int bufferedFor)
+        {
+            if (command.IsHeld(CommandButtons.Block))
+            {
+                // No attacks start while guarding; a press keeps buffering and fires on release.
+                CombatState holding = new CombatState(
+                    AttackPhase.Guarding, state.StepsInPhase + 1, 0, 0,
+                    buffered, bufferedFor, 0, 0, default);
+                return new CombatStepResult(holding, false, false, default);
+            }
+
+            CombatState ready = new CombatState(
+                AttackPhase.Ready, 0, 0, 0, buffered, bufferedFor, 0, 0, default);
+            return new CombatStepResult(ready, false, false, default);
         }
 
         private static CombatStepResult StepFlight(

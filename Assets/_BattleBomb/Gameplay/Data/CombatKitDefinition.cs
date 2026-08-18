@@ -36,6 +36,9 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps a press is remembered while an attack is still busy.")]
         [SerializeField] private int _inputBufferSteps = CombatKit.Default.InputBufferSteps;
 
+        [Tooltip("How young a guard must be when a hit arrives to block perfectly (§2.7).")]
+        [SerializeField] private int _perfectBlockSteps = CombatKit.Default.PerfectBlockSteps;
+
         public CombatKit ToRuntime()
         {
             if (_chain == null || _chain.Count == 0)
@@ -58,7 +61,8 @@ namespace BattleBomb.Gameplay.Data
                 Mathf.Max(1, _comboWindowSteps),
                 Mathf.Max(1, _inputBufferSteps),
                 _aerialLight.ToRuntime(),
-                _aerialHeavy.ToRuntime());
+                _aerialHeavy.ToRuntime(),
+                Mathf.Max(1, _perfectBlockSteps));
         }
 
         private static List<ComboStepSpec> DefaultChain()

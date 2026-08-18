@@ -33,6 +33,9 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public readonly bool ResolvesOnLanding;
 
+        /// <summary>What Block makes of this hit (D19): melee and shoves are Kinetic by default.</summary>
+        public readonly HitKind Kind;
+
         public AttackTuning(
             int startupSteps,
             int activeSteps,
@@ -46,7 +49,8 @@ namespace BattleBomb.Core.Combat
             float launchSpeed,
             int hitstopSteps,
             float moveSpeedScale,
-            bool resolvesOnLanding = false)
+            bool resolvesOnLanding = false,
+            HitKind kind = HitKind.Kinetic)
         {
             StartupSteps = startupSteps;
             ActiveSteps = activeSteps;
@@ -61,6 +65,7 @@ namespace BattleBomb.Core.Combat
             HitstopSteps = hitstopSteps;
             MoveSpeedScale = moveSpeedScale;
             ResolvesOnLanding = resolvesOnLanding;
+            Kind = kind;
         }
 
         public int TotalSteps => StartupSteps + ActiveSteps + RecoverySteps;

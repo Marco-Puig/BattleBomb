@@ -35,6 +35,7 @@ namespace BattleBomb.Tests.EditMode
                 Assert.That(kit.ChargeThresholdSteps, Is.EqualTo(expected.ChargeThresholdSteps));
                 Assert.That(kit.ComboWindowSteps, Is.EqualTo(expected.ComboWindowSteps));
                 Assert.That(kit.InputBufferSteps, Is.EqualTo(expected.InputBufferSteps));
+                Assert.That(kit.PerfectBlockSteps, Is.EqualTo(expected.PerfectBlockSteps));
             }
             finally
             {

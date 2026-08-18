@@ -62,12 +62,12 @@ namespace BattleBomb.Gameplay.Players
             }
 
             _move = Find(actions, PlayerActions.Move);
-            AddButton(actions, PlayerActions.Attack, CommandButtons.Attack);
+            AddButton(actions, PlayerActions.Light, CommandButtons.Light);
             AddButton(actions, PlayerActions.Heavy, CommandButtons.Heavy);
-            AddButton(actions, PlayerActions.Dodge, CommandButtons.Dodge);
-            AddButton(actions, PlayerActions.Ability1, CommandButtons.Ability1);
-            AddButton(actions, PlayerActions.Ability2, CommandButtons.Ability2);
-            AddButton(actions, PlayerActions.Interact, CommandButtons.Interact);
+            AddButton(actions, PlayerActions.Magic, CommandButtons.Magic);
+            AddButton(actions, PlayerActions.Equipment, CommandButtons.Equipment);
+            AddButton(actions, PlayerActions.Jump, CommandButtons.Jump);
+            AddButton(actions, PlayerActions.Block, CommandButtons.Block);
         }
 
         private void OnEnable()

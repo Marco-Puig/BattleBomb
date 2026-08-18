@@ -12,11 +12,11 @@ namespace BattleBomb.Tests.EditMode
             PlayerCommand command = PlayerCommand.FromState(
                 frame: 0,
                 move: Vector2.zero,
-                held: CommandButtons.Attack | CommandButtons.Dodge,
+                held: CommandButtons.Light | CommandButtons.Block,
                 previouslyHeld: CommandButtons.None);
 
-            Assert.That(command.IsHeld(CommandButtons.Attack), Is.True);
-            Assert.That(command.IsHeld(CommandButtons.Dodge), Is.True);
+            Assert.That(command.IsHeld(CommandButtons.Light), Is.True);
+            Assert.That(command.IsHeld(CommandButtons.Block), Is.True);
             Assert.That(command.IsHeld(CommandButtons.Heavy), Is.False);
         }
 
@@ -27,7 +27,7 @@ namespace BattleBomb.Tests.EditMode
             PlayerCommand active = PlayerCommand.FromState(
                 frame: 1,
                 move: Vector2.zero,
-                held: CommandButtons.Attack,
+                held: CommandButtons.Light,
                 previouslyHeld: CommandButtons.None);
 
             Assert.That(idle.IsHeld(CommandButtons.None), Is.False);

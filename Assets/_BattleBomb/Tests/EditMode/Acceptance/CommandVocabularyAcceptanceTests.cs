@@ -12,36 +12,36 @@ namespace BattleBomb.Tests.EditMode.Acceptance
 {
     /// <summary>
     /// The game's verbs, in one vocabulary, in three places that must agree: the Core enum, the
-    /// action-name constants, and the authored input asset. The set comes from the ability slot table
-    /// in GAME_DESIGN.md §3 — no more verbs than the design has.
+    /// action-name constants, and the authored input asset. The set is D17's six-verb scheme — no
+    /// more verbs than the design has.
     /// </summary>
     public sealed class CommandVocabularyAcceptanceTests
     {
         private static readonly string[] Buttons =
         {
-            "Attack",     // basic melee combo
-            "Elemental",  // the character's element, offensively
-            "Dodge",      // movement ability
-            "Special",    // cooldown-gated high impact
+            "Light",      // basic melee combo; performs Interact in context
+            "Heavy",      // slow, high-commitment; launcher / guard-break class
+            "Magic",      // the character's element, offensively
+            "Equipment",  // the equipped active item (§5)
             "Jump",       // universal (§2.4)
-            "Interact",
+            "Block",      // hold to guard
         };
 
         /// <summary>Every non-composite binding the asset must carry, as (path, action).</summary>
         private static readonly (string Path, string Action)[] RequiredBindings =
         {
-            ("<Keyboard>/j", "Attack"),
-            ("<Gamepad>/buttonWest", "Attack"),
-            ("<Keyboard>/k", "Elemental"),
-            ("<Gamepad>/buttonNorth", "Elemental"),
-            ("<Keyboard>/l", "Special"),
-            ("<Gamepad>/rightShoulder", "Special"),
-            ("<Keyboard>/leftShift", "Dodge"),
-            ("<Gamepad>/buttonEast", "Dodge"),
+            ("<Keyboard>/j", "Light"),
+            ("<Gamepad>/buttonWest", "Light"),
+            ("<Keyboard>/k", "Heavy"),
+            ("<Gamepad>/buttonNorth", "Heavy"),
+            ("<Keyboard>/l", "Magic"),
+            ("<Gamepad>/buttonEast", "Magic"),
+            ("<Keyboard>/i", "Equipment"),
+            ("<Gamepad>/rightShoulder", "Equipment"),
             ("<Keyboard>/space", "Jump"),
             ("<Gamepad>/buttonSouth", "Jump"),
-            ("<Keyboard>/e", "Interact"),
-            ("<Gamepad>/dpad/up", "Interact"),
+            ("<Keyboard>/leftShift", "Block"),
+            ("<Gamepad>/leftShoulder", "Block"),
             ("<Gamepad>/leftStick", "Move"),
         };
 

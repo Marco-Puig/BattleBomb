@@ -12,11 +12,11 @@ namespace BattleBomb.Tests.EditMode
             PlayerCommand command = PlayerCommand.FromState(
                 frame: 7,
                 move: Vector2.zero,
-                held: CommandButtons.Attack | CommandButtons.Dodge,
-                previouslyHeld: CommandButtons.Attack);
+                held: CommandButtons.Light | CommandButtons.Jump,
+                previouslyHeld: CommandButtons.Light);
 
-            Assert.That(command.WasPressed(CommandButtons.Dodge), Is.True);
-            Assert.That(command.WasPressed(CommandButtons.Attack), Is.False, "Attack was already held.");
+            Assert.That(command.WasPressed(CommandButtons.Jump), Is.True);
+            Assert.That(command.WasPressed(CommandButtons.Light), Is.False, "Light was already held.");
             Assert.That(command.Released, Is.EqualTo(CommandButtons.None));
             Assert.That(command.Frame, Is.EqualTo(7));
         }

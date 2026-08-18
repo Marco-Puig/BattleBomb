@@ -10,11 +10,11 @@ namespace BattleBomb.Gameplay.Players
         public const string Map = "Gameplay";
 
         public const string Move = "Move";
-        public const string Attack = "Attack";
+        public const string Light = "Light";
         public const string Heavy = "Heavy";
-        public const string Dodge = "Dodge";
-        public const string Ability1 = "Ability1";
-        public const string Ability2 = "Ability2";
-        public const string Interact = "Interact";
+        public const string Magic = "Magic";
+        public const string Equipment = "Equipment";
+        public const string Jump = "Jump";
+        public const string Block = "Block";
     }
 }

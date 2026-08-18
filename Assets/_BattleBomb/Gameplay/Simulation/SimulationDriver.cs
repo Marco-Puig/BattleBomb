@@ -75,8 +75,10 @@ namespace BattleBomb.Gameplay.Simulation
         public bool TryGetCommand(PlayerId playerId, out PlayerCommand command) =>
             _commands.TryGetValue(playerId.Value, out command);
 
-        private void Awake()
+        private void OnEnable()
         {
+            // OnEnable rather than Awake: it re-runs after a mid-play domain reload, so a script
+            // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
         }
 

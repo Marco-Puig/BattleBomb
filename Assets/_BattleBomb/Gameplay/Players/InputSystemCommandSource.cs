@@ -74,7 +74,7 @@ namespace BattleBomb.Gameplay.Players
         {
             if (_driver == null)
             {
-                _driver = FindFirstObjectByType<SimulationDriver>();
+                _driver = FindAnyObjectByType<SimulationDriver>();
             }
 
             if (_driver == null)

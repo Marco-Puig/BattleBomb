@@ -86,8 +86,8 @@ done. PlayMode tests are deferred until scenes stabilise (D7).
 | # | Milestone | State |
 |---|---|---|
 | **M0** | Foundation — Unity 6 + URP, assemblies, Input System, tests green | **complete** |
-| **M1** | Movement and camera — two players on the depth plane, shared camera | next |
-| M2 | Combat core | |
+| **M1** | Movement and camera — two players on the depth plane, shared camera | **complete** |
+| **M2** | Combat core | next |
 | M3 | Enemies | |
 | M4 | Gear and stats | |
 | M5 | Abilities and elements | |

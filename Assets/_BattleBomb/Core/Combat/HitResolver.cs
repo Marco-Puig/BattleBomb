@@ -17,6 +17,9 @@ namespace BattleBomb.Core.Combat
         /// <summary>Vertical slack so a just-launched target stays hittable.</summary>
         public const float VerticalTolerance = 2.5f;
 
+        /// <summary>The lunge stops this far from its target's centre instead of standing inside it.</summary>
+        public const float LungeStandoff = 0.75f;
+
         /// <summary>
         /// Fills <paramref name="hits"/> with the indices of struck candidates, nearest first on
         /// |Δx|, capped at the attack's <c>MaxTargets</c>. Returns the number of hits.
@@ -63,9 +66,12 @@ namespace BattleBomb.Core.Combat
         }
 
         /// <summary>
-        /// The soft lunge's target: the nearest candidate in front within the attack's reach plus
-        /// its lunge distance, on both X and depth. −1 when nothing qualifies. Chosen once, on the
-        /// step the attack starts, and never re-picked mid-swing.
+        /// The soft lunge's target: the nearest candidate the lunge can actually convert into a hit
+        /// — after travelling <see cref="LungeEnd"/> the candidate must sit inside the reach box.
+        /// −1 when nothing qualifies. Chosen once, on the step the attack starts, and never
+        /// re-picked mid-swing. Without the convertibility check, a flush target the attacker
+        /// slightly overran would be skipped for a deep diagonal the lunge cannot reach, dragging
+        /// the swing away from a guaranteed hit into a guaranteed whiff.
         /// </summary>
         public static int LungeTarget(
             Vector3 attacker,
@@ -84,7 +90,7 @@ namespace BattleBomb.Core.Combat
             {
                 Vector3 candidate = candidates[i];
                 float forward = (candidate.x - attacker.x) * (int)facing;
-                if (forward < 0f || forward > attack.ReachX + attack.LungeDistance)
+                if (forward < -BehindTolerance || forward > attack.ReachX + attack.LungeDistance)
                 {
                     continue;
                 }
@@ -100,6 +106,11 @@ namespace BattleBomb.Core.Combat
                     continue;
                 }
 
+                if (!IsInReach(LungeEnd(attacker, attack, candidate), facing, attack, candidate))
+                {
+                    continue;
+                }
+
                 float distance = forward * forward + depth * depth;
                 if (distance < bestDistance)
                 {
@@ -109,6 +120,25 @@ namespace BattleBomb.Core.Combat
             }
 
             return best;
+        }
+
+        /// <summary>
+        /// Where a lunge toward the target ends: the planar gap minus the standoff, capped at the
+        /// attack's lunge distance. The picker predicts with this and the mover travels with it, so
+        /// they can never disagree.
+        /// </summary>
+        public static Vector3 LungeEnd(Vector3 attacker, in AttackTuning attack, Vector3 target)
+        {
+            Vector3 toTarget = target - attacker;
+            toTarget.y = 0f;
+            float distance = toTarget.magnitude;
+            float travel = Mathf.Min(Mathf.Max(0f, distance - LungeStandoff), attack.LungeDistance);
+            if (distance < 1e-4f || travel <= 0f)
+            {
+                return attacker;
+            }
+
+            return attacker + toTarget / distance * travel;
         }
 
         private static bool IsInReach(Vector3 attacker, Facing facing, in AttackTuning attack, Vector3 candidate)

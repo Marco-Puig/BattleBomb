@@ -114,6 +114,42 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void A_flush_target_beats_a_deep_diagonal_for_the_lunge()
+        {
+            var candidates = new[]
+            {
+                new Vector3(-0.05f, 0f, 0f),
+                new Vector3(2.15f, 0f, 2.2f),
+            };
+
+            Assert.That(HitResolver.LungeTarget(Origin, Facing.Right, Attack, candidates), Is.EqualTo(0),
+                "Slightly overrunning a target must not make the lunge abandon it — " +
+                "found live: the swing dragged away from a guaranteed hit into a whiff.");
+        }
+
+        [Test]
+        public void The_lunge_never_picks_a_target_it_cannot_convert_into_a_hit()
+        {
+            var unconvertible = new[] { new Vector3(2.15f, 0f, 2.2f) };
+
+            Assert.That(HitResolver.LungeTarget(Origin, Facing.Right, Attack, unconvertible), Is.EqualTo(-1),
+                "A deep diagonal at the window's edge stays out of depth tolerance even after a " +
+                "full lunge — lunging at it is a guaranteed whiff.");
+        }
+
+        [Test]
+        public void The_lunge_end_closes_the_gap_minus_the_standoff_capped_by_the_attack()
+        {
+            Vector3 far = HitResolver.LungeEnd(Origin, Attack, new Vector3(2.5f, 0f, 0f));
+            Assert.That(far.x, Is.EqualTo(Attack.LungeDistance).Within(1e-4f),
+                "A distant target caps the travel at the lunge distance.");
+
+            Vector3 flush = HitResolver.LungeEnd(Origin, Attack, new Vector3(0.3f, 0f, 0f));
+            Assert.That(flush, Is.EqualTo(Origin),
+                "Inside the standoff there is nothing to close.");
+        }
+
+        [Test]
         public void Null_or_empty_candidates_resolve_to_nothing()
         {
             Assert.That(HitResolver.Resolve(Origin, Facing.Right, Attack, null, _hits), Is.EqualTo(0));

@@ -1,5 +1,12 @@
 # Handoff — M2: combat core
 
+> **Status — complete (2026-08-18).** Tasks 17–25 shipped, plus a playtest-directed movement
+> redesign: whiffed swings never root (Lights free, Heavies at 80%), airborne swings hang then
+> fall, the lunge never targets a partner, hitstop halved. Task 26 (aerials) slipped to M3 exactly
+> as planning decision 10 pre-authorised. Task 27's tuning session was deferred by Michael until
+> more mechanics and art exist — combat runs on his play-approved paper values, all living in
+> `Assets/_BattleBomb/Data/Combat/DefaultKit.asset`.
+
 Continues `docs/HANDOFF-M1.md` (tasks 7–16). Same rules, same tools, same reporting format — re-read
 `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are not
 repeated here. The combat design itself is **D19–D21**; nothing below overrides them.

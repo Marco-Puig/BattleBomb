@@ -71,8 +71,10 @@ the base jump.
 Skill expression lives in **timing, left-to-right spacing, and ability use** — deliberately not in
 fine depth alignment, which would not survive touch controls.
 
-⚠ **NEEDS TUNING TARGETS** — attack startup/recovery frames, combo window length, lunge distance,
-hitstop duration, and i-frame windows are set by feel during M2, then recorded here as the reference.
+⚠ **NEEDS TUNING TARGETS** — attack frame data, combo window length, lunge distance, hitstop, and
+i-frame windows shipped M2 on paper values Michael play-approved as a baseline (2026-08-18). The
+settle-and-record pass is deferred, at his direction, until more mechanics and artwork exist; until
+then the authored assets in `Assets/_BattleBomb/Data/Combat/` are the reference.
 
 ### 2.6 Attack verbs and combos (D19)
 

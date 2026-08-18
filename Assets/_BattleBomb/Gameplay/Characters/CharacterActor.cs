@@ -35,6 +35,9 @@ namespace BattleBomb.Gameplay.Characters
         private int _lungeStepsLeft;
         private bool _attackRooted;
         private Vector3 _strikeMomentum;
+        private PlayerCondition _condition;
+        private int _hitStaggerSteps;
+        private int _hitGraceSteps;
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -48,6 +51,7 @@ namespace BattleBomb.Gameplay.Characters
 
         public AttackPhase CombatPhase => _combat.Phase;
         public AttackTuning CurrentAttack => _combat.CurrentAttack;
+        public PlayerCondition Condition => _condition;
         public float ChargeFraction => _kit == null || _kit.ChargeThresholdSteps <= 0
             ? 0f
             : Mathf.Clamp01((float)_combat.ChargeSteps / _kit.ChargeThresholdSteps);
@@ -56,8 +60,12 @@ namespace BattleBomb.Gameplay.Characters
         {
             _previous = _state;
 
+            // Staggered or downed, the player's intent goes nowhere — the body still obeys
+            // physics (knockback, gravity), it just takes no orders (task 29).
+            PlayerCommand effective = _condition.InControl ? command : PlayerCommand.Idle(frame);
+
             bool frozen = _combat.HitstopSteps > 0;
-            CombatStepResult combat = CombatMachine.Step(_combat, command, _kit, _state.IsGrounded);
+            CombatStepResult combat = CombatMachine.Step(_combat, effective, _kit, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
@@ -65,9 +73,11 @@ namespace BattleBomb.Gameplay.Characters
                 return;
             }
 
+            _condition = _condition.Step();
+
             if (combat.AttackStarted)
             {
-                BeginAttack(command, combat.Attack);
+                BeginAttack(effective, combat.Attack);
             }
 
             AttackPhase phase = _combat.Phase;
@@ -75,7 +85,7 @@ namespace BattleBomb.Gameplay.Characters
             {
                 _attackRooted = false;
                 _lungeStepsLeft = 0;
-                _state = CharacterMotor.Step(_state, command, _tuning, bounds, dt);
+                _state = CharacterMotor.Step(_state, effective, _tuning, bounds, dt);
             }
             else if (_attackRooted)
             {
@@ -92,7 +102,7 @@ namespace BattleBomb.Gameplay.Characters
                     && (phase == AttackPhase.Startup || phase == AttackPhase.Active)
                     && !_combat.CurrentAttack.ResolvesOnLanding;
                 MovementTuning tuning = stallGravity ? WithoutGravity(_tuning) : _tuning;
-                _state = CharacterMotor.Step(_state, CombatMove(command, phase), tuning, bounds, dt);
+                _state = CharacterMotor.Step(_state, CombatMove(effective, phase), tuning, bounds, dt);
                 StepAirLunge(bounds);
             }
 
@@ -105,6 +115,28 @@ namespace BattleBomb.Gameplay.Characters
         }
 
         internal void ApplyHitstop(int steps) => _combat = _combat.WithHitstop(steps);
+
+        /// <summary>
+        /// An enemy's landed hit — the seam M3's enemies call (tasks 31–33). Grace and the downed
+        /// state swallow it whole; otherwise damage, stagger, the shove, and the victim's hitstop
+        /// land together, and a damaging hit interrupts whatever swing was in flight.
+        /// </summary>
+        internal void ApplyEnemyHit(in HitResult hit)
+        {
+            if (_condition.IsInvulnerable)
+            {
+                return;
+            }
+
+            _condition = _condition.Hit(hit.Damage, _hitStaggerSteps, _hitGraceSteps);
+            if (hit.Damage > 0f)
+            {
+                _combat = CombatState.Ready;
+            }
+
+            ApplyImpulse(hit.Impulse);
+            ApplyHitstop(hit.HitstopSteps);
+        }
 
         /// <summary>A partner's shove (D21): replaces velocity, never touches health.</summary>
         internal void ApplyImpulse(Vector3 velocity)
@@ -233,6 +265,9 @@ namespace BattleBomb.Gameplay.Characters
             _source = GetComponent<IPlayerCommandSource>();
             _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
             _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
+            _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
+            _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
+            _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
         }

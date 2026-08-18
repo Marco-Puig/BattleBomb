@@ -30,7 +30,22 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("The character's combo table. Leave empty to use the default kit.")]
         [SerializeField] private CombatKitDefinition _combatKit;
 
+        [Header("Vitals")]
+        [SerializeField] private float _maxHealth = 100f;
+
+        [Tooltip("Steps of lost control after taking a hit.")]
+        [SerializeField] private int _hitStaggerSteps = 15;
+
+        [Tooltip("Steps of post-hit invulnerability. Longer than the stagger, so a crowd can never stunlock.")]
+        [SerializeField] private int _hitGraceSteps = 30;
+
         public string DisplayName => _displayName;
+
+        public float MaxHealth => Mathf.Max(1f, _maxHealth);
+
+        public int HitStaggerSteps => Mathf.Max(0, _hitStaggerSteps);
+
+        public int HitGraceSteps => Mathf.Max(0, _hitGraceSteps);
 
         public CombatKit CombatKitToRuntime() =>
             _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;

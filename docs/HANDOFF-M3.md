@@ -1,6 +1,12 @@
 # Handoff — M3: enemies
 
-> **Status — not started.**
+> **Status — in progress.** Task 28 complete and play-approved, plus three playtest-directed
+> follow-ups: the lunge works airborne (sheds carried momentum, full grounded range), knockback
+> inherits attacker momentum through a saturating curve (cap 6, half at 6 u/s — the two consts in
+> `HitApplication`), and aerials knock back ~10% harder than their ground counterparts (Michael's
+> rule, authored as data). Task 29 complete: `PlayerCondition` in Core, vitals on
+> `CharacterDefinition`, the actor gates commands while staggered/down and exposes
+> `ApplyEnemyHit` — the seam tasks 31–33 call. Task 30 (Block) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

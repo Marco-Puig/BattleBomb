@@ -47,6 +47,23 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Vitals_default_sane_and_grace_outlasts_stagger()
+        {
+            CharacterDefinition definition = ScriptableObject.CreateInstance<CharacterDefinition>();
+            try
+            {
+                Assert.That(definition.MaxHealth, Is.GreaterThan(0f));
+                Assert.That(definition.HitStaggerSteps, Is.GreaterThan(0));
+                Assert.That(definition.HitGraceSteps, Is.GreaterThan(definition.HitStaggerSteps),
+                    "Grace must outlast stagger, or recovery is a free hit and crowds stunlock.");
+            }
+            finally
+            {
+                Object.DestroyImmediate(definition);
+            }
+        }
+
+        [Test]
         public void A_fresh_definition_matches_the_default_tuning()
         {
             CharacterDefinition definition = ScriptableObject.CreateInstance<CharacterDefinition>();

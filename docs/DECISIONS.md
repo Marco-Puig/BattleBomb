@@ -341,6 +341,47 @@ if the game starts reading as a lookalike.
 
 ---
 
+## D17 — Six-verb control scheme · **Locked**
+
+Directed by Michael (2026-08-17), superseding the draft vocabulary in `docs/HANDOFF-M1.md`
+(`Attack, Elemental, Dodge, Special, Jump, Interact`) before it was ever implemented. The reference
+is Castle Crashers' control feel — within D11's "feel and structure" allowance.
+
+The complete input surface after the movement stick:
+
+| Verb | Role | Keyboard | Gamepad |
+|---|---|---|---|
+| **Light** | Basic melee combo chain; performs **Interact** when an interactable is in range | J | X (west) |
+| **Heavy** | Slower, high-commitment attack; launcher / guard-break class | K | Y (north) |
+| **Magic** | The character's element, offensively (design §4) | L | B (east) |
+| **Equipment** | Use the equipped active item — the loot game's combat verb (design §5) | I | RB |
+| **Jump** | Universal (design §2.4, D13) | Space | A (south) |
+| **Block** | Hold to guard | Left Shift | LB |
+
+**What is deliberately absent:**
+
+- **No dodge button.** The intended playstyle is forward, not passive. Evasion is jump — D13 already
+  makes it general-purpose, and §6's bosses are built on "jump-dodgeable and depth-dodgeable"
+  patterns — plus free depth movement. A dodge button would duplicate both and cost the seventh
+  button a phone screen does not have.
+- **No interact button.** Light is contextual: near an interactable, the same press interacts.
+- **No special button.** High-impact, cooldown-gated expression lives inside Magic (charged or held
+  casts) and Equipment (item actives). Depth stays in gear, not in inputs (pillar 2).
+
+**Block's design intent:** active defence — timed-block rewards and cancel windows are the M2-era
+design space. A turtle button would fight the forward playstyle this scheme exists to serve.
+
+**Mobile constraint — binding on all future combat design:** one thumb operates every button on a
+touch screen, so combos are **sequences, holds, and stick+button flavours — never two face buttons
+pressed simultaneously**. Chorded inputs are unperformable on touch and must not be designed.
+
+**Supersedes / amends:** the design doc's §3 slot table loses its "Movement ability (dodge/dash)"
+slot and its "Special" slot per the above, and gains Heavy, Equipment, and Block; D9.3's ability-set
+enumeration ("elemental attack, movement ability, special") is refined accordingly. D13/D14 are
+untouched — their defensive verbs were always jump and depth, never a button.
+
+---
+
 ## Open
 
 - **O7 — Co-op loot distribution.** Shared drops create friction between two players; instanced drops

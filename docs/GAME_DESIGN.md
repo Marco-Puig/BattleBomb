@@ -77,13 +77,34 @@ hitstop duration, and i-frame windows are set by feel during M2, then recorded h
 Every character shares **one ability framework** and the same slots. They differ in animation,
 element, VFX, and small tuning values — the Castle Crashers model, stated explicitly in the hook.
 
-| Slot | Role |
-|---|---|
-| Basic attack | Grounded melee combo chain. The default verb. |
-| Elemental attack | The character's element expressed offensively. |
-| Movement ability | Traversal and repositioning; dodge/dash-class. |
-| Special | High-impact, resource- or cooldown-gated. |
-| Jump | Shared, universal (§2.4). |
+| Slot | Verb | Role |
+|---|---|---|
+| Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
+| Heavy attack | **Heavy** | Slower, high-commitment; launcher / guard-break class. |
+| Elemental attack | **Magic** | The character's element expressed offensively (§4). |
+| Equipment use | **Equipment** | The equipped active item — the gear system (§5) reaching into combat. |
+| Guard | **Block** | Hold to guard. Active defence by design: timed-block rewards, not turtling. |
+| Jump | **Jump** | Shared, universal (§2.4). |
+
+### 3.1 Controls
+
+Six verbs after the movement stick — the complete input surface, sized for one-thumb mobile play
+(full mapping and reasoning: D17):
+
+| Verb | Keyboard | Gamepad |
+|---|---|---|
+| Move | WASD | Left stick |
+| Light | J | X (west) |
+| Heavy | K | Y (north) |
+| Magic | L | B (east) |
+| Equipment | I | RB (right shoulder) |
+| Jump | Space | A (south) |
+| Block | Left Shift (hold) | LB (left shoulder) |
+
+There is **no dodge button** — evasion is jump (§2.4) and free depth movement (§2.1); the playstyle
+is deliberately forward. There is **no interact button** — Light is contextual. **Combos are
+sequences, holds, and stick+button flavours, never two face buttons pressed at once:** one thumb
+operates every button on a touch screen, so chorded inputs are out by construction (D17).
 
 **Implementation rule:** a character is a data asset — visual set, element, per-slot ability variant,
 base stat weights. Any design requiring a bespoke script per character is wrong and should be pushed

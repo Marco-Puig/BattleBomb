@@ -15,10 +15,9 @@ Recorded because they are load-bearing and a future session will need the reason
 from `GAME_DESIGN.md`; none contradicts a locked decision in `DECISIONS.md`.
 
 1. **The button set matches the ability slot table (§3), and nothing else.**
-   `Attack, Elemental, Dodge, Special, Jump, Interact`. The current `Heavy`, `Ability1`, `Ability2`
-   were placeholders invented during M0 scaffolding before the design doc was consulted; `Heavy` in
-   particular adds an input verb the design does not have, against pillar 1 ("combat is simple").
-   Task 7 corrects this. *Flagged for Michael — this is a design-surface change, not just a rename.*
+   *Resolved by Michael, 2026-08-17 — recorded as D17, which supersedes the vocabulary this document
+   originally drafted here.* The verbs are `Light, Heavy, Magic, Equipment, Jump, Block`; Interact
+   folds into Light contextually and there is no dodge. Task 7 below is written against D17.
 
 2. **Jump lands in M1, not M2.** §2.4 makes jump a general-purpose mechanic. It is movement, so it
    belongs to the movement motor; bolting a vertical axis onto a finished horizontal motor later is
@@ -50,18 +49,18 @@ from `GAME_DESIGN.md`; none contradicts a locked decision in `DECISIONS.md`.
 
 ## Task 7 — Align the command vocabulary with the design
 
-**Goal:** the six buttons the game actually has.
+**Goal:** the six buttons the game actually has (D17).
 
 `CommandButtons` becomes exactly:
 
 ```csharp
 None      = 0,
-Attack    = 1 << 0,   // basic melee combo
-Elemental = 1 << 1,   // the character's element, offensively
-Dodge     = 1 << 2,   // movement ability, dodge/dash-class
-Special   = 1 << 3,   // cooldown-gated high impact
+Light     = 1 << 0,   // basic melee combo; performs Interact in context
+Heavy     = 1 << 1,   // slow, high-commitment; launcher / guard-break class
+Magic     = 1 << 2,   // the character's element, offensively
+Equipment = 1 << 3,   // the equipped active item (§5)
 Jump      = 1 << 4,   // universal (§2.4)
-Interact  = 1 << 5,
+Block     = 1 << 5,   // hold to guard; active defence, not turtling
 ```
 
 Then update, in this order:
@@ -69,28 +68,26 @@ Then update, in this order:
 1. `Core/Players/CommandButtons.cs` — the enum above, keeping the existing comment style.
 2. `Gameplay/Players/PlayerActions.cs` — constants renamed to match.
 3. `Gameplay/Players/InputSystemCommandSource.cs` — the `AddButton` calls.
-4. `Input/BattleBombControls.inputactions` — edit the JSON in place, preserving its formatting and
-   giving any genuinely new entry a unique `id` (extend the existing
-   `b471b0bb-0000-4000-8000-0000000000XX` scheme; **no two ids may collide**):
+4. `Input/BattleBombControls.inputactions` — edit the JSON in place, preserving its formatting.
+   The old and new sets are both seven actions, so **every action renames in place keeping its
+   existing `id`** — nothing is added or deleted and no new ids are needed:
 
    | Action | Keyboard | Gamepad |
    |---|---|---|
-   | Move | WASD composite *(unchanged)* | left stick *(unchanged)* |
-   | Attack | `<Keyboard>/j` | `<Gamepad>/buttonWest` |
-   | Elemental *(was Heavy)* | `<Keyboard>/k` | `<Gamepad>/buttonNorth` |
-   | Special *(was Ability1)* | `<Keyboard>/l` | `<Gamepad>/rightShoulder` |
-   | Dodge | `<Keyboard>/leftShift` | `<Gamepad>/buttonEast` |
-   | Jump *(new)* | `<Keyboard>/space` | `<Gamepad>/buttonSouth` |
-   | Interact | `<Keyboard>/e` | `<Gamepad>/dpad/up` |
+   | Move *(unchanged)* | WASD composite | left stick |
+   | Light *(was Attack)* | `<Keyboard>/j` | `<Gamepad>/buttonWest` |
+   | Heavy *(unchanged)* | `<Keyboard>/k` | `<Gamepad>/buttonNorth` |
+   | Magic *(was Ability1)* | `<Keyboard>/l` | `<Gamepad>/buttonEast` |
+   | Equipment *(was Ability2)* | `<Keyboard>/i` | `<Gamepad>/rightShoulder` |
+   | Jump *(was Dodge)* | `<Keyboard>/space` | `<Gamepad>/buttonSouth` |
+   | Block *(was Interact)* | `<Keyboard>/leftShift` | `<Gamepad>/leftShoulder` |
 
-   Delete the `Ability2` action and both of its bindings. Rename in place where an action is renamed —
-   **keep its existing `id`**, so any prefab already referencing it survives.
-5. Any test or the debug overlay that names `Heavy` / `Ability1` / `Ability2`.
+5. Any test or the debug overlay that names the old verbs.
 
-**Done when:** `run_tests` green, console clean, and in Play mode the overlay shows Jump flagging on
-space and Dodge on left shift.
+**Done when:** `run_tests` green on the vocabulary tests, console clean, and in Play mode the overlay
+shows Jump flagging on space and Block on left shift.
 
-**Commit:** `M1: align command buttons with the ability slot table`
+**Commit:** `M1: six-verb control scheme (D17)`
 
 ---
 

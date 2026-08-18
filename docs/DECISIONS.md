@@ -552,6 +552,11 @@ difficulty scales with player count remains an M3 tuning question, not a design 
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
-- **O2 — Git LFS.** Not enabled. `git lfs` is not installed locally and the existing pack is
-  ~1.5 GiB. Revisit before large binary art starts landing on `Redo`; enabling later means a history
-  rewrite, so decide before the art volume grows. D22's elite armor art raises the urgency.
+- **O2 — Git LFS: deliberately deferred (Michael, 2026-08-18).** Working policy: a few hi-res
+  hero assets plus lightweight placeholders live in plain git. Rules that keep this safe — no file
+  near 100 MB (GitHub hard-rejects; warns at 50 MB), hero binaries are commit-rarely (iterate
+  outside the repo, commit keepers — every committed version lives in history forever), and one
+  hi-res source per asset (Unity's import settings handle per-platform compression). *Correction
+  to the earlier note:* enabling LFS later for **new** files is a one-line `.gitattributes` change
+  with no history rewrite; only retroactive migration rewrites. Tripwire to flip it on: any asset
+  wanting >50 MB, or binary churn growing the pack (currently 1.51 GiB) by ~500 MB.

@@ -79,6 +79,12 @@ manual steps. Useful calls:
 **Verify with `run_tests` before claiming anything works.** EditMode is green or the change is not
 done. PlayMode tests are deferred until scenes stabilise (D7).
 
+**Live verification protocol (Michael's rule):** for slow-paced checks — positions, registrations,
+settled states — drive the editor yourself with synthetic input and `eval` sampling. For anything
+with fast motion (jumps, dashes, combat actions, hit feel), do **not** slow-motion-sample your way
+to it: Michael watches the screen in real time, so hand him a short checklist of what to verify and
+let him confirm what he saw. Spawning subagents is fine when a task genuinely benefits from one.
+
 ---
 
 ## Progress

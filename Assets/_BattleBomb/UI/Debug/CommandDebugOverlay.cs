@@ -15,11 +15,20 @@ namespace BattleBomb.UI.Debug
 
         private readonly List<int> _ids = new List<int>();
 
+        private GUIStyle _style;
+
         private void OnGUI()
         {
             if (_driver == null)
             {
                 return;
+            }
+
+            int fontSize = Mathf.Max(14, Screen.height / 45);
+            if (_style == null || _style.fontSize != fontSize)
+            {
+                _style = new GUIStyle(GUI.skin.label) { fontSize = fontSize };
+                _style.normal.textColor = Color.white;
             }
 
             _ids.Clear();
@@ -30,12 +39,21 @@ namespace BattleBomb.UI.Debug
 
             _ids.Sort();
 
+            if (_ids.Count == 0)
+            {
+                return;
+            }
+
+            float row = fontSize + 8f;
+            float width = fontSize * 30f;
+            GUI.Box(new Rect(8f, 8f, width, 12f + row * _ids.Count), GUIContent.none);
+
             for (int i = 0; i < _ids.Count; i++)
             {
                 PlayerCommand command = _driver.Commands[_ids[i]];
                 string line =
                     $"{new PlayerId(_ids[i])}  Move ({command.Move.x:0.00}, {command.Move.y:0.00})  Held [{command.Held}]";
-                GUI.Label(new Rect(10f, 10f + i * 22f, 640f, 20f), line);
+                GUI.Label(new Rect(16f, 14f + i * row, width - 16f, row), line, _style);
             }
         }
     }

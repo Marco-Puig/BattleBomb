@@ -1,0 +1,469 @@
+# Handoff — M3: enemies
+
+> **Status — not started.**
+
+Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
+re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are
+not repeated here. The design authority is **D22** (archetypes × regions × ranks, elites), **D23**
+(loot flow), **D25** (partner revive), and **D19**'s Block paragraph — nothing below overrides
+them. Check `editor_status` before any recompile or synchronous test run (Michael plays between
+sessions), and follow the live-verification protocol in `CLAUDE.md`: slow-paced checks by `eval`,
+fast motion by Michael's checklist.
+
+**M3 is done when:** two players can fight a spawned, mixed enemy group and every archetype applies
+its designed pressure — **grunts** crowd through the same depth-limited melee rules the players
+live under, **ranged** pokes across depth and punishes standing still, a **caster** throws
+elemental attacks that Block never stops, and a **brute** forces jump- and depth-dodges with long
+telegraphs. Players take damage and can be staggered, downed, revived by their partner (D25), and
+reset when the attempt fails. Block is live with its perfect-timed window. Enemies telegraph,
+flinch, die, and roll drops through D23's seam. The aerial pop and slam ride in from M2. Every
+piece of new logic lives in Core under EditMode tests, and `run_tests` is green.
+
+---
+
+## Decisions taken while planning this milestone
+
+Recorded because they are load-bearing and a future session will need the reasoning.
+
+1. **Enemies are commands through the same motor.** An enemy brain emits movement intent and attack
+   triggers; the motor beneath is the player's `CharacterMotor`, exactly as `TrainingDummy` already
+   proved. Knockback, launch, gravity, ground snap, and arena clamping are inherited, not
+   duplicated — and a brain that only emits intent is network-shaped (D10) by construction.
+
+2. **The enemy attack cycle is its own small machine, but it reuses `AttackTuning`.** Enemies do
+   not run the player's combo machine — they have no combos. Their cycle is
+   Approach → Telegraph → Active → Recovery → Cooldown, and the telegraph **is** the attack's
+   `StartupSteps`, authored long. One tuning vocabulary for every attack in the game.
+
+3. **Enemies resolve hits with the same `HitResolver`.** D22 says the grunt is "depth-limited like
+   the player (§2.2)" — so it literally uses the player's reach geometry. No parallel resolver.
+
+4. **A perfect block staggers any attacker — including the brute.** The brute is otherwise
+   uninterruptible (flinching would delete his identity as the telegraphed threat), so the
+   perfect-timed block is the *only* interrupt that works on him. That makes the D19 reward a
+   jackpot with a real use, and it is consistent: the perfect block staggers, no exceptions.
+
+5. **Block guards the front only.** A hit from behind the facing lands normally. Omnidirectional
+   blocking would make turtling in a crowd too strong, and D19 prices blocking by inaction — a
+   price that only bites if positioning still matters while guarding. Michael vetoes this live if
+   it feels wrong.
+
+6. **Players get a short post-hit grace.** A few steps of invulnerability after taking a hit, so a
+   crowd of grunts cannot stunlock a player to death from one mistake. Enemies get no grace — the
+   player's crowd control (cleaves, launcher, slam) is supposed to dominate a group.
+
+7. **Revive is a short interruptible channel.** D25 says "walking over and pressing Light" — the
+   press starts a channel of a second or two during which the reviver cannot act, and taking a hit
+   interrupts it. That keeps enemy pressure meaningful during a revive without inventing new verbs.
+
+8. **Elites defer to M6, but the seam ships now.** An elite's entire payoff is loot (D22 — it
+   drops what it wears), which does not exist until M4–M6. The death event carries an `IsElite`
+   flag from day one so nothing is retrofitted; no elite spawns until the loot loop can pay it.
+
+9. **Rank is a number on the enemy definition, nothing more.** It scales stats and feeds D23's drop
+   chance. The composition ladder — which ranks appear where in a level — is encounter authoring
+   and lands with chapters (M7). Same for difficulty multipliers: the *slot* exists in the drop
+   maths, but the difficulty system itself is M7's.
+
+10. **Drops are placeholder pickups proving D23's flow.** One roll per kill in Core, a physical
+    pickup in the world, first grabber keeps it — chance scaling with rank, the whole shape — but
+    the pickup is an abstract token until M4's item generation exists. XP is likewise a payload on
+    the death event with no ladder consuming it; D24's leveling arrives with M4's stat system.
+
+11. **Deterministic randomness enters Core here.** The drop roll is the project's first random
+    number. Core cannot touch Unity `Random` (rule 1), so this milestone introduces a small seeded
+    RNG (xorshift-class) injected where needed — which is exactly what D10's determinism wants
+    anyway. Gameplay owns the seed.
+
+12. **Attempt-over is a sandbox reset.** Both players down (or solo down) → short beat, then
+    players and encounter respawn. Real run lifecycle — checkpoints, retries, win/loss — is
+    mode-owned (D4) and arrives with M7. Do not build a checkpoint system now.
+
+13. **Placeholder enemies stay abstract.** They are named Grunt, Ranged, Caster, Brute — never
+    skeletons, goblins, or anything lore-flavoured. Region families resolve with the story (§9),
+    and placeholder lore only gets thrown away.
+
+---
+
+## Task 28 — Aerials: the pop and the slam
+
+M2's task 26, slipped here exactly as its planning decision 10 pre-authorised. D19's aerial pair,
+first because it completes the player's kit before anything starts hitting back.
+
+- `CombatMachine.Step` gains an `isGrounded` parameter (kept pure — the caller passes it). Airborne
+  Light selects the kit's **AerialLight**; airborne Heavy selects **AerialHeavy**, the slam.
+- **Jump→Light** pops the struck target up briefly — a small `LaunchSpeed`, deliberately short of
+  juggling (extended air tech is a future skill layer, not M3's).
+- **Jump→Heavy** slams: the attacker descends fast (actor motion policy, like the M2 air-stall),
+  and the hit resolves **on the landing step** as a radial hit centred on the landing point — the
+  grounded shadow is the aiming reticle (D14). `HitResolver` gains a radial variant (planar radius
+  plus the usual vertical tolerance).
+- `CombatKit` gains the two aerial attacks; `CombatKitDefinition` and `DefaultKit.asset` gain their
+  authored entries. Paper values: pop ~4/3/8 steps, damage 4, launch ~5; slam damage ~14, radius
+  ~2.2, strong knockback, hitstop 5.
+
+**Tests:** airborne Light selects the aerial attack and grounded combos are unchanged; the slam
+resolves at the landing position against multiple targets; the radial resolver respects the
+vertical tolerance and `MaxTargets`.
+
+**Done when:** tests green, and Michael's checklist confirms the pop's air moment and the slam
+landing where the shadow said it would — fast motion, his eyes, not frame sampling.
+
+**Commit:** `M3: aerial pop and slam`
+
+---
+
+## Task 29 — Core: the player can be hurt
+
+**Files:** `Core/Combat/PlayerCondition.cs` (name flexible), plus tests. Wired in
+`Gameplay/Characters/CharacterActor.cs`.
+
+Players gain `Health` (the Task 21 struct, reused) and a condition layer around it:
+
+```csharp
+public readonly struct PlayerCondition
+{
+    Health Health;
+    int    StaggerSteps;    // > 0: control lost — the actor feeds the motor Idle,
+                            // the combat machine resets to Ready, any revive channel breaks
+    int    GraceSteps;      // > 0: post-hit invulnerability (planning decision 6)
+    bool   IsDown;          // health depleted — no actions until revived (Task 35)
+}
+```
+
+Taking a hit while not in grace: damage through the full §4 pipeline (player resistance is
+`Neutral` until gear exists, M4), knockback through the motor as impulse (mechanism already exists
+from D21's shove), stagger steps from the attack, grace steps started. While `IsDown`, nothing
+lands and nothing is targetable (Task 31's selection skips downed players).
+
+**Tests:** damage reaches player health through the pipeline; a hit during grace does nothing; a
+hit during stagger extends nothing it shouldn't (no stunlock: grace outlasts stagger by design);
+depletion sets `IsDown`; stagger counts down and control returns; determinism.
+
+**Commit:** `M3: player health, stagger, and the downed state in Core`
+
+---
+
+## Task 30 — Core: Block and the perfect window
+
+**Files:** `Core/Combat/HitKind.cs`, `Core/Combat/GuardResolver.cs`, `CombatMachine` extension,
+plus tests. The D19 paragraph is the spec; §2.7 restates it.
+
+```csharp
+public enum HitKind { Kinetic, Projectile, Magic }   // Block stops the first two, never Magic
+
+public enum GuardOutcome { Hit, Blocked, PerfectBlocked }
+
+public static class GuardResolver
+{
+    // Defender guarding? Hit from the front? Kind blockable? Guard young enough for perfect?
+    public static GuardOutcome Resolve(in CombatState defender, Facing defenderFacing,
+                                       Vector3 defenderPosition, Vector3 attackOrigin,
+                                       HitKind kind, int perfectWindowSteps);
+}
+```
+
+- The combat machine learns **Guarding**: Block held from Ready enters it, release returns to
+  Ready. `GuardSteps` counts up from the press — the perfect window is `GuardSteps` at or under
+  the threshold on the step the hit arrives. No attacks start while Guarding; Block pressed
+  mid-attack does nothing (no block-cancels in M3 — that is D19's "cancel windows" design space,
+  deliberately untouched).
+- **Blocked:** zero damage, zero stagger, a reduced shove is fine. **PerfectBlocked:** zero
+  everything for the defender, and the *attacker* receives stagger steps — every attacker, brute
+  included (planning decision 4). **Magic:** always `Hit`, regardless of guard (the anti-turtle).
+- Front-only: the attack origin must be on the facing side, same behind-tolerance idea as
+  `HitResolver` (planning decision 5).
+- `AttackTuning` (or the enemy tuning that wraps it) carries the attack's `HitKind`; every player
+  melee attack and D21 shove is `Kinetic`.
+
+Paper values: perfect window 8 steps; perfect-block stagger on the attacker 45 steps.
+
+**Tests:** held Block from Ready guards and release ends the guard; a Kinetic and a Projectile hit are
+Blocked, Magic never is; a hit inside the window is PerfectBlocked, one step past is merely
+Blocked; a hit from behind lands regardless of guard; guarding prevents attack starts; the machine
+stays deterministic.
+
+**Commit:** `M3: Block and the perfect window in Core`
+
+---
+
+## Task 31 — Core: the enemy brain
+
+**Files:** `Core/Enemies/EnemyArchetype.cs`, `Core/Enemies/EnemyTuning.cs`,
+`Core/Enemies/EnemyState.cs`, `Core/Enemies/EnemyBrain.cs`, `Core/Enemies/TargetSelection.cs`,
+plus tests. A new Core folder, not a new assembly.
+
+```csharp
+public enum EnemyArchetype { Grunt, Ranged, Caster, Brute }   // D22 — the four pressures
+
+public readonly struct EnemyTuning
+{
+    EnemyArchetype Archetype;
+    float  MoveSpeed;
+    float  PreferredRangeX;    // grunt/brute: attack reach; ranged/caster: standoff distance
+    AttackTuning Attack;       // StartupSteps IS the telegraph — authored long (decision 2)
+    HitKind Kind;              // grunt/brute Kinetic, ranged Projectile, caster Magic
+    Element Element;           // the region skin's element rides here (None until M5 matters)
+    int    CooldownSteps;      // beat between attacks
+    bool   Interruptible;      // brutes: false (decision 4)
+    int    StaggerSteps;       // flinch length when interrupted
+    float  ProjectileSpeed;    // ranged/caster only
+}
+
+public enum EnemyPhase { Approach, Telegraph, Active, Recovery, Cooldown, Staggered }
+
+public static class EnemyBrain
+{
+    public static EnemyStepResult Step(in EnemyState state, in EnemyPerception view,
+                                       in EnemyTuning tuning);
+    // A player hit interrupts via a separate pure transition:
+    public static EnemyState Interrupted(in EnemyState state, in EnemyTuning tuning);
+    // → Staggered for StaggerSteps if Interruptible, unchanged otherwise.
+}
+
+public readonly struct EnemyPerception   // everything the brain is allowed to know
+{
+    Vector3 SelfPosition; Facing SelfFacing;
+    bool    HasTarget; Vector3 TargetPosition;
+}
+
+public readonly struct EnemyStepResult
+{
+    EnemyState State;
+    Vector2    MoveIntent;        // becomes the stick of a synthesized command (decision 1)
+    bool       AttackStarted;     // telegraph opened this step
+    bool       HitWindowOpened;   // same contract as CombatStepResult — resolve hits once, here
+    bool       ProjectileFired;   // ranged/caster: the driver spawns a projectile this step
+}
+```
+
+Approach behaviour per archetype — this is the whole difference between them:
+
+- **Grunt:** close on X to `PreferredRangeX`, close depth to within the attack's `DepthTolerance`
+  (it lives under §2.2 like the player), attack when in reach and off cooldown.
+- **Ranged:** hold a standoff band — retreat when the target closes, advance when it flees. Fires
+  across any depth (§2.2's ranged identity): no depth-closing at all.
+- **Caster:** ranged's movement with a longer telegraph and cooldown — its hit is unblockable, so
+  it must always be visibly answerable by depth or jump instead.
+- **Brute:** grunt's approach, slower, with the long telegraph and no flinch.
+
+`TargetSelection.Choose(self, playerPositions, playerDowned, currentTarget, switchMargin)` is
+sticky: keep the current target unless it is downed or gone, or another player is closer by more
+than the margin — hysteresis so a co-op pair straddling an enemy doesn't cause flip-flopping.
+Downed players are never selected. Players come to the driver from `PlayerRegistry` — a brain
+hardcoded to one player is the D10 bug.
+
+During hitstop the enemy state freezes exactly as the player machine does.
+
+**Tests:** each archetype's approach behaviour (grunt closes depth, ranged holds standoff and
+never closes depth, brute is slow); telegraph → active → recovery → cooldown timeline; the grunt
+does not open a hit window out of reach; `Interrupted` staggers a grunt mid-telegraph and does not
+stagger a brute; target stickiness and the downed-player exclusion; determinism — identical
+perception sequences produce identical states.
+
+**Commit:** `M3: the enemy brain in Core`
+
+---
+
+## Task 32 — Core: projectiles
+
+**Files:** `Core/Combat/ProjectileState.cs`, `Core/Combat/ProjectileSimulation.cs`, plus tests.
+
+```csharp
+public readonly struct ProjectileState
+{
+    Vector3 Position; Vector3 Velocity;    // aimed at the target's position when fired; no homing
+    float   Damage;  Element Element;  HitKind Kind;   // Projectile (blockable) or Magic (not)
+    int     LifeSteps;                     // despawn cap
+}
+
+public static class ProjectileSimulation
+{
+    public static ProjectileState Step(in ProjectileState p);   // straight line, fixed step
+    public static int HitTest(in ProjectileState p, IReadOnlyList<Vector3> targets, float radius);
+}
+```
+
+Projectiles cross depth freely — that is the entire mechanical identity of ranged (§2.2), so the
+velocity simply points at where the target was at fire time, depth included. A hit runs the target
+through `GuardResolver` (Task 30): a blocked projectile despawns harmlessly; Magic ignores the
+guard. Life expiry despawns.
+
+**Tests:** straight-line flight; the hit test respects the radius; depth crossing (a projectile
+fired from deep hits a shallow target); expiry; determinism.
+
+**Commit:** `M3: projectiles in Core`
+
+---
+
+## Task 33 — Gameplay: enemy authoring, actors, and the spawner
+
+**Files:** `Gameplay/Data/EnemyDefinition.cs`, `Gameplay/Characters/EnemyActor.cs`,
+`Gameplay/Combat/EnemySpawner.cs`, `Gameplay/Simulation/SimulationDriver.cs` (extend).
+
+- **`EnemyDefinition`** (ScriptableObject → `.ToRuntime()` struct, the Task 22 pattern): archetype
+  and every `EnemyTuning` number, max health, **rank** (an int — decision 9), **elemental
+  resistances** (four floats → `ElementalMultipliers`), element, XP reward. This is D22's
+  consequence made real: a new enemy — and later a whole region skin — is an asset, never a class.
+  Resistances ship as authored, tested data now; they become player-visible when elemental damage
+  exists (M5). Author four assets under `Data/Enemies/`: Grunt, Ranged, Caster, Brute — abstract
+  names only (decision 13). Paper values (60 Hz):
+
+  | | HP | speed | telegraph | active | recovery | cooldown | damage | reach | notes |
+  |---|---|---|---|---|---|---|---|---|---|
+  | Grunt | 30 | 3.0 | 18 | 4 | 20 | 45 | 6 | 1.4 | stagger 20 when flinched |
+  | Ranged | 20 | 2.5 | 24 | 1 | 12 | 90 | 5 | — | standoff 6–9, projectile speed 8/s |
+  | Caster | 25 | 2.2 | 36 | 1 | 16 | 150 | 10 | — | Magic, projectile speed 6/s |
+  | Brute | 90 | 1.8 | 45 | 6 | 30 | 60 | 18 | 2.2 | uninterruptible, heavy knockback |
+
+  Paper values, same status as M2's: Michael's play replaces them, do not defend them.
+
+- **`EnemyActor`**: brain + motor + `Health`, registered in `TargetRegistry` so player attacks
+  find it — this is the dummy pattern promoted, and `TrainingDummy` stays as a prefab for tuning
+  but leaves the scene. The brain's `MoveIntent` becomes a synthesized `PlayerCommand` into the
+  motor; player hits route through `HitApplication` as today, plus `EnemyBrain.Interrupted`.
+- **`EnemySpawner`**: an authored list of (definition, position, spawn-delay steps). It spawns,
+  tracks its brood, and can `Reset()` for Task 35's attempt-over. Nothing procedural — endless
+  mode's generator is a different milestone (D12).
+- **Driver:** fixed step order, for determinism: players (registry order) → enemies (registry
+  order) → projectiles → hit resolution → deaths. Enemy hit windows resolve against players via
+  the same `HitResolver` (decision 3), then `GuardResolver`, then the player's condition (Task
+  29). The driver builds each brain's `EnemyPerception` — a brain never touches the scene; if a
+  brain seems to need more knowledge, extend the perception struct deliberately.
+
+**Done when:** `run_tests` green; in Play mode (slow checks by `eval`) spawned enemies register,
+approach, and a grunt's landed hit reduces a player's health.
+
+**Commit:** `M3: enemies authored, spawned, and stepped by the driver`
+
+---
+
+## Task 34 — Presentation and UI: reading the fight
+
+**Files:** `Presentation/Enemies/EnemyVisual.cs` and material/prefab work,
+`Presentation/Enemies/TelegraphTell.cs`, projectile visuals, `UI/Combat/PlayerHealthBars.cs`.
+
+- **Archetype silhouettes:** four visibly distinct placeholder bodies (shape and colour — abstract,
+  decision 13), each with the D15 shadow-proxy capsule. An enemy without a grounded shadow is
+  invisible to the game's primary spatial cue (D14) — that rule applies to placeholders too.
+- **The telegraph tell is the point of this milestone's presentation.** During Telegraph the enemy
+  must read unambiguously: colour ramp / windup pose scale on the body, and for the brute a ground
+  marker at the impact zone. The caster's tell gets the most contrast — its hit ignores Block, so
+  the telegraph is the player's only defence.
+- **Projectiles cast grounded shadows.** A projectile's depth is combat information (D14): a
+  simple blob under each one, moving with it.
+- **Hurt feedback:** players reuse `HitFlash`; enemy→player hits pop damage numbers (D20 — every
+  hit, both directions); a perfect block deserves a distinct flash/sound-slot so the reward is
+  felt.
+- **`PlayerHealthBars`:** minimal per-player health readout, observe-only, styled like
+  `DamageNumbers` (serialized size — the settings menu binds later).
+
+**Done when:** Michael's checklist — telegraph readability per archetype at real speed, projectile
+shadows, damage numbers both ways, the perfect-block moment. His eyes, not frame sampling.
+
+**Commit:** `M3: enemy presentation and player health UI`
+
+---
+
+## Task 35 — Downed, revive, and the attempt reset
+
+**Files:** `Core/Combat/ReviveChannel.cs` (plus tests), `CharacterActor` wiring, spawner/driver
+reset, presentation for the downed pose and channel progress.
+
+- **Downed** (Task 29's `IsDown`): the actor ignores commands, the visual drops flat/tinted,
+  enemies retarget (Task 31 already excludes downed players).
+- **Revive — D25 exactly:** Light is contextual (D17), and a downed partner is the game's first
+  interactable. Within revive range of a downed partner, Light starts a **channel** (paper: 90
+  steps) instead of an attack; the channel is Core state with tests — progress, broken by the
+  reviver being staggered or leaving range, completing into the partner at 50% health with a short
+  grace (Task 29's mechanism reused). The reviver cannot attack or block mid-channel.
+- **Attempt over:** both down in co-op, or down solo → a short beat, then the sandbox resets —
+  players respawned full, spawner `Reset()`. A placeholder by design (decision 12); no checkpoint
+  system.
+- **UI:** a progress ring/bar over the channel, and a "partner down" hint pointing the living
+  player at the downed one.
+
+**Tests:** the channel's full timeline; interruption by stagger and by range; the revived state
+(half health, grace, standing); contextual Light prefers the revive over an attack inside range;
+both-down detection; determinism.
+
+**Commit:** `M3: downed players, partner revive, and the attempt reset`
+
+---
+
+## Task 36 — Death and drops: the D23 seam
+
+**Files:** `Core/Loot/DeterministicRandom.cs`, `Core/Loot/DropRoll.cs` (plus tests),
+`Gameplay/Loot/DropPickup.cs`, driver/spawner death flow.
+
+- **Enemy death:** health depleted → brief dying beat (corpse fade is presentation) → despawn and
+  a single `EnemyDied` event raised inside the fixed step: enemy spec (rank, XP payload — nothing
+  consumes XP until M4, decision 10), `IsElite` (always false in M3 — decision 8), and position.
+- **`DeterministicRandom`:** the project's first RNG — small, seeded, xorshift-class, in Core,
+  injected (decision 11). Unity `Random` stays forbidden.
+- **`DropRoll`:** D23's shape as a pure function — inputs (rank, story progress, difficulty,
+  active multipliers, elite bonus), one roll per kill: first *whether* (chance scales with rank),
+  then *quality* (scales with progress × difficulty × multipliers, elite bonus on top). Quality is
+  computed and carried even though M3 has no items to apply it to — the function signature is the
+  seam M4/M6 fill. Paper chance: `10% + 5% × rank`, capped sensibly.
+- **`DropPickup`:** the roll succeeding spawns a placeholder token in the world at the corpse —
+  free-grab, first player within grab radius keeps it, resolved inside the fixed step so
+  simultaneous grabs are deterministic (D23: the couch chaos is the feature). A per-player grab
+  count on the HUD proves the flow end to end.
+
+**Tests:** the RNG is deterministic from a seed; chance scales with rank and clamps; quality
+responds to each input independently and compounds; elite bonus applies; one roll per death;
+grab assignment picks exactly one player.
+
+**Commit:** `M3: death, the drop roll, and free-grab pickups`
+
+---
+
+## Task 37 — Soft character separation
+
+**Files:** `Core/Movement/BodySeparation.cs`, plus tests; applied by the driver.
+
+Deferred from M1, due now that crowds exist: overlapping bodies (enemy-enemy, enemy-player,
+player-player) push gently apart so a group never stacks into one point. An explicit Core-defined
+seam, exactly as M1 recorded — **never a Rigidbody or the physics engine**.
+
+- Pairwise, X and Z only, never Y; push speed capped low so it reads as crowding, not force.
+- Knockback and launches dominate: a body moving fast is not separated against its motion — the
+  shove and the launcher must never feel cushioned.
+- Applied after all motors step, before hit resolution, in deterministic (registry) order.
+
+**Tests:** two overlapped bodies separate; separated bodies stay put; the push never exceeds its
+cap; Y untouched; a fast-moving body is left alone; determinism.
+
+**Commit:** `M3: soft character separation`
+
+---
+
+## Task 38 — Close out M3
+
+1. Full `run_tests` — report the summary line.
+2. **Michael's session** — the first real fight. His checklist: each archetype's pressure felt
+   (crowded by grunts, punished for standing still, punished for turtling, forced to dodge the
+   brute), telegraph readability, Block and the perfect-block moment, being downed and revived
+   under pressure, the attempt reset, drop grabs racing the partner, the aerial pair in a real
+   crowd. Iterate the Task 33 asset numbers live; anything settled gets recorded, the rest stays
+   paper per §2.5's deferral.
+3. Update the progress table in `CLAUDE.md`: M3 → complete, M4 → next.
+4. Update this file's status header, and record anything that felt wrong to build.
+
+**Commit:** `M3: enemies complete`
+
+---
+
+## Escalate rather than solve
+
+- Any need for a new assembly, `.asmdef` reference, or third-party package — including any
+  pathfinding urge. The plane is open ground; straight-line steering is enough for M3, and
+  obstacle avoidance is a future milestone's problem if it ever exists.
+- Any urge to give a brain scene knowledge beyond `EnemyPerception`, or Presentation a write path.
+- Anything touching Magic, mana, statuses and reactions (M5), item generation or inventory (M4/M6),
+  elites actually spawning (M6), encounter composition ladders or difficulty tiers (M7).
+- Any temptation to name or theme placeholder enemies — region families arrive with the story (§9).
+- Real animation or art direction — telegraphs and silhouettes here are explicitly placeholder.
+- If enemy authoring starts wanting a per-archetype C# subclass, stop — that is the pillar-3
+  violation D22 exists to prevent; the archetype switch lives in one brain, driven by data.

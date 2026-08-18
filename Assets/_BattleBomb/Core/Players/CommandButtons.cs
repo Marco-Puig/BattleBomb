@@ -5,7 +5,8 @@ namespace BattleBomb.Core.Players
     /// <summary>
     /// Button state carried by a <see cref="PlayerCommand"/>. Packed as flags so a command stays a
     /// small, copyable value — a remote or replayed command is the same shape as a local one (D10).
-    /// The six verbs are the game's complete input vocabulary (D17).
+    /// The five verbs are the game's complete input vocabulary (D17 as amended by D26 — Block was
+    /// cut for the mobile control budget; defence is the defence stat and movement).
     /// </summary>
     [Flags]
     public enum CommandButtons : uint
@@ -16,6 +17,5 @@ namespace BattleBomb.Core.Players
         Magic     = 1 << 2,
         Equipment = 1 << 3,
         Jump      = 1 << 4,
-        Block     = 1 << 5,
     }
 }

@@ -12,19 +12,18 @@ namespace BattleBomb.Tests.EditMode.Acceptance
 {
     /// <summary>
     /// The game's verbs, in one vocabulary, in three places that must agree: the Core enum, the
-    /// action-name constants, and the authored input asset. The set is D17's six-verb scheme — no
-    /// more verbs than the design has.
+    /// action-name constants, and the authored input asset. The set is D17's scheme as amended by
+    /// D26 (Block cut for the mobile control budget) — no more verbs than the design has.
     /// </summary>
     public sealed class CommandVocabularyAcceptanceTests
     {
         private static readonly string[] Buttons =
         {
             "Light",      // basic melee combo; performs Interact in context
-            "Heavy",      // slow, high-commitment; launcher / guard-break class
+            "Heavy",      // slow, high-commitment; launcher class
             "Magic",      // the character's element, offensively
             "Equipment",  // the equipped active item (§5)
             "Jump",       // universal (§2.4)
-            "Block",      // hold to guard
         };
 
         /// <summary>Every non-composite binding the asset must carry, as (path, action).</summary>
@@ -40,8 +39,6 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             ("<Gamepad>/rightShoulder", "Equipment"),
             ("<Keyboard>/space", "Jump"),
             ("<Gamepad>/buttonSouth", "Jump"),
-            ("<Keyboard>/leftShift", "Block"),
-            ("<Gamepad>/leftShoulder", "Block"),
             ("<Gamepad>/leftStick", "Move"),
         };
 

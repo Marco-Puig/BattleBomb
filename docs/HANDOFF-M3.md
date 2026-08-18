@@ -6,24 +6,26 @@
 > `HitApplication`), and aerials knock back ~10% harder than their ground counterparts (Michael's
 > rule, authored as data). Task 29 complete: `PlayerCondition` in Core, vitals on
 > `CharacterDefinition`, the actor gates commands while staggered/down and exposes
-> `ApplyEnemyHit` — the seam tasks 31–33 call. Task 30 (Block) is next.
+> `ApplyEnemyHit` — the seam tasks 31–33 call. **Task 30 was built, then cut by D26** (Block
+> removed with the input verb — fc9dbb6 reverted by a2d5d11); defence is the defence stat and
+> movement. Task 31 (the enemy brain) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are
 not repeated here. The design authority is **D22** (archetypes × regions × ranks, elites), **D23**
-(loot flow), **D25** (partner revive), and **D19**'s Block paragraph — nothing below overrides
-them. Check `editor_status` before any recompile or synchronous test run (Michael plays between
+(loot flow), **D25** (partner revive), and **D26** (no Block — defence is stats and movement) —
+nothing below overrides them. Check `editor_status` before any recompile or synchronous test run (Michael plays between
 sessions), and follow the live-verification protocol in `CLAUDE.md`: slow-paced checks by `eval`,
 fast motion by Michael's checklist.
 
 **M3 is done when:** two players can fight a spawned, mixed enemy group and every archetype applies
 its designed pressure — **grunts** crowd through the same depth-limited melee rules the players
-live under, **ranged** pokes across depth and punishes standing still, a **caster** throws
-elemental attacks that Block never stops, and a **brute** forces jump- and depth-dodges with long
-telegraphs. Players take damage and can be staggered, downed, revived by their partner (D25), and
-reset when the attempt fails. Block is live with its perfect-timed window. Enemies telegraph,
-flinch, die, and roll drops through D23's seam. The aerial pop and slam ride in from M2. Every
-piece of new logic lives in Core under EditMode tests, and `run_tests` is green.
+live under, **ranged** pokes across depth and punishes standing still, a **caster** lobs slow,
+hard-hitting elemental artillery behind the longest telegraphs, and a **brute** forces jump- and
+depth-dodges. Players take damage and can be staggered, downed, revived by their partner (D25),
+and reset when the attempt fails. Enemies telegraph, flinch, die, and roll drops through D23's
+seam. The aerial pop and slam ride in from M2. Every piece of new logic lives in Core under
+EditMode tests, and `run_tests` is green.
 
 ---
 
@@ -44,15 +46,10 @@ Recorded because they are load-bearing and a future session will need the reason
 3. **Enemies resolve hits with the same `HitResolver`.** D22 says the grunt is "depth-limited like
    the player (§2.2)" — so it literally uses the player's reach geometry. No parallel resolver.
 
-4. **A perfect block staggers any attacker — including the brute.** The brute is otherwise
-   uninterruptible (flinching would delete his identity as the telegraphed threat), so the
-   perfect-timed block is the *only* interrupt that works on him. That makes the D19 reward a
-   jackpot with a real use, and it is consistent: the perfect block staggers, no exceptions.
+4. ~~A perfect block staggers any attacker.~~ **Superseded by D26** — Block is cut. The brute is
+   simply uninterruptible: jump and depth are the answer, exactly his archetype's job.
 
-5. **Block guards the front only.** A hit from behind the facing lands normally. Omnidirectional
-   blocking would make turtling in a crowd too strong, and D19 prices blocking by inaction — a
-   price that only bites if positioning still matters while guarding. Michael vetoes this live if
-   it feels wrong.
+5. ~~Block guards the front only.~~ **Superseded by D26.**
 
 6. **Players get a short post-hit grace.** A few steps of invulnerability after taking a hit, so a
    crowd of grunts cannot stunlock a player to death from one mistake. Enemies get no grace — the
@@ -150,46 +147,11 @@ depletion sets `IsDown`; stagger counts down and control returns; determinism.
 
 ---
 
-## Task 30 — Core: Block and the perfect window
+## Task 30 — ~~Core: Block and the perfect window~~ · cut by D26
 
-**Files:** `Core/Combat/HitKind.cs`, `Core/Combat/GuardResolver.cs`, `CombatMachine` extension,
-plus tests. The D19 paragraph is the spec; §2.7 restates it.
-
-```csharp
-public enum HitKind { Kinetic, Projectile, Magic }   // Block stops the first two, never Magic
-
-public enum GuardOutcome { Hit, Blocked, PerfectBlocked }
-
-public static class GuardResolver
-{
-    // Defender guarding? Hit from the front? Kind blockable? Guard young enough for perfect?
-    public static GuardOutcome Resolve(in CombatState defender, Facing defenderFacing,
-                                       Vector3 defenderPosition, Vector3 attackOrigin,
-                                       HitKind kind, int perfectWindowSteps);
-}
-```
-
-- The combat machine learns **Guarding**: Block held from Ready enters it, release returns to
-  Ready. `GuardSteps` counts up from the press — the perfect window is `GuardSteps` at or under
-  the threshold on the step the hit arrives. No attacks start while Guarding; Block pressed
-  mid-attack does nothing (no block-cancels in M3 — that is D19's "cancel windows" design space,
-  deliberately untouched).
-- **Blocked:** zero damage, zero stagger, a reduced shove is fine. **PerfectBlocked:** zero
-  everything for the defender, and the *attacker* receives stagger steps — every attacker, brute
-  included (planning decision 4). **Magic:** always `Hit`, regardless of guard (the anti-turtle).
-- Front-only: the attack origin must be on the facing side, same behind-tolerance idea as
-  `HitResolver` (planning decision 5).
-- `AttackTuning` (or the enemy tuning that wraps it) carries the attack's `HitKind`; every player
-  melee attack and D21 shove is `Kinetic`.
-
-Paper values: perfect window 8 steps; perfect-block stagger on the attacker 45 steps.
-
-**Tests:** held Block from Ready guards and release ends the guard; a Kinetic and a Projectile hit are
-Blocked, Magic never is; a hit inside the window is PerfectBlocked, one step past is merely
-Blocked; a hit from behind lands regardless of guard; guarding prevents attack starts; the machine
-stays deterministic.
-
-**Commit:** `M3: Block and the perfect window in Core`
+Built (fc9dbb6) and reverted (a2d5d11) the same day: Michael and his collaborator cut Block for
+the mobile control budget. The input vocabulary is five verbs; defence is the defence stat (M4)
+and movement. Nothing in this milestone references a guard.
 
 ---
 
@@ -208,7 +170,6 @@ public readonly struct EnemyTuning
     float  MoveSpeed;
     float  PreferredRangeX;    // grunt/brute: attack reach; ranged/caster: standoff distance
     AttackTuning Attack;       // StartupSteps IS the telegraph — authored long (decision 2)
-    HitKind Kind;              // grunt/brute Kinetic, ranged Projectile, caster Magic
     Element Element;           // the region skin's element rides here (None until M5 matters)
     int    CooldownSteps;      // beat between attacks
     bool   Interruptible;      // brutes: false (decision 4)
@@ -249,8 +210,8 @@ Approach behaviour per archetype — this is the whole difference between them:
   (it lives under §2.2 like the player), attack when in reach and off cooldown.
 - **Ranged:** hold a standoff band — retreat when the target closes, advance when it flees. Fires
   across any depth (§2.2's ranged identity): no depth-closing at all.
-- **Caster:** ranged's movement with a longer telegraph and cooldown — its hit is unblockable, so
-  it must always be visibly answerable by depth or jump instead.
+- **Caster:** ranged's movement with a longer telegraph and cooldown — its hit is the hardest
+  single poke, so the telegraph must always be visibly answerable by depth or jump.
 - **Brute:** grunt's approach, slower, with the long telegraph and no flinch.
 
 `TargetSelection.Choose(self, playerPositions, playerDowned, currentTarget, switchMargin)` is
@@ -279,7 +240,7 @@ perception sequences produce identical states.
 public readonly struct ProjectileState
 {
     Vector3 Position; Vector3 Velocity;    // aimed at the target's position when fired; no homing
-    float   Damage;  Element Element;  HitKind Kind;   // Projectile (blockable) or Magic (not)
+    float   Damage;  Element Element;
     int     LifeSteps;                     // despawn cap
 }
 
@@ -291,9 +252,8 @@ public static class ProjectileSimulation
 ```
 
 Projectiles cross depth freely — that is the entire mechanical identity of ranged (§2.2), so the
-velocity simply points at where the target was at fire time, depth included. A hit runs the target
-through `GuardResolver` (Task 30): a blocked projectile despawns harmlessly; Magic ignores the
-guard. Life expiry despawns.
+velocity simply points at where the target was at fire time, depth included. A hit lands through
+the player's condition (task 29 — grace and the downed state swallow it). Life expiry despawns.
 
 **Tests:** straight-line flight; the hit test respects the radius; depth crossing (a projectile
 fired from deep hits a shallow target); expiry; determinism.
@@ -333,9 +293,10 @@ fired from deep hits a shallow target); expiry; determinism.
   mode's generator is a different milestone (D12).
 - **Driver:** fixed step order, for determinism: players (registry order) → enemies (registry
   order) → projectiles → hit resolution → deaths. Enemy hit windows resolve against players via
-  the same `HitResolver` (decision 3), then `GuardResolver`, then the player's condition (Task
-  29). The driver builds each brain's `EnemyPerception` — a brain never touches the scene; if a
-  brain seems to need more knowledge, extend the perception struct deliberately.
+  the same `HitResolver` (decision 3), then the player's condition (Task 29 — grace and the
+  downed state swallow hits). The driver builds each brain's `EnemyPerception` — a brain never
+  touches the scene; if a brain seems to need more knowledge, extend the perception struct
+  deliberately.
 
 **Done when:** `run_tests` green; in Play mode (slow checks by `eval`) spawned enemies register,
 approach, and a grunt's landed hit reduces a player's health.
@@ -354,18 +315,17 @@ approach, and a grunt's landed hit reduces a player's health.
   invisible to the game's primary spatial cue (D14) — that rule applies to placeholders too.
 - **The telegraph tell is the point of this milestone's presentation.** During Telegraph the enemy
   must read unambiguously: colour ramp / windup pose scale on the body, and for the brute a ground
-  marker at the impact zone. The caster's tell gets the most contrast — its hit ignores Block, so
-  the telegraph is the player's only defence.
+  marker at the impact zone. The caster's tell gets the most contrast — its hit is the biggest,
+  so the telegraph is the player's whole defence (D26: no guard exists).
 - **Projectiles cast grounded shadows.** A projectile's depth is combat information (D14): a
   simple blob under each one, moving with it.
 - **Hurt feedback:** players reuse `HitFlash`; enemy→player hits pop damage numbers (D20 — every
-  hit, both directions); a perfect block deserves a distinct flash/sound-slot so the reward is
-  felt.
+  hit, both directions).
 - **`PlayerHealthBars`:** minimal per-player health readout, observe-only, styled like
   `DamageNumbers` (serialized size — the settings menu binds later).
 
 **Done when:** Michael's checklist — telegraph readability per archetype at real speed, projectile
-shadows, damage numbers both ways, the perfect-block moment. His eyes, not frame sampling.
+shadows, damage numbers both ways. His eyes, not frame sampling.
 
 **Commit:** `M3: enemy presentation and player health UI`
 
@@ -382,7 +342,7 @@ reset, presentation for the downed pose and channel progress.
   interactable. Within revive range of a downed partner, Light starts a **channel** (paper: 90
   steps) instead of an attack; the channel is Core state with tests — progress, broken by the
   reviver being staggered or leaving range, completing into the partner at 50% health with a short
-  grace (Task 29's mechanism reused). The reviver cannot attack or block mid-channel.
+  grace (Task 29's mechanism reused). The reviver cannot attack mid-channel.
 - **Attempt over:** both down in co-op, or down solo → a short beat, then the sandbox resets —
   players respawned full, spawner `Reset()`. A placeholder by design (decision 12); no checkpoint
   system.
@@ -449,11 +409,10 @@ cap; Y untouched; a fast-moving body is left alone; determinism.
 
 1. Full `run_tests` — report the summary line.
 2. **Michael's session** — the first real fight. His checklist: each archetype's pressure felt
-   (crowded by grunts, punished for standing still, punished for turtling, forced to dodge the
-   brute), telegraph readability, Block and the perfect-block moment, being downed and revived
-   under pressure, the attempt reset, drop grabs racing the partner, the aerial pair in a real
-   crowd. Iterate the Task 33 asset numbers live; anything settled gets recorded, the rest stays
-   paper per §2.5's deferral.
+   (crowded by grunts, punished for standing still, forced to prioritise the caster, forced to
+   dodge the brute), telegraph readability, being downed and revived under pressure, the attempt
+   reset, drop grabs racing the partner, the aerial pair in a real crowd. Iterate the Task 33
+   asset numbers live; anything settled gets recorded, the rest stays paper per §2.5's deferral.
 3. Update the progress table in `CLAUDE.md`: M3 → complete, M4 → next.
 4. Update this file's status header, and record anything that felt wrong to build.
 

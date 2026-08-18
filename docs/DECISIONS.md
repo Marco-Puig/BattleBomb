@@ -549,9 +549,38 @@ difficulty scales with player count remains an M3 tuning question, not a design 
 
 ---
 
+## D26 — Block is cut: five verbs, defence is stats and movement · **Locked** *(amends D17, D19, D22)*
+
+Directed by Michael with his collaborator (2026-08-18). D17's own mobile constraint — one thumb
+operates every on-screen button — is the binding budget, and six verbs plus the stick was already
+the ceiling. Block is the verb that goes; Heavy was discussed for the same cut and **stays for
+now**, explicitly on watch.
+
+- **No block button, no guard state.** Defence is the **defence stat** (M4's gear system) and
+  movement itself — depth, spacing, and jump were always the designed defensive verbs. This is the
+  same reasoning that rejected a dodge button in D17, now applied consistently.
+- The input vocabulary is **five verbs**: Light, Heavy, Magic, Equipment, Jump.
+- **Supersedes:** D17's Block row and "Block's design intent" paragraph; D19's Block paragraph
+  entirely (the perfect-timed block, its counter window, and the guard-break framing of Heavy);
+  D22's caster rationale — with no Block there is no turtling to punish, so the caster archetype
+  survives as slow, hard-hitting elemental artillery whose statuses arrive with M5, not as the
+  anti-turtle.
+- **Consequence:** M3 task 30 was built and reverted the same day (fc9dbb6 → a2d5d11) — the
+  combat machine has no Guarding phase and the input asset carries no Block action. If Block ever
+  returns, it is a new decision argued against the same control budget.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
+- **O9 — Prestige must feel like a fresh start without invalidating the loot grind
+  (2026-08-18).** D24 resets the level, but endgame gear carries, so a prestiged player stomps the
+  early game and the reset is theatre. Michael and his collaborator floated story-milestone
+  "progress chests" that return old gear — and flagged their own concern: chunky recovery means
+  the fresh start only lasts until the first chest. Proposal under discussion: **level
+  requirements on gear**, so prestige-to-level-1 re-locks the stash and it comes back online
+  continuously as the level is re-earned. Resolves with M4's item design.
 - **O2 — Git LFS: deliberately deferred (Michael, 2026-08-18).** Working policy: a few hi-res
   hero assets plus lightweight placeholders live in plain git. Rules that keep this safe — no file
   near 100 MB (GitHub hard-rejects; warns at 50 MB), hero binaries are commit-rarely (iterate

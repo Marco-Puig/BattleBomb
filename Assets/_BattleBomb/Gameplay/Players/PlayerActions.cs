@@ -15,6 +15,5 @@ namespace BattleBomb.Gameplay.Players
         public const string Magic = "Magic";
         public const string Equipment = "Equipment";
         public const string Jump = "Jump";
-        public const string Block = "Block";
     }
 }

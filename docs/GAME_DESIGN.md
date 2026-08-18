@@ -91,11 +91,12 @@ then the authored assets in `Assets/_BattleBomb/Data/Combat/` are the reference.
 - **Magic is one press.** No charged casts, no chain-into-magic finishers. Fuelled by slowly
   regenerating mana; regen and capacity are gear stats (§5).
 
-### 2.7 Block (D19)
+### 2.7 Defence (D26)
 
-Hold to block kinetic damage and projectiles — **never magic**, so casters always answer turtles.
-A perfect-timed block staggers the attacker and opens a counter window. No stamina meter: blocking
-is priced by inaction and magic vulnerability, and the reward lives in the timing.
+There is **no block button**. Defence is the **defence stat** (§5, from M4) and movement itself —
+depth, spacing, and jump (§2.4). The mobile control budget was at its limit, and the designed
+defensive verbs were always movement: the same reasoning that rejected a dodge button in D17,
+applied consistently.
 
 ### 2.8 Hit feedback (D20)
 
@@ -117,13 +118,12 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 | Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
 | Elemental attack | **Magic** | The character's element expressed offensively (§4). |
 | Equipment use | **Equipment** | 1–2 chosen loadout slots from an unlockable catalog. Utility-first, damage derived from the weapon — spice, never the meta (D19). |
-| Guard | **Block** | Hold to guard. Active defence by design: timed-block rewards, not turtling. |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
 ### 3.1 Controls
 
-Six verbs after the movement stick — the complete input surface, sized for one-thumb mobile play
-(full mapping and reasoning: D17):
+Five verbs after the movement stick — the complete input surface, sized for one-thumb mobile play
+(full mapping and reasoning: D17, amended by D26):
 
 | Verb | Keyboard | Gamepad |
 |---|---|---|
@@ -133,10 +133,10 @@ Six verbs after the movement stick — the complete input surface, sized for one
 | Magic | L | B (east) |
 | Equipment | I | RB (right shoulder) |
 | Jump | Space | A (south) |
-| Block | Left Shift (hold) | LB (left shoulder) |
 
-There is **no dodge button** — evasion is jump (§2.4) and free depth movement (§2.1); the playstyle
-is deliberately forward. There is **no interact button** — Light is contextual. **Combos are
+There is **no dodge button and no block button** — evasion and defence are jump (§2.4), free depth
+movement (§2.1), and the defence stat (§2.7, D26); the playstyle is deliberately forward. There is
+**no interact button** — Light is contextual. **Combos are
 sequences, holds, and stick+button flavours, never two face buttons pressed at once:** one thumb
 operates every button on a touch screen, so chorded inputs are out by construction (D17).
 
@@ -231,7 +231,7 @@ Enemy mechanics are **standardized archetypes**; regions and ranks style and sca
 |---|---|
 | **Melee grunt** | Depth-limited like the player (§2.2) — crowds you into managing depth. |
 | **Ranged** | Crosses depth freely — punishes standing still. |
-| **Caster** | Elemental attacks that Block never stops (§2.7) — punishes turtling. |
+| **Caster** | Slow, hard-hitting elemental artillery behind the longest telegraphs — the priority target, and where M5's statuses will land (§4). |
 | **Brute** | Slow, telegraphed, jump- and depth-dodgeable — tests both defensive verbs. |
 
 - **A region authors 2–3 skins** of these archetypes — its element, its attacks, its look. A new

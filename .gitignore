@@ -71,3 +71,6 @@ Icon?
 ehthumbs.db
 [Tt]humbs.db
 [Dd]esktop.ini
+
+# Claude Code local state
+/.claude/

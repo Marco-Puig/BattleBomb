@@ -1,0 +1,18 @@
+{
+    "name": "BattleBomb.Gameplay",
+    "rootNamespace": "BattleBomb.Gameplay",
+    "references": [
+        "BattleBomb.Core",
+        "BattleBomb.Platform",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

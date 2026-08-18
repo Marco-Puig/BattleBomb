@@ -192,8 +192,9 @@ inline from UI scripts, which would have blocked a console or mobile build outri
 
 ## 10. M0 — bringing the project into existence
 
-Runbook for replacing the legacy tree on `Redo` with a fresh Unity 6 project. Recorded here so it
-survives a lost session.
+✅ **Complete.** Runbook for replacing the legacy tree on `Redo` with a fresh Unity 6 project. Kept
+for the record; every step below is done. Unity 6.5 (`6000.5.8f1`), assemblies per §1, 19 EditMode
+tests green.
 
 **Nothing here is destructive in the permanent sense.** The complete 2019 project stays on `main` at
 `12039a6`. Steps 3–4 only remove it from the `Redo` working tree.

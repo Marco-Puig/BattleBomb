@@ -107,7 +107,7 @@ namespace BattleBomb.Core.Combat
             aerialLight: new AttackTuning(
                 startupSteps: 4, activeSteps: 3, recoverySteps: 8,
                 damage: 4f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 1.2f,
-                maxTargets: 2, knockbackSpeed: 2f, launchSpeed: 5f, hitstopSteps: 2,
+                maxTargets: 2, knockbackSpeed: 5.5f, launchSpeed: 5f, hitstopSteps: 2,
                 moveSpeedScale: 1f),
             aerialHeavy: new AttackTuning(
                 startupSteps: 4, activeSteps: 2, recoverySteps: 12,

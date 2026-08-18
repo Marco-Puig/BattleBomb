@@ -138,7 +138,7 @@ MonoBehaviour:
     _depthTolerance: 1
     _lungeDistance: 1.2
     _maxTargets: 2
-    _knockbackSpeed: 2
+    _knockbackSpeed: 5.5
     _launchSpeed: 5
     _hitstopSteps: 2
     _moveSpeedScale: 1

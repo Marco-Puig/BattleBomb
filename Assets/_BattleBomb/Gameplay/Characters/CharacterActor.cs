@@ -92,6 +92,7 @@ namespace BattleBomb.Gameplay.Characters
                     && !_combat.CurrentAttack.ResolvesOnLanding;
                 MovementTuning tuning = stallGravity ? WithoutGravity(_tuning) : _tuning;
                 _state = CharacterMotor.Step(_state, CombatMove(command, phase), tuning, bounds, dt);
+                StepAirLunge(bounds);
             }
 
             if (combat.HitWindowOpened && _driver != null)
@@ -136,13 +137,12 @@ namespace BattleBomb.Gameplay.Characters
                 velocity.y = attack.ResolvesOnLanding ? -_tuning.MaxFallSpeed : 0f;
             }
 
+            // The slam never lunges: its aim is the shadow mark (D14), not magnetism.
             Vector3 target = default;
-            bool hasTarget = _state.IsGrounded && _driver != null
+            bool hasTarget = !attack.ResolvesOnLanding && _driver != null
                 && _driver.TryPickLungeTarget(this, attack, out target);
             if (hasTarget)
             {
-                _attackRooted = true;
-                velocity = Vector3.zero;
                 Vector3 travel = HitResolver.LungeEnd(_state.Position, attack, target) - _state.Position;
                 if (travel.sqrMagnitude >= 1e-4f)
                 {
@@ -150,11 +150,39 @@ namespace BattleBomb.Gameplay.Characters
                     _lungePerStep = travel / steps;
                     _lungeStepsLeft = steps;
                 }
+
+                if (_state.IsGrounded)
+                {
+                    _attackRooted = true;
+                    velocity = Vector3.zero;
+                }
+
+                // Airborne the same scoot rides on top of the free swing instead of rooting:
+                // momentum is kept and the stick still drifts, so overshooting is possible
+                // (Michael's playtest — accepted).
             }
 
             _state = new MotorState(
                 _state.Position, velocity, facing, _state.IsGrounded, _state.StepsSinceGrounded,
                 _state.JumpBufferedFor);
+        }
+
+        /// <summary>
+        /// The air lunge: the grounded snap's travel applied over the free swing — velocity and
+        /// stick drift stay live, so the scoot converts the hit without the rooted feel.
+        /// </summary>
+        private void StepAirLunge(in ArenaBounds bounds)
+        {
+            if (_lungeStepsLeft <= 0)
+            {
+                return;
+            }
+
+            _lungeStepsLeft -= 1;
+            Vector3 position = bounds.ClampHorizontal(_state.Position + _lungePerStep);
+            _state = new MotorState(
+                position, _state.Velocity, _state.Facing, _state.IsGrounded,
+                _state.StepsSinceGrounded, _state.JumpBufferedFor);
         }
 
         private void StepLungeMotion(in ArenaBounds bounds)

@@ -56,15 +56,28 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         [Test]
         public void Player_carries_a_shadow_casting_proxy()
         {
-            Transform proxy = _prefab.transform.Find("ShadowProxy");
+            Transform proxy = FindDeep(_prefab.transform, "ShadowProxy");
             Assert.That(proxy, Is.Not.Null,
-                "Expected a child named 'ShadowProxy'. A 2D character casts a flat cutout shadow; the " +
-                "invisible 3D proxy is what makes the grounded shadow real (D15).");
+                "Expected a descendant named 'ShadowProxy'. A 2D character casts a flat cutout shadow; " +
+                "the invisible 3D proxy is what makes the grounded shadow real (D15).");
 
             Renderer renderer = proxy.GetComponent<Renderer>();
             Assert.That(renderer, Is.Not.Null, "'ShadowProxy' has no renderer, so it casts nothing.");
             Assert.That(renderer.shadowCastingMode, Is.Not.EqualTo(ShadowCastingMode.Off),
                 "The proxy exists solely to cast a shadow.");
+        }
+
+        private static Transform FindDeep(Transform root, string childName)
+        {
+            foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (child.name == childName)
+                {
+                    return child;
+                }
+            }
+
+            return null;
         }
     }
 }

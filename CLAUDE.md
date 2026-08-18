@@ -93,7 +93,7 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 |---|---|---|
 | **M0** | Foundation — Unity 6 + URP, assemblies, Input System, tests green | **complete** |
 | **M1** | Movement and camera — two players on the depth plane, shared camera | **complete** |
-| **M2** | Combat core | next |
+| **M2** | Combat core — the D19 kit against training dummies | **in progress** |
 | M3 | Enemies | |
 | M4 | Gear and stats | |
 | M5 | Abilities and elements | |

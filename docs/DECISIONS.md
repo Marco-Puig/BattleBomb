@@ -446,6 +446,39 @@ blocking is priced by inaction and magic vulnerability, and the reward lives in 
 
 ---
 
+## D20 — Damage numbers on every hit · **Locked**
+
+Directed by Michael in the M2 design session (2026-08-17). Every landed hit pops a floating damage
+number by default. Settings must eventually offer number text-size options and a full disable —
+that menu is later UI work, but the number renderer treats size as a parameter from day one so the
+option stays cheap.
+
+**Why:** pillar 2 — depth lives in gear. Numbers are how a better weapon is *felt* in combat rather
+than read on a stat screen (the Dungeon Defenders answer). Styled small and quick so the screen
+stays clean; the settings disable keeps a pure Castle Crashers read available to whoever wants it.
+
+**Consequence:** the simulation reports every hit's final resolved damage outward, and numbers are
+presentation-only — nothing in Core or Gameplay ever reads them back.
+
+---
+
+## D21 — Partner contact is knockback, never damage · **Locked**
+
+Directed by Michael in the M2 design session (2026-08-17): *"interrupt their flow in the moment but
+not too detrimental."* A player's attacks can shove the other player — real knockback that
+interrupts — but never remove health.
+
+**Why:** full pass-through makes the partner a ghost and the couch quiet; full friendly fire
+punishes fighting side by side, which D19's crowd-cleaving Heavy actively encourages. Knockback
+keeps the chaos and the mutual awareness at zero cost in health.
+
+**Consequence:** hit resolution distinguishes target kinds from M2 onward — enemies take damage and
+knockback, partners take knockback only, and no damage number appears over a partner (a shove
+resolves no damage for D20 to show). Whether a shove also interrupts an in-progress attack is a
+feel knob, tuned live and recorded with §2.5's targets.
+
+---
+
 ## Open
 
 - **O7 — Co-op loot distribution.** Shared drops create friction between two players; instanced drops

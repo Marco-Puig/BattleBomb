@@ -95,6 +95,13 @@ Hold to block kinetic damage and projectiles — **never magic**, so casters alw
 A perfect-timed block staggers the attacker and opens a counter window. No stamina meter: blocking
 is priced by inaction and magic vulnerability, and the reward lives in the timing.
 
+### 2.8 Hit feedback (D20)
+
+Every landed hit pops a **floating damage number** by default — pillar 2 made visible in combat,
+not just on the stat screen. Settings will offer number text-size options and a full disable once a
+settings menu exists; the renderer treats size as a parameter from day one. Numbers are
+presentation-only: nothing in the simulation reads them back.
+
 ---
 
 ## 3. Characters and abilities
@@ -105,7 +112,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 | Slot | Verb | Role |
 |---|---|---|
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
-| Heavy attack | **Heavy** | Slower, high-commitment; launcher / guard-break class. |
+| Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
 | Elemental attack | **Magic** | The character's element expressed offensively (§4). |
 | Equipment use | **Equipment** | 1–2 chosen loadout slots from an unlockable catalog. Utility-first, damage derived from the weapon — spice, never the meta (D19). |
 | Guard | **Block** | Hold to guard. Active defence by design: timed-block rewards, not turtling. |
@@ -170,6 +177,10 @@ Earth.
 
 The retention engine. Depth here is intentional and unbounded, unlike combat.
 
+**Terminology, binding (D19):** *gear* = armor + weapon, the build this section describes;
+*Equipment* = the loadout button (D17, §3). Equipment damage derives from the weapon and can never
+out-grow it.
+
 ### 5.1 Axes
 
 - **Tier** — caps maximum potential. Low-tier gear cannot reach high-tier ceilings regardless of rolls.
@@ -217,6 +228,9 @@ Design consequences:
 - Shared camera framing constrains level width and enemy placement. Encounters must stay readable
   when players separate.
 - Difficulty scales with player count.
+- **Partner contact is knockback, never damage (D21).** A player's swing can shove the other player
+  and interrupt their flow, but never removes health — and shows no damage number, because none
+  resolves.
 - ⚠ **OPEN (O7)** — loot distribution: shared drops vs per-player instanced rolls. Changes the item
   generation API, so settle before §5.3 is built.
 - ⚠ **OPEN (O8)** — failure state: revives, whether one death ends an attempt.

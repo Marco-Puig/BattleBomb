@@ -34,6 +34,7 @@ namespace BattleBomb.Gameplay.Characters
         private Vector3 _lungePerStep;
         private int _lungeStepsLeft;
         private bool _attackRooted;
+        private Vector3 _strikeMomentum;
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -118,8 +119,16 @@ namespace BattleBomb.Gameplay.Characters
                 _state.JumpBufferedFor);
         }
 
+        /// <summary>
+        /// The planar speed carried into the current swing, captured before any lunge zeroes it.
+        /// Feeds the momentum-knockback bonus — the scripted snap itself never counts as momentum.
+        /// </summary>
+        internal Vector3 StrikeMomentum => _strikeMomentum;
+
         private void BeginAttack(in PlayerCommand command, in AttackTuning attack)
         {
+            _strikeMomentum = new Vector3(_state.Velocity.x, 0f, _state.Velocity.z);
+
             // The stick aims (D19). Chosen here; a free-moving whiff may still re-aim by moving.
             Facing facing = command.Move.x > 0.01f ? Facing.Right
                 : command.Move.x < -0.01f ? Facing.Left

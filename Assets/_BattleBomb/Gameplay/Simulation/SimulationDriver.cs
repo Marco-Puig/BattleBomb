@@ -158,8 +158,8 @@ namespace BattleBomb.Gameplay.Simulation
                 if (owner is TrainingDummy dummy)
                 {
                     HitResult hit = HitApplication.Apply(
-                        attack, attacker.Position, attacker.Facing, Element.None, 1f,
-                        TargetKind.Enemy, dummy.Position,
+                        attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
+                        Element.None, 1f, TargetKind.Enemy, dummy.Position,
                         ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
                     dummy.ApplyHit(hit);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
@@ -168,8 +168,8 @@ namespace BattleBomb.Gameplay.Simulation
                 else if (owner is CharacterActor partner)
                 {
                     HitResult shove = HitApplication.Apply(
-                        attack, attacker.Position, attacker.Facing, Element.None, 1f,
-                        TargetKind.Partner, partner.Position,
+                        attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
+                        Element.None, 1f, TargetKind.Partner, partner.Position,
                         ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
                     partner.ApplyImpulse(shove.Impulse);
                     HitLanded?.Invoke(new HitEvent(attacker, partner, 0f, partner.Position, true));

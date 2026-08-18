@@ -17,7 +17,7 @@ namespace BattleBomb.Tests.EditMode
 
         private static HitResult Apply(TargetKind kind, Vector3 target,
             in ElementalMultipliers resistance, in ElementalMultipliers climate) =>
-            HitApplication.Apply(Attack, Vector3.zero, Facing.Right, Element.Fire, 1f,
+            HitApplication.Apply(Attack, Vector3.zero, Facing.Right, Vector3.zero, Element.Fire, 1f,
                 kind, target, resistance, climate);
 
         [Test]
@@ -64,8 +64,8 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void A_target_on_top_of_the_attacker_is_shoved_along_the_facing()
         {
-            HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Left, Element.None, 1f,
-                TargetKind.Enemy, Vector3.zero, Neutral, Neutral);
+            HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Left, Vector3.zero,
+                Element.None, 1f, TargetKind.Enemy, Vector3.zero, Neutral, Neutral);
 
             Assert.That(result.Impulse.x, Is.LessThan(0f),
                 "With no separation, the shove follows the attacker's facing.");

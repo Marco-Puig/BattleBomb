@@ -6,10 +6,7 @@
 > `HitApplication`), and aerials knock back ~10% harder than their ground counterparts (Michael's
 > rule, authored as data). Task 29 complete: `PlayerCondition` in Core, vitals on
 > `CharacterDefinition`, the actor gates commands while staggered/down and exposes
-> `ApplyEnemyHit` — the seam tasks 31–33 call. Task 30 complete: `HitKind` on `AttackTuning`,
-> Guarding in the machine (grounded hold, buffers through, breaks the combo), `GuardResolver`
-> deciding Hit/Blocked/PerfectBlocked front-only, `PerfectBlockSteps` (8) on the kit. Task 31
-> (the enemy brain) is next; the driver applies guard outcomes when enemy hits exist (task 33).
+> `ApplyEnemyHit` — the seam tasks 31–33 call. Task 30 (Block) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

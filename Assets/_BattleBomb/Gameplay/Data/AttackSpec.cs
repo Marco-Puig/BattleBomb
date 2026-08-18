@@ -27,9 +27,6 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("The slam pattern: startup holds until landing and the hit is radial at the landing point.")]
         [SerializeField] private bool _resolvesOnLanding;
 
-        [Tooltip("What Block makes of this hit: Kinetic and Projectile are blockable, Magic never is.")]
-        [SerializeField] private HitKind _kind = HitKind.Kinetic;
-
         public static AttackSpec From(in AttackTuning tuning)
         {
             AttackSpec spec = new AttackSpec
@@ -47,7 +44,6 @@ namespace BattleBomb.Gameplay.Data
                 _hitstopSteps = tuning.HitstopSteps,
                 _moveSpeedScale = tuning.MoveSpeedScale,
                 _resolvesOnLanding = tuning.ResolvesOnLanding,
-                _kind = tuning.Kind,
             };
             return spec;
         }
@@ -65,7 +61,6 @@ namespace BattleBomb.Gameplay.Data
             _launchSpeed,
             _hitstopSteps,
             _moveSpeedScale,
-            _resolvesOnLanding,
-            _kind);
+            _resolvesOnLanding);
     }
 }

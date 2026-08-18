@@ -12,4 +12,4 @@ EditorBuildSettings:
     path: Assets/_BattleBomb/Scenes/Gameplay.unity
     guid: ace3d04bda5bc3f4da0ca4b7065a2344
   m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: f0b1875b2e5801f488954ff2f8dfc938, type: 3}

@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
+using BattleBomb.Core.Spatial;
+using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Players;
+using BattleBomb.Gameplay.World;
 using UnityEngine;
 
 namespace BattleBomb.Gameplay.Simulation
@@ -24,15 +27,40 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Steps a single frame may run before time is dropped, so a hitch cannot spiral.")]
         [SerializeField] private int _maxStepsPerFrame = SimulationClock.DefaultMaxStepsPerFrame;
 
+        [Tooltip("The arena characters are clamped to. Leave empty to fall back to ArenaBounds.Default.")]
+        [SerializeField] private ArenaVolume _arena;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
 
         private SimulationClock _clock;
+        private bool _warnedMissingArena;
 
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
 
         public PlayerRegistry Players => _players;
+
+        public CharacterRegistry Characters { get; } = new CharacterRegistry();
+
+        public ArenaBounds Bounds
+        {
+            get
+            {
+                if (_arena != null)
+                {
+                    return _arena.ToRuntime();
+                }
+
+                if (!_warnedMissingArena)
+                {
+                    _warnedMissingArena = true;
+                    Debug.LogWarning($"{name}: no ArenaVolume assigned — using ArenaBounds.Default.", this);
+                }
+
+                return ArenaBounds.Default;
+            }
+        }
 
         /// <summary>Commands sampled for the most recent step, keyed by <see cref="PlayerId.Value"/>.</summary>
         public IReadOnlyDictionary<int, PlayerCommand> Commands => _commands;
@@ -59,6 +87,18 @@ namespace BattleBomb.Gameplay.Simulation
             while (_clock.TryConsumeStep(out int frame))
             {
                 _players.SampleAll(frame, _commands);
+
+                IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+                ArenaBounds bounds = Bounds;
+                for (int i = 0; i < actors.Count; i++)
+                {
+                    CharacterActor actor = actors[i];
+                    PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
+                        ? sampled
+                        : PlayerCommand.Idle(frame);
+                    actor.Step(frame, command, bounds, StepDuration);
+                }
+
                 Stepped?.Invoke(frame);
             }
         }

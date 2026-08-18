@@ -125,6 +125,7 @@ GameObject:
   - component: {fileID: 8513221258796164119}
   - component: {fileID: 7782524822534071537}
   - component: {fileID: 8105310037222224716}
+  - component: {fileID: 3065311605573934768}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -190,4 +191,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be913a08ec96ea547a242c905d08aae8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Players.InputSystemCommandSource
+  _driver: {fileID: 0}
+--- !u!114 &3065311605573934768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5304322366050665028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b71a7486b8988741b33c4c83e202b71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Characters.CharacterActor
+  _definition: {fileID: 11400000, guid: 5e205aa3650cd8d409146d3a74afb79f, type: 2}
+  _playerIndex: 0
   _driver: {fileID: 0}

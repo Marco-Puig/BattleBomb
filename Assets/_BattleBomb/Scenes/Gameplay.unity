@@ -256,6 +256,7 @@ GameObject:
   m_Component:
   - component: {fileID: 463551037}
   - component: {fileID: 463551038}
+  - component: {fileID: 463551039}
   m_Layer: 0
   m_Name: Simulation
   m_TagString: Untagged
@@ -292,6 +293,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Simulation.SimulationDriver
   _stepsPerSecond: 60
   _maxStepsPerFrame: 5
+  _arena: {fileID: 463551039}
+--- !u!114 &463551039
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 463551036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69ab9ef94338a0c4e8082ced9071076a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.World.ArenaVolume
+  _minX: -10
+  _maxX: 10
+  _groundY: 0
 --- !u!1001 &1227676800
 PrefabInstance:
   m_ObjectHideFlags: 0

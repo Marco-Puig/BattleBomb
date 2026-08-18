@@ -74,6 +74,27 @@ fine depth alignment, which would not survive touch controls.
 ⚠ **NEEDS TUNING TARGETS** — attack startup/recovery frames, combo window length, lunge distance,
 hitstop duration, and i-frame windows are set by feel during M2, then recorded here as the reference.
 
+### 2.6 Attack verbs and combos (D19)
+
+- **Light** — fast, hits 1–2 targets, creates space. The rhythm verb.
+- **Heavy** — slower, cleaves a crowd, longer lunge. **The only hold in combat:** charge it for a
+  bigger single-target hit.
+- **The stick aims; it never picks the combo.** Attack direction and lunge follow the held movement
+  direction; combos are pure button sequences.
+- **Combos are authored content.** M2 ships `L-L-L`, `L-L-H` (launcher), and charged Heavy. A new
+  combo is an animation plus data, never new code — the set grows over time.
+- **Aerials:** Jump→Light pops enemies up for a hit or two, deliberately short of juggling
+  (extended "air tech" is a future skill ceiling). Jump→Heavy slams an AoE where the grounded
+  shadow marks the landing.
+- **Magic is one press.** No charged casts, no chain-into-magic finishers. Fuelled by slowly
+  regenerating mana; regen and capacity are gear stats (§5).
+
+### 2.7 Block (D19)
+
+Hold to block kinetic damage and projectiles — **never magic**, so casters always answer turtles.
+A perfect-timed block staggers the attacker and opens a counter window. No stamina meter: blocking
+is priced by inaction and magic vulnerability, and the reward lives in the timing.
+
 ---
 
 ## 3. Characters and abilities
@@ -86,7 +107,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
 | Heavy attack | **Heavy** | Slower, high-commitment; launcher / guard-break class. |
 | Elemental attack | **Magic** | The character's element expressed offensively (§4). |
-| Equipment use | **Equipment** | The equipped active item — the gear system (§5) reaching into combat. |
+| Equipment use | **Equipment** | 1–2 chosen loadout slots from an unlockable catalog. Utility-first, damage derived from the weapon — spice, never the meta (D19). |
 | Guard | **Block** | Hold to guard. Active defence by design: timed-block rewards, not turtling. |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
@@ -133,6 +154,12 @@ base damage
 
 Environments carry an elemental climate that modifies effectiveness. This makes character choice
 situational without adding a single input to combat — depth via context, not via complexity.
+
+**Two element sources per player (D19):** the weapon's infusion applies its status automatically on
+hit (the Dungeon Defenders half), and the character casts their own element on Magic (the Castle
+Crashers half). Statuses react — soak + shock chain-stuns, and a deliberately small set of similar
+pairs — so a lone player self-combos by pairing weapon element against their own, and a co-op
+partner adds a third source (§7). Reactions are the elemental depth Castle Crashers never had.
 
 **Baseline roster** (inherited from the 2019 `CharacterClassData`, ⚠ confirm): Fire, Water, Electric,
 Earth.

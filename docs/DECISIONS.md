@@ -399,6 +399,53 @@ cannot creep back in.
 
 ---
 
+## D19 — Combat model: rhythm melee, two element sources, spice-not-meta equipment · **Locked**
+
+Settled with Michael in the M2 design session (2026-08-17). The mix is deliberate: Castle Crashers
+supplies the hands, Dungeon Defenders supplies the build, and the depth band plus the elemental
+world supply what neither game had (D11's differentiation).
+
+**Attacks.**
+- **Light**: fast, hits 1–2 targets, creates space. The rhythm verb.
+- **Heavy**: slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit —
+  **the only hold in the combat kit**. Rejected: charged casts and additional holds; more holds add
+  complication, not depth.
+- **Combos are pure button sequences**: `L-L-L`, `L-L-H` (launcher), and charged Heavy ship with
+  M2. The combo system must make a new combo an animation plus authored data — never new code — so
+  the set grows as content.
+- **The stick aims; it never picks the combo.** The player is always moving, so held direction
+  turns the attack and its lunge — nothing else. Rejected: the depth-shove and any
+  stick-modifies-the-combo input.
+- **Aerials**: Jump→Light pops enemies up for a hit or two — deliberately short of juggling, with
+  extended air time ("tech") reserved as a future skill-expression layer. Jump→Heavy slams an AoE
+  where the grounded shadow marks the landing (D14 as an aiming reticle).
+
+**Elements — two sources per player.**
+- The **weapon's infusion** applies its status automatically on hit (Dungeon Defenders).
+- The **character's own element** casts on Magic with **one press** (Castle Crashers), fuelled by
+  slowly regenerating mana; regen and capacity are gear stats, so caster-leaning builds are found
+  in loot, not picked from a menu.
+- Statuses react (soak + shock → chain stun, and a deliberately small set of similar pairs). A solo
+  player self-combos by pairing weapon element against their own; co-op adds the partner as a third
+  source. This is the loot hook working: *"this sword is good for me specifically."*
+
+**Block.** Blocks kinetic damage and projectiles — **never magic**, so casters always answer
+turtles. A perfect-timed block staggers the attacker and opens a counter. No stamina meter:
+blocking is priced by inaction and magic vulnerability, and the reward lives in the timing.
+
+**Equipment stays spice, never meta** — the CC-bow / one-best-tower failure, named by Michael.
+1–2 chosen loadout slots from a broad unlockable catalog, with three structural guards:
+1. Equipment damage is **derived** — a percentage of weapon damage — so it scales with the build
+   and can never out-grow it.
+2. Real cooldowns: equipment is a moment, not a rotation.
+3. The catalog is utility-first: healing, deployment, control, mobility. The build focus stays on
+   armor and weapon.
+
+**Terminology, binding on all docs and code:** *gear* = armor + weapon, the build (§5);
+*Equipment* = the loadout button (D17).
+
+---
+
 ## Open
 
 - **O7 — Co-op loot distribution.** Shared drops create friction between two players; instanced drops

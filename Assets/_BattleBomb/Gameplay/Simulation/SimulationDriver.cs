@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
 using BattleBomb.Core.Spatial;
@@ -32,6 +33,9 @@ namespace BattleBomb.Gameplay.Simulation
 
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
+        private readonly List<Vector3> _candidatePositions = new List<Vector3>();
+        private readonly List<Component> _candidateOwners = new List<Component>();
+        private readonly List<int> _hitIndices = new List<int>();
 
         private SimulationClock _clock;
         private bool _warnedMissingArena;
@@ -39,9 +43,14 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
 
+        /// <summary>Raised inside the fixed step for every landed hit (D20/D21 feedback).</summary>
+        public event Action<HitEvent> HitLanded;
+
         public PlayerRegistry Players => _players;
 
         public CharacterRegistry Characters { get; } = new CharacterRegistry();
+
+        public TargetRegistry Targets { get; } = new TargetRegistry();
 
         public ArenaBounds Bounds
         {
@@ -101,7 +110,95 @@ namespace BattleBomb.Gameplay.Simulation
                     actor.Step(frame, command, bounds, StepDuration);
                 }
 
+                IReadOnlyList<TrainingDummy> dummies = Targets.Ordered;
+                for (int i = 0; i < dummies.Count; i++)
+                {
+                    dummies[i].Step(frame, bounds, StepDuration);
+                }
+
                 Stepped?.Invoke(frame);
+            }
+        }
+
+        /// <summary>
+        /// The soft lunge's destination for an attack starting this step, if anything qualifies.
+        /// </summary>
+        internal bool TryPickLungeTarget(CharacterActor attacker, in AttackTuning attack, out Vector3 target)
+        {
+            CollectCandidates(attacker);
+            int index = HitResolver.LungeTarget(attacker.Position, attacker.Facing, attack, _candidatePositions);
+            target = index >= 0 ? _candidatePositions[index] : default;
+            return index >= 0;
+        }
+
+        /// <summary>
+        /// Resolves one attack's hit window: dummies take the full pipeline, the other player takes
+        /// a shove and nothing else (D21). Runs inside the fixed step; Presentation and UI hear
+        /// about it through <see cref="HitLanded"/>.
+        /// </summary>
+        internal void ResolveHits(CharacterActor attacker, in AttackTuning attack)
+        {
+            CollectCandidates(attacker);
+            HitResolver.Resolve(attacker.Position, attacker.Facing, attack, _candidatePositions, _hitIndices);
+
+            int attackerHitstop = 0;
+            for (int i = 0; i < _hitIndices.Count; i++)
+            {
+                Component owner = _candidateOwners[_hitIndices[i]];
+                if (owner is TrainingDummy dummy)
+                {
+                    HitResult hit = HitApplication.Apply(
+                        attack, attacker.Position, attacker.Facing, Element.None, 1f,
+                        TargetKind.Enemy, dummy.Position,
+                        ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                    dummy.ApplyHit(hit);
+                    attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
+                    HitLanded?.Invoke(new HitEvent(attacker, dummy, hit.Damage, dummy.Position, false));
+                }
+                else if (owner is CharacterActor partner)
+                {
+                    HitResult shove = HitApplication.Apply(
+                        attack, attacker.Position, attacker.Facing, Element.None, 1f,
+                        TargetKind.Partner, partner.Position,
+                        ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                    partner.ApplyImpulse(shove.Impulse);
+                    HitLanded?.Invoke(new HitEvent(attacker, partner, 0f, partner.Position, true));
+                }
+            }
+
+            if (attackerHitstop > 0)
+            {
+                attacker.ApplyHitstop(attackerHitstop);
+            }
+        }
+
+        private void CollectCandidates(CharacterActor except)
+        {
+            _candidatePositions.Clear();
+            _candidateOwners.Clear();
+
+            IReadOnlyList<TrainingDummy> dummies = Targets.Ordered;
+            for (int i = 0; i < dummies.Count; i++)
+            {
+                if (dummies[i].IsDepleted)
+                {
+                    continue;
+                }
+
+                _candidatePositions.Add(dummies[i].Position);
+                _candidateOwners.Add(dummies[i]);
+            }
+
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                if (actors[i] == except)
+                {
+                    continue;
+                }
+
+                _candidatePositions.Add(actors[i].Position);
+                _candidateOwners.Add(actors[i]);
             }
         }
 

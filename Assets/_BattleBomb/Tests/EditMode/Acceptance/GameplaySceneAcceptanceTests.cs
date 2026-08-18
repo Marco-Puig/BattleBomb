@@ -27,6 +27,7 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             "Player 1",
             "Player 2",
             "Debug Overlay",
+            "Dummies",   // M2 (HANDOFF-M2 task 23): the training dummies live under one root
         };
 
         private Scene _scene;

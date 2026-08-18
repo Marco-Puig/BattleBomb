@@ -36,10 +36,6 @@ namespace BattleBomb.Core.Movement
             else
             {
                 vy = grounded ? 0f : Mathf.Max(vy - tuning.Gravity * dt, -tuning.MaxFallSpeed);
-                if (command.WasReleased(CommandButtons.Jump) && vy > 0f)
-                {
-                    vy *= tuning.JumpCutMultiplier;
-                }
             }
 
             float desiredX = command.Move.x * tuning.MaxSpeed;

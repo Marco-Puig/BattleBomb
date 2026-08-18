@@ -22,7 +22,6 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private float _gravity = 45f;
         [SerializeField] private float _jumpSpeed = 12f;
         [SerializeField] private float _maxFallSpeed = 30f;
-        [SerializeField] private float _jumpCutMultiplier = 0.45f;
         [SerializeField] private int _coyoteSteps = 6;
         [SerializeField] private int _jumpBufferSteps = 6;
 
@@ -36,7 +35,6 @@ namespace BattleBomb.Gameplay.Data
             _gravity,
             _jumpSpeed,
             _maxFallSpeed,
-            _jumpCutMultiplier,
             _coyoteSteps,
             _jumpBufferSteps);
     }

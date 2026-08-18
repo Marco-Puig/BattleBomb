@@ -23,7 +23,6 @@ namespace BattleBomb.Tests.EditMode
                 serialized.FindProperty("_gravity").floatValue = 40f;
                 serialized.FindProperty("_jumpSpeed").floatValue = 11f;
                 serialized.FindProperty("_maxFallSpeed").floatValue = 25f;
-                serialized.FindProperty("_jumpCutMultiplier").floatValue = 0.5f;
                 serialized.FindProperty("_coyoteSteps").intValue = 4;
                 serialized.FindProperty("_jumpBufferSteps").intValue = 5;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
@@ -38,7 +37,6 @@ namespace BattleBomb.Tests.EditMode
                 Assert.That(tuning.Gravity, Is.EqualTo(40f));
                 Assert.That(tuning.JumpSpeed, Is.EqualTo(11f));
                 Assert.That(tuning.MaxFallSpeed, Is.EqualTo(25f));
-                Assert.That(tuning.JumpCutMultiplier, Is.EqualTo(0.5f));
                 Assert.That(tuning.CoyoteSteps, Is.EqualTo(4));
                 Assert.That(tuning.JumpBufferSteps, Is.EqualTo(5));
             }

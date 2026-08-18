@@ -20,6 +20,5 @@ MonoBehaviour:
   _gravity: 45
   _jumpSpeed: 12
   _maxFallSpeed: 30
-  _jumpCutMultiplier: 0.45
   _coyoteSteps: 6
   _jumpBufferSteps: 6

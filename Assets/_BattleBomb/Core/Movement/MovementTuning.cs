@@ -13,7 +13,6 @@ namespace BattleBomb.Core.Movement
         public readonly float Gravity;
         public readonly float JumpSpeed;
         public readonly float MaxFallSpeed;
-        public readonly float JumpCutMultiplier;
         public readonly int CoyoteSteps;
         public readonly int JumpBufferSteps;
 
@@ -25,7 +24,6 @@ namespace BattleBomb.Core.Movement
             float gravity,
             float jumpSpeed,
             float maxFallSpeed,
-            float jumpCutMultiplier,
             int coyoteSteps,
             int jumpBufferSteps)
         {
@@ -36,7 +34,6 @@ namespace BattleBomb.Core.Movement
             Gravity = gravity;
             JumpSpeed = jumpSpeed;
             MaxFallSpeed = maxFallSpeed;
-            JumpCutMultiplier = jumpCutMultiplier;
             CoyoteSteps = coyoteSteps;
             JumpBufferSteps = jumpBufferSteps;
         }
@@ -49,7 +46,6 @@ namespace BattleBomb.Core.Movement
             gravity: 45f,
             jumpSpeed: 12f,
             maxFallSpeed: 30f,
-            jumpCutMultiplier: 0.45f,
             coyoteSteps: 6,
             jumpBufferSteps: 6);
     }

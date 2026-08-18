@@ -119,24 +119,25 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Releasing_jump_while_rising_cuts_the_climb()
+        public void Tapped_and_held_jumps_trace_the_identical_arc()
         {
-            MotorState state = Airborne(1f, 10f, 20);
+            MotorState held = MotorState.AtRest(Vector3.zero);
+            MotorState tapped = MotorState.AtRest(Vector3.zero);
 
-            state = CharacterMotor.Step(state, JumpRelease, Tuning, Arena, Dt);
+            held = CharacterMotor.Step(held, JumpPress, Tuning, Arena, Dt);
+            tapped = CharacterMotor.Step(tapped, JumpPress, Tuning, Arena, Dt);
 
-            float expected = (10f - Tuning.Gravity * Dt) * Tuning.JumpCutMultiplier;
-            Assert.That(state.Velocity.y, Is.EqualTo(expected).Within(1e-4f));
-        }
+            held = CharacterMotor.Step(held, JumpHeld, Tuning, Arena, Dt);
+            tapped = CharacterMotor.Step(tapped, JumpRelease, Tuning, Arena, Dt);
 
-        [Test]
-        public void Releasing_jump_while_falling_changes_nothing()
-        {
-            MotorState state = Airborne(5f, -5f, 20);
+            for (int i = 0; i < 60; i++)
+            {
+                held = CharacterMotor.Step(held, JumpHeld, Tuning, Arena, Dt);
+                tapped = CharacterMotor.Step(tapped, Idle, Tuning, Arena, Dt);
 
-            state = CharacterMotor.Step(state, JumpRelease, Tuning, Arena, Dt);
-
-            Assert.That(state.Velocity.y, Is.EqualTo(-5f - Tuning.Gravity * Dt).Within(1e-4f));
+                Assert.That(tapped.Position.y, Is.EqualTo(held.Position.y),
+                    "The standard jump is fixed-height (D18) — releasing early must not change the arc.");
+            }
         }
 
         [Test]

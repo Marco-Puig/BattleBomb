@@ -62,6 +62,10 @@ readability — this is the specific failure mode a previous parallax attempt hi
 A **general-purpose** mechanic, as in the inspiration games: traversal over obstacles, dodging,
 combo extensions, boss mechanics. Not reserved for one job.
 
+The standard jump is **fixed-height** — tap or hold, the same arc every time (D18). Jump boosts or
+double jumps, if they ever exist, are explicit mechanics layered on top, never variable height on
+the base jump.
+
 ### 2.5 Feel targets
 
 Skill expression lives in **timing, left-to-right spacing, and ability use** — deliberately not in

@@ -382,6 +382,23 @@ untouched — their defensive verbs were always jump and depth, never a button.
 
 ---
 
+## D18 — The standard jump is fixed-height · **Locked**
+
+Directed by Michael after playing M1 (2026-08-17). Tap or hold, the arc is identical — the
+early-release jump cut M1 first shipped with is removed. If jump boosts or double jumps ever
+arrive, they are explicit mechanics layered on top; the base jump never varies. The jump input
+buffer stays: it is about responsiveness, not height.
+
+**Why:** a constant jump is a constant promise. Boss patterns (§6 builds them on "jump-dodgeable"),
+platforming gaps, and combo timing can all be authored against one arc, and the player's spatial
+intuition never has to account for how long they held a button.
+
+**Consequence:** `MovementTuning` carries no jump-cut multiplier and `CharacterMotor` ignores Jump
+release entirely. `Tapped_and_held_jumps_trace_the_identical_arc` pins the rule so variable height
+cannot creep back in.
+
+---
+
 ## Open
 
 - **O7 — Co-op loot distribution.** Shared drops create friction between two players; instanced drops

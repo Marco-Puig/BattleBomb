@@ -151,15 +151,11 @@ namespace BattleBomb.Gameplay.Characters
                     _lungeStepsLeft = steps;
                 }
 
-                if (_state.IsGrounded)
-                {
-                    _attackRooted = true;
-                    velocity = Vector3.zero;
-                }
-
-                // Airborne the same scoot rides on top of the free swing instead of rooting:
-                // momentum is kept and the stick still drifts, so overshooting is possible
-                // (Michael's playtest — accepted).
+                // Grounded the snap roots; airborne it sheds carried momentum instead, so the
+                // scoot pulls at the grounded rate over the grounded range — consistency over
+                // overshoot (Michael's retest) — while drift-steering and the fall stay live.
+                _attackRooted = _state.IsGrounded;
+                velocity = Vector3.zero;
             }
 
             _state = new MotorState(

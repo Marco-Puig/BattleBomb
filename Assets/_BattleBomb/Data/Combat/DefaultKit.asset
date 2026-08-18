@@ -136,7 +136,7 @@ MonoBehaviour:
     _damage: 4
     _reachX: 1.6
     _depthTolerance: 1
-    _lungeDistance: 0.6
+    _lungeDistance: 1.2
     _maxTargets: 2
     _knockbackSpeed: 2
     _launchSpeed: 5

@@ -172,6 +172,7 @@ GameObject:
   m_Component:
   - component: {fileID: 90397529100740178}
   - component: {fileID: 4905085247013938820}
+  - component: {fileID: 6906334618882984441}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -209,3 +210,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.DummyVisual
   _dummy: {fileID: 0}
   _driver: {fileID: 0}
+--- !u!114 &6906334618882984441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9208519862058321427}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df23cec95af6bd44db012e60503c58a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.HitFlash
+  _driver: {fileID: 0}
+  _renderer: {fileID: 0}
+  _flashSeconds: 0.12

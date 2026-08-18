@@ -124,6 +124,9 @@ GameObject:
   m_Component:
   - component: {fileID: 8989940383492534226}
   - component: {fileID: 318659277906066431}
+  - component: {fileID: 8230435345833294851}
+  - component: {fileID: 3426639394293203807}
+  - component: {fileID: 1132443202071923846}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -161,6 +164,49 @@ MonoBehaviour:
   m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.InterpolatedVisual
   _actor: {fileID: 0}
   _driver: {fileID: 0}
+--- !u!114 &8230435345833294851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4892102282120605561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d26ecbbae3a62564e9da127aee439e20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.AttackTelegraph
+  _actor: {fileID: 0}
+  _color: {r: 1, g: 0.45, b: 0.1, a: 1}
+--- !u!114 &3426639394293203807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4892102282120605561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0ee825fbab67143973c52882cdb786, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.ChargeTell
+  _actor: {fileID: 0}
+  _maxSwell: 0.18
+--- !u!114 &1132443202071923846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4892102282120605561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: df23cec95af6bd44db012e60503c58a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.HitFlash
+  _driver: {fileID: 0}
+  _renderer: {fileID: 0}
+  _flashSeconds: 0.12
 --- !u!1 &5304322366050665028
 GameObject:
   m_ObjectHideFlags: 0

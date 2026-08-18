@@ -538,6 +538,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1619851941}
   - component: {fileID: 1619851942}
+  - component: {fileID: 1619851943}
   m_Layer: 0
   m_Name: Debug Overlay
   m_TagString: Untagged
@@ -573,6 +574,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Debug.CommandDebugOverlay
   _driver: {fileID: 463551038}
+--- !u!114 &1619851943
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619851940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5639015a891566146a470d678731235a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.DamageNumbers
+  _driver: {fileID: 463551038}
+  _camera: {fileID: 1778134441}
+  _fontSize: 30
+  _lifetimeSeconds: 0.8
+  _riseUnitsPerSecond: 1.4
 --- !u!1 &1632419326
 GameObject:
   m_ObjectHideFlags: 0

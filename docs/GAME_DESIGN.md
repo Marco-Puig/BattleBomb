@@ -206,18 +206,45 @@ Entirely **pure logic with no scene dependency**. It lives in Core, is covered b
 is called identically by story and endless modes. This is the highest-value test surface in the
 project — loot bugs are subtle, compounding, and destroy trust in the chase.
 
+### 5.4 Drops (D23)
+
+Drops are **shared and free-grab**: one roll per drop, it lands in the world, whoever grabs it
+keeps it. **Chance** scales with enemy rank; **quality** scales with story progress × difficulty ×
+active multipliers, elites adding ~5–10% on top. **Bosses always drop an authored signature item**
+at a quality floor well above the level's norm.
+
+### 5.5 Character progression (D24)
+
+Leveling **never caps** — the main differentiator from Castle Crashers and Dungeon Defenders.
+Levels run 1–99, then **prestige**: back to 1 with one permanent stat point and a visible prestige
+badge, each cycle costing more XP than the last. The reward per cycle is deliberately small — only
+the most dedicated players are noticeably stronger — so gear remains the dominant power source
+(pillar 2) while the ladder itself never ends.
+
 ---
 
 ## 6. Enemies and bosses
 
-Enemy design vocabulary, built from the combat model rather than invented separately:
+Enemy mechanics are **standardized archetypes**; regions and ranks style and scale them (D22):
 
-- **Depth-limited melee attackers** — pressure you into managing depth.
-- **Ranged attackers** — cross depth, punish standing still, create the reason to keep moving.
-- **Elementally resistant variants** — reward roster and gear choice (§4).
-- **Bosses** — use jump-dodgeable and depth-dodgeable patterns, mixing both defensive verbs.
+| Archetype | The pressure it applies |
+|---|---|
+| **Melee grunt** | Depth-limited like the player (§2.2) — crowds you into managing depth. |
+| **Ranged** | Crosses depth freely — punishes standing still. |
+| **Caster** | Elemental attacks that Block never stops (§2.7) — punishes turtling. |
+| **Brute** | Slow, telegraphed, jump- and depth-dodgeable — tests both defensive verbs. |
 
-⚠ **NEEDS INPUT** — specific enemy families, boss roster, and how they tie to the world.
+- **A region authors 2–3 skins** of these archetypes — its element, its attacks, its look. A new
+  region's roster is data, never code; elemental resistances reward roster and gear choice (§4).
+- **Rank** composes encounters (grunts early, brutes late) and scales stats; **difficulty** (§8)
+  multiplies on top. Two dials, deliberately separate.
+- **Elites (rare):** visibly armored, tougher, 5–10% better loot — and they **drop what they
+  wear** (D22). Standard enemy armor marks common elites; a player-itemizable piece is visibly
+  distinct on sight, so the fight advertises its own reward.
+- **Bosses** mix jump-dodgeable and depth-dodgeable patterns and always drop their signature item
+  (§5.4).
+
+⚠ **NEEDS INPUT** — the specific families and bosses per region resolve with the world and story (§9).
 
 ---
 
@@ -233,9 +260,10 @@ Design consequences:
 - **Partner contact is knockback, never damage (D21).** A player's swing can shove the other player
   and interrupt their flow, but never removes health — and shows no damage number, because none
   resolves.
-- ⚠ **OPEN (O7)** — loot distribution: shared drops vs per-player instanced rolls. Changes the item
-  generation API, so settle before §5.3 is built.
-- ⚠ **OPEN (O8)** — failure state: revives, whether one death ends an attempt.
+- **Loot is shared and free-grab (D23)** — the discovery moment belongs to the whole couch,
+  grabbing included.
+- **A downed player is revived by their partner** — contextual Light (D17), so a revive is walking
+  over and pressing the button you already know. Both down = back to the last checkpoint (D25).
 
 ---
 

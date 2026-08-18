@@ -479,13 +479,79 @@ feel knob, tuned live and recorded with §2.5's targets.
 
 ---
 
+## D22 — Enemies: archetypes × regions × ranks, plus elites · **Locked**
+
+Directed by Michael in the M3 design session (2026-08-18). Enemy mechanics are **standardized
+archetypes**; regions and ranks style and scale them — Castle Crashers' region styling mixed with
+Dungeon Defenders' structured difficulty, copying neither roster.
+
+- **~Four archetypes** carry all enemy behaviour: the depth-limited **melee grunt** (§2.2), the
+  **ranged** attacker who crosses depth freely, the **caster** whose elemental attacks Block never
+  stops (D19 — the anti-turtle), and the slow, telegraphed **brute** dodged with jump and depth.
+- **A region authors 2–3 skins** of those archetypes — its element, its attacks, its look. A new
+  region's roster is data, never code: pillar 3 applied to enemies.
+- **Rank** is the authored composition ladder (grunts early, brutes late) with stat scale;
+  **difficulty** (§8's replay tiers) is a separate multiplier applied on top. Two dials — hard
+  mode may both swap in meaner compositions and scale them.
+- **Elites** are a rare per-spawn modifier: visibly armored, tougher, worth better loot (D23) —
+  and they **drop exactly what they wear**, rolled at the elite's boosted quality. Standard
+  enemy-armor art covers common elites; when one wears a real player-itemizable piece the
+  difference is visible on sight. "More art but bigger payoff" — accepted explicitly.
+
+**Consequence:** enemy authoring is archetype definition (behaviour tuning) + region skin
+(element, attacks, visuals) + rank tables — ScriptableObject in, struct out, like everything else.
+
+---
+
+## D23 — Loot flow: shared drops, rank-driven chance, progress-driven quality · **Locked** *(resolves O7)*
+
+Directed by Michael (2026-08-18); Dungeon Defenders' loot progression is the explicit model.
+
+- **Drops are shared and free-grab** (O7 resolved): one roll per drop, it lands in the world, and
+  whoever grabs it keeps it. The shared discovery moment — and the couch chaos — beat instanced
+  fairness.
+- **Drop chance scales with enemy rank. Quality scales with story progress × difficulty × active
+  multipliers**, and elite kills add roughly 5–10% on top (D22).
+- **Bosses always drop an authored signature item** at a quality floor well above the level's norm.
+
+**Consequence:** the §5.3 generator takes (rank, progress, difficulty, multipliers, elite bonus)
+and rolls once per drop; boss tables carry fixed item identities with rolled stats.
+
+---
+
+## D24 — Progression never caps: prestige cycles · **Locked**
+
+Directed by Michael (2026-08-18) as **the main differentiator from Castle Crashers and Dungeon
+Defenders** — both cap levels; BattleBomb never does.
+
+- Levels 1–99, then **prestige**: back to level 1 carrying **one permanent stat point** and a
+  **visible prestige badge**. Repeatable forever, and **each successive cycle costs more XP**.
+- The per-cycle reward is deliberately small: *"only the most dedicated players should be
+  noticeably stronger."* The badge, not the stat total, is the main flex — and power growth stays
+  arithmetic, so enemies and endless mode remain balanceable forever.
+- **Rejected:** one infinite ladder with doubling XP per level — after a handful of doublings a
+  level takes orders of magnitude longer, and a bar that never visibly moves feels capped, which
+  defeats the differentiator.
+
+**Consequence:** XP, level, and prestige count are simulation state alongside gear. Pillar 2 is
+amended in spirit, not letter: gear stays the *big* power lever; leveling is the *endless* one.
+
+---
+
+## D25 — Co-op failure: partner revive · **Locked** *(resolves O8)*
+
+Directed by Michael (2026-08-18). A downed player is revived by their partner — Interact is
+contextual Light (D17), so a revive is walking over and pressing Light. Both players down ends the
+attempt at the last checkpoint; solo, going down is the attempt ending.
+
+**Consequence:** M3 ships death handling with revive from the start, never as a retrofit. How
+difficulty scales with player count remains an M3 tuning question, not a design one.
+
+---
+
 ## Open
 
-- **O7 — Co-op loot distribution.** Shared drops create friction between two players; instanced drops
-  remove it but weaken the shared-discovery moment that makes co-op looting fun. Affects the item
-  generation API directly (per-player rolls vs one roll), so it should be settled before loot is built.
-- **O8 — Co-op failure state.** Whether a downed player can be revived, whether one death ends the
-  attempt, and how difficulty scales for two players rather than one.
+- **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
 - **O2 — Git LFS.** Not enabled. `git lfs` is not installed locally and the existing pack is
   ~1.5 GiB. Revisit before large binary art starts landing on `Redo`; enabling later means a history
-  rewrite, so decide before the art volume grows.
+  rewrite, so decide before the art volume grows. D22's elite armor art raises the urgency.

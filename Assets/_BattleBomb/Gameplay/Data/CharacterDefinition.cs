@@ -1,3 +1,4 @@
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
 using UnityEngine;
 
@@ -25,7 +26,14 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private int _coyoteSteps = 6;
         [SerializeField] private int _jumpBufferSteps = 6;
 
+        [Header("Combat")]
+        [Tooltip("The character's combo table. Leave empty to use the default kit.")]
+        [SerializeField] private CombatKitDefinition _combatKit;
+
         public string DisplayName => _displayName;
+
+        public CombatKit CombatKitToRuntime() =>
+            _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;
 
         public MovementTuning ToRuntime() => new MovementTuning(
             _maxSpeed,

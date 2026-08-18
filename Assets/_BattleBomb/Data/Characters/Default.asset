@@ -22,3 +22,4 @@ MonoBehaviour:
   _maxFallSpeed: 30
   _coyoteSteps: 6
   _jumpBufferSteps: 6
+  _combatKit: {fileID: 11400000, guid: 416b20a6c2fc08047934ca2ed8a2befd, type: 2}

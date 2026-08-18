@@ -141,7 +141,15 @@ namespace BattleBomb.Gameplay.Simulation
         internal void ResolveHits(CharacterActor attacker, in AttackTuning attack)
         {
             CollectCandidates(attacker, includePartners: true);
-            HitResolver.Resolve(attacker.Position, attacker.Facing, attack, _candidatePositions, _hitIndices);
+            if (attack.ResolvesOnLanding)
+            {
+                // The slam bursts radially around the landing point (D14 as the reticle).
+                HitResolver.ResolveRadial(attacker.Position, attack, _candidatePositions, _hitIndices);
+            }
+            else
+            {
+                HitResolver.Resolve(attacker.Position, attacker.Facing, attack, _candidatePositions, _hitIndices);
+            }
 
             int attackerHitstop = 0;
             for (int i = 0; i < _hitIndices.Count; i++)

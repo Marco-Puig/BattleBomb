@@ -6,11 +6,14 @@ namespace BattleBomb.Core.Combat
     /// The per-step combat brain (D19): pure like <c>CharacterMotor</c>. Combos chain through the
     /// same press-buffering the jump has; the chain consumes at recovery end, never earlier, so an
     /// attack is a commitment. Hitstop freezes phases and the buffer countdown alike, but a press
-    /// during hitstop is still captured.
+    /// during hitstop is still captured. Airborne, the verbs become the aerials: Light is the pop,
+    /// Heavy is the slam, and nothing charges — the caller passes groundedness so the machine
+    /// stays pure.
     /// </summary>
     public static class CombatMachine
     {
-        public static CombatStepResult Step(in CombatState state, in PlayerCommand command, CombatKit kit)
+        public static CombatStepResult Step(
+            in CombatState state, in PlayerCommand command, CombatKit kit, bool isGrounded = true)
         {
             CommandButtons buffered = state.Buffered;
             int bufferedFor = state.BufferedFor;
@@ -48,16 +51,16 @@ namespace BattleBomb.Core.Combat
             switch (state.Phase)
             {
                 case AttackPhase.Ready:
-                    return StepReady(state, command, kit, buffered, bufferedFor);
+                    return StepReady(state, command, kit, isGrounded, buffered, bufferedFor);
                 case AttackPhase.Charging:
                     return StepCharging(state, command, kit, buffered, bufferedFor);
                 default:
-                    return StepFlight(state, command, kit, buffered, bufferedFor);
+                    return StepFlight(state, command, kit, isGrounded, buffered, bufferedFor);
             }
         }
 
         private static CombatStepResult StepReady(
-            in CombatState state, in PlayerCommand command, CombatKit kit,
+            in CombatState state, in PlayerCommand command, CombatKit kit, bool isGrounded,
             CommandButtons buffered, int bufferedFor)
         {
             int comboIndex = state.ComboIndex;
@@ -74,12 +77,13 @@ namespace BattleBomb.Core.Combat
 
             if (buffered == CommandButtons.Light)
             {
-                return StartLight(kit, comboIndex);
+                return isGrounded ? StartLight(kit, comboIndex) : StartAerial(kit.AerialLight);
             }
 
             if (buffered == CommandButtons.Heavy)
             {
-                return ConsumeHeavy(command, kit, comboIndex);
+                // Airborne Heavy is always the slam — no launcher ender, no charging in the air.
+                return isGrounded ? ConsumeHeavy(command, kit, comboIndex) : StartAerial(kit.AerialHeavy);
             }
 
             CombatState idle = new CombatState(
@@ -109,7 +113,7 @@ namespace BattleBomb.Core.Combat
         }
 
         private static CombatStepResult StepFlight(
-            in CombatState state, in PlayerCommand command, CombatKit kit,
+            in CombatState state, in PlayerCommand command, CombatKit kit, bool isGrounded,
             CommandButtons buffered, int bufferedFor)
         {
             AttackTuning attack = state.CurrentAttack;
@@ -117,7 +121,10 @@ namespace BattleBomb.Core.Combat
             int steps = state.StepsInPhase;
             bool hitWindowOpened = false;
 
-            if (phase == AttackPhase.Startup && steps >= attack.StartupSteps)
+            // A landing-resolved attack (the slam) serves its startup, then waits for the ground:
+            // the hit window opens on the landing step, where the shadow said it would (D14).
+            if (phase == AttackPhase.Startup && steps >= attack.StartupSteps
+                && (isGrounded || !attack.ResolvesOnLanding))
             {
                 phase = AttackPhase.Active;
                 steps = 0;
@@ -132,12 +139,14 @@ namespace BattleBomb.Core.Combat
             {
                 if (buffered == CommandButtons.Light)
                 {
-                    return StartLight(kit, state.ComboIndex);
+                    return isGrounded ? StartLight(kit, state.ComboIndex) : StartAerial(kit.AerialLight);
                 }
 
                 if (buffered == CommandButtons.Heavy)
                 {
-                    return ConsumeHeavy(command, kit, state.ComboIndex);
+                    return isGrounded
+                        ? ConsumeHeavy(command, kit, state.ComboIndex)
+                        : StartAerial(kit.AerialHeavy);
                 }
 
                 CombatState ready = new CombatState(
@@ -150,6 +159,9 @@ namespace BattleBomb.Core.Combat
                 phase, steps + 1, state.ComboIndex, 0, buffered, bufferedFor, 0, 0, attack);
             return new CombatStepResult(next, false, hitWindowOpened, attack);
         }
+
+        private static CombatStepResult StartAerial(in AttackTuning attack) =>
+            Start(attack, 0, CommandButtons.None, 0);
 
         private static CombatStepResult StartLight(CombatKit kit, int comboIndex)
         {

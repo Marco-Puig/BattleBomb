@@ -13,6 +13,13 @@ namespace BattleBomb.Core.Combat
 
         public readonly AttackTuning Heavy;
         public readonly AttackTuning ChargedHeavy;
+
+        /// <summary>Jump→Light: the pop — a small launch, deliberately short of juggling (D19).</summary>
+        public readonly AttackTuning AerialLight;
+
+        /// <summary>Jump→Heavy: the slam — resolves radially where the shadow marks the landing (D19/D14).</summary>
+        public readonly AttackTuning AerialHeavy;
+
         public readonly int ChargeThresholdSteps;
         public readonly int ComboWindowSteps;
         public readonly int InputBufferSteps;
@@ -23,7 +30,9 @@ namespace BattleBomb.Core.Combat
             AttackTuning chargedHeavy,
             int chargeThresholdSteps,
             int comboWindowSteps,
-            int inputBufferSteps)
+            int inputBufferSteps,
+            AttackTuning aerialLight = default,
+            AttackTuning aerialHeavy = default)
         {
             if (steps == null || steps.Length == 0)
             {
@@ -38,6 +47,8 @@ namespace BattleBomb.Core.Combat
             _steps = (ComboStep[])steps.Clone();
             Heavy = heavy;
             ChargedHeavy = chargedHeavy;
+            AerialLight = aerialLight;
+            AerialHeavy = aerialHeavy;
             ChargeThresholdSteps = chargeThresholdSteps;
             ComboWindowSteps = comboWindowSteps;
             InputBufferSteps = inputBufferSteps;
@@ -92,6 +103,16 @@ namespace BattleBomb.Core.Combat
                 moveSpeedScale: 0.8f),
             chargeThresholdSteps: 30,
             comboWindowSteps: 12,
-            inputBufferSteps: 12);
+            inputBufferSteps: 12,
+            aerialLight: new AttackTuning(
+                startupSteps: 4, activeSteps: 3, recoverySteps: 8,
+                damage: 4f, reachX: 1.6f, depthTolerance: 1f, lungeDistance: 0f,
+                maxTargets: 2, knockbackSpeed: 2f, launchSpeed: 5f, hitstopSteps: 2,
+                moveSpeedScale: 1f),
+            aerialHeavy: new AttackTuning(
+                startupSteps: 4, activeSteps: 2, recoverySteps: 12,
+                damage: 14f, reachX: 2.2f, depthTolerance: 1.1f, lungeDistance: 0f,
+                maxTargets: 4, knockbackSpeed: 10f, launchSpeed: 0f, hitstopSteps: 5,
+                moveSpeedScale: 0.3f, resolvesOnLanding: true));
     }
 }

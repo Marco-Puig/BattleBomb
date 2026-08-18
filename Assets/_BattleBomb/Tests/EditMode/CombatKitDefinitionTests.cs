@@ -30,6 +30,8 @@ namespace BattleBomb.Tests.EditMode
 
                 Assert.That(kit.Heavy, Is.EqualTo(expected.Heavy));
                 Assert.That(kit.ChargedHeavy, Is.EqualTo(expected.ChargedHeavy));
+                Assert.That(kit.AerialLight, Is.EqualTo(expected.AerialLight));
+                Assert.That(kit.AerialHeavy, Is.EqualTo(expected.AerialHeavy));
                 Assert.That(kit.ChargeThresholdSteps, Is.EqualTo(expected.ChargeThresholdSteps));
                 Assert.That(kit.ComboWindowSteps, Is.EqualTo(expected.ComboWindowSteps));
                 Assert.That(kit.InputBufferSteps, Is.EqualTo(expected.InputBufferSteps));

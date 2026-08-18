@@ -27,7 +27,7 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Only_the_launcher_launches()
+        public void Only_the_launcher_and_the_aerial_pop_launch()
         {
             CombatKit kit = CombatKit.Default;
 
@@ -39,6 +39,28 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(kit.Heavy.LaunchSpeed, Is.EqualTo(0f));
             Assert.That(kit.ChargedHeavy.LaunchSpeed, Is.EqualTo(0f));
+            Assert.That(kit.AerialLight.LaunchSpeed, Is.GreaterThan(0f),
+                "The pop is a small launch (D19).");
+            Assert.That(kit.AerialLight.LaunchSpeed,
+                Is.LessThan(kit.StepAt(2).OnHeavy.LaunchSpeed),
+                "Deliberately short of juggling: the pop stays under the launcher.");
+            Assert.That(kit.AerialHeavy.LaunchSpeed, Is.EqualTo(0f), "The slam knocks away, not up.");
+        }
+
+        [Test]
+        public void The_slam_resolves_on_landing_and_nothing_else_does()
+        {
+            CombatKit kit = CombatKit.Default;
+
+            Assert.That(kit.AerialHeavy.ResolvesOnLanding, Is.True);
+            Assert.That(kit.AerialHeavy.MaxTargets, Is.GreaterThan(1), "The slam is an AoE (D19).");
+            Assert.That(kit.AerialLight.ResolvesOnLanding, Is.False);
+            Assert.That(kit.Heavy.ResolvesOnLanding, Is.False);
+            Assert.That(kit.ChargedHeavy.ResolvesOnLanding, Is.False);
+            for (int i = 0; i < kit.ChainLength; i++)
+            {
+                Assert.That(kit.StepAt(i).OnLight.ResolvesOnLanding, Is.False);
+            }
         }
 
         [Test]
@@ -67,6 +89,8 @@ namespace BattleBomb.Tests.EditMode
 
             attacks.Add(kit.Heavy);
             attacks.Add(kit.ChargedHeavy);
+            attacks.Add(kit.AerialLight);
+            attacks.Add(kit.AerialHeavy);
 
             foreach (AttackTuning attack in attacks)
             {

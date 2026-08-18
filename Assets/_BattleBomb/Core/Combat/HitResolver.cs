@@ -66,6 +66,52 @@ namespace BattleBomb.Core.Combat
         }
 
         /// <summary>
+        /// The slam's landing burst: every candidate within <c>ReachX</c> of the centre on the
+        /// ground plane, facing-free — an AoE crosses depth by construction. Nearest first on
+        /// planar distance, capped at <c>MaxTargets</c>. Returns the number of hits.
+        /// </summary>
+        public static int ResolveRadial(
+            Vector3 center,
+            in AttackTuning attack,
+            IReadOnlyList<Vector3> candidates,
+            IList<int> hits)
+        {
+            hits.Clear();
+            if (candidates == null)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                float distance = PlanarSqrDistance(center, candidates[i]);
+                if (distance > attack.ReachX * attack.ReachX
+                    || Mathf.Abs(candidates[i].y - center.y) > VerticalTolerance)
+                {
+                    continue;
+                }
+
+                int insertAt = hits.Count;
+                for (int h = 0; h < hits.Count; h++)
+                {
+                    if (distance < PlanarSqrDistance(center, candidates[hits[h]]))
+                    {
+                        insertAt = h;
+                        break;
+                    }
+                }
+
+                hits.Insert(insertAt, i);
+                if (hits.Count > attack.MaxTargets)
+                {
+                    hits.RemoveAt(hits.Count - 1);
+                }
+            }
+
+            return hits.Count;
+        }
+
+        /// <summary>
         /// The soft lunge's target: the nearest candidate the lunge can actually convert into a hit
         /// — after travelling <see cref="LungeEnd"/> the candidate must sit inside the reach box.
         /// −1 when nothing qualifies. Chosen once, on the step the attack starts, and never
@@ -139,6 +185,13 @@ namespace BattleBomb.Core.Combat
             }
 
             return attacker + toTarget / distance * travel;
+        }
+
+        private static float PlanarSqrDistance(Vector3 a, Vector3 b)
+        {
+            float dx = b.x - a.x;
+            float dz = b.z - a.z;
+            return dx * dx + dz * dz;
         }
 
         private static bool IsInReach(Vector3 attacker, Facing facing, in AttackTuning attack, Vector3 candidate)

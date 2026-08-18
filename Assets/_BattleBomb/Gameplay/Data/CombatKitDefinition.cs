@@ -22,6 +22,13 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps Heavy must be held before release fires the charged variant.")]
         [SerializeField] private int _chargeThresholdSteps = CombatKit.Default.ChargeThresholdSteps;
 
+        [Header("Aerials")]
+        [Tooltip("Jump→Light: the pop — a small launch, deliberately short of juggling.")]
+        [SerializeField] private AttackSpec _aerialLight = AttackSpec.From(CombatKit.Default.AerialLight);
+
+        [Tooltip("Jump→Heavy: the slam — lands radially where the grounded shadow marks.")]
+        [SerializeField] private AttackSpec _aerialHeavy = AttackSpec.From(CombatKit.Default.AerialHeavy);
+
         [Header("Windows")]
         [Tooltip("Steps after recovery in which a follow-up press still continues the chain.")]
         [SerializeField] private int _comboWindowSteps = CombatKit.Default.ComboWindowSteps;
@@ -49,7 +56,9 @@ namespace BattleBomb.Gameplay.Data
                 _chargedHeavy.ToRuntime(),
                 Mathf.Max(1, _chargeThresholdSteps),
                 Mathf.Max(1, _comboWindowSteps),
-                Mathf.Max(1, _inputBufferSteps));
+                Mathf.Max(1, _inputBufferSteps),
+                _aerialLight.ToRuntime(),
+                _aerialHeavy.ToRuntime());
         }
 
         private static List<ComboStepSpec> DefaultChain()

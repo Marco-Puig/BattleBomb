@@ -24,6 +24,9 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private int _hitstopSteps = 2;
         [SerializeField] private float _moveSpeedScale = 1f;
 
+        [Tooltip("The slam pattern: startup holds until landing and the hit is radial at the landing point.")]
+        [SerializeField] private bool _resolvesOnLanding;
+
         public static AttackSpec From(in AttackTuning tuning)
         {
             AttackSpec spec = new AttackSpec
@@ -40,6 +43,7 @@ namespace BattleBomb.Gameplay.Data
                 _launchSpeed = tuning.LaunchSpeed,
                 _hitstopSteps = tuning.HitstopSteps,
                 _moveSpeedScale = tuning.MoveSpeedScale,
+                _resolvesOnLanding = tuning.ResolvesOnLanding,
             };
             return spec;
         }
@@ -56,6 +60,7 @@ namespace BattleBomb.Gameplay.Data
             _knockbackSpeed,
             _launchSpeed,
             _hitstopSteps,
-            _moveSpeedScale);
+            _moveSpeedScale,
+            _resolvesOnLanding);
     }
 }

@@ -26,6 +26,7 @@ MonoBehaviour:
       _launchSpeed: 0
       _hitstopSteps: 2
       _moveSpeedScale: 1
+      _resolvesOnLanding: 0
     _hasEnder: 0
     _ender:
       _startupSteps: 5
@@ -40,6 +41,7 @@ MonoBehaviour:
       _launchSpeed: 0
       _hitstopSteps: 2
       _moveSpeedScale: 1
+      _resolvesOnLanding: 0
   - _light:
       _startupSteps: 4
       _activeSteps: 4
@@ -53,6 +55,7 @@ MonoBehaviour:
       _launchSpeed: 0
       _hitstopSteps: 2
       _moveSpeedScale: 1
+      _resolvesOnLanding: 0
     _hasEnder: 0
     _ender:
       _startupSteps: 5
@@ -67,6 +70,7 @@ MonoBehaviour:
       _launchSpeed: 0
       _hitstopSteps: 2
       _moveSpeedScale: 1
+      _resolvesOnLanding: 0
   - _light:
       _startupSteps: 6
       _activeSteps: 4
@@ -80,6 +84,7 @@ MonoBehaviour:
       _launchSpeed: 0
       _hitstopSteps: 2
       _moveSpeedScale: 1
+      _resolvesOnLanding: 0
     _hasEnder: 1
     _ender:
       _startupSteps: 8
@@ -94,6 +99,7 @@ MonoBehaviour:
       _launchSpeed: 9
       _hitstopSteps: 3
       _moveSpeedScale: 0.8
+      _resolvesOnLanding: 0
   _heavy:
     _startupSteps: 12
     _activeSteps: 6
@@ -107,6 +113,7 @@ MonoBehaviour:
     _launchSpeed: 0
     _hitstopSteps: 3
     _moveSpeedScale: 0.8
+    _resolvesOnLanding: 0
   _chargedHeavy:
     _startupSteps: 6
     _activeSteps: 6
@@ -120,6 +127,35 @@ MonoBehaviour:
     _launchSpeed: 0
     _hitstopSteps: 4
     _moveSpeedScale: 0.8
+    _resolvesOnLanding: 0
   _chargeThresholdSteps: 30
+  _aerialLight:
+    _startupSteps: 4
+    _activeSteps: 3
+    _recoverySteps: 8
+    _damage: 4
+    _reachX: 1.6
+    _depthTolerance: 1
+    _lungeDistance: 0
+    _maxTargets: 2
+    _knockbackSpeed: 2
+    _launchSpeed: 5
+    _hitstopSteps: 2
+    _moveSpeedScale: 1
+    _resolvesOnLanding: 0
+  _aerialHeavy:
+    _startupSteps: 4
+    _activeSteps: 2
+    _recoverySteps: 12
+    _damage: 14
+    _reachX: 2.2
+    _depthTolerance: 1.1
+    _lungeDistance: 0
+    _maxTargets: 4
+    _knockbackSpeed: 10
+    _launchSpeed: 0
+    _hitstopSteps: 5
+    _moveSpeedScale: 0.3
+    _resolvesOnLanding: 1
   _comboWindowSteps: 12
   _inputBufferSteps: 12

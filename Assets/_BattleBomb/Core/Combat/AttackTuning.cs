@@ -26,6 +26,13 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public readonly float MoveSpeedScale;
 
+        /// <summary>
+        /// The slam pattern (D19): startup persists until the attacker touches ground, the actor
+        /// descends instead of air-stalling, and the hit resolves radially around the landing
+        /// point — <see cref="ReachX"/> is the radius and the grounded shadow is the reticle (D14).
+        /// </summary>
+        public readonly bool ResolvesOnLanding;
+
         public AttackTuning(
             int startupSteps,
             int activeSteps,
@@ -38,7 +45,8 @@ namespace BattleBomb.Core.Combat
             float knockbackSpeed,
             float launchSpeed,
             int hitstopSteps,
-            float moveSpeedScale)
+            float moveSpeedScale,
+            bool resolvesOnLanding = false)
         {
             StartupSteps = startupSteps;
             ActiveSteps = activeSteps;
@@ -52,6 +60,7 @@ namespace BattleBomb.Core.Combat
             LaunchSpeed = launchSpeed;
             HitstopSteps = hitstopSteps;
             MoveSpeedScale = moveSpeedScale;
+            ResolvesOnLanding = resolvesOnLanding;
         }
 
         public int TotalSteps => StartupSteps + ActiveSteps + RecoverySteps;

@@ -56,7 +56,7 @@ namespace BattleBomb.Gameplay.Characters
             _previous = _state;
 
             bool frozen = _combat.HitstopSteps > 0;
-            CombatStepResult combat = CombatMachine.Step(_combat, command, _kit);
+            CombatStepResult combat = CombatMachine.Step(_combat, command, _kit, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
@@ -86,8 +86,10 @@ namespace BattleBomb.Gameplay.Characters
                 // Out of range nothing roots (Michael's playtest): Lights move freely, Heavies
                 // and charging at their reduced speed, and an airborne swing hangs — vertical
                 // speed stays zeroed through startup and the hit window, recovery falls normally.
+                // The slam is the exception: it dives instead of hanging.
                 bool stallGravity = !_state.IsGrounded
-                    && (phase == AttackPhase.Startup || phase == AttackPhase.Active);
+                    && (phase == AttackPhase.Startup || phase == AttackPhase.Active)
+                    && !_combat.CurrentAttack.ResolvesOnLanding;
                 MovementTuning tuning = stallGravity ? WithoutGravity(_tuning) : _tuning;
                 _state = CharacterMotor.Step(_state, CombatMove(command, phase), tuning, bounds, dt);
             }
@@ -130,7 +132,8 @@ namespace BattleBomb.Gameplay.Characters
             if (!_state.IsGrounded)
             {
                 // The air stall: the swing hangs, and recovery resumes the fall from zero.
-                velocity.y = 0f;
+                // The slam dives at full fall speed instead — the shadow marks where it ends.
+                velocity.y = attack.ResolvesOnLanding ? -_tuning.MaxFallSpeed : 0f;
             }
 
             Vector3 target = default;

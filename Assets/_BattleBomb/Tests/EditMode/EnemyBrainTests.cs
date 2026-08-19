@@ -118,14 +118,17 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void The_ranged_never_closes_depth()
+        public void The_ranged_drifts_depth_without_ever_seeking_the_target_in_it()
         {
             EnemyTuning ranged = Tuning(EnemyArchetype.Ranged);
-            EnemyStepResult r = EnemyBrain.Step(
+            EnemyStepResult deep = EnemyBrain.Step(
                 EnemyState.Fresh, At(Vector3.zero, new Vector3(9f, 0f, 2.5f)), ranged);
+            EnemyStepResult shallow = EnemyBrain.Step(
+                EnemyState.Fresh, At(Vector3.zero, new Vector3(9f, 0f, -2.5f)), ranged);
 
-            Assert.That(r.MoveIntent.y, Is.EqualTo(0f),
-                "Projectiles cross depth for it — that is ranged's identity (§2.2).");
+            Assert.That(deep.MoveIntent.y, Is.Not.EqualTo(0f), "Never a statue (D28)…");
+            Assert.That(deep.MoveIntent.y, Is.EqualTo(shallow.MoveIntent.y),
+                "…but the drift ignores where the target sits in depth — projectiles cross it (§2.2).");
         }
 
         [Test]
@@ -196,6 +199,116 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(r.State.Phase, Is.EqualTo(EnemyPhase.Approach));
             Assert.That(r.MoveIntent, Is.EqualTo(Vector2.zero));
             Assert.That(r.AttackStarted, Is.False);
+        }
+
+        [Test]
+        public void A_waiting_grunt_circles_instead_of_swinging()
+        {
+            EnemyTuning grunt = Tuning(EnemyArchetype.Grunt);
+            EnemyPerception noToken = new EnemyPerception(
+                Vector3.zero, true, new Vector3(1f, 0f, 0f), mayAttack: false);
+
+            EnemyStepResult r = EnemyBrain.Step(EnemyState.Fresh, noToken, grunt);
+
+            Assert.That(r.AttackStarted, Is.False, "Someone else holds the attack token (D28).");
+            Assert.That(r.MoveIntent.x, Is.LessThan(0f), "Inside the hover ring it backs out…");
+            Assert.That(r.MoveIntent.y, Is.Not.EqualTo(0f), "…and strafes depth while it waits.");
+        }
+
+        [Test]
+        public void The_turn_arrives_and_the_swing_comes()
+        {
+            EnemyTuning grunt = Tuning(EnemyArchetype.Grunt);
+            EnemyPerception token = new EnemyPerception(
+                Vector3.zero, true, new Vector3(1f, 0f, 0f), mayAttack: true);
+
+            EnemyStepResult r = EnemyBrain.Step(EnemyState.Fresh, token, grunt);
+
+            Assert.That(r.AttackStarted, Is.True);
+        }
+
+        [Test]
+        public void The_brute_ignores_the_token_entirely()
+        {
+            EnemyTuning brute = new EnemyTuning(
+                EnemyArchetype.Brute, Swing, cooldownSteps: 5, interruptible: false, staggerSteps: 1,
+                Element.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
+                hopPulseSteps: 0, takesTurns: false);
+            EnemyPerception noToken = new EnemyPerception(
+                Vector3.zero, true, new Vector3(1f, 0f, 0f), mayAttack: false);
+
+            EnemyStepResult r = EnemyBrain.Step(EnemyState.Fresh, noToken, brute);
+
+            Assert.That(r.AttackStarted, Is.True, "He never waits — relentlessness is the identity (D28).");
+        }
+
+        [Test]
+        public void Seeds_desynchronise_the_crowd()
+        {
+            EnemyTuning grunt = Tuning(EnemyArchetype.Grunt);
+            EnemyPerception waiting = new EnemyPerception(
+                Vector3.zero, true, new Vector3(6f, 0f, 0f), mayAttack: false);
+
+            EnemyStepResult a = EnemyBrain.Step(EnemyState.Seeded(0), waiting, grunt);
+            EnemyStepResult b = EnemyBrain.Step(EnemyState.Seeded(1), waiting, grunt);
+
+            Assert.That(a.MoveIntent.y, Is.Not.EqualTo(b.MoveIntent.y),
+                "Two enemies with identical perception must not move in lockstep (D28).");
+        }
+
+        [Test]
+        public void The_strafe_flips_direction_on_its_beat()
+        {
+            EnemyTuning grunt = Tuning(EnemyArchetype.Grunt);
+            EnemyPerception waiting = new EnemyPerception(
+                Vector3.zero, true, new Vector3(6f, 0f, 0f), mayAttack: false);
+
+            EnemyStepResult early = EnemyBrain.Step(EnemyState.Seeded(0), waiting, grunt);
+            EnemyState aged = new EnemyState(
+                EnemyPhase.Approach, 0, 0, seed: 0, ageSteps: 90);
+            EnemyStepResult late = EnemyBrain.Step(aged, waiting, grunt);
+
+            Assert.That(late.MoveIntent.y, Is.EqualTo(-early.MoveIntent.y),
+                "One strafe period later the circle reverses.");
+        }
+
+        [Test]
+        public void The_cooldown_peels_off_instead_of_face_camping()
+        {
+            EnemyTuning grunt = Tuning(EnemyArchetype.Grunt);
+            EnemyState cooling = new EnemyState(EnemyPhase.Cooldown, 1, 0);
+            EnemyPerception close = At(Vector3.zero, new Vector3(1f, 0f, 0f));
+
+            EnemyStepResult r = EnemyBrain.Step(cooling, close, grunt);
+
+            Assert.That(r.MoveIntent.x, Is.LessThan(0f),
+                "After the swing it backs out to the hover ring — hit and peel (D28).");
+        }
+
+        [Test]
+        public void Hops_pulse_while_free_and_never_mid_attack()
+        {
+            EnemyTuning hopper = new EnemyTuning(
+                EnemyArchetype.Grunt, Swing, cooldownSteps: 5, interruptible: true, staggerSteps: 4,
+                Element.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
+                hopPulseSteps: 4, takesTurns: true);
+            EnemyPerception waiting = new EnemyPerception(
+                Vector3.zero, true, new Vector3(6f, 0f, 0f), mayAttack: false);
+
+            bool hopped = false;
+            EnemyState state = EnemyState.Seeded(3);
+            for (int i = 0; i < 8; i++)
+            {
+                EnemyStepResult r = EnemyBrain.Step(state, waiting, hopper);
+                hopped |= r.JumpRequested;
+                state = r.State;
+            }
+
+            Assert.That(hopped, Is.True, "The hop beat fires while circling.");
+
+            EnemyStepResult telegraphing = EnemyBrain.Step(
+                new EnemyState(EnemyPhase.Telegraph, 1, 0, seed: 3, ageSteps: 4), waiting, hopper);
+            Assert.That(telegraphing.JumpRequested, Is.False, "Never during a commitment.");
         }
 
         [Test]

@@ -52,31 +52,43 @@ namespace BattleBomb.Gameplay.Characters
 
         internal Vector3 StrikeMomentum => _strikeMomentum;
         internal ElementalMultipliers Resistances => _spec.Resistances;
+        internal int TargetIndex => _targetIndex;
+
+        /// <summary>A melee turn-taker competes for the per-target attack token (D28).</summary>
+        internal bool TakesMeleeTurns =>
+            _configured && !_spec.Tuning.FightsAtRange && _spec.Tuning.TakesTurns;
+
+        /// <summary>Holding an attack token right now — mid-telegraph or mid-swing.</summary>
+        internal bool IsAttacking =>
+            _brain.Phase == EnemyPhase.Telegraph || _brain.Phase == EnemyPhase.Active;
 
         /// <summary>The spawner assigns the authored archetype right after instantiating.</summary>
-        internal void Configure(EnemyDefinition definition)
+        internal void Configure(EnemyDefinition definition, int seed = 0)
         {
             _definition = definition;
             _spec = definition.ToRuntime();
             _health = new Health(_spec.MaxHealth);
-            _brain = EnemyState.Fresh;
+            _brain = EnemyState.Seeded(seed);
             _targetIndex = -1;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
             _configured = true;
         }
 
-        internal void Step(
+        /// <summary>Returns true when a melee attack started this step, so the driver's token
+        /// count stays honest within the step (D28).</summary>
+        internal bool Step(
             int frame,
             IReadOnlyList<Vector3> playerPositions,
             IReadOnlyList<bool> playerDowned,
+            bool mayAttack,
             in ArenaBounds bounds,
             float dt)
         {
             _previous = _state;
             if (!_configured)
             {
-                return;
+                return false;
             }
 
             if (_health.IsDepleted)
@@ -84,20 +96,20 @@ namespace BattleBomb.Gameplay.Characters
                 // Inert but physical: knockback in flight still lands and settles (task 36 owns death).
                 _state = CharacterMotor.Step(_state, PlayerCommand.Idle(frame), _spec.Movement, bounds, dt);
                 transform.position = _state.Position;
-                return;
+                return false;
             }
 
             bool frozen = _brain.HitstopSteps > 0;
             if (frozen)
             {
                 _brain = EnemyBrain.Step(_brain, EnemyPerception.NoTarget(_state.Position), _spec.Tuning).State;
-                return;
+                return false;
             }
 
             _targetIndex = TargetSelection.Choose(
                 _state.Position, playerPositions, playerDowned, _targetIndex, TargetSwitchMargin);
             EnemyPerception view = _targetIndex >= 0
-                ? new EnemyPerception(_state.Position, true, playerPositions[_targetIndex])
+                ? new EnemyPerception(_state.Position, true, playerPositions[_targetIndex], mayAttack)
                 : EnemyPerception.NoTarget(_state.Position);
 
             EnemyStepResult result = EnemyBrain.Step(_brain, view, _spec.Tuning);
@@ -114,8 +126,9 @@ namespace BattleBomb.Gameplay.Characters
                     _state.StepsSinceGrounded, _state.JumpBufferedFor);
             }
 
+            CommandButtons held = result.JumpRequested ? CommandButtons.Jump : CommandButtons.None;
             PlayerCommand intent = PlayerCommand.FromState(
-                frame, result.MoveIntent, CommandButtons.None, CommandButtons.None);
+                frame, result.MoveIntent, held, CommandButtons.None);
             _state = CharacterMotor.Step(_state, intent, _spec.Movement, bounds, dt);
 
             if (result.HitWindowOpened && _driver != null)
@@ -129,6 +142,7 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             transform.position = _state.Position;
+            return result.AttackStarted && !_spec.Tuning.FightsAtRange;
         }
 
         /// <summary>A player's landed hit: pipeline damage, knockback, hitstop, and the flinch.</summary>

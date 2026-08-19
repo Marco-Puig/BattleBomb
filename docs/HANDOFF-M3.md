@@ -19,7 +19,10 @@
 > driver stepping brains/projectiles and resolving both hit directions; dummies left the scene
 > (the prefab remains for tuning); four abstract archetype assets in `Data/Enemies/` on paper
 > numbers. Live-verified end to end: enemies spawn, chase, telegraph, hit, down a player, and
-> retarget the survivor. Task 34 (presentation — telegraph tells, health bars) is next.
+> retarget the survivor. **Plus D28**, Michael's playtest direction: turn-taking attack tokens
+> (waiting melee circles a hover ring), hit-and-peel cooldowns, depth-drifting archers, seeded
+> per-enemy desync, and hops through the shared motor — live-verified alternating grunts and
+> drifting archers. Task 34 (presentation — telegraph tells, health bars) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

@@ -81,7 +81,8 @@ namespace BattleBomb.Gameplay.Combat
             EnemyActor actor = spawned.GetComponent<EnemyActor>();
             if (actor != null)
             {
-                actor.Configure(entry.Definition);
+                // The entry index is the D28 variation seed: deterministic, unique per spawn.
+                actor.Configure(entry.Definition, index);
             }
 
             _brood.Add(spawned);

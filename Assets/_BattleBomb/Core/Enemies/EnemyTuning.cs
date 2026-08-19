@@ -36,6 +36,18 @@ namespace BattleBomb.Core.Enemies
         /// <summary>Ranged/Caster: advance when the target is further than this on X; fire inside it.</summary>
         public readonly float StandoffFarX;
 
+        /// <summary>Melee circles the target at this X distance while waiting its turn (D28).</summary>
+        public readonly float HoverDistanceX;
+
+        /// <summary>Steps between depth-strafe direction flips while hovering or peeling. 0 stands still.</summary>
+        public readonly int StrafePeriodSteps;
+
+        /// <summary>Steps between possible hops while free to move. 0 never hops.</summary>
+        public readonly int HopPulseSteps;
+
+        /// <summary>False for the brute: he never waits for an attack token and never peels off (D28).</summary>
+        public readonly bool TakesTurns;
+
         public EnemyTuning(
             EnemyArchetype archetype,
             AttackTuning attack,
@@ -45,7 +57,11 @@ namespace BattleBomb.Core.Enemies
             Element element,
             float projectileSpeed,
             float standoffNearX,
-            float standoffFarX)
+            float standoffFarX,
+            float hoverDistanceX = 3f,
+            int strafePeriodSteps = 90,
+            int hopPulseSteps = 0,
+            bool takesTurns = true)
         {
             Archetype = archetype;
             Attack = attack;
@@ -56,6 +72,10 @@ namespace BattleBomb.Core.Enemies
             ProjectileSpeed = projectileSpeed;
             StandoffNearX = standoffNearX;
             StandoffFarX = standoffFarX;
+            HoverDistanceX = hoverDistanceX;
+            StrafePeriodSteps = strafePeriodSteps;
+            HopPulseSteps = hopPulseSteps;
+            TakesTurns = takesTurns;
         }
 
         /// <summary>Ranged and Caster fight from the standoff and fire projectiles; the rest are melee.</summary>

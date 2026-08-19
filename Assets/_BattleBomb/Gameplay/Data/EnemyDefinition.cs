@@ -41,11 +41,27 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Advance when further than this on X; fire from inside it.")]
         [SerializeField] private float _standoffFarX = 7f;
 
+        [Header("Liveliness (D28)")]
+        [Tooltip("Melee circles the target at this X distance while waiting its attack turn.")]
+        [SerializeField] private float _hoverDistanceX = 3f;
+
+        [Tooltip("Steps between depth-strafe direction flips while circling. 0 stands still.")]
+        [SerializeField] private int _strafePeriodSteps = 90;
+
+        [Tooltip("Steps between possible hops while free to move. 0 never hops.")]
+        [SerializeField] private int _hopPulseSteps = 0;
+
+        [Tooltip("Off for the brute: he never waits for an attack token and never peels off.")]
+        [SerializeField] private bool _takesTurns = true;
+
         [Header("Movement")]
         [SerializeField] private float _maxSpeed = 3f;
         [SerializeField] private float _acceleration = 40f;
         [SerializeField] private float _deceleration = 60f;
         [SerializeField] private float _depthSpeedScale = 0.85f;
+
+        [Tooltip("Hop launch speed; only matters when hop pulses are authored. 0 disables jumping.")]
+        [SerializeField] private float _jumpSpeed = 0f;
 
         [Header("Vitals and rewards")]
         [SerializeField] private float _maxHealth = 30f;
@@ -72,14 +88,18 @@ namespace BattleBomb.Gameplay.Data
                 _element,
                 Mathf.Max(0.1f, _projectileSpeed),
                 Mathf.Max(0f, _standoffNearX),
-                Mathf.Max(_standoffNearX, _standoffFarX)),
+                Mathf.Max(_standoffNearX, _standoffFarX),
+                Mathf.Max(0f, _hoverDistanceX),
+                Mathf.Max(0, _strafePeriodSteps),
+                Mathf.Max(0, _hopPulseSteps),
+                _takesTurns),
             new MovementTuning(
                 Mathf.Max(0.1f, _maxSpeed),
                 Mathf.Max(1f, _acceleration),
                 Mathf.Max(1f, _deceleration),
                 Mathf.Clamp01(_depthSpeedScale),
                 gravity: 45f,
-                jumpSpeed: 0f,
+                jumpSpeed: Mathf.Max(0f, _jumpSpeed),
                 maxFallSpeed: 30f,
                 coyoteSteps: 1,
                 jumpBufferSteps: 1),

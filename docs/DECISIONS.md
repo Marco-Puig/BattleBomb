@@ -596,6 +596,30 @@ has nothing left to activate.
 
 ---
 
+## D28 — Enemies fight like a crowd, not a queue · **Locked** *(amends D22)*
+
+Directed by Michael after the first live fight (2026-08-19): the task-33 brains beelined at one
+target and archers stood still — *"very Dungeon Defenders."* The Castle Crashers reference means
+the space **between** attacks moves. Four behaviours, all data on `EnemyDefinition`:
+
+- **Turn-taking:** at most N melee attackers per player at once (driver-enforced token, paper
+  N=1). Melee without the token circles its target at a **hover ring**, strafing depth. The
+  **brute never waits** (`TakesTurns` off) — relentlessness is his identity, and the contrast
+  sells the others.
+- **Hit-and-peel:** melee cooldown backs out to the hover ring instead of standing on the player.
+- **Living archers:** ranged and caster drift in depth inside their band and scatter diagonally
+  when dived — never statues. The drift deliberately never *seeks* the target's depth: projectiles
+  cross depth for them, which is §2.2's ranged identity, test-pinned.
+- **Per-enemy seeds:** each spawn gets a deterministic seed; strafe flips and hop pulses run on
+  per-enemy beats so no two enemies move in lockstep. Hops go through the shared motor
+  (`JumpRequested` → a Jump press in the synthesized command); jump speed is authored per enemy.
+
+**Deferred deliberately:** reacting to the *player's* attacks (dodge-rolls out of your swing)
+needs the perception struct to carry player combat state — a future, explicit extension, not a
+retrofit.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

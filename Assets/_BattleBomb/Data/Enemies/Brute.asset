@@ -34,10 +34,15 @@ MonoBehaviour:
   _projectileSpeed: 8
   _standoffNearX: 4
   _standoffFarX: 7
+  _hoverDistanceX: 3
+  _strafePeriodSteps: 0
+  _hopPulseSteps: 0
+  _takesTurns: 0
   _maxSpeed: 1.8
   _acceleration: 40
   _deceleration: 60
   _depthSpeedScale: 0.85
+  _jumpSpeed: 0
   _maxHealth: 90
   _rank: 4
   _xpReward: 40

@@ -36,6 +36,10 @@ namespace BattleBomb.Gameplay.Simulation
         private const int ProjectileHitstop = 2;
         private const int ProjectileLifeSteps = 240;
 
+        /// <summary>D28's turn-taking: melee attackers allowed on one player at once (paper value).
+        /// Brutes never wait, so the real ceiling a player faces is this plus the brutes.</summary>
+        private const int MaxMeleeAttackersPerTarget = 1;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
         private readonly List<Vector3> _candidatePositions = new List<Vector3>();
@@ -43,6 +47,7 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<int> _hitIndices = new List<int>();
         private readonly List<Vector3> _playerPositions = new List<Vector3>();
         private readonly List<bool> _playerDowned = new List<bool>();
+        private readonly List<int> _attackTokens = new List<int>();
         private readonly List<ProjectileState> _projectiles = new List<ProjectileState>();
 
         private SimulationClock _clock;
@@ -130,12 +135,43 @@ namespace BattleBomb.Gameplay.Simulation
                     _playerDowned.Add(actors[i].Condition.IsDown);
                 }
 
+                // D28's turn-taking: count who already holds each player's melee attack token,
+                // then walk the registry order — waiting melee hovers and circles instead.
+                _attackTokens.Clear();
+                for (int i = 0; i < actors.Count; i++)
+                {
+                    _attackTokens.Add(0);
+                }
+
                 IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is EnemyActor holder && holder.TakesMeleeTurns && holder.IsAttacking
+                        && holder.TargetIndex >= 0 && holder.TargetIndex < _attackTokens.Count)
+                    {
+                        _attackTokens[holder.TargetIndex] += 1;
+                    }
+                }
+
                 for (int i = 0; i < targets.Count; i++)
                 {
                     if (targets[i] is EnemyActor enemy)
                     {
-                        enemy.Step(frame, _playerPositions, _playerDowned, bounds, StepDuration);
+                        bool mayAttack = true;
+                        if (enemy.TakesMeleeTurns && !enemy.IsAttacking)
+                        {
+                            int target = enemy.TargetIndex;
+                            mayAttack = target < 0 || target >= _attackTokens.Count
+                                || _attackTokens[target] < MaxMeleeAttackersPerTarget;
+                        }
+
+                        bool started = enemy.Step(
+                            frame, _playerPositions, _playerDowned, mayAttack, bounds, StepDuration);
+                        if (started && enemy.TakesMeleeTurns
+                            && enemy.TargetIndex >= 0 && enemy.TargetIndex < _attackTokens.Count)
+                        {
+                            _attackTokens[enemy.TargetIndex] += 1;
+                        }
                     }
                     else if (targets[i] is TrainingDummy dummy)
                     {

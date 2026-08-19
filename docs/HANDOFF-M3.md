@@ -29,8 +29,19 @@
 > ember→orange, the caster's tell ending in a white flicker, projectile bolts sized by damage with
 > grounded shadow blobs (bolt renders chest-high, sim flies at foot height), and `PlayerHealthBars`
 > top-centre with the downed state spelled out. Live-verified: bolts + blobs in flight, the marker
-> underfoot mid-telegraph, players flashing on enemy hits, bars tracking to DOWN. Task 35
-> (downed/revive/attempt reset) is next.
+> underfoot mid-telegraph, players flashing on enemy hits, bars tracking to DOWN — and Michael
+> passed all five readability checks. Task 35 complete: `ReviveChannel` and `AttemptCountdown`
+> pure in Core (the channel's whole rulebook — starts on Light beside a downed partner, advances
+> only in-control/in-range/same-target, restarts from zero when broken; contextual Light channels
+> only from combat-Ready so charges keep their buttons), revive numbers authored on
+> `CharacterDefinition` (channel 90, range 1.8, half health, grace 60), the driver passing each
+> player its revive context and applying completions (one actor never rewrites another), the
+> attempt-over beat (120 steps) resetting players to spawn + `ResetBrood` + clearing bolts via the
+> `AttemptReset` event, `DownedPose` laying the body flat on the sim position, HitFlash holding
+> downed players grey, and `ReviveHud` (DOWN marker + channel bar + WIPED OUT banner).
+> Live-verified through two full wipe cycles: downed pose + marker, reset to spawn at full
+> health, encounter respawning and re-engaging, zero errors. The channel's feel is Michael's
+> checklist. Task 36 (death + the D23 drop seam) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

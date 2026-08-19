@@ -39,6 +39,19 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps of post-hit invulnerability. Longer than the stagger, so a crowd can never stunlock.")]
         [SerializeField] private int _hitGraceSteps = 30;
 
+        [Header("Revive (D25)")]
+        [Tooltip("Steps this character's revive channel takes when rescuing a partner.")]
+        [SerializeField] private int _reviveChannelSteps = 90;
+
+        [Tooltip("Planar range within which Light becomes the revive instead of an attack.")]
+        [SerializeField] private float _reviveRange = 1.8f;
+
+        [Tooltip("Health fraction this character stands back up with when revived.")]
+        [SerializeField] private float _reviveHealthFraction = 0.5f;
+
+        [Tooltip("Steps of invulnerability granted on being revived.")]
+        [SerializeField] private int _reviveGraceSteps = 60;
+
         public string DisplayName => _displayName;
 
         public float MaxHealth => Mathf.Max(1f, _maxHealth);
@@ -46,6 +59,14 @@ namespace BattleBomb.Gameplay.Data
         public int HitStaggerSteps => Mathf.Max(0, _hitStaggerSteps);
 
         public int HitGraceSteps => Mathf.Max(0, _hitGraceSteps);
+
+        public int ReviveChannelSteps => Mathf.Max(1, _reviveChannelSteps);
+
+        public float ReviveRange => Mathf.Max(0f, _reviveRange);
+
+        public float ReviveHealthFraction => Mathf.Clamp01(_reviveHealthFraction);
+
+        public int ReviveGraceSteps => Mathf.Max(0, _reviveGraceSteps);
 
         public CombatKit CombatKitToRuntime() =>
             _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;

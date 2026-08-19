@@ -40,6 +40,9 @@ namespace BattleBomb.Gameplay.Simulation
         /// Brutes never wait, so the real ceiling a player faces is this plus the brutes.</summary>
         private const int MaxMeleeAttackersPerTarget = 1;
 
+        /// <summary>Steps everyone stays down before the sandbox resets (task 35, paper value).</summary>
+        private const int AttemptResetBeatSteps = 120;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
         private readonly List<Vector3> _candidatePositions = new List<Vector3>();
@@ -52,12 +55,20 @@ namespace BattleBomb.Gameplay.Simulation
 
         private SimulationClock _clock;
         private bool _warnedMissingArena;
+        private AttemptCountdown _attempt;
 
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
 
         /// <summary>Raised inside the fixed step for every landed hit (D20/D21 feedback).</summary>
         public event Action<HitEvent> HitLanded;
+
+        /// <summary>Raised inside the fixed step when the failed attempt resets the sandbox — the
+        /// spawner answers by restarting its encounter (task 35).</summary>
+        public event Action AttemptReset;
+
+        /// <summary>The attempt-over beat is running: everyone is down, the reset is counting.</summary>
+        public bool AttemptEnding => _attempt.StepsAllDown > 0;
 
         public PlayerRegistry Players => _players;
 
@@ -123,7 +134,12 @@ namespace BattleBomb.Gameplay.Simulation
                     PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
                         ? sampled
                         : PlayerCommand.Idle(frame);
-                    actor.Step(frame, command, bounds, StepDuration);
+                    int revived = actor.Step(
+                        frame, command, bounds, StepDuration, FindReviveTarget(actors, i));
+                    if (revived >= 0 && revived < actors.Count)
+                    {
+                        actors[revived].ApplyRevive();
+                    }
                 }
 
                 // What the enemies may know this step (their perception is built from this).
@@ -180,8 +196,55 @@ namespace BattleBomb.Gameplay.Simulation
                 }
 
                 StepProjectiles(actors, StepDuration);
+                StepAttemptFlow(actors);
                 Stepped?.Invoke(frame);
             }
+        }
+
+        /// <summary>
+        /// The downed partner this player's Light would revive right now, or -1. Built from live
+        /// registry state in registry order, so the answer is deterministic (D10).
+        /// </summary>
+        private int FindReviveTarget(IReadOnlyList<CharacterActor> actors, int selfIndex)
+        {
+            if (actors.Count < 2)
+            {
+                return -1;
+            }
+
+            _playerPositions.Clear();
+            _playerDowned.Clear();
+            for (int i = 0; i < actors.Count; i++)
+            {
+                _playerPositions.Add(actors[i].Position);
+                _playerDowned.Add(actors[i].Condition.IsDown);
+            }
+
+            return ReviveChannel.FindTarget(
+                actors[selfIndex].Position, _playerPositions, _playerDowned,
+                selfIndex, actors[selfIndex].ReviveRange);
+        }
+
+        /// <summary>
+        /// The attempt-over beat (task 35): everyone down starts the countdown, anyone standing
+        /// back up cancels it, and the trigger resets players, bolts, and the encounter together.
+        /// </summary>
+        private void StepAttemptFlow(IReadOnlyList<CharacterActor> actors)
+        {
+            _attempt = _attempt.Step(AttemptCountdown.AllDown(_playerDowned));
+            if (!_attempt.Triggers(AttemptResetBeatSteps))
+            {
+                return;
+            }
+
+            _attempt = default;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                actors[i].ResetForAttempt();
+            }
+
+            _projectiles.Clear();
+            AttemptReset?.Invoke();
         }
 
         /// <summary>

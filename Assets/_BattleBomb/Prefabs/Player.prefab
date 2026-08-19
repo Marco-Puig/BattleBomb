@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 9107219230336906736}
   - component: {fileID: 6463052891845933730}
   - component: {fileID: 2536427845537938380}
+  - component: {fileID: 2253181452527938979}
   m_Layer: 0
   m_Name: ShadowProxy
   m_TagString: Untagged
@@ -114,6 +115,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2253181452527938979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2253181452527938978}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f45d3be42312014db18a9d4fba4ed84, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.DownedPose
+  _actor: {fileID: 0}
+  _fallSeconds: 0.25
+  _fallenHeight: 0.45
 --- !u!1 &4892102282120605561
 GameObject:
   m_ObjectHideFlags: 0

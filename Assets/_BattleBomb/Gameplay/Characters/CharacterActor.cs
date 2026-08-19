@@ -38,6 +38,13 @@ namespace BattleBomb.Gameplay.Characters
         private PlayerCondition _condition;
         private int _hitStaggerSteps;
         private int _hitGraceSteps;
+        private ReviveChannel _revive = ReviveChannel.Inactive;
+        private int _reviveChannelSteps = 90;
+        private float _reviveRange = 1.8f;
+        private float _reviveHealthFraction = 0.5f;
+        private int _reviveGraceSteps = 60;
+        private Vector3 _spawnPosition;
+        private bool _spawnCaptured;
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -52,11 +59,27 @@ namespace BattleBomb.Gameplay.Characters
         public AttackPhase CombatPhase => _combat.Phase;
         public AttackTuning CurrentAttack => _combat.CurrentAttack;
         public PlayerCondition Condition => _condition;
+
+        /// <summary>The revive channel this player is running, for the HUD to draw (task 35).</summary>
+        public ReviveChannel Revive => _revive;
+
+        /// <summary>Channel progress 0–1, for the HUD's bar.</summary>
+        public float ReviveProgress => _revive.IsActive
+            ? Mathf.Clamp01((float)_revive.Steps / _reviveChannelSteps)
+            : 0f;
+
+        internal float ReviveRange => _reviveRange;
         public float ChargeFraction => _kit == null || _kit.ChargeThresholdSteps <= 0
             ? 0f
             : Mathf.Clamp01((float)_combat.ChargeSteps / _kit.ChargeThresholdSteps);
 
-        internal void Step(int frame, in PlayerCommand command, in ArenaBounds bounds, float dt)
+        /// <summary>
+        /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
+        /// this step, or -1; the return value is the partner index whose revive completed here, or
+        /// -1 — the driver applies it, because one actor never rewrites another (D25, task 35).
+        /// </summary>
+        internal int Step(
+            int frame, in PlayerCommand command, in ArenaBounds bounds, float dt, int reviveTarget)
         {
             _previous = _state;
 
@@ -65,12 +88,36 @@ namespace BattleBomb.Gameplay.Characters
             PlayerCommand effective = _condition.InControl ? command : PlayerCommand.Idle(frame);
 
             bool frozen = _combat.HitstopSteps > 0;
+            int completedRevive = -1;
+            if (!frozen)
+            {
+                // Contextual Light (D17/D25): beside a downed partner the press channels instead
+                // of swinging, and only from combat-Ready — a swing or charge in flight keeps its
+                // buttons. While the channel runs, attack presses never reach the machine.
+                bool mayChannel = _condition.InControl && _combat.Phase == AttackPhase.Ready;
+                _revive = ReviveChannel.Next(
+                    _revive,
+                    (effective.Pressed & CommandButtons.Light) != 0,
+                    reviveTarget,
+                    mayChannel);
+                if (_revive.IsComplete(_reviveChannelSteps))
+                {
+                    completedRevive = _revive.TargetIndex;
+                    _revive = ReviveChannel.Inactive;
+                }
+            }
+
+            if (_revive.IsActive)
+            {
+                effective = WithoutAttacks(effective);
+            }
+
             CombatStepResult combat = CombatMachine.Step(_combat, effective, _kit, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
                 // Hitstop freezes the whole character — the machine above only counted it down.
-                return;
+                return completedRevive;
             }
 
             _condition = _condition.Step();
@@ -112,6 +159,7 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             transform.position = _state.Position;
+            return completedRevive;
         }
 
         internal void ApplyHitstop(int steps) => _combat = _combat.WithHitstop(steps);
@@ -136,6 +184,27 @@ namespace BattleBomb.Gameplay.Characters
 
             ApplyImpulse(hit.Impulse);
             ApplyHitstop(hit.HitstopSteps);
+        }
+
+        /// <summary>A completed partner channel stands this player back up (D25).</summary>
+        internal void ApplyRevive() =>
+            _condition = _condition.Revived(_reviveHealthFraction, _reviveGraceSteps);
+
+        /// <summary>
+        /// The attempt-over sandbox reset (task 35): back to the spawn point, full health, clean
+        /// combat state. A placeholder by design — the run lifecycle is mode-owned (D4, M7).
+        /// </summary>
+        internal void ResetForAttempt()
+        {
+            _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
+            _combat = CombatState.Ready;
+            _revive = ReviveChannel.Inactive;
+            _lungePerStep = Vector3.zero;
+            _lungeStepsLeft = 0;
+            _attackRooted = false;
+            _state = MotorState.AtRest(_spawnPosition);
+            _previous = _state;
+            transform.position = _spawnPosition;
         }
 
         /// <summary>A partner's shove (D21): replaces velocity, never touches health.</summary>
@@ -236,6 +305,13 @@ namespace BattleBomb.Gameplay.Characters
                 _state.JumpBufferedFor);
         }
 
+        private static PlayerCommand WithoutAttacks(in PlayerCommand command) => new PlayerCommand(
+            command.Frame,
+            command.Move,
+            command.Held & ~(CommandButtons.Light | CommandButtons.Heavy),
+            command.Pressed & ~(CommandButtons.Light | CommandButtons.Heavy),
+            command.Released & ~(CommandButtons.Light | CommandButtons.Heavy));
+
         private PlayerCommand CombatMove(in PlayerCommand command, AttackPhase phase)
         {
             float scale = phase == AttackPhase.Charging
@@ -268,12 +344,22 @@ namespace BattleBomb.Gameplay.Characters
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
             _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
             _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
+            _reviveChannelSteps = _definition != null ? _definition.ReviveChannelSteps : 90;
+            _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;
+            _reviveHealthFraction = _definition != null ? _definition.ReviveHealthFraction : 0.5f;
+            _reviveGraceSteps = _definition != null ? _definition.ReviveGraceSteps : 60;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
         }
 
         private void OnEnable()
         {
+            if (!_spawnCaptured)
+            {
+                _spawnPosition = transform.position;
+                _spawnCaptured = true;
+            }
+
             if (_driver == null)
             {
                 _driver = FindAnyObjectByType<SimulationDriver>();

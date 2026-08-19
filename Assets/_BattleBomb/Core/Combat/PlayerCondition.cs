@@ -42,6 +42,13 @@ namespace BattleBomb.Core.Combat
         /// survivor is staggered and granted grace. Depletion downs the player — the stagger is
         /// irrelevant past that point.
         /// </summary>
+        /// <summary>
+        /// D25's completion: back on their feet at a fraction of max health, with a grace so the
+        /// crowd that downed them cannot instantly re-down them.
+        /// </summary>
+        public PlayerCondition Revived(float healthFraction, int graceSteps) =>
+            new PlayerCondition(Health.Refilled(healthFraction), 0, graceSteps);
+
         public PlayerCondition Hit(float damage, int staggerSteps, int graceSteps)
         {
             if (IsInvulnerable)

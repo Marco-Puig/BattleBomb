@@ -104,6 +104,7 @@ namespace BattleBomb.Gameplay.Combat
             _spawned = new bool[_entries.Count];
             _elapsedSteps = 0;
             _driver.Stepped += OnStepped;
+            _driver.AttemptReset += ResetBrood;
         }
 
         private void OnDisable()
@@ -111,6 +112,7 @@ namespace BattleBomb.Gameplay.Combat
             if (_driver != null)
             {
                 _driver.Stepped -= OnStepped;
+                _driver.AttemptReset -= ResetBrood;
             }
         }
     }

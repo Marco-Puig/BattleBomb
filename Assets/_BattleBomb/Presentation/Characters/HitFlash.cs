@@ -77,7 +77,8 @@ namespace BattleBomb.Presentation.Characters
             }
 
             Color color = _restColor;
-            bool depleted = _body is TrainingDummy dummy && dummy.IsDepleted;
+            bool depleted = (_body is TrainingDummy dummy && dummy.IsDepleted)
+                || (_body is CharacterActor player && player.Condition.IsDown);
             if (depleted)
             {
                 color = new Color(0.32f, 0.32f, 0.32f);

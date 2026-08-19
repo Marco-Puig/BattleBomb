@@ -34,5 +34,9 @@ namespace BattleBomb.Core.Combat
             amount <= 0f ? this : new Health(Max, Mathf.Max(0f, Current - amount));
 
         public Health Refilled() => new Health(Max, Max);
+
+        /// <summary>A partial refill — the revive's half-health return (D25). Fraction is clamped.</summary>
+        public Health Refilled(float fraction) =>
+            new Health(Max, Mathf.Clamp01(fraction) * Max);
     }
 }

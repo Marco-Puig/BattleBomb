@@ -6,54 +6,94 @@ using UnityEngine;
 namespace BattleBomb.Tests.EditMode
 {
     /// <summary>
-    /// D25's partner revive and the attempt-over beat (task 35): the channel's full rulebook, the
-    /// half-health return, and the all-down countdown — every rule pure and stepped by hand.
+    /// D25's partner revive with D29's skill, and the attempt-over beat (task 35): the pump
+    /// channel's full rulebook, the pace-priced return, and the all-down countdown — every rule
+    /// pure and stepped by hand.
     /// </summary>
     public sealed class ReviveTests
     {
-        private const int ChannelSteps = 90;
+        private const int RequiredPumps = 10;
+        private const int DecaySteps = 30;
+
+        private static ReviveChannel Step(in ReviveChannel channel, bool pressed, int target = 1, bool inControl = true) =>
+            ReviveChannel.Next(channel, pressed, target, inControl, DecaySteps);
 
         [Test]
         public void A_light_press_beside_a_downed_partner_starts_the_channel()
         {
-            ReviveChannel channel = ReviveChannel.Next(
-                ReviveChannel.Inactive, lightPressed: true, targetIndex: 1, inControl: true);
+            ReviveChannel channel = Step(ReviveChannel.Inactive, pressed: true);
 
             Assert.That(channel.IsActive, Is.True);
             Assert.That(channel.TargetIndex, Is.EqualTo(1));
-            Assert.That(channel.Steps, Is.EqualTo(1));
+            Assert.That(channel.Pumps, Is.EqualTo(1));
         }
 
         [Test]
         public void Without_the_press_nothing_starts()
         {
-            ReviveChannel channel = ReviveChannel.Next(
-                ReviveChannel.Inactive, lightPressed: false, targetIndex: 1, inControl: true);
+            ReviveChannel channel = Step(ReviveChannel.Inactive, pressed: false);
 
             Assert.That(channel.IsActive, Is.False);
         }
 
         [Test]
-        public void The_channel_completes_after_the_authored_steps()
+        public void Mashing_completes_after_the_required_pumps()
         {
-            ReviveChannel channel = ReviveChannel.Next(ReviveChannel.Inactive, true, 1, true);
-            for (int i = 1; i < ChannelSteps; i++)
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            for (int pump = 1; pump < RequiredPumps; pump++)
             {
-                Assert.That(channel.IsComplete(ChannelSteps), Is.False, $"complete early at step {i}");
-                channel = ReviveChannel.Next(channel, false, 1, true);
+                Assert.That(channel.IsComplete(RequiredPumps), Is.False, $"complete early at pump {pump}");
+                channel = Step(channel, false);
+                channel = Step(channel, true);
             }
 
-            Assert.That(channel.IsComplete(ChannelSteps), Is.True);
-            Assert.That(channel.Steps, Is.EqualTo(ChannelSteps));
+            Assert.That(channel.IsComplete(RequiredPumps), Is.True);
+            Assert.That(channel.Pumps, Is.EqualTo(RequiredPumps));
+            Assert.That(channel.StepsElapsed, Is.EqualTo(RequiredPumps * 2 - 1));
+        }
+
+        [Test]
+        public void The_restored_fraction_rewards_the_fast_masher()
+        {
+            float fast = ReviveChannel.RestoredFraction(60, 75, 240, 0.25f, 0.65f);
+            float mid = ReviveChannel.RestoredFraction(158, 75, 240, 0.25f, 0.65f);
+            float slow = ReviveChannel.RestoredFraction(400, 75, 240, 0.25f, 0.65f);
+
+            Assert.That(fast, Is.EqualTo(0.65f), "at or under the fast pace pays the max");
+            Assert.That(mid, Is.LessThan(fast).And.GreaterThan(slow), "the middle pace sits between");
+            Assert.That(slow, Is.EqualTo(0.25f), "past the slow pace pays only the min");
+        }
+
+        [Test]
+        public void Silence_drains_pumps_until_the_channel_drops()
+        {
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            channel = Step(channel, true);
+            channel = Step(channel, true);
+            Assert.That(channel.Pumps, Is.EqualTo(3));
+
+            for (int i = 0; i < DecaySteps; i++)
+            {
+                channel = Step(channel, false);
+            }
+
+            Assert.That(channel.Pumps, Is.EqualTo(2), "one pump lost per quiet decay window");
+
+            for (int i = 0; i < DecaySteps * 2; i++)
+            {
+                channel = Step(channel, false);
+            }
+
+            Assert.That(channel.IsActive, Is.False, "draining to zero drops the channel");
         }
 
         [Test]
         public void Losing_control_breaks_the_channel()
         {
-            ReviveChannel channel = ReviveChannel.Next(ReviveChannel.Inactive, true, 1, true);
-            channel = ReviveChannel.Next(channel, false, 1, true);
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            channel = Step(channel, false);
 
-            channel = ReviveChannel.Next(channel, false, 1, inControl: false);
+            channel = Step(channel, false, inControl: false);
 
             Assert.That(channel.IsActive, Is.False);
         }
@@ -61,10 +101,10 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void Leaving_range_breaks_the_channel()
         {
-            ReviveChannel channel = ReviveChannel.Next(ReviveChannel.Inactive, true, 1, true);
-            channel = ReviveChannel.Next(channel, false, 1, true);
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            channel = Step(channel, false);
 
-            channel = ReviveChannel.Next(channel, false, targetIndex: -1, inControl: true);
+            channel = Step(channel, false, target: -1);
 
             Assert.That(channel.IsActive, Is.False);
         }
@@ -72,9 +112,9 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void A_target_change_breaks_the_channel()
         {
-            ReviveChannel channel = ReviveChannel.Next(ReviveChannel.Inactive, true, 1, true);
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
 
-            channel = ReviveChannel.Next(channel, false, targetIndex: 0, inControl: true);
+            channel = Step(channel, false, target: 0);
 
             Assert.That(channel.IsActive, Is.False);
         }
@@ -82,16 +122,17 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void A_broken_channel_restarts_from_zero()
         {
-            ReviveChannel channel = ReviveChannel.Next(ReviveChannel.Inactive, true, 1, true);
-            for (int i = 0; i < 40; i++)
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            for (int i = 0; i < 6; i++)
             {
-                channel = ReviveChannel.Next(channel, false, 1, true);
+                channel = Step(channel, true);
             }
 
-            channel = ReviveChannel.Next(channel, false, -1, true);
-            channel = ReviveChannel.Next(channel, true, 1, true);
+            channel = Step(channel, false, target: -1);
+            channel = Step(channel, true);
 
-            Assert.That(channel.Steps, Is.EqualTo(1));
+            Assert.That(channel.Pumps, Is.EqualTo(1));
+            Assert.That(channel.StepsElapsed, Is.EqualTo(1));
         }
 
         [Test]
@@ -194,3 +235,4 @@ namespace BattleBomb.Tests.EditMode
         }
     }
 }
+

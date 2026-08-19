@@ -39,9 +39,13 @@ namespace BattleBomb.Gameplay.Characters
         private int _hitStaggerSteps;
         private int _hitGraceSteps;
         private ReviveChannel _revive = ReviveChannel.Inactive;
-        private int _reviveChannelSteps = 90;
+        private int _revivePumps = 10;
+        private int _revivePumpDecaySteps = 30;
+        private int _reviveFastSteps = 75;
+        private int _reviveSlowSteps = 240;
+        private float _reviveMinHealthFraction = 0.25f;
+        private float _reviveMaxHealthFraction = 0.65f;
         private float _reviveRange = 1.8f;
-        private float _reviveHealthFraction = 0.5f;
         private int _reviveGraceSteps = 60;
         private Vector3 _spawnPosition;
         private bool _spawnCaptured;
@@ -63,9 +67,9 @@ namespace BattleBomb.Gameplay.Characters
         /// <summary>The revive channel this player is running, for the HUD to draw (task 35).</summary>
         public ReviveChannel Revive => _revive;
 
-        /// <summary>Channel progress 0–1, for the HUD's bar.</summary>
+        /// <summary>Pump progress 0–1, for the HUD's bar — it visibly drains when the mash stops.</summary>
         public float ReviveProgress => _revive.IsActive
-            ? Mathf.Clamp01((float)_revive.Steps / _reviveChannelSteps)
+            ? Mathf.Clamp01((float)_revive.Pumps / _revivePumps)
             : 0f;
 
         internal float ReviveRange => _reviveRange;
@@ -77,10 +81,14 @@ namespace BattleBomb.Gameplay.Characters
         /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
         /// this step, or -1; the return value is the partner index whose revive completed here, or
         /// -1 — the driver applies it, because one actor never rewrites another (D25, task 35).
+        /// <paramref name="reviveFraction"/> carries D29's price: the health fraction the mash
+        /// pace earned, meaningful only when a revive completed.
         /// </summary>
         internal int Step(
-            int frame, in PlayerCommand command, in ArenaBounds bounds, float dt, int reviveTarget)
+            int frame, in PlayerCommand command, in ArenaBounds bounds, float dt,
+            int reviveTarget, out float reviveFraction)
         {
+            reviveFraction = 0f;
             _previous = _state;
 
             // Staggered or downed, the player's intent goes nowhere — the body still obeys
@@ -93,16 +101,21 @@ namespace BattleBomb.Gameplay.Characters
             {
                 // Contextual Light (D17/D25): beside a downed partner the press channels instead
                 // of swinging, and only from combat-Ready — a swing or charge in flight keeps its
-                // buttons. While the channel runs, attack presses never reach the machine.
+                // buttons. While the channel runs, attack presses never reach the machine; each
+                // press is a pump, and the pace prices the revive (D29).
                 bool mayChannel = _condition.InControl && _combat.Phase == AttackPhase.Ready;
                 _revive = ReviveChannel.Next(
                     _revive,
                     (effective.Pressed & CommandButtons.Light) != 0,
                     reviveTarget,
-                    mayChannel);
-                if (_revive.IsComplete(_reviveChannelSteps))
+                    mayChannel,
+                    _revivePumpDecaySteps);
+                if (_revive.IsComplete(_revivePumps))
                 {
                     completedRevive = _revive.TargetIndex;
+                    reviveFraction = ReviveChannel.RestoredFraction(
+                        _revive.StepsElapsed, _reviveFastSteps, _reviveSlowSteps,
+                        _reviveMinHealthFraction, _reviveMaxHealthFraction);
                     _revive = ReviveChannel.Inactive;
                 }
             }
@@ -186,9 +199,10 @@ namespace BattleBomb.Gameplay.Characters
             ApplyHitstop(hit.HitstopSteps);
         }
 
-        /// <summary>A completed partner channel stands this player back up (D25).</summary>
-        internal void ApplyRevive() =>
-            _condition = _condition.Revived(_reviveHealthFraction, _reviveGraceSteps);
+        /// <summary>A completed partner channel stands this player back up (D25); the fraction
+        /// is what the reviver's mash pace earned (D29). Grace is this player's own.</summary>
+        internal void ApplyRevive(float healthFraction) =>
+            _condition = _condition.Revived(healthFraction, _reviveGraceSteps);
 
         /// <summary>
         /// The attempt-over sandbox reset (task 35): back to the spawn point, full health, clean
@@ -344,9 +358,13 @@ namespace BattleBomb.Gameplay.Characters
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
             _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
             _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
-            _reviveChannelSteps = _definition != null ? _definition.ReviveChannelSteps : 90;
+            _revivePumps = _definition != null ? _definition.RevivePumps : 10;
+            _revivePumpDecaySteps = _definition != null ? _definition.RevivePumpDecaySteps : 30;
+            _reviveFastSteps = _definition != null ? _definition.ReviveFastSteps : 75;
+            _reviveSlowSteps = _definition != null ? _definition.ReviveSlowSteps : 240;
+            _reviveMinHealthFraction = _definition != null ? _definition.ReviveMinHealthFraction : 0.25f;
+            _reviveMaxHealthFraction = _definition != null ? _definition.ReviveMaxHealthFraction : 0.65f;
             _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;
-            _reviveHealthFraction = _definition != null ? _definition.ReviveHealthFraction : 0.5f;
             _reviveGraceSteps = _definition != null ? _definition.ReviveGraceSteps : 60;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;

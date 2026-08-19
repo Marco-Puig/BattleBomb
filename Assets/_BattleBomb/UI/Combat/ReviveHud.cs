@@ -75,7 +75,7 @@ namespace BattleBomb.UI.Combat
                 }
 
                 Rect rect = new Rect(screen.x - 110f, Screen.height - screen.y - 22f, 220f, 26f);
-                string label = $"P{players[i].PlayerId.Value + 1} DOWN — Light revives";
+                string label = $"P{players[i].PlayerId.Value + 1} DOWN — mash Light";
                 DrawLabel(rect, label, new Color(1f, 0.4f, 0.35f));
 
                 float progress = ChannelProgressFor(players, i);

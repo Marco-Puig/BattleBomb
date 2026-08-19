@@ -40,8 +40,12 @@
 > `AttemptReset` event, `DownedPose` laying the body flat on the sim position, HitFlash holding
 > downed players grey, and `ReviveHud` (DOWN marker + channel bar + WIPED OUT banner).
 > Live-verified through two full wipe cycles: downed pose + marker, reset to spawn at full
-> health, encounter respawning and re-engaging, zero errors. The channel's feel is Michael's
-> checklist. Task 36 (death + the D23 drop seam) is next.
+> health, encounter respawning and re-engaging, zero errors. Michael play-approved the whole
+> flow, then directed **D29**: revive is now Castle Crashers CPR — each Light press is a pump
+> (paper 10 to complete), the mash pace prices the restored health (75 steps → 65%, 240 → 25%,
+> linear between), and silence drains a pump per 30 quiet steps until the channel drops. All
+> authored on `CharacterDefinition`; the break rules and grace stand. The mash feel is on
+> Michael's mega-pass checklist. Task 36 (death + the D23 drop seam) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

@@ -135,10 +135,11 @@ namespace BattleBomb.Gameplay.Simulation
                         ? sampled
                         : PlayerCommand.Idle(frame);
                     int revived = actor.Step(
-                        frame, command, bounds, StepDuration, FindReviveTarget(actors, i));
+                        frame, command, bounds, StepDuration, FindReviveTarget(actors, i),
+                        out float reviveFraction);
                     if (revived >= 0 && revived < actors.Count)
                     {
-                        actors[revived].ApplyRevive();
+                        actors[revived].ApplyRevive(reviveFraction);
                     }
                 }
 

@@ -39,15 +39,27 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps of post-hit invulnerability. Longer than the stagger, so a crowd can never stunlock.")]
         [SerializeField] private int _hitGraceSteps = 30;
 
-        [Header("Revive (D25)")]
-        [Tooltip("Steps this character's revive channel takes when rescuing a partner.")]
-        [SerializeField] private int _reviveChannelSteps = 90;
+        [Header("Revive (D25/D29)")]
+        [Tooltip("Light presses that complete a revive — each press is one pump.")]
+        [SerializeField] private int _revivePumps = 10;
+
+        [Tooltip("Quiet steps that drain one pump; draining to zero drops the channel.")]
+        [SerializeField] private int _revivePumpDecaySteps = 30;
+
+        [Tooltip("Completing this fast (steps) restores the max health fraction.")]
+        [SerializeField] private int _reviveFastSteps = 75;
+
+        [Tooltip("Completing this slow (steps) restores only the min health fraction.")]
+        [SerializeField] private int _reviveSlowSteps = 240;
+
+        [Tooltip("Health fraction a leisurely revive restores.")]
+        [SerializeField] private float _reviveMinHealthFraction = 0.25f;
+
+        [Tooltip("Health fraction a perfectly mashed revive restores.")]
+        [SerializeField] private float _reviveMaxHealthFraction = 0.65f;
 
         [Tooltip("Planar range within which Light becomes the revive instead of an attack.")]
         [SerializeField] private float _reviveRange = 1.8f;
-
-        [Tooltip("Health fraction this character stands back up with when revived.")]
-        [SerializeField] private float _reviveHealthFraction = 0.5f;
 
         [Tooltip("Steps of invulnerability granted on being revived.")]
         [SerializeField] private int _reviveGraceSteps = 60;
@@ -60,11 +72,20 @@ namespace BattleBomb.Gameplay.Data
 
         public int HitGraceSteps => Mathf.Max(0, _hitGraceSteps);
 
-        public int ReviveChannelSteps => Mathf.Max(1, _reviveChannelSteps);
+        public int RevivePumps => Mathf.Max(1, _revivePumps);
+
+        public int RevivePumpDecaySteps => Mathf.Max(0, _revivePumpDecaySteps);
+
+        public int ReviveFastSteps => Mathf.Max(1, _reviveFastSteps);
+
+        public int ReviveSlowSteps => Mathf.Max(ReviveFastSteps, _reviveSlowSteps);
+
+        public float ReviveMinHealthFraction => Mathf.Clamp01(_reviveMinHealthFraction);
+
+        public float ReviveMaxHealthFraction =>
+            Mathf.Clamp(_reviveMaxHealthFraction, ReviveMinHealthFraction, 1f);
 
         public float ReviveRange => Mathf.Max(0f, _reviveRange);
-
-        public float ReviveHealthFraction => Mathf.Clamp01(_reviveHealthFraction);
 
         public int ReviveGraceSteps => Mathf.Max(0, _reviveGraceSteps);
 

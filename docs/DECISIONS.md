@@ -620,6 +620,27 @@ retrofit.
 
 ---
 
+## D29 — Revive is a skill: mash to pump, pace decides the health · **Locked** *(amends D25)*
+**Michael, 2026-08-19, after play-approving the task-35 channel:** "reviving should have a little
+skill involved and the amount of hp restored reflects the skill. Castle Crashers did it
+perfectly."
+
+- **Mash, not hold.** Each Light press beside the downed partner is one *pump*; the revive
+  completes after an authored pump count (paper 10). Faster mashing completes sooner — the fill
+  is per-press, exactly the Castle Crashers CPR feel.
+- **Pace decides the health.** The restored fraction scales with how quickly the pumps landed:
+  completing at the authored *fast* pace (paper 75 steps) restores the max fraction (paper 65%),
+  dawdling to the *slow* pace (paper 240 steps) restores the min (paper 25%), linear between.
+  The old flat 50% is gone.
+- **Stopping drains the bar.** Going quiet mid-revive decays pumps (paper: one lost per 30
+  silent steps); draining to zero drops the channel. No one gets locked into a channel by a
+  single tap, and the bar visibly bleeding out is the urgency cue.
+- **Everything else D25/task-35 built stands:** contextual Light, broken by stagger or leaving
+  range, restart from zero, revive grace, attacks stripped while channelling. All numbers are
+  authored on `CharacterDefinition` — tuning, not code.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

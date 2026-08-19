@@ -240,6 +240,23 @@ namespace BattleBomb.Gameplay.Characters
         /// </summary>
         internal Vector3 StrikeMomentum => _strikeMomentum;
 
+        internal Vector3 Velocity => _state.Velocity;
+
+        /// <summary>The crowding nudge (task 37): position only — velocity is never cushioned.</summary>
+        internal void ApplySeparation(Vector3 push, in ArenaBounds bounds)
+        {
+            if (push.sqrMagnitude < 1e-12f)
+            {
+                return;
+            }
+
+            Vector3 position = bounds.ClampHorizontal(_state.Position + push);
+            _state = new MotorState(
+                position, _state.Velocity, _state.Facing, _state.IsGrounded,
+                _state.StepsSinceGrounded, _state.JumpBufferedFor);
+            transform.position = _state.Position;
+        }
+
         private void BeginAttack(in PlayerCommand command, in AttackTuning attack)
         {
             _strikeMomentum = new Vector3(_state.Velocity.x, 0f, _state.Velocity.z);

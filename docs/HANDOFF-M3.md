@@ -55,7 +55,14 @@
 > downed players grab nothing, 0.9 radius); health bars show a per-player loot count; wipe
 > resets clear tokens and counts; dying enemies release their melee token. Live-verified by
 > reflection kill: beat → despawn → token at corpse → unclaimed outside radius → grabbed the
-> step a player stands on it → cleared by the wipe. Task 37 (soft separation) is next.
+> step a player stands on it → cleared by the wipe. Task 37 complete:
+> `Core/Movement/BodySeparation` — pairwise planar push-apart (personal radius 0.45, push cap
+> 0.03/step, fast bodies at ≥4.5 u/s receive nothing but still push others — knockback and the
+> launcher are never cushioned; a perfectly stacked pair splits along X deterministically),
+> applied by the driver after all motors step, players then enemies in registry order. Never a
+> Rigidbody — the M1 seam made real. Live-verified: a full brawl's closest pair held at 1.04
+> (above the 0.9 overlap line) where crowds previously stacked into one point. Task 38
+> (close-out) awaits Michael's mega pass.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

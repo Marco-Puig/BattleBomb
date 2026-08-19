@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
 using BattleBomb.Core.Loot;
+using BattleBomb.Core.Movement;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
 using BattleBomb.Core.Spatial;
@@ -71,6 +72,9 @@ namespace BattleBomb.Gameplay.Simulation
         private DeterministicRandom _lootRng;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
+        private readonly List<Vector3> _bodyPositions = new List<Vector3>();
+        private readonly List<Vector3> _bodyVelocities = new List<Vector3>();
+        private readonly List<Vector3> _bodyPushes = new List<Vector3>();
 
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
@@ -220,11 +224,60 @@ namespace BattleBomb.Gameplay.Simulation
                     }
                 }
 
+                SeparateBodies(actors, bounds);
                 StepProjectiles(actors, StepDuration);
                 ResolveDeaths();
                 StepPickups(actors);
                 StepAttemptFlow(actors);
                 Stepped?.Invoke(frame);
+            }
+        }
+
+        /// <summary>
+        /// The soft crowding pass (task 37): players first, then enemies, both in registry order
+        /// (D10), nudged apart after every motor has stepped. Never a Rigidbody — the M1 seam
+        /// made real. Dummies are tuning props and stay out of it.
+        /// </summary>
+        private void SeparateBodies(IReadOnlyList<CharacterActor> players, in ArenaBounds bounds)
+        {
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            _bodyPositions.Clear();
+            _bodyVelocities.Clear();
+            for (int i = 0; i < players.Count; i++)
+            {
+                _bodyPositions.Add(players[i].Position);
+                _bodyVelocities.Add(players[i].Velocity);
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] is EnemyActor enemy)
+                {
+                    _bodyPositions.Add(enemy.Position);
+                    _bodyVelocities.Add(enemy.Velocity);
+                }
+            }
+
+            if (_bodyPositions.Count < 2)
+            {
+                return;
+            }
+
+            BodySeparation.Resolve(_bodyPositions, _bodyVelocities, _bodyPushes);
+
+            for (int i = 0; i < players.Count; i++)
+            {
+                players[i].ApplySeparation(_bodyPushes[i], bounds);
+            }
+
+            int cursor = players.Count;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] is EnemyActor enemy)
+                {
+                    enemy.ApplySeparation(_bodyPushes[cursor], bounds);
+                    cursor++;
+                }
             }
         }
 

@@ -173,6 +173,23 @@ namespace BattleBomb.Gameplay.Characters
 
         internal void ApplyHitstop(int steps) => _brain = _brain.WithHitstop(steps);
 
+        internal Vector3 Velocity => _state.Velocity;
+
+        /// <summary>The crowding nudge (task 37): position only — velocity is never cushioned.</summary>
+        internal void ApplySeparation(Vector3 push, in ArenaBounds bounds)
+        {
+            if (push.sqrMagnitude < 1e-12f)
+            {
+                return;
+            }
+
+            Vector3 position = bounds.ClampHorizontal(_state.Position + push);
+            _state = new MotorState(
+                position, _state.Velocity, _state.Facing, _state.IsGrounded,
+                _state.StepsSinceGrounded, _state.JumpBufferedFor);
+            transform.position = _state.Position;
+        }
+
         /// <summary>
         /// True exactly once, when the dying beat has run out — the driver's cue to announce the
         /// death, roll the drop, and despawn (task 36).

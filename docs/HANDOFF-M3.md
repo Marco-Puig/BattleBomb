@@ -61,8 +61,16 @@
 > launcher are never cushioned; a perfectly stacked pair splits along X deterministically),
 > applied by the driver after all motors step, players then enemies in registry order. Never a
 > Rigidbody — the M1 seam made real. Live-verified: a full brawl's closest pair held at 1.04
-> (above the 0.9 overlap line) where crowds previously stacked into one point. Task 38
-> (close-out) awaits Michael's mega pass.
+> (above the 0.9 overlap line) where crowds previously stacked into one point. **Michael's mega
+> pass passed everything**, and his feedback landed as **D30** (loot is inspected and taken:
+> walking over a drop shows what it is — the placeholder prints its quality — and Light grabs it
+> deliberately, contested drops to the first press; inventory-by-default with an auto-equip
+> setting recorded as the M4/M6 shape) and **D31** (the heartbeat revive: a pulse beats over the
+> downed partner, on-beat presses earn 2.0 progress at full accuracy, rushed presses 0.5 at
+> zero, and average accuracy prices the restored health 25%→65% — mash completes fastest and
+> pays the floor, riding the beat pays the ceiling; the ReviveHud pulse reads the same clock the
+> simulation prices with). Both implemented; contextual Light resolves revive → grab → swing.
+> Feel check on the heartbeat and the press-grab, then task 38's close-out.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

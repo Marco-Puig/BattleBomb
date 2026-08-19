@@ -39,23 +39,23 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps of post-hit invulnerability. Longer than the stagger, so a crowd can never stunlock.")]
         [SerializeField] private int _hitGraceSteps = 30;
 
-        [Header("Revive (D25/D29)")]
-        [Tooltip("Light presses that complete a revive — each press is one pump.")]
-        [SerializeField] private int _revivePumps = 10;
+        [Header("Revive (D25/D31)")]
+        [Tooltip("Progress that completes a revive. A press on the beat earns 2, a rushed mash press 0.5.")]
+        [SerializeField] private float _reviveRequiredProgress = 10f;
 
-        [Tooltip("Quiet steps that drain one pump; draining to zero drops the channel.")]
-        [SerializeField] private int _revivePumpDecaySteps = 30;
+        [Tooltip("Steps per heartbeat — press at the pulse's peak for full accuracy.")]
+        [SerializeField] private int _reviveBeatSteps = 45;
 
-        [Tooltip("Completing this fast (steps) restores the max health fraction.")]
-        [SerializeField] private int _reviveFastSteps = 75;
+        [Tooltip("A press within this many steps of the last counts as rushed: minimum progress, zero accuracy.")]
+        [SerializeField] private int _reviveRushSteps = 15;
 
-        [Tooltip("Completing this slow (steps) restores only the min health fraction.")]
-        [SerializeField] private int _reviveSlowSteps = 240;
+        [Tooltip("Quiet steps that drain one sloppy chunk; draining to zero drops the channel.")]
+        [SerializeField] private int _revivePumpDecaySteps = 60;
 
-        [Tooltip("Health fraction a leisurely revive restores.")]
+        [Tooltip("Health fraction a pure mash restores.")]
         [SerializeField] private float _reviveMinHealthFraction = 0.25f;
 
-        [Tooltip("Health fraction a perfectly mashed revive restores.")]
+        [Tooltip("Health fraction a perfectly timed revive restores.")]
         [SerializeField] private float _reviveMaxHealthFraction = 0.65f;
 
         [Tooltip("Planar range within which Light becomes the revive instead of an attack.")]
@@ -72,13 +72,13 @@ namespace BattleBomb.Gameplay.Data
 
         public int HitGraceSteps => Mathf.Max(0, _hitGraceSteps);
 
-        public int RevivePumps => Mathf.Max(1, _revivePumps);
+        public float ReviveRequiredProgress => Mathf.Max(1f, _reviveRequiredProgress);
+
+        public int ReviveBeatSteps => Mathf.Max(2, _reviveBeatSteps);
+
+        public int ReviveRushSteps => Mathf.Max(0, _reviveRushSteps);
 
         public int RevivePumpDecaySteps => Mathf.Max(0, _revivePumpDecaySteps);
-
-        public int ReviveFastSteps => Mathf.Max(1, _reviveFastSteps);
-
-        public int ReviveSlowSteps => Mathf.Max(ReviveFastSteps, _reviveSlowSteps);
 
         public float ReviveMinHealthFraction => Mathf.Clamp01(_reviveMinHealthFraction);
 

@@ -6,9 +6,11 @@ using UnityEngine;
 namespace BattleBomb.UI.Combat
 {
     /// <summary>
-    /// The downed-state readout (D25): a marker over each fallen player naming the rescue verb, a
-    /// progress bar while a partner channels, and the wipe banner while the attempt-over beat
-    /// runs. IMGUI like the rest of the placeholder UI; purely observational.
+    /// The downed-state readout (D25/D31): a marker over each fallen player naming the rescue
+    /// verb, and while a partner channels, the progress bar plus the heartbeat — a pulse that
+    /// swells to its peak exactly when a press earns full accuracy, reading the same clock the
+    /// simulation prices with. The wipe banner runs during the attempt-over beat. IMGUI like the
+    /// rest of the placeholder UI; purely observational.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class ReviveHud : MonoBehaviour
@@ -75,11 +77,11 @@ namespace BattleBomb.UI.Combat
                 }
 
                 Rect rect = new Rect(screen.x - 110f, Screen.height - screen.y - 22f, 220f, 26f);
-                string label = $"P{players[i].PlayerId.Value + 1} DOWN — mash Light";
+                string label = $"P{players[i].PlayerId.Value + 1} DOWN — Light on the beat";
                 DrawLabel(rect, label, new Color(1f, 0.4f, 0.35f));
 
-                float progress = ChannelProgressFor(players, i);
-                if (progress > 0f)
+                CharacterActor reviver = ChannellingRescuerOf(players, i);
+                if (reviver != null)
                 {
                     Rect back = new Rect(screen.x - 45f, rect.y + 28f, 90f, 10f);
                     Color restore = GUI.color;
@@ -87,7 +89,17 @@ namespace BattleBomb.UI.Combat
                     GUI.DrawTexture(back, Texture2D.whiteTexture);
                     GUI.color = new Color(0.35f, 0.9f, 0.4f);
                     GUI.DrawTexture(
-                        new Rect(back.x + 1f, back.y + 1f, (back.width - 2f) * progress, back.height - 2f),
+                        new Rect(back.x + 1f, back.y + 1f, (back.width - 2f) * reviver.ReviveProgress, back.height - 2f),
+                        Texture2D.whiteTexture);
+
+                    // The heartbeat: swells to its peak at the accuracy window's centre (D31).
+                    float phase = Core.Combat.ReviveChannel.BeatPhase(
+                        reviver.Revive.StepsElapsed, reviver.ReviveBeatSteps);
+                    float pulse = 1f - 2f * Mathf.Abs(phase - 0.5f);
+                    float size = 8f + 16f * pulse;
+                    GUI.color = new Color(1f, 0.3f + 0.7f * pulse, 0.3f + 0.5f * pulse);
+                    GUI.DrawTexture(
+                        new Rect(back.x + back.width + 12f - size * 0.5f, back.y + 5f - size * 0.5f, size, size),
                         Texture2D.whiteTexture);
                     GUI.color = restore;
                 }
@@ -103,17 +115,17 @@ namespace BattleBomb.UI.Combat
             }
         }
 
-        private static float ChannelProgressFor(IReadOnlyList<CharacterActor> players, int target)
+        private static CharacterActor ChannellingRescuerOf(IReadOnlyList<CharacterActor> players, int target)
         {
             for (int i = 0; i < players.Count; i++)
             {
                 if (players[i].Revive.IsActive && players[i].Revive.TargetIndex == target)
                 {
-                    return players[i].ReviveProgress;
+                    return players[i];
                 }
             }
 
-            return 0f;
+            return null;
         }
 
         private void DrawLabel(Rect rect, string text, Color color)

@@ -10,6 +10,25 @@ using UnityEngine;
 namespace BattleBomb.Gameplay.Characters
 {
     /// <summary>
+    /// What one player step produced beyond motion: a completed revive (and the health fraction
+    /// the reviver's accuracy earned), or a deliberate loot grab (D30). The driver acts on both —
+    /// one actor never rewrites another, and only the driver knows which pickup was in reach.
+    /// </summary>
+    internal readonly struct ActorStepResult
+    {
+        public readonly int RevivedPartner;
+        public readonly float ReviveFraction;
+        public readonly bool GrabbedLoot;
+
+        public ActorStepResult(int revivedPartner, float reviveFraction, bool grabbedLoot)
+        {
+            RevivedPartner = revivedPartner;
+            ReviveFraction = reviveFraction;
+            GrabbedLoot = grabbedLoot;
+        }
+    }
+
+    /// <summary>
     /// The simulation's view of one character: it owns the motor state and writes the transform.
     /// <see cref="Step"/> is internal on purpose — Presentation and UI reference this assembly, and
     /// internal is the compiler-level guarantee they can observe but never drive it (§3).
@@ -39,10 +58,10 @@ namespace BattleBomb.Gameplay.Characters
         private int _hitStaggerSteps;
         private int _hitGraceSteps;
         private ReviveChannel _revive = ReviveChannel.Inactive;
-        private int _revivePumps = 10;
-        private int _revivePumpDecaySteps = 30;
-        private int _reviveFastSteps = 75;
-        private int _reviveSlowSteps = 240;
+        private float _reviveRequiredProgress = 10f;
+        private int _reviveBeatSteps = 45;
+        private int _reviveRushSteps = 15;
+        private int _revivePumpDecaySteps = 60;
         private float _reviveMinHealthFraction = 0.25f;
         private float _reviveMaxHealthFraction = 0.65f;
         private float _reviveRange = 1.8f;
@@ -67,10 +86,13 @@ namespace BattleBomb.Gameplay.Characters
         /// <summary>The revive channel this player is running, for the HUD to draw (task 35).</summary>
         public ReviveChannel Revive => _revive;
 
-        /// <summary>Pump progress 0–1, for the HUD's bar — it visibly drains when the mash stops.</summary>
+        /// <summary>Channel progress 0–1, for the HUD's bar — it visibly drains in silence.</summary>
         public float ReviveProgress => _revive.IsActive
-            ? Mathf.Clamp01((float)_revive.Pumps / _revivePumps)
+            ? Mathf.Clamp01(_revive.Progress / _reviveRequiredProgress)
             : 0f;
+
+        /// <summary>The heartbeat's period, so the HUD's pulse beats on the accuracy clock (D31).</summary>
+        public int ReviveBeatSteps => _reviveBeatSteps;
 
         internal float ReviveRange => _reviveRange;
         public float ChargeFraction => _kit == null || _kit.ChargeThresholdSteps <= 0
@@ -79,16 +101,17 @@ namespace BattleBomb.Gameplay.Characters
 
         /// <summary>
         /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
-        /// this step, or -1; the return value is the partner index whose revive completed here, or
-        /// -1 — the driver applies it, because one actor never rewrites another (D25, task 35).
-        /// <paramref name="reviveFraction"/> carries D29's price: the health fraction the mash
-        /// pace earned, meaningful only when a revive completed.
+        /// this step (or -1) and <paramref name="lootInReach"/> whether a drop sits in grab range —
+        /// both computed by the driver, which alone acts on the result. Contextual Light resolves
+        /// in priority order: the revive channel first (D25), then the loot grab (D30), then the
+        /// swing.
         /// </summary>
-        internal int Step(
+        internal ActorStepResult Step(
             int frame, in PlayerCommand command, in ArenaBounds bounds, float dt,
-            int reviveTarget, out float reviveFraction)
+            int reviveTarget, bool lootInReach)
         {
-            reviveFraction = 0f;
+            float reviveFraction = 0f;
+            bool grabbedLoot = false;
             _previous = _state;
 
             // Staggered or downed, the player's intent goes nowhere — the body still obeys
@@ -102,19 +125,21 @@ namespace BattleBomb.Gameplay.Characters
                 // Contextual Light (D17/D25): beside a downed partner the press channels instead
                 // of swinging, and only from combat-Ready — a swing or charge in flight keeps its
                 // buttons. While the channel runs, attack presses never reach the machine; each
-                // press is a pump, and the pace prices the revive (D29).
+                // press earns by its heartbeat timing, and accuracy prices the revive (D31).
                 bool mayChannel = _condition.InControl && _combat.Phase == AttackPhase.Ready;
                 _revive = ReviveChannel.Next(
                     _revive,
                     (effective.Pressed & CommandButtons.Light) != 0,
                     reviveTarget,
                     mayChannel,
+                    _reviveBeatSteps,
+                    _reviveRushSteps,
                     _revivePumpDecaySteps);
-                if (_revive.IsComplete(_revivePumps))
+                if (_revive.IsComplete(_reviveRequiredProgress))
                 {
                     completedRevive = _revive.TargetIndex;
                     reviveFraction = ReviveChannel.RestoredFraction(
-                        _revive.StepsElapsed, _reviveFastSteps, _reviveSlowSteps,
+                        _revive.AverageAccuracy,
                         _reviveMinHealthFraction, _reviveMaxHealthFraction);
                     _revive = ReviveChannel.Inactive;
                 }
@@ -125,12 +150,22 @@ namespace BattleBomb.Gameplay.Characters
                 effective = WithoutAttacks(effective);
             }
 
+            // The deliberate grab (D30): Light beside a drop takes it instead of swinging, but
+            // never while a revive channel holds the press — the partner outranks the loot.
+            if (!frozen && lootInReach && !_revive.IsActive && completedRevive < 0
+                && _condition.InControl && _combat.Phase == AttackPhase.Ready
+                && (effective.Pressed & CommandButtons.Light) != 0)
+            {
+                grabbedLoot = true;
+                effective = WithoutLight(effective);
+            }
+
             CombatStepResult combat = CombatMachine.Step(_combat, effective, _kit, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
                 // Hitstop freezes the whole character — the machine above only counted it down.
-                return completedRevive;
+                return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
             }
 
             _condition = _condition.Step();
@@ -172,7 +207,7 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             transform.position = _state.Position;
-            return completedRevive;
+            return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
         }
 
         internal void ApplyHitstop(int steps) => _combat = _combat.WithHitstop(steps);
@@ -343,6 +378,13 @@ namespace BattleBomb.Gameplay.Characters
             command.Pressed & ~(CommandButtons.Light | CommandButtons.Heavy),
             command.Released & ~(CommandButtons.Light | CommandButtons.Heavy));
 
+        private static PlayerCommand WithoutLight(in PlayerCommand command) => new PlayerCommand(
+            command.Frame,
+            command.Move,
+            command.Held & ~CommandButtons.Light,
+            command.Pressed & ~CommandButtons.Light,
+            command.Released & ~CommandButtons.Light);
+
         private PlayerCommand CombatMove(in PlayerCommand command, AttackPhase phase)
         {
             float scale = phase == AttackPhase.Charging
@@ -375,10 +417,10 @@ namespace BattleBomb.Gameplay.Characters
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
             _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
             _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
-            _revivePumps = _definition != null ? _definition.RevivePumps : 10;
-            _revivePumpDecaySteps = _definition != null ? _definition.RevivePumpDecaySteps : 30;
-            _reviveFastSteps = _definition != null ? _definition.ReviveFastSteps : 75;
-            _reviveSlowSteps = _definition != null ? _definition.ReviveSlowSteps : 240;
+            _reviveRequiredProgress = _definition != null ? _definition.ReviveRequiredProgress : 10f;
+            _reviveBeatSteps = _definition != null ? _definition.ReviveBeatSteps : 45;
+            _reviveRushSteps = _definition != null ? _definition.ReviveRushSteps : 15;
+            _revivePumpDecaySteps = _definition != null ? _definition.RevivePumpDecaySteps : 60;
             _reviveMinHealthFraction = _definition != null ? _definition.ReviveMinHealthFraction : 0.25f;
             _reviveMaxHealthFraction = _definition != null ? _definition.ReviveMaxHealthFraction : 0.65f;
             _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;

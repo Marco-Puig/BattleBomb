@@ -6,17 +6,19 @@ using UnityEngine;
 namespace BattleBomb.Tests.EditMode
 {
     /// <summary>
-    /// D25's partner revive with D29's skill, and the attempt-over beat (task 35): the pump
-    /// channel's full rulebook, the pace-priced return, and the all-down countdown — every rule
-    /// pure and stepped by hand.
+    /// D25's partner revive on D31's heartbeat, and the attempt-over beat (task 35): the timing
+    /// channel's full rulebook, the accuracy-priced return, and the all-down countdown — every
+    /// rule pure and stepped by hand. The beat is 40 here so its centre lands on a whole step.
     /// </summary>
     public sealed class ReviveTests
     {
-        private const int RequiredPumps = 10;
-        private const int DecaySteps = 30;
+        private const float Required = 10f;
+        private const int Beat = 40;
+        private const int Rush = 15;
+        private const int Decay = 60;
 
         private static ReviveChannel Step(in ReviveChannel channel, bool pressed, int target = 1, bool inControl = true) =>
-            ReviveChannel.Next(channel, pressed, target, inControl, DecaySteps);
+            ReviveChannel.Next(channel, pressed, target, inControl, Beat, Rush, Decay);
 
         [Test]
         public void A_light_press_beside_a_downed_partner_starts_the_channel()
@@ -25,7 +27,8 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(channel.IsActive, Is.True);
             Assert.That(channel.TargetIndex, Is.EqualTo(1));
-            Assert.That(channel.Pumps, Is.EqualTo(1));
+            Assert.That(channel.Progress, Is.EqualTo(ReviveChannel.SloppyPumpProgress));
+            Assert.That(channel.Pumps, Is.Zero, "the starting press is never accuracy-rated");
         }
 
         [Test]
@@ -37,49 +40,99 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Mashing_completes_after_the_required_pumps()
+        public void Riding_the_beat_pays_the_ceiling()
         {
             ReviveChannel channel = Step(ReviveChannel.Inactive, true);
-            for (int pump = 1; pump < RequiredPumps; pump++)
+            for (int k = 0; k < 5; k++)
             {
-                Assert.That(channel.IsComplete(RequiredPumps), Is.False, $"complete early at pump {pump}");
-                channel = Step(channel, false);
+                while (channel.StepsElapsed < Beat * k + Beat / 2 - 1)
+                {
+                    channel = Step(channel, false);
+                }
+
                 channel = Step(channel, true);
             }
 
-            Assert.That(channel.IsComplete(RequiredPumps), Is.True);
-            Assert.That(channel.Pumps, Is.EqualTo(RequiredPumps));
-            Assert.That(channel.StepsElapsed, Is.EqualTo(RequiredPumps * 2 - 1));
+            Assert.That(channel.IsComplete(Required), Is.True, "five perfect chunks complete it");
+            Assert.That(channel.AverageAccuracy, Is.EqualTo(1f).Within(1e-4f));
+            Assert.That(
+                ReviveChannel.RestoredFraction(channel.AverageAccuracy, 0.25f, 0.65f),
+                Is.EqualTo(0.65f).Within(1e-4f), "precision buys the max health");
         }
 
         [Test]
-        public void The_restored_fraction_rewards_the_fast_masher()
-        {
-            float fast = ReviveChannel.RestoredFraction(60, 75, 240, 0.25f, 0.65f);
-            float mid = ReviveChannel.RestoredFraction(158, 75, 240, 0.25f, 0.65f);
-            float slow = ReviveChannel.RestoredFraction(400, 75, 240, 0.25f, 0.65f);
-
-            Assert.That(fast, Is.EqualTo(0.65f), "at or under the fast pace pays the max");
-            Assert.That(mid, Is.LessThan(fast).And.GreaterThan(slow), "the middle pace sits between");
-            Assert.That(slow, Is.EqualTo(0.25f), "past the slow pace pays only the min");
-        }
-
-        [Test]
-        public void Silence_drains_pumps_until_the_channel_drops()
+        public void Pure_mashing_completes_fast_but_pays_the_floor()
         {
             ReviveChannel channel = Step(ReviveChannel.Inactive, true);
-            channel = Step(channel, true);
-            channel = Step(channel, true);
-            Assert.That(channel.Pumps, Is.EqualTo(3));
+            for (int i = 0; i < 19; i++)
+            {
+                channel = Step(channel, true);
+            }
 
-            for (int i = 0; i < DecaySteps; i++)
+            Assert.That(channel.IsComplete(Required), Is.True, "twenty sloppy chunks complete it");
+            Assert.That(channel.StepsElapsed, Is.EqualTo(20), "mashing is by far the fastest route");
+            Assert.That(channel.AverageAccuracy, Is.Zero, "every rushed press rates zero");
+            Assert.That(
+                ReviveChannel.RestoredFraction(channel.AverageAccuracy, 0.25f, 0.65f),
+                Is.EqualTo(0.25f), "and pays only the floor");
+        }
+
+        [Test]
+        public void An_off_beat_press_earns_between_the_extremes()
+        {
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            while (channel.StepsElapsed < 29)
             {
                 channel = Step(channel, false);
             }
 
-            Assert.That(channel.Pumps, Is.EqualTo(2), "one pump lost per quiet decay window");
+            channel = Step(channel, true);
 
-            for (int i = 0; i < DecaySteps * 2; i++)
+            Assert.That(channel.AverageAccuracy, Is.EqualTo(0.5f).Within(1e-4f));
+            float expected = ReviveChannel.SloppyPumpProgress
+                + ReviveChannel.SloppyPumpProgress
+                + 0.5f * (ReviveChannel.PerfectPumpProgress - ReviveChannel.SloppyPumpProgress);
+            Assert.That(channel.Progress, Is.EqualTo(expected).Within(1e-4f),
+                "an off-beat press earns more than sloppy, less than perfect");
+        }
+
+        [Test]
+        public void The_beat_clock_peaks_at_centre_and_wraps()
+        {
+            Assert.That(ReviveChannel.PressAccuracy(Beat / 2, Beat), Is.EqualTo(1f));
+            Assert.That(ReviveChannel.PressAccuracy(0, Beat), Is.EqualTo(0f));
+            Assert.That(ReviveChannel.PressAccuracy(Beat, Beat), Is.EqualTo(0f));
+            Assert.That(ReviveChannel.BeatPhase(Beat + Beat / 2, Beat), Is.EqualTo(0.5f));
+        }
+
+        [Test]
+        public void The_restored_fraction_clamps_its_accuracy()
+        {
+            Assert.That(ReviveChannel.RestoredFraction(2f, 0.25f, 0.65f), Is.EqualTo(0.65f));
+            Assert.That(ReviveChannel.RestoredFraction(-1f, 0.25f, 0.65f), Is.EqualTo(0.25f));
+        }
+
+        [Test]
+        public void Silence_drains_progress_until_the_channel_drops()
+        {
+            ReviveChannel channel = Step(ReviveChannel.Inactive, true);
+            while (channel.StepsElapsed < Beat / 2 - 1)
+            {
+                channel = Step(channel, false);
+            }
+
+            channel = Step(channel, true);
+            float earned = channel.Progress;
+
+            for (int i = 0; i < Decay; i++)
+            {
+                channel = Step(channel, false);
+            }
+
+            Assert.That(channel.IsActive, Is.True, "a healthy bar survives one drain");
+            Assert.That(channel.Progress, Is.LessThan(earned), "but silence costs progress");
+
+            for (int i = 0; i < Decay * 5; i++)
             {
                 channel = Step(channel, false);
             }
@@ -131,8 +184,9 @@ namespace BattleBomb.Tests.EditMode
             channel = Step(channel, false, target: -1);
             channel = Step(channel, true);
 
-            Assert.That(channel.Pumps, Is.EqualTo(1));
+            Assert.That(channel.Progress, Is.EqualTo(ReviveChannel.SloppyPumpProgress));
             Assert.That(channel.StepsElapsed, Is.EqualTo(1));
+            Assert.That(channel.Pumps, Is.Zero);
         }
 
         [Test]

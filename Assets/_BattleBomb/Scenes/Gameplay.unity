@@ -460,6 +460,7 @@ GameObject:
   - component: {fileID: 1619851943}
   - component: {fileID: 1619851944}
   - component: {fileID: 1619851945}
+  - component: {fileID: 1619851946}
   m_Layer: 0
   m_Name: Debug Overlay
   m_TagString: Untagged
@@ -543,6 +544,21 @@ MonoBehaviour:
   _driver: {fileID: 463551038}
   _camera: {fileID: 1778134441}
   _fontSize: 18
+--- !u!114 &1619851946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619851940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad512674e2e1bc34f99564a4650a6dfe, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.LootHud
+  _driver: {fileID: 463551038}
+  _camera: {fileID: 1778134441}
+  _fontSize: 14
 --- !u!1 &1632419326
 GameObject:
   m_ObjectHideFlags: 0

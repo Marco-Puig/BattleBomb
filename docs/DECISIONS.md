@@ -641,6 +641,39 @@ perfectly."
 
 ---
 
+## D30 — Loot is inspected and taken, never hoovered · **Locked** *(amends D23)*
+**Michael, 2026-08-19, after the M3 mega pass:** "I prefer the loot to show stats when you walk
+over it — not everything is an upgrade, not everything is worth your time. Click Light to grab
+it. There could be a setting to autoequip new items when picked up, but by default just place
+new stuff in your inventory."
+
+- **Walking over a drop shows what it is.** Stats when M4's items exist; the placeholder shows
+  its quality roll. Judging worth is the player's job — the game never assumes a drop matters.
+- **Light takes it, deliberately.** Contextual like the revive; no touch-hoover. First press
+  wins a contested drop, so D23's couch race survives — it just requires intent.
+- **Inventory by default, auto-equip as a setting** (lands with M4/M6). Two playstyles honored:
+  rush-grab-and-sort-later, and inspect-on-the-spot.
+
+---
+
+## D31 — The heartbeat revive: precision buys health, mashing buys time · **Locked** *(amends D29)*
+**Michael, same session:** "the mashing isn't quite the same as Castle Crashers' heartbeat
+quicktime revive, where you can spend time getting a precise revive with a lot of hp or a quick
+button mash with very little hp."
+
+- **A heartbeat pulses over the downed partner** (paper: every 45 steps). A press **on the
+  beat** is worth a big progress chunk (paper 2.0) at full accuracy; a **rushed** press (within
+  15 steps of the last) is worth the floor (paper 0.5) at zero accuracy; between the two,
+  accuracy is how close to the beat's centre the press landed.
+- **Health restored = average accuracy** across the channel (25% → 65%). A pure mash completes
+  fastest and pays the floor; riding the beat takes seconds longer and pays the ceiling. D29's
+  pace-based pricing is gone.
+- **Silence still drains progress** (paper: one chunk per 60 quiet steps — longer than a beat,
+  so the rhythm itself is never punished) and an empty bar drops the channel. The break rules,
+  the contextual-Light gate, and the revive grace stand.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

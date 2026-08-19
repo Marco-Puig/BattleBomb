@@ -50,8 +50,8 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Steps everyone stays down before the sandbox resets (task 35, paper value).</summary>
         private const int AttemptResetBeatSteps = 120;
 
-        /// <summary>Planar reach of a free grab (D23, paper value).</summary>
-        private const float GrabRadius = 0.9f;
+        /// <summary>Planar reach of a grab, and of the drop's inspect panel (D23/D30, paper value).</summary>
+        public const float GrabRadius = 0.9f;
 
         /// <summary>The elite quality bonus slot — no elite spawns until M6 pays it (decision 8).</summary>
         private const float LootEliteBonus = 1.5f;
@@ -95,6 +95,9 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;
+
+        /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
+        public IReadOnlyList<DropPickup> Pickups => _pickups;
 
         public PlayerRegistry Players => _players;
 
@@ -161,12 +164,22 @@ namespace BattleBomb.Gameplay.Simulation
                     PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
                         ? sampled
                         : PlayerCommand.Idle(frame);
-                    int revived = actor.Step(
-                        frame, command, bounds, StepDuration, FindReviveTarget(actors, i),
-                        out float reviveFraction);
-                    if (revived >= 0 && revived < actors.Count)
+                    int grabTarget = FindGrabTarget(actor);
+                    ActorStepResult result = actor.Step(
+                        frame, command, bounds, StepDuration,
+                        FindReviveTarget(actors, i), grabTarget >= 0);
+                    if (result.RevivedPartner >= 0 && result.RevivedPartner < actors.Count)
                     {
-                        actors[revived].ApplyRevive(reviveFraction);
+                        actors[result.RevivedPartner].ApplyRevive(result.ReviveFraction);
+                    }
+
+                    if (result.GrabbedLoot && grabTarget >= 0 && grabTarget < _pickups.Count
+                        && _pickups[grabTarget] != null)
+                    {
+                        int id = actor.PlayerId.Value;
+                        _grabCounts[id] = GrabCountFor(id) + 1;
+                        Destroy(_pickups[grabTarget].gameObject);
+                        _pickups.RemoveAt(grabTarget);
                     }
                 }
 
@@ -311,43 +324,41 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         /// <summary>
-        /// Free-grab resolution (D23): the first living player inside the grab radius keeps the
-        /// token, walked in registry order so a simultaneous couch dive has one deterministic
-        /// winner. Downed players grab nothing.
+        /// The drop this player's Light would take right now (D30): the nearest one inside the
+        /// grab radius, or -1. Grabs resolve per-actor in registry order, so a simultaneous
+        /// couch press has one deterministic winner — the loser's press finds nothing left.
         /// </summary>
+        private int FindGrabTarget(CharacterActor player)
+        {
+            int best = -1;
+            float bestSq = float.MaxValue;
+            const float radiusSq = GrabRadius * GrabRadius;
+            for (int i = 0; i < _pickups.Count; i++)
+            {
+                if (_pickups[i] == null)
+                {
+                    continue;
+                }
+
+                Vector3 to = _pickups[i].Position - player.Position;
+                to.y = 0f;
+                float sq = to.sqrMagnitude;
+                if (sq <= radiusSq && sq < bestSq)
+                {
+                    best = i;
+                    bestSq = sq;
+                }
+            }
+
+            return best;
+        }
+
         private void StepPickups(IReadOnlyList<CharacterActor> players)
         {
             for (int i = _pickups.Count - 1; i >= 0; i--)
             {
-                DropPickup pickup = _pickups[i];
-                if (pickup == null)
+                if (_pickups[i] == null)
                 {
-                    _pickups.RemoveAt(i);
-                    continue;
-                }
-
-                int grabber = -1;
-                for (int p = 0; p < players.Count; p++)
-                {
-                    if (players[p].Condition.IsDown)
-                    {
-                        continue;
-                    }
-
-                    Vector3 to = players[p].Position - pickup.Position;
-                    to.y = 0f;
-                    if (to.sqrMagnitude <= GrabRadius * GrabRadius)
-                    {
-                        grabber = p;
-                        break;
-                    }
-                }
-
-                if (grabber >= 0)
-                {
-                    int id = players[grabber].PlayerId.Value;
-                    _grabCounts[id] = GrabCountFor(id) + 1;
-                    Destroy(pickup.gameObject);
                     _pickups.RemoveAt(i);
                 }
             }

@@ -11,7 +11,10 @@
 > movement. Task 31 complete: the four archetype brains as one pure machine in `Core/Enemies`
 > (grunt/brute close on both axes and swing from reach; ranged/caster hold a standoff band, fire
 > only from inside it, and never close depth; brutes never flinch; sticky `TargetSelection` skips
-> downed players). Task 32 (projectiles) is next.
+> downed players). Task 32 complete: `ProjectileState`/`ProjectileSimulation` — straight-line
+> fixed-step flight aimed at the fire-time target position, spherical hit test (a bolt flies at
+> firing height, so jumping over it works), life expiry. Task 33 (enemy authoring, actors, and
+> the spawner) is next — that is where the sandbox becomes a fight.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

@@ -8,7 +8,10 @@
 > `CharacterDefinition`, the actor gates commands while staggered/down and exposes
 > `ApplyEnemyHit` — the seam tasks 31–33 call. **Task 30 was built, then cut by D26** (Block
 > removed with the input verb — fc9dbb6 reverted by a2d5d11); defence is the defence stat and
-> movement. Task 31 (the enemy brain) is next.
+> movement. Task 31 complete: the four archetype brains as one pure machine in `Core/Enemies`
+> (grunt/brute close on both axes and swing from reach; ranged/caster hold a standoff band, fire
+> only from inside it, and never close depth; brutes never flinch; sticky `TargetSelection` skips
+> downed players). Task 32 (projectiles) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

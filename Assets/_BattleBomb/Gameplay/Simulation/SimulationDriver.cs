@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
+using BattleBomb.Core.Enemies;
+using BattleBomb.Core.Loot;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.World;
 using UnityEngine;
@@ -31,6 +34,9 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("The arena characters are clamped to. Leave empty to fall back to ArenaBounds.Default.")]
         [SerializeField] private ArenaVolume _arena;
 
+        [Tooltip("Seed for the loot rolls (D23). Gameplay owns the seed; Core owns the maths.")]
+        [SerializeField] private int _lootSeed = 1;
+
         private const float ProjectileRadius = 0.6f;
         private const float ProjectileKnockback = 4f;
         private const int ProjectileHitstop = 2;
@@ -42,6 +48,12 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Steps everyone stays down before the sandbox resets (task 35, paper value).</summary>
         private const int AttemptResetBeatSteps = 120;
+
+        /// <summary>Planar reach of a free grab (D23, paper value).</summary>
+        private const float GrabRadius = 0.9f;
+
+        /// <summary>The elite quality bonus slot — no elite spawns until M6 pays it (decision 8).</summary>
+        private const float LootEliteBonus = 1.5f;
 
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
@@ -56,6 +68,9 @@ namespace BattleBomb.Gameplay.Simulation
         private SimulationClock _clock;
         private bool _warnedMissingArena;
         private AttemptCountdown _attempt;
+        private DeterministicRandom _lootRng;
+        private readonly List<DropPickup> _pickups = new List<DropPickup>();
+        private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
 
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
@@ -69,6 +84,13 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>The attempt-over beat is running: everyone is down, the reset is counting.</summary>
         public bool AttemptEnding => _attempt.StepsAllDown > 0;
+
+        /// <summary>Raised inside the fixed step when an enemy's dying beat ends (task 36).</summary>
+        public event Action<EnemyDeath> EnemyDied;
+
+        /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
+        public int GrabCountFor(int playerIdValue) =>
+            _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;
 
         public PlayerRegistry Players => _players;
 
@@ -116,6 +138,7 @@ namespace BattleBomb.Gameplay.Simulation
             // OnEnable rather than Awake: it re-runs after a mid-play domain reload, so a script
             // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
+            _lootRng = new DeterministicRandom((uint)_lootSeed);
         }
 
         private void Update()
@@ -163,7 +186,8 @@ namespace BattleBomb.Gameplay.Simulation
                 IReadOnlyList<ISimTarget> targets = Targets.Ordered;
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    if (targets[i] is EnemyActor holder && holder.TakesMeleeTurns && holder.IsAttacking
+                    if (targets[i] is EnemyActor holder && !holder.IsDepleted
+                        && holder.TakesMeleeTurns && holder.IsAttacking
                         && holder.TargetIndex >= 0 && holder.TargetIndex < _attackTokens.Count)
                     {
                         _attackTokens[holder.TargetIndex] += 1;
@@ -197,8 +221,82 @@ namespace BattleBomb.Gameplay.Simulation
                 }
 
                 StepProjectiles(actors, StepDuration);
+                ResolveDeaths();
+                StepPickups(actors);
                 StepAttemptFlow(actors);
                 Stepped?.Invoke(frame);
+            }
+        }
+
+        /// <summary>
+        /// Ends each finished dying beat: announce the death, roll D23's drop, spawn the token if
+        /// it paid out, despawn the corpse. Progress, difficulty, and multipliers hold their
+        /// paper value of 1 until M7 builds the systems behind those slots (decision 9).
+        /// </summary>
+        private void ResolveDeaths()
+        {
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (!(targets[i] is EnemyActor enemy) || !enemy.ConsumeDeath())
+                {
+                    continue;
+                }
+
+                EnemySpec spec = enemy.Spec;
+                EnemyDied?.Invoke(new EnemyDeath(spec.Rank, spec.XpReward, false, enemy.Position));
+
+                _lootRng = DropRoll.Roll(
+                    _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
+                if (drop.Dropped)
+                {
+                    _pickups.Add(DropPickup.Spawn(enemy.Position, drop.Quality));
+                }
+
+                Destroy(enemy.gameObject);
+            }
+        }
+
+        /// <summary>
+        /// Free-grab resolution (D23): the first living player inside the grab radius keeps the
+        /// token, walked in registry order so a simultaneous couch dive has one deterministic
+        /// winner. Downed players grab nothing.
+        /// </summary>
+        private void StepPickups(IReadOnlyList<CharacterActor> players)
+        {
+            for (int i = _pickups.Count - 1; i >= 0; i--)
+            {
+                DropPickup pickup = _pickups[i];
+                if (pickup == null)
+                {
+                    _pickups.RemoveAt(i);
+                    continue;
+                }
+
+                int grabber = -1;
+                for (int p = 0; p < players.Count; p++)
+                {
+                    if (players[p].Condition.IsDown)
+                    {
+                        continue;
+                    }
+
+                    Vector3 to = players[p].Position - pickup.Position;
+                    to.y = 0f;
+                    if (to.sqrMagnitude <= GrabRadius * GrabRadius)
+                    {
+                        grabber = p;
+                        break;
+                    }
+                }
+
+                if (grabber >= 0)
+                {
+                    int id = players[grabber].PlayerId.Value;
+                    _grabCounts[id] = GrabCountFor(id) + 1;
+                    Destroy(pickup.gameObject);
+                    _pickups.RemoveAt(i);
+                }
             }
         }
 
@@ -245,6 +343,16 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _projectiles.Clear();
+            for (int i = 0; i < _pickups.Count; i++)
+            {
+                if (_pickups[i] != null)
+                {
+                    Destroy(_pickups[i].gameObject);
+                }
+            }
+
+            _pickups.Clear();
+            _grabCounts.Clear();
             AttemptReset?.Invoke();
         }
 

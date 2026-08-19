@@ -83,6 +83,12 @@ namespace BattleBomb.UI.Combat
                 string label = condition.IsDown
                     ? $"P{players[i].PlayerId.Value + 1}  DOWN"
                     : $"P{players[i].PlayerId.Value + 1}  {Mathf.CeilToInt(condition.Health.Current)}/{Mathf.CeilToInt(condition.Health.Max)}";
+                int grabs = _driver.GrabCountFor(players[i].PlayerId.Value);
+                if (grabs > 0)
+                {
+                    label += $"   loot {grabs}";
+                }
+
                 _style.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
                 GUI.Label(new Rect(back.x + 9f, back.y + 1f, back.width, back.height), label, _style);
                 _style.normal.textColor = condition.IsDown ? new Color(1f, 0.45f, 0.4f) : Color.white;

@@ -45,7 +45,17 @@
 > (paper 10 to complete), the mash pace prices the restored health (75 steps → 65%, 240 → 25%,
 > linear between), and silence drains a pump per 30 quiet steps until the channel drops. All
 > authored on `CharacterDefinition`; the break rules and grace stand. The mash feel is on
-> Michael's mega-pass checklist. Task 36 (death + the D23 drop seam) is next.
+> Michael's mega-pass checklist. Task 36 complete: `Core/Loot` — `DeterministicRandom` (seeded
+> xorshift value-struct, the project's first RNG, decision 11) and `DropRoll` (chance
+> 10%+5%×rank capped 60%; quality = [0.5,1.5) spread × progress × difficulty × multipliers ×
+> elite bonus, slots at paper 1 until M7; both draws always consumed so the stream never depends
+> on outcomes). Driver owns the seed (serialized), raises `EnemyDied` (rank/XP/IsElite=false/
+> position) when the 45-step dying beat ends, rolls once per kill, spawns the gold `DropPickup`
+> token at the corpse, and resolves free grabs in the fixed step (registry order wins ties,
+> downed players grab nothing, 0.9 radius); health bars show a per-player loot count; wipe
+> resets clear tokens and counts; dying enemies release their melee token. Live-verified by
+> reflection kill: beat → despawn → token at corpse → unclaimed outside radius → grabbed the
+> step a player stands on it → cleared by the wipe. Task 37 (soft separation) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

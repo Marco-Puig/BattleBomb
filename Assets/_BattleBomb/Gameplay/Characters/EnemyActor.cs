@@ -20,6 +20,9 @@ namespace BattleBomb.Gameplay.Characters
     {
         private const float TargetSwitchMargin = 1.5f;
 
+        /// <summary>Steps a corpse lingers before despawning (task 36) — the fade is presentation's.</summary>
+        private const int DeathBeatSteps = 45;
+
         [Tooltip("Authored archetype this enemy runs. The spawner assigns it on spawn.")]
         [SerializeField] private EnemyDefinition _definition;
 
@@ -34,6 +37,8 @@ namespace BattleBomb.Gameplay.Characters
         private Health _health;
         private int _targetIndex = -1;
         private Vector3 _strikeMomentum;
+        private int _depletedSteps;
+        private bool _deathReported;
 
         public Component Body => this;
         public Vector3 Position => _state.Position;
@@ -94,7 +99,9 @@ namespace BattleBomb.Gameplay.Characters
 
             if (_health.IsDepleted)
             {
-                // Inert but physical: knockback in flight still lands and settles (task 36 owns death).
+                // The dying beat: still physical, so a killing blow's knockback lands and
+                // settles before the driver despawns the corpse and rolls the drop (task 36).
+                _depletedSteps += 1;
                 _state = CharacterMotor.Step(_state, PlayerCommand.Idle(frame), _spec.Movement, bounds, dt);
                 transform.position = _state.Position;
                 return false;
@@ -165,6 +172,21 @@ namespace BattleBomb.Gameplay.Characters
         }
 
         internal void ApplyHitstop(int steps) => _brain = _brain.WithHitstop(steps);
+
+        /// <summary>
+        /// True exactly once, when the dying beat has run out — the driver's cue to announce the
+        /// death, roll the drop, and despawn (task 36).
+        /// </summary>
+        internal bool ConsumeDeath()
+        {
+            if (_deathReported || !_configured || !_health.IsDepleted || _depletedSteps < DeathBeatSteps)
+            {
+                return false;
+            }
+
+            _deathReported = true;
+            return true;
+        }
 
         private void Awake()
         {

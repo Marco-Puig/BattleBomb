@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8751313463972710287}
   - component: {fileID: 783673701229851742}
   - component: {fileID: 3119867467045029815}
+  - component: {fileID: 3119867467045029816}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -100,12 +101,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 3245215991650535228}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: df23cec95af6bd44db012e60503c58a5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.HitFlash
+  m_Script: {fileID: 11500000, guid: 8648d2cdc1a961743bad0dc20c9f829a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Enemies.EnemyVisual
+  _enemy: {fileID: 1511727030228517298}
   _driver: {fileID: 0}
-  _renderer: {fileID: 0}
   _flashSeconds: 0.12
+--- !u!114 &3119867467045029816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3245215991650535228}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aec34fc373cfa8849bb8327a6919e248, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Enemies.TelegraphTell
+  _enemy: {fileID: 1511727030228517298}
 --- !u!1 &8310384833521273880
 GameObject:
   m_ObjectHideFlags: 0

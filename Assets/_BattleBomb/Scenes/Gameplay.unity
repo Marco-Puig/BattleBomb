@@ -319,6 +319,7 @@ GameObject:
   m_Component:
   - component: {fileID: 869505449}
   - component: {fileID: 869505448}
+  - component: {fileID: 869505450}
   m_Layer: 0
   m_Name: Enemies
   m_TagString: Untagged
@@ -356,6 +357,20 @@ MonoBehaviour:
   - Definition: {fileID: 11400000, guid: b6907e80fd3843f4481c67c18a63953a, type: 2}
     Position: {x: 9, y: 0, z: 0}
     DelaySteps: 480
+--- !u!114 &869505450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869505447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97b7e467a6add914c90801687b5ef177, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Enemies.ProjectileVisuals
+  _driver: {fileID: 463551038}
+  _boltHeight: 1
 --- !u!4 &869505449
 Transform:
   m_ObjectHideFlags: 0
@@ -443,6 +458,7 @@ GameObject:
   - component: {fileID: 1619851941}
   - component: {fileID: 1619851942}
   - component: {fileID: 1619851943}
+  - component: {fileID: 1619851944}
   m_Layer: 0
   m_Name: Debug Overlay
   m_TagString: Untagged
@@ -495,6 +511,22 @@ MonoBehaviour:
   _fontSize: 30
   _lifetimeSeconds: 0.8
   _riseUnitsPerSecond: 1.4
+--- !u!114 &1619851944
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619851940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b41d6cf3822eff146bb4d3bf1db08a9f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.PlayerHealthBars
+  _driver: {fileID: 463551038}
+  _fontSize: 16
+  _barWidth: 240
+  _barHeight: 22
 --- !u!1 &1632419326
 GameObject:
   m_ObjectHideFlags: 0

@@ -22,7 +22,15 @@
 > retarget the survivor. **Plus D28**, Michael's playtest direction: turn-taking attack tokens
 > (waiting melee circles a hover ring), hit-and-peel cooldowns, depth-drifting archers, seeded
 > per-enemy desync, and hops through the shared motor — live-verified alternating grunts and
-> drifting archers. Task 34 (presentation — telegraph tells, health bars) is next.
+> drifting archers. Task 34 complete: per-archetype silhouettes (capsule/cylinder/sphere/cube,
+> distinct colours), `EnemyVisual` as the enemy body's single tint writer (rest colour, telegraph
+> ramp + windup swell, hit flash, depleted grey — one writer because two flicker, the ChargeTell
+> lesson) with interpolated follow, `TelegraphTell` drawing the brute's ground impact box heating
+> ember→orange, the caster's tell ending in a white flicker, projectile bolts sized by damage with
+> grounded shadow blobs (bolt renders chest-high, sim flies at foot height), and `PlayerHealthBars`
+> top-centre with the downed state spelled out. Live-verified: bolts + blobs in flight, the marker
+> underfoot mid-telegraph, players flashing on enemy hits, bars tracking to DOWN. Task 35
+> (downed/revive/attempt reset) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

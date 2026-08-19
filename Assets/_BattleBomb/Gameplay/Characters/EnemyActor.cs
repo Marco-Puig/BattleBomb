@@ -41,6 +41,7 @@ namespace BattleBomb.Gameplay.Characters
         public Facing Facing => _state.Facing;
         public Health Health => _health;
         public bool IsDepleted => !_configured || _health.IsDepleted;
+        public bool IsConfigured => _configured;
         public EnemySpec Spec => _spec;
         public EnemyPhase Phase => _brain.Phase;
 

@@ -1,6 +1,8 @@
 # Handoff — M3: enemies
 
-> **Status — in progress.** Task 28 complete and play-approved, plus three playtest-directed
+> **Status — complete, 2026-08-19.** Every criterion in "M3 is done when" is met, and Michael's
+> mega pass plus his feel checks approved the whole milestone. The log: Task 28 complete and
+> play-approved, plus three playtest-directed
 > follow-ups: the lunge works airborne (sheds carried momentum, full grounded range), knockback
 > inherits attacker momentum through a saturating curve (cap 6, half at 6 u/s — the two consts in
 > `HitApplication`), and aerials knock back ~10% harder than their ground counterparts (Michael's
@@ -70,7 +72,19 @@
 > zero, and average accuracy prices the restored health 25%→65% — mash completes fastest and
 > pays the floor, riding the beat pays the ceiling; the ReviveHud pulse reads the same clock the
 > simulation prices with). Both implemented; contextual Light resolves revive → grab → swing.
-> Feel check on the heartbeat and the press-grab, then task 38's close-out.
+> Michael approved both feels — "works as intended, feels natural" — and M3 closed. Fine-tuning
+> may follow his conversation with his collaborator; every number involved is authored data.
+> **M4 (gear and stats) is next**; its design session inherits O9 (prestige gear locks), O10
+> (the Equipment button ruling), and D30's inventory shape (default-to-inventory, auto-equip as
+> a setting — and inventory was their biggest 2019 hurdle, so M4/M6 design it Core-data-first
+> with tests before any UI).
+>
+> **What felt wrong to build, for the next milestone's eyes:** contextual Light now carries
+> three meanings (revive → grab → swing) — that pressure on the five-verb budget needs watching
+> when M5's Magic arrives. The driver's fixed step has grown to seven phases (players, enemies,
+> separation, projectiles, deaths, pickups, attempt flow) — resist adding an eighth before
+> considering a tidy-up. And the IMGUI pile on "Debug Overlay" is five components deep; fine
+> strictly as placeholder.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

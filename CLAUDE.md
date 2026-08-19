@@ -94,8 +94,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M0** | Foundation — Unity 6 + URP, assemblies, Input System, tests green | **complete** |
 | **M1** | Movement and camera — two players on the depth plane, shared camera | **complete** |
 | **M2** | Combat core — the D19 kit against training dummies | **complete** |
-| **M3** | Enemies — plus the aerial pair, deferred into it | in progress |
-| M4 | Gear and stats | |
+| **M3** | Enemies — plus the aerial pair, deferred into it | **complete** |
+| M4 | Gear and stats | next |
 | M5 | Abilities and elements | |
 | M6 | Loot loop | |
 | M7 | Chapters *(first point story input is needed)* | |

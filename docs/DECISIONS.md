@@ -571,9 +571,38 @@ now**, explicitly on watch.
 
 ---
 
+## D27 — Equipment: two passive slots, no deployables, no keys · **Locked** *(amends D19)*
+
+Directed by Michael with his collaborator (2026-08-18).
+
+- **No deployable equipment** — no turrets, no placed constructions. The Dungeon Defenders tower
+  line is out entirely, which also deletes the one-best-tower meta D19 guarded against.
+- **No progression-gating equipment** — nothing like Castle Crashers' shovel or horn. Story
+  progress never depends on carrying an item.
+- **Two slots, effects passive.** Equipment modifies the player while worn; it is never an
+  activated ability.
+- **Bows are weapons**, a deliberate weapon class — not equipment. First recorded ranged weapon
+  class; M4's weapon design inherits this.
+- **Potions (health/mana) are instant-use from the inventory**, not equipment and not a loadout
+  slot.
+
+**Supersedes in D19:** the "utility-first catalog: healing, deployment, control, mobility" line
+(deployment is out, healing lives in potions) and the "equipment is a moment, not a rotation"
+framing — passive equipment has no moment. D19's structural guard survives in spirit: equipment
+stays spice; the build focus stays armor and weapon.
+
+**Consequence — opens O10:** with every equipment effect passive, the **Equipment button** (D17)
+has nothing left to activate.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
+- **O10 — The Equipment verb after D27 (2026-08-18).** Passive equipment leaves the Equipment
+  button without a function: potions bypass it (inventory instant-use) and nothing else activates.
+  Candidate resolution: cut the verb — four buttons (Light, Heavy, Magic, Jump), which hands back
+  exactly the mobile control-budget headroom that put Heavy on watch in D26. Michael to rule.
 - **O9 — Prestige must feel like a fresh start without invalidating the loot grind
   (2026-08-18).** D24 resets the level, but endgame gear carries, so a prestiged player stomps the
   early game and the reset is theatre. Michael and his collaborator floated story-milestone

@@ -117,7 +117,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
 | Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
 | Elemental attack | **Magic** | The character's element expressed offensively (§4). |
-| Equipment use | **Equipment** | 1–2 chosen loadout slots from an unlockable catalog. Utility-first, damage derived from the weapon — spice, never the meta (D19). |
+| Equipment use | **Equipment** | Two equipped slots with **passive** effects (D27) — no deployables, no progression keys; potions are inventory instant-use. Spice, never the meta (D19). The button itself now has nothing to activate — whether the verb survives is **O10**. |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
 ### 3.1 Controls
@@ -180,8 +180,8 @@ Earth.
 The retention engine. Depth here is intentional and unbounded, unlike combat.
 
 **Terminology, binding (D19):** *gear* = armor + weapon, the build this section describes;
-*Equipment* = the loadout button (D17, §3). Equipment damage derives from the weapon and can never
-out-grow it.
+*Equipment* = the two-slot passive loadout (D27 — the button it once activated is O10). Bows are
+**weapons**, a deliberate ranged weapon class, never equipment; potions are inventory instant-use.
 
 ### 5.1 Axes
 

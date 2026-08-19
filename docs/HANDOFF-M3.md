@@ -13,8 +13,13 @@
 > only from inside it, and never close depth; brutes never flinch; sticky `TargetSelection` skips
 > downed players). Task 32 complete: `ProjectileState`/`ProjectileSimulation` — straight-line
 > fixed-step flight aimed at the fire-time target position, spherical hit test (a bolt flies at
-> firing height, so jumping over it works), life expiry. Task 33 (enemy authoring, actors, and
-> the spawner) is next — that is where the sandbox becomes a fight.
+> firing height, so jumping over it works), life expiry. Task 33 complete: `EnemyDefinition` →
+> `EnemySpec`, `EnemyActor` on the shared motor registered through the generalised
+> `TargetRegistry` (`ISimTarget`), `EnemySpawner` with authored entries and `ResetBrood`, the
+> driver stepping brains/projectiles and resolving both hit directions; dummies left the scene
+> (the prefab remains for tuning); four abstract archetype assets in `Data/Enemies/` on paper
+> numbers. Live-verified end to end: enemies spawn, chase, telegraph, hit, down a player, and
+> retarget the survivor. Task 34 (presentation — telegraph tells, health bars) is next.
 
 Continues `docs/HANDOFF-M2.md` (tasks 17–27). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

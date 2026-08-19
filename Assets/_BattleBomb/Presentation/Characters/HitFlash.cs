@@ -38,8 +38,13 @@ namespace BattleBomb.Presentation.Characters
                 _renderer = GetComponentInChildren<Renderer>();
             }
 
-            TrainingDummy dummy = GetComponentInParent<TrainingDummy>();
-            _body = dummy != null ? (Component)dummy : GetComponentInParent<CharacterActor>();
+            Component body = GetComponentInParent<TrainingDummy>();
+            if (body == null)
+            {
+                body = GetComponentInParent<EnemyActor>();
+            }
+
+            _body = body != null ? body : GetComponentInParent<CharacterActor>();
             _block = new MaterialPropertyBlock();
             if (_renderer != null && _renderer.sharedMaterial != null
                 && _renderer.sharedMaterial.HasProperty(BaseColor))
@@ -77,7 +82,9 @@ namespace BattleBomb.Presentation.Characters
             }
 
             Color color = _restColor;
-            if (_body is TrainingDummy dummy && dummy.IsDepleted)
+            bool depleted = (_body is TrainingDummy dummy && dummy.IsDepleted)
+                || (_body is EnemyActor enemy && enemy.IsDepleted);
+            if (depleted)
             {
                 color = new Color(0.32f, 0.32f, 0.32f);
             }

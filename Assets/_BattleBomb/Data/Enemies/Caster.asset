@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ddab27e6d1466643b6541112c358922, type: 3}
+  m_Name: Caster
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.EnemyDefinition
+  _archetype: 2
+  _element: 0
+  _attack:
+    _startupSteps: 36
+    _activeSteps: 1
+    _recoverySteps: 16
+    _damage: 10
+    _reachX: 1.6
+    _depthTolerance: 1
+    _lungeDistance: 0
+    _maxTargets: 1
+    _knockbackSpeed: 5
+    _launchSpeed: 0
+    _hitstopSteps: 2
+    _moveSpeedScale: 1
+    _resolvesOnLanding: 0
+  _cooldownSteps: 150
+  _interruptible: 1
+  _staggerSteps: 16
+  _projectileSpeed: 6
+  _standoffNearX: 5
+  _standoffFarX: 8
+  _maxSpeed: 2.2
+  _acceleration: 40
+  _deceleration: 60
+  _depthSpeedScale: 0.85
+  _maxHealth: 25
+  _rank: 3
+  _xpReward: 20
+  _resistFire: 1
+  _resistWater: 1
+  _resistElectric: 1
+  _resistEarth: 1

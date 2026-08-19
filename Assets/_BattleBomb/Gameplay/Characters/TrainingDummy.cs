@@ -14,7 +14,7 @@ namespace BattleBomb.Gameplay.Characters
     /// scene reload. M3's enemies replace this; the registry and hit flow stay.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class TrainingDummy : MonoBehaviour
+    public sealed class TrainingDummy : MonoBehaviour, ISimTarget
     {
         [SerializeField] private float _maxHealth = 50f;
 
@@ -31,6 +31,7 @@ namespace BattleBomb.Gameplay.Characters
         private int _hitstopSteps;
         private int _respawnIn;
 
+        public Component Body => this;
         public Vector3 Position => _state.Position;
         public Vector3 PreviousPosition => _previous.Position;
         public Health Health => _health;

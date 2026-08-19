@@ -31,11 +31,19 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("The arena characters are clamped to. Leave empty to fall back to ArenaBounds.Default.")]
         [SerializeField] private ArenaVolume _arena;
 
+        private const float ProjectileRadius = 0.6f;
+        private const float ProjectileKnockback = 4f;
+        private const int ProjectileHitstop = 2;
+        private const int ProjectileLifeSteps = 240;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
         private readonly List<Vector3> _candidatePositions = new List<Vector3>();
         private readonly List<Component> _candidateOwners = new List<Component>();
         private readonly List<int> _hitIndices = new List<int>();
+        private readonly List<Vector3> _playerPositions = new List<Vector3>();
+        private readonly List<bool> _playerDowned = new List<bool>();
+        private readonly List<ProjectileState> _projectiles = new List<ProjectileState>();
 
         private SimulationClock _clock;
         private bool _warnedMissingArena;
@@ -51,6 +59,9 @@ namespace BattleBomb.Gameplay.Simulation
         public CharacterRegistry Characters { get; } = new CharacterRegistry();
 
         public TargetRegistry Targets { get; } = new TargetRegistry();
+
+        /// <summary>Bolts in flight, for Presentation to draw. Simulated inside the fixed step.</summary>
+        public IReadOnlyList<ProjectileState> Projectiles => _projectiles;
 
         public ArenaBounds Bounds
         {
@@ -110,12 +121,29 @@ namespace BattleBomb.Gameplay.Simulation
                     actor.Step(frame, command, bounds, StepDuration);
                 }
 
-                IReadOnlyList<TrainingDummy> dummies = Targets.Ordered;
-                for (int i = 0; i < dummies.Count; i++)
+                // What the enemies may know this step (their perception is built from this).
+                _playerPositions.Clear();
+                _playerDowned.Clear();
+                for (int i = 0; i < actors.Count; i++)
                 {
-                    dummies[i].Step(frame, bounds, StepDuration);
+                    _playerPositions.Add(actors[i].Position);
+                    _playerDowned.Add(actors[i].Condition.IsDown);
                 }
 
+                IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (targets[i] is EnemyActor enemy)
+                    {
+                        enemy.Step(frame, _playerPositions, _playerDowned, bounds, StepDuration);
+                    }
+                    else if (targets[i] is TrainingDummy dummy)
+                    {
+                        dummy.Step(frame, bounds, StepDuration);
+                    }
+                }
+
+                StepProjectiles(actors, StepDuration);
                 Stepped?.Invoke(frame);
             }
         }
@@ -134,8 +162,9 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         /// <summary>
-        /// Resolves one attack's hit window: dummies take the full pipeline, the other player takes
-        /// a shove and nothing else (D21). Runs inside the fixed step; Presentation and UI hear
+        /// Resolves one player attack's hit window: enemies and dummies take the full pipeline
+        /// (enemies through their authored resistances, plus the flinch), the other player takes a
+        /// shove and nothing else (D21). Runs inside the fixed step; Presentation and UI hear
         /// about it through <see cref="HitLanded"/>.
         /// </summary>
         internal void ResolveHits(CharacterActor attacker, in AttackTuning attack)
@@ -155,7 +184,17 @@ namespace BattleBomb.Gameplay.Simulation
             for (int i = 0; i < _hitIndices.Count; i++)
             {
                 Component owner = _candidateOwners[_hitIndices[i]];
-                if (owner is TrainingDummy dummy)
+                if (owner is EnemyActor enemy)
+                {
+                    HitResult hit = HitApplication.Apply(
+                        attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
+                        Element.None, 1f, TargetKind.Enemy, enemy.Position,
+                        enemy.Resistances, ElementalMultipliers.Neutral);
+                    enemy.ApplyHit(hit);
+                    attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
+                    HitLanded?.Invoke(new HitEvent(attacker, enemy, hit.Damage, enemy.Position, false));
+                }
+                else if (owner is TrainingDummy dummy)
                 {
                     HitResult hit = HitApplication.Apply(
                         attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
@@ -182,21 +221,93 @@ namespace BattleBomb.Gameplay.Simulation
             }
         }
 
+        /// <summary>
+        /// An enemy's melee window: the same reach geometry players use (§2.2), resolved against
+        /// players and applied through their condition — grace and the downed state swallow hits
+        /// entirely, and momentum feeds the shove like every other hit.
+        /// </summary>
+        internal void ResolveEnemyMelee(EnemyActor attacker, in AttackTuning attack)
+        {
+            IReadOnlyList<CharacterActor> players = Characters.Ordered;
+            HitResolver.Resolve(attacker.Position, attacker.Facing, attack, _playerPositions, _hitIndices);
+
+            int attackerHitstop = 0;
+            for (int i = 0; i < _hitIndices.Count; i++)
+            {
+                CharacterActor victim = players[_hitIndices[i]];
+                if (victim.Condition.IsInvulnerable)
+                {
+                    continue;
+                }
+
+                HitResult hit = HitApplication.Apply(
+                    attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
+                    attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
+                    ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                victim.ApplyEnemyHit(hit);
+                attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
+                HitLanded?.Invoke(new HitEvent(attacker, victim, hit.Damage, victim.Position, false));
+            }
+
+            if (attackerHitstop > 0)
+            {
+                attacker.ApplyHitstop(attackerHitstop);
+            }
+        }
+
+        /// <summary>A ranged or caster shot leaves the muzzle aimed at the target's position now.</summary>
+        internal void SpawnProjectile(EnemyActor shooter, Vector3 target)
+        {
+            _projectiles.Add(ProjectileState.Fired(
+                shooter.Position, target, shooter.Spec.Tuning.ProjectileSpeed,
+                shooter.Spec.Tuning.Attack.Damage, shooter.Spec.Tuning.Element, ProjectileLifeSteps));
+        }
+
+        private void StepProjectiles(IReadOnlyList<CharacterActor> players, float dt)
+        {
+            for (int i = _projectiles.Count - 1; i >= 0; i--)
+            {
+                ProjectileState p = ProjectileSimulation.Step(_projectiles[i], dt);
+                if (p.IsExpired)
+                {
+                    _projectiles.RemoveAt(i);
+                    continue;
+                }
+
+                int hit = ProjectileSimulation.HitTest(p, _playerPositions, ProjectileRadius);
+                if (hit >= 0 && hit < players.Count && !players[hit].Condition.IsInvulnerable)
+                {
+                    CharacterActor victim = players[hit];
+                    float damage = DamageCalculator.Resolve(
+                        p.Damage, p.Element, ElementalMultipliers.Neutral, ElementalMultipliers.Neutral, 1f);
+                    Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
+                    direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
+                    victim.ApplyEnemyHit(new HitResult(
+                        damage, direction * ProjectileKnockback, ProjectileHitstop));
+                    HitLanded?.Invoke(new HitEvent(null, victim, damage, victim.Position, false));
+                    _projectiles.RemoveAt(i);
+                    continue;
+                }
+
+                _projectiles[i] = p;
+            }
+        }
+
         private void CollectCandidates(CharacterActor except, bool includePartners)
         {
             _candidatePositions.Clear();
             _candidateOwners.Clear();
 
-            IReadOnlyList<TrainingDummy> dummies = Targets.Ordered;
-            for (int i = 0; i < dummies.Count; i++)
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            for (int i = 0; i < targets.Count; i++)
             {
-                if (dummies[i].IsDepleted)
+                if (targets[i].IsDepleted)
                 {
                     continue;
                 }
 
-                _candidatePositions.Add(dummies[i].Position);
-                _candidateOwners.Add(dummies[i]);
+                _candidatePositions.Add(targets[i].Position);
+                _candidateOwners.Add(targets[i].Body);
             }
 
             if (!includePartners)

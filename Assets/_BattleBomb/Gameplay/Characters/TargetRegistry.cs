@@ -3,35 +3,35 @@ using System.Collections.Generic;
 namespace BattleBomb.Gameplay.Characters
 {
     /// <summary>
-    /// The scene's hittable dummies, ordered by name so hit resolution walks them in an order
-    /// independent of scene load order (D10). M3's enemies will register here too.
+    /// The scene's hittable targets — dummies and enemies alike — ordered by body name so hit
+    /// resolution walks them in an order independent of scene load or spawn order (D10).
     /// </summary>
     public sealed class TargetRegistry
     {
-        private static readonly System.Comparison<TrainingDummy> ByName =
-            (a, b) => string.CompareOrdinal(a.name, b.name);
+        private static readonly System.Comparison<ISimTarget> ByName =
+            (a, b) => string.CompareOrdinal(a.Body.name, b.Body.name);
 
-        private readonly List<TrainingDummy> _dummies = new List<TrainingDummy>();
+        private readonly List<ISimTarget> _targets = new List<ISimTarget>();
 
-        public IReadOnlyList<TrainingDummy> Ordered
+        public IReadOnlyList<ISimTarget> Ordered
         {
             get
             {
-                _dummies.Sort(ByName);
-                return _dummies;
+                _targets.Sort(ByName);
+                return _targets;
             }
         }
 
-        public void Register(TrainingDummy dummy)
+        public void Register(ISimTarget target)
         {
-            if (dummy == null || _dummies.Contains(dummy))
+            if (target == null || _targets.Contains(target))
             {
                 return;
             }
 
-            _dummies.Add(dummy);
+            _targets.Add(target);
         }
 
-        public void Unregister(TrainingDummy dummy) => _dummies.Remove(dummy);
+        public void Unregister(ISimTarget target) => _targets.Remove(target);
     }
 }

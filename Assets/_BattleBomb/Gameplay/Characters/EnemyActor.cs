@@ -1,0 +1,191 @@
+using System.Collections.Generic;
+using BattleBomb.Core.Combat;
+using BattleBomb.Core.Enemies;
+using BattleBomb.Core.Movement;
+using BattleBomb.Core.Players;
+using BattleBomb.Core.Spatial;
+using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Simulation;
+using UnityEngine;
+
+namespace BattleBomb.Gameplay.Characters
+{
+    /// <summary>
+    /// One spawned enemy: the Core brain choosing intent, the same motor players use obeying it
+    /// (D10), and health in the target registry so player attacks find it. The dummy pattern
+    /// promoted. Depleted enemies stand inert until task 36 gives them a real death.
+    /// </summary>
+    [DisallowMultipleComponent]
+    public sealed class EnemyActor : MonoBehaviour, ISimTarget
+    {
+        private const float TargetSwitchMargin = 1.5f;
+
+        [Tooltip("Authored archetype this enemy runs. The spawner assigns it on spawn.")]
+        [SerializeField] private EnemyDefinition _definition;
+
+        [Tooltip("Driver this enemy registers with. Leave empty to find the one in the scene.")]
+        [SerializeField] private SimulationDriver _driver;
+
+        private EnemySpec _spec;
+        private bool _configured;
+        private MotorState _state;
+        private MotorState _previous;
+        private EnemyState _brain = EnemyState.Fresh;
+        private Health _health;
+        private int _targetIndex = -1;
+        private Vector3 _strikeMomentum;
+
+        public Component Body => this;
+        public Vector3 Position => _state.Position;
+        public Vector3 PreviousPosition => _previous.Position;
+        public Facing Facing => _state.Facing;
+        public Health Health => _health;
+        public bool IsDepleted => !_configured || _health.IsDepleted;
+        public EnemySpec Spec => _spec;
+        public EnemyPhase Phase => _brain.Phase;
+
+        /// <summary>How far into the telegraph, 0–1 — the tell Presentation ramps on (task 34).</summary>
+        public float TelegraphFraction => _brain.Phase == EnemyPhase.Telegraph
+            && _spec.Tuning.Attack.StartupSteps > 0
+                ? Mathf.Clamp01((float)_brain.StepsInPhase / _spec.Tuning.Attack.StartupSteps)
+                : 0f;
+
+        internal Vector3 StrikeMomentum => _strikeMomentum;
+        internal ElementalMultipliers Resistances => _spec.Resistances;
+
+        /// <summary>The spawner assigns the authored archetype right after instantiating.</summary>
+        internal void Configure(EnemyDefinition definition)
+        {
+            _definition = definition;
+            _spec = definition.ToRuntime();
+            _health = new Health(_spec.MaxHealth);
+            _brain = EnemyState.Fresh;
+            _targetIndex = -1;
+            _state = MotorState.AtRest(transform.position);
+            _previous = _state;
+            _configured = true;
+        }
+
+        internal void Step(
+            int frame,
+            IReadOnlyList<Vector3> playerPositions,
+            IReadOnlyList<bool> playerDowned,
+            in ArenaBounds bounds,
+            float dt)
+        {
+            _previous = _state;
+            if (!_configured)
+            {
+                return;
+            }
+
+            if (_health.IsDepleted)
+            {
+                // Inert but physical: knockback in flight still lands and settles (task 36 owns death).
+                _state = CharacterMotor.Step(_state, PlayerCommand.Idle(frame), _spec.Movement, bounds, dt);
+                transform.position = _state.Position;
+                return;
+            }
+
+            bool frozen = _brain.HitstopSteps > 0;
+            if (frozen)
+            {
+                _brain = EnemyBrain.Step(_brain, EnemyPerception.NoTarget(_state.Position), _spec.Tuning).State;
+                return;
+            }
+
+            _targetIndex = TargetSelection.Choose(
+                _state.Position, playerPositions, playerDowned, _targetIndex, TargetSwitchMargin);
+            EnemyPerception view = _targetIndex >= 0
+                ? new EnemyPerception(_state.Position, true, playerPositions[_targetIndex])
+                : EnemyPerception.NoTarget(_state.Position);
+
+            EnemyStepResult result = EnemyBrain.Step(_brain, view, _spec.Tuning);
+            _brain = result.State;
+
+            if (result.AttackStarted && _targetIndex >= 0)
+            {
+                _strikeMomentum = new Vector3(_state.Velocity.x, 0f, _state.Velocity.z);
+                Facing facing = playerPositions[_targetIndex].x >= _state.Position.x
+                    ? Facing.Right
+                    : Facing.Left;
+                _state = new MotorState(
+                    _state.Position, _state.Velocity, facing, _state.IsGrounded,
+                    _state.StepsSinceGrounded, _state.JumpBufferedFor);
+            }
+
+            PlayerCommand intent = PlayerCommand.FromState(
+                frame, result.MoveIntent, CommandButtons.None, CommandButtons.None);
+            _state = CharacterMotor.Step(_state, intent, _spec.Movement, bounds, dt);
+
+            if (result.HitWindowOpened && _driver != null)
+            {
+                _driver.ResolveEnemyMelee(this, _spec.Tuning.Attack);
+            }
+
+            if (result.ProjectileFired && _targetIndex >= 0 && _driver != null)
+            {
+                _driver.SpawnProjectile(this, playerPositions[_targetIndex]);
+            }
+
+            transform.position = _state.Position;
+        }
+
+        /// <summary>A player's landed hit: pipeline damage, knockback, hitstop, and the flinch.</summary>
+        internal void ApplyHit(in HitResult hit)
+        {
+            _health = _health.Damaged(hit.Damage);
+
+            bool launched = hit.Impulse.y > 0.01f;
+            _state = new MotorState(
+                _state.Position,
+                hit.Impulse,
+                _state.Facing,
+                launched ? false : _state.IsGrounded,
+                launched ? _spec.Movement.CoyoteSteps + 1 : _state.StepsSinceGrounded,
+                0);
+
+            _brain = _brain.WithHitstop(hit.HitstopSteps);
+            _brain = EnemyBrain.Interrupted(_brain, _spec.Tuning);
+        }
+
+        internal void ApplyHitstop(int steps) => _brain = _brain.WithHitstop(steps);
+
+        private void Awake()
+        {
+            if (_definition != null)
+            {
+                Configure(_definition);
+            }
+            else
+            {
+                _state = MotorState.AtRest(transform.position);
+                _previous = _state;
+            }
+        }
+
+        private void OnEnable()
+        {
+            if (_driver == null)
+            {
+                _driver = FindAnyObjectByType<SimulationDriver>();
+            }
+
+            if (_driver == null)
+            {
+                Debug.LogError($"{name}: no SimulationDriver in the scene — this enemy will never act.", this);
+                return;
+            }
+
+            _driver.Targets.Register(this);
+        }
+
+        private void OnDisable()
+        {
+            if (_driver != null)
+            {
+                _driver.Targets.Unregister(this);
+            }
+        }
+    }
+}

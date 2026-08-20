@@ -1,7 +1,32 @@
 # HANDOFF-M5 — Abilities and elements
 
-**Status — in build.** Design locked with Michael 2026-08-19 (D38–D41, plus O11 opened);
-tasks 50–60 below. Read first: `DECISIONS.md` D38–D41 and O11, then `GAME_DESIGN.md` §2.6 and §4.
+**Status — tasks 50–58 built and committed, 401/401 green. Task 59 is Michael's mega pass.**
+Design locked with Michael 2026-08-19 (D38–D41, plus O11 opened). Read first: `DECISIONS.md`
+D38–D41 and O11, then `GAME_DESIGN.md` §2.6 and §4.
+
+## Build log
+
+| # | Commit | What landed |
+|---|---|---|
+| 50 | `6be7fc7` | The driver step reads as a phase list. Zero behaviour change, 325/325 both sides. |
+| 51 | (with 50's branch) | Elements became authored data; the `Element` enum is gone. Fire is the first asset. 334/334. |
+| 52 | — | Statuses, priced from the applying hit; the same-element rule made automatic by threading `ElementalDefence` through every damage path. 349/349. |
+| 53 | — | The reaction framework, built and tested with synthetic elements, its table deliberately empty. 361/361. |
+| 54 | — | The four sleeping affixes woke: magic damage/range, per-element resistance, weapon infusion on every hit. 373/373. |
+| 55 | — | The Magic kit: one button, three casts, mana gating, the stick read at the press. 389/389. |
+| 56 | `5fffcf0` | Magic in the world — casts resolve, the leap lifts, the Fire caster burns players. 392/392. |
+| 57 | — | Magic made visible: element-coloured burn tint, quiet tick numbers, the mana bar's cost mark, cast tells. 392/392. |
+| 58 | — | The Ember Stone, the mana potion, a cold climate on the test scene. 401/401. |
+
+**Deviations from the design, both deliberate and recorded:**
+
+- **Magic damage is flat, not a percentage.** D39's parenthetical said "+% cast damage"; it ships
+  as a flat addition, matching how weapon damage already works and keeping a low-base character's
+  casts exactly as gear-scalable as a high-base one's. One number range to flip if Michael
+  disagrees.
+- **The debug panel grants items.** Testing magic needs a specific weapon, stone, and potions, and
+  drops are random by design. The panel's Grant row rolls them mid-ladder (score 1.7, Shiny
+  territory) so a feel judgement is never about an absurd item. Dies with the panel in M6.
 
 ---
 

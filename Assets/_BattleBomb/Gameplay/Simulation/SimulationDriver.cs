@@ -129,6 +129,22 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Raised inside the fixed step when an enemy's dying beat ends (task 36).</summary>
         public event Action<EnemyDeath> EnemyDied;
 
+        /// <summary>
+        /// Debug only: rolls one authored definition at a quality floor, for the equip panel to
+        /// hand over. It draws from its own stream so testing a weapon never shifts the loot the
+        /// fight would have dropped. Dies with the debug panel when M6 builds the real UI.
+        /// </summary>
+        internal ItemInstance RollDebugItem(int definitionId, float qualityScore)
+        {
+            var rng = new DeterministicRandom((uint)(Frame * 2654435761u + 17u));
+            var context = new GenerationContext(
+                    qualityScore, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                    _elements.Ids)
+                .WithSignature(definitionId, QualityRank.Nothing);
+            ItemGenerator.Roll(rng, context, out ItemInstance item);
+            return item;
+        }
+
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;

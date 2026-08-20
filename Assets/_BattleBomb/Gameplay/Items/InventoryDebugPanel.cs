@@ -19,6 +19,15 @@ namespace BattleBomb.Gameplay.Items
         [Tooltip("Driver whose players are listed. Leave empty to find the one in the scene.")]
         [SerializeField] private SimulationDriver _driver;
 
+        private const int KnifeDefinitionId = 7;
+        private const int BowDefinitionId = 8;
+        private const int HealthPotionDefinitionId = 9;
+        private const int ManaPotionDefinitionId = 12;
+        private const int EmberStoneDefinitionId = 13;
+
+        /// <summary>Quality score a granted item rolls at — Shiny territory, not the top of the ladder.</summary>
+        private const float DebugGrantQuality = 1.7f;
+
         private bool _open;
         private Vector2 _scroll;
 
@@ -92,6 +101,18 @@ namespace BattleBomb.Gameplay.Items
             GUILayout.Label($"Dmg {sheet.WeaponDamage:F0}  Def {sheet.Defence * 100f:F0}%  "
                 + $"Crit {sheet.CritChance * 100f:F0}%  Swing x{sheet.SwingSpeedMultiplier:F2}  "
                 + $"Speed x{sheet.NetMoveSpeedMultiplier:F2}  Mana {actor.Mana.Current:F0}/{actor.Mana.Max:F0}");
+            GUILayout.Label($"Magic +{sheet.MagicDamage:F0} dmg, +{sheet.MagicRange:F1} range");
+
+            // Testing magic needs specific loot, and drops are random by design. These hand it
+            // over directly so a play session can reach the content it means to judge.
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Grant:", GUILayout.Width(44f));
+            DrawGrant(actor, bag, KnifeDefinitionId, "Knife");
+            DrawGrant(actor, bag, BowDefinitionId, "Bow");
+            DrawGrant(actor, bag, EmberStoneDefinitionId, "Stone");
+            DrawGrant(actor, bag, ManaPotionDefinitionId, "Mana");
+            DrawGrant(actor, bag, HealthPotionDefinitionId, "Health");
+            GUILayout.EndHorizontal();
 
             if (bag.Ledger.UnspentPoints > 0)
             {
@@ -163,6 +184,22 @@ namespace BattleBomb.Gameplay.Items
                 }
 
                 GUILayout.EndHorizontal();
+            }
+        }
+
+        private void DrawGrant(CharacterActor actor, PlayerInventory bag, int definitionId, string label)
+        {
+            if (!GUILayout.Button(label, GUILayout.Width(56f)))
+            {
+                return;
+            }
+
+            // Mid-ladder on purpose: a Godly grant would make every feel judgement about an
+            // absurd item rather than about the mechanic being judged.
+            ItemInstance rolled = _driver.RollDebugItem(definitionId, DebugGrantQuality);
+            if (!rolled.IsEmpty && bag.Take(rolled))
+            {
+                actor.RefreshStats();
             }
         }
 

@@ -95,8 +95,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M1** | Movement and camera — two players on the depth plane, shared camera | **complete** |
 | **M2** | Combat core — the D19 kit against training dummies | **complete** |
 | **M3** | Enemies — plus the aerial pair, deferred into it | **complete** |
-| M4 | Gear and stats | next |
-| M5 | Abilities and elements | |
+| **M4** | Gear and stats | **complete** |
+| M5 | Abilities and elements | next |
 | M6 | Loot loop | |
 | M7 | Chapters *(first point story input is needed)* | |
 | M8 | **Vertical slice** — the real target | |

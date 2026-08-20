@@ -1,22 +1,46 @@
 # Handoff — M4: gear and stats
 
-> **Status — built through task 48, awaiting Michael's mega pass (task 49), 2026-08-20.**
-> Designed with Michael 2026-08-19 (D32–D37); tasks 39–48 built and committed one green run
-> each (438e100 → 0c22f3d, 323/323). Everything in "M4 is done when" is implemented and
-> machine-verified: the StatSheet and its caps, the nine-rank ladder, the deterministic
-> generator (replay-pinned, elite/boss forcings bound), the XP ledger with the prestige reset,
-> the inventory with the D36 level lock and force-return, real drops with item cards, gear
-> live in combat (damage scale, defence, crits on their own seeded stream, life steal, weight
-> slow, swing-scaled kits), the bow (arrows aim across depth, priced at impact), the quick-use
-> slot, and the ladder HUD. Live-verified by eval: a Godly knife took P1's damage 10→25.5, a
-> 20-raw enemy hit landed 14.17 through 29% defence, an arrow crossed depth and took exactly
-> 6.3 HP, and a level-40 knife force-returned to the bag at the prestige moment. Feel checks
-> (swing speed, bow cadence, the potion press, tank-build movement) are Michael's checklist —
-> synthetic input can't reach actions while the editor is unfocused, the known M1 trap.
-> Deviations from plan, both deliberate: the inventory types live in `Core/Items` (a class
-> named Inventory inside a namespace segment named Inventory fights C# resolution), and the
-> debug panel lives in `Gameplay/Items` (it mutates player state, which UI never may — the
-> observe-only rule outranks the planned file path).
+> **Status — complete, 2026-08-20.** Designed with Michael 2026-08-19 (D32–D37); tasks 39–48
+> built and committed one green run each (438e100 → 0c22f3d), Michael's mega pass passed with
+> three refinements (592f201), and the milestone closed at **325/325**. What shipped: the
+> StatSheet and its caps (defence 70%, slow resist 75%, the Speed hard cap with over-cap
+> conversion), the nine-rank ladder doing its three jobs, the deterministic generator
+> (replay-pinned; elite slot forcing and boss signature+floor bound; defence and weight share
+> one roll so tanky is heavy), the XP ledger (overflow, the 99 wall, prestige banking the
+> permanent pool), the inventory with the D36 level lock and prestige force-return, real drops
+> with quality-tinted tokens and full item cards (D30), gear live in combat — damage scale =
+> sheet weapon damage / unarmed baseline so unarmed preserves the M2/M3 numbers and enemy
+> tuning exactly; defence applies inside `ApplyEnemyHit`, which returns landed damage so the
+> numbers the couch sees are the numbers pools lose; crits roll on their own seeded stream and
+> pop bigger and orange; life steal, knockback affixes, weight slow, and swing-scaled kits all
+> flow — the bow (chain Lights loose arrows that aim across depth, §2.2 made playable; priced
+> at impact from the shooter's live sheet; cyan bolts), the quick-use slot (potions heal a
+> fraction of sheet max on the old Equipment binding, cooldown authored), and the ladder HUD
+> (level, prestige stars, XP and mana strips). Live-verified by eval: damage 10→25.5 from a
+> Godly knife, a 20-raw hit landing 14.17 through 29% defence, an arrow taking exactly 6.3 HP,
+> a level-40 knife force-returning at the prestige moment. **Michael's mega pass** directed:
+> consumables speak alchemy — Vial/Flask/Bottle/Draught/Philter/Elixir "of Health", potency
+> scaling with the rank's budget (0.175→0.875), stacks split by quality, the quick slot drinks
+> the weakest first (that test caught a real bug: one stack's exhaustion cleared the slot while
+> a better stack remained); slow-per-weight raised 0.005→0.012 so one chestplate is felt; the
+> bow's draw speed now rolls with quality. Deviations from plan, both deliberate: inventory
+> types live in `Core/Items` (a class named Inventory inside a namespace segment named
+> Inventory fights C# resolution), and the debug panel lives in `Gameplay/Items` (it mutates
+> player state, which UI never may — the observe-only rule outranks the planned file path).
+>
+> **What felt wrong to build, for the next milestone's eyes:** stat refreshes are manual
+> choreography — the driver and the debug panel each remember to call `RefreshStats()` after
+> mutations; when M6's real UI multiplies the mutation sites, `PlayerInventory` should raise a
+> changed event instead. The driver keeps absorbing responsibilities (the crit stream, XP
+> application, arrow resolution) — M3's seven-phase warning stands, heavier. The IMGUI pile
+> now includes a mutating Gameplay panel; M6 replaces it wholesale, never extends it. Feel
+> notes from the pass, for M5/M6: mid-fight card reading is really a wait-till-after maneuver
+> (M6's comparison UI should assume calm-moment inspection); the bow wants a rolled stat
+> surface of its own (shot speed as a rolled stat is the candidate); the command overlay shows
+> stick input, not velocity — a velocity readout would make movement tuning legible. And the
+> synthetic-input gap is permanent: input actions never fire while the editor is unfocused, so
+> button-press features are machine-verifiable only up to the command pipe — the press itself
+> is always Michael's.
 
 Continues `docs/HANDOFF-M3.md` (tasks 28–38). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

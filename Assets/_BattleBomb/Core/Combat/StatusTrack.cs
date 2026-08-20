@@ -12,14 +12,19 @@ namespace BattleBomb.Core.Combat
         public readonly int TickSteps;
         public readonly float DamagePerTick;
 
+        /// <summary>Movement multiplier while this mark lasts (D46); 1 for a pure damage mark.</summary>
+        public readonly float MoveScale;
+
         public StatusInstance(
-            ElementId element, int remainingSteps, int stepsToTick, int tickSteps, float damagePerTick)
+            ElementId element, int remainingSteps, int stepsToTick, int tickSteps,
+            float damagePerTick, float moveScale = 1f)
         {
             Element = element;
             RemainingSteps = remainingSteps;
             StepsToTick = stepsToTick;
             TickSteps = tickSteps;
             DamagePerTick = damagePerTick;
+            MoveScale = Mathf.Clamp01(moveScale);
         }
 
         public bool IsExpired => RemainingSteps <= 0;
@@ -49,6 +54,27 @@ namespace BattleBomb.Core.Combat
         public int Count => _active.Count;
 
         public bool IsEmpty => _active.Count == 0;
+
+        /// <summary>
+        /// The strongest active slow (D46) — 1 when nothing slows. Concurrent slows never stack
+        /// multiplicatively: the worst one wins, so two chills can never freeze anyone solid.
+        /// </summary>
+        public float MoveScale
+        {
+            get
+            {
+                float scale = 1f;
+                for (int i = 0; i < _active.Count; i++)
+                {
+                    if (_active[i].MoveScale < scale)
+                    {
+                        scale = _active[i].MoveScale;
+                    }
+                }
+
+                return scale;
+            }
+        }
 
         public bool Has(ElementId element)
         {
@@ -83,7 +109,8 @@ namespace BattleBomb.Core.Combat
         /// longer remaining time and the stronger tick both survive, so a weak weapon infusion
         /// keeps a strong cast's burn alive instead of overwriting it — the self-combo D19 wants.
         /// </summary>
-        public bool Apply(ElementId element, int durationSteps, int tickSteps, float damagePerTick)
+        public bool Apply(ElementId element, int durationSteps, int tickSteps, float damagePerTick,
+            float moveScale = 1f)
         {
             if (element.IsNone || durationSteps <= 0)
             {
@@ -91,6 +118,7 @@ namespace BattleBomb.Core.Combat
             }
 
             tickSteps = Mathf.Max(1, tickSteps);
+            moveScale = Mathf.Clamp01(moveScale);
             for (int i = 0; i < _active.Count; i++)
             {
                 if (_active[i].Element != element)
@@ -104,11 +132,13 @@ namespace BattleBomb.Core.Combat
                     Mathf.Max(existing.RemainingSteps, durationSteps),
                     Mathf.Min(existing.StepsToTick, tickSteps),
                     tickSteps,
-                    Mathf.Max(existing.DamagePerTick, damagePerTick));
+                    Mathf.Max(existing.DamagePerTick, damagePerTick),
+                    Mathf.Min(existing.MoveScale, moveScale));
                 return true;
             }
 
-            _active.Add(new StatusInstance(element, durationSteps, tickSteps, tickSteps, damagePerTick));
+            _active.Add(new StatusInstance(
+                element, durationSteps, tickSteps, tickSteps, damagePerTick, moveScale));
             return true;
         }
 
@@ -138,7 +168,8 @@ namespace BattleBomb.Core.Combat
                 }
 
                 _active[i] = new StatusInstance(
-                    status.Element, remaining, toTick, status.TickSteps, status.DamagePerTick);
+                    status.Element, remaining, toTick, status.TickSteps, status.DamagePerTick,
+                    status.MoveScale);
             }
 
             return damage;

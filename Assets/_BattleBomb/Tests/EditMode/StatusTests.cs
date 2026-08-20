@@ -218,5 +218,81 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(condition.Drained(5f).Health.Current, Is.EqualTo(0f),
                 "And nothing burns the downed further.");
         }
+
+        /// <summary>Chill's paper shape (D46): 3 seconds, no tick damage, movement at 55%.</summary>
+        private static readonly StatusSpec Chill = new StatusSpec("Chill", 180, 30, 0f, 0.55f);
+
+        [Test]
+        public void A_slow_slows_for_its_duration_and_deals_nothing()
+        {
+            Chill.Price(100f, 1f, 1f, out int duration, out float perTick);
+            var track = new StatusTrack();
+            track.Apply(Other, duration, Chill.TickSteps, perTick, Chill.MoveScale);
+
+            Assert.That(track.MoveScale, Is.EqualTo(0.55f).Within(1e-4f));
+
+            float total = 0f;
+            for (int step = 0; step < 200; step++)
+            {
+                total += track.Step();
+            }
+
+            Assert.That(total, Is.EqualTo(0f), "A chill takes speed, never health.");
+            Assert.That(track.MoveScale, Is.EqualTo(1f), "Expiry hands movement back.");
+        }
+
+        [Test]
+        public void A_pure_damage_mark_never_touches_movement()
+        {
+            var track = new StatusTrack();
+            track.Apply(Burnish, 180, 30, 5f);
+
+            Assert.That(track.MoveScale, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void Renewing_a_slow_keeps_the_stronger_whichever_lands_second()
+        {
+            var track = new StatusTrack();
+            track.Apply(Other, 180, 30, 0f, 0.55f);
+            track.Apply(Other, 180, 30, 0f, 0.8f);
+            Assert.That(track.MoveScale, Is.EqualTo(0.55f).Within(1e-4f),
+                "A weak chill never dilutes a strong one.");
+
+            track.Apply(Other, 180, 30, 0f, 0.4f);
+            Assert.That(track.MoveScale, Is.EqualTo(0.4f).Within(1e-4f));
+        }
+
+        [Test]
+        public void Concurrent_slows_take_the_worst_and_never_multiply()
+        {
+            var track = new StatusTrack();
+            track.Apply(Burnish, 180, 30, 0f, 0.7f);
+            track.Apply(Other, 180, 30, 0f, 0.5f);
+
+            Assert.That(track.MoveScale, Is.EqualTo(0.5f).Within(1e-4f),
+                "0.35 would be a freeze the design never priced.");
+        }
+
+        [Test]
+        public void Resistance_shortens_a_slow_like_any_other_mark()
+        {
+            Chill.Price(100f, 1f, 0.5f, out int duration, out _);
+
+            Assert.That(duration, Is.EqualTo(90),
+                "Elemental Resistance's second bite works on afflictions without damage too.");
+        }
+
+        [Test]
+        public void The_strike_carries_a_slow_from_spec_to_track()
+        {
+            var track = new StatusTrack();
+            ElementalStrikeResult result = ElementalStrike.Apply(
+                track, new ElementSpec(Other, "Ice", Chill), ElementId.None, null, 100f, 1f, 1f);
+
+            Assert.That(result.Marked, Is.True);
+            Assert.That(track.MoveScale, Is.EqualTo(0.55f).Within(1e-4f),
+                "The one funnel every elemental hit uses delivers the slow.");
+        }
     }
 }

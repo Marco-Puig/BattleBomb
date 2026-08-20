@@ -18,12 +18,20 @@ namespace BattleBomb.Core.Combat
         public readonly int TickSteps;
         public readonly float DamageShare;
 
-        public StatusSpec(string name, int durationSteps, int tickSteps, float damageShare)
+        /// <summary>
+        /// Movement multiplier while marked (D46) — 1 leaves movement alone; Chill's 0.55 is the
+        /// first authored slow. Clamped to at most 1: a status is an affliction, never a haste.
+        /// </summary>
+        public readonly float MoveScale;
+
+        public StatusSpec(string name, int durationSteps, int tickSteps, float damageShare,
+            float moveScale = 1f)
         {
             Name = string.IsNullOrEmpty(name) ? "Status" : name;
             DurationSteps = Mathf.Max(0, durationSteps);
             TickSteps = Mathf.Max(1, tickSteps);
             DamageShare = Mathf.Max(0f, damageShare);
+            MoveScale = Mathf.Clamp01(moveScale);
         }
 
         /// <summary>An element that marks nothing — legal, and the default.</summary>

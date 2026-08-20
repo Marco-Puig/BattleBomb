@@ -90,7 +90,9 @@ namespace BattleBomb.Core.Combat
                 element.Status.Price(
                     hitDamage, sourceScale, resistanceMultiplier,
                     out int duration, out float damagePerTick);
-                marked = statuses.Apply(element.Id, duration, element.Status.TickSteps, damagePerTick);
+                marked = statuses.Apply(
+                    element.Id, duration, element.Status.TickSteps, damagePerTick,
+                    element.Status.MoveScale);
             }
 
             return new ElementalStrikeResult(marked, reacted, reactedWith, burst, stun);

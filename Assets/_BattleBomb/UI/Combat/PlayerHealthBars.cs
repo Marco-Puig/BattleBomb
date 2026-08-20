@@ -67,7 +67,9 @@ namespace BattleBomb.UI.Combat
                     ? Mathf.Clamp01(condition.Health.Current / condition.Health.Max)
                     : 0f;
 
-                Rect back = new Rect(x, 10f + i * (_barHeight + 6f), _barWidth, _barHeight);
+                PlayerInventory ledgerBag = players[i].GetComponent<PlayerInventory>();
+
+                Rect back = new Rect(x, 10f + i * (_barHeight + 14f), _barWidth, _barHeight);
                 Color restore = GUI.color;
                 GUI.color = new Color(0f, 0f, 0f, 0.55f);
                 GUI.DrawTexture(back, Texture2D.whiteTexture);
@@ -80,32 +82,58 @@ namespace BattleBomb.UI.Combat
                         Texture2D.whiteTexture);
                 }
 
+                // The ladder strip (D24) and the mana strip (D32), thin under the health bar.
+                if (ledgerBag != null)
+                {
+                    var ledger = ledgerBag.Ledger;
+                    float toNext = ledgerBag.Curve.XpToNext(ledger.Level, ledger.PrestigeCount);
+                    float xpFraction = ledger.Level >= ledgerBag.Curve.MaxLevel ? 1f
+                        : toNext > 0f ? Mathf.Clamp01(ledger.XpIntoLevel / toNext) : 0f;
+                    GUI.color = new Color(0f, 0f, 0f, 0.55f);
+                    GUI.DrawTexture(new Rect(back.x, back.yMax + 1f, back.width, 4f), Texture2D.whiteTexture);
+                    GUI.color = new Color(0.95f, 0.8f, 0.25f);
+                    GUI.DrawTexture(new Rect(back.x, back.yMax + 1f, back.width * xpFraction, 4f), Texture2D.whiteTexture);
+
+                    float manaFraction = Mathf.Clamp01(players[i].Mana.Fraction);
+                    GUI.color = new Color(0f, 0f, 0f, 0.55f);
+                    GUI.DrawTexture(new Rect(back.x, back.yMax + 6f, back.width, 4f), Texture2D.whiteTexture);
+                    GUI.color = new Color(0.3f, 0.55f, 1f);
+                    GUI.DrawTexture(new Rect(back.x, back.yMax + 6f, back.width * manaFraction, 4f), Texture2D.whiteTexture);
+                }
+
                 GUI.color = restore;
 
+                string prefix = $"P{players[i].PlayerId.Value + 1}";
+                if (ledgerBag != null)
+                {
+                    prefix += ledgerBag.Ledger.PrestigeCount > 0
+                        ? $" ★{ledgerBag.Ledger.PrestigeCount} Lv{ledgerBag.Ledger.Level}"
+                        : $" Lv{ledgerBag.Ledger.Level}";
+                }
+
                 string label = condition.IsDown
-                    ? $"P{players[i].PlayerId.Value + 1}  DOWN"
-                    : $"P{players[i].PlayerId.Value + 1}  {Mathf.CeilToInt(condition.Health.Current)}/{Mathf.CeilToInt(condition.Health.Max)}";
+                    ? $"{prefix}  DOWN"
+                    : $"{prefix}  {Mathf.CeilToInt(condition.Health.Current)}/{Mathf.CeilToInt(condition.Health.Max)}";
                 int grabs = _driver.GrabCountFor(players[i].PlayerId.Value);
                 if (grabs > 0)
                 {
                     label += $"   loot {grabs}";
                 }
 
-                PlayerInventory bag = players[i].GetComponent<PlayerInventory>();
-                if (bag != null && bag.Inventory.QuickKind == QuickSlotKind.Consumable)
+                if (ledgerBag != null && ledgerBag.Inventory.QuickKind == QuickSlotKind.Consumable)
                 {
                     int potions = 0;
-                    IReadOnlyList<ItemStack> items = bag.Inventory.Items;
+                    IReadOnlyList<ItemStack> items = ledgerBag.Inventory.Items;
                     for (int s = 0; s < items.Count; s++)
                     {
-                        if (items[s].Item.DefinitionId == bag.Inventory.QuickConsumableId)
+                        if (items[s].Item.DefinitionId == ledgerBag.Inventory.QuickConsumableId)
                         {
                             potions = items[s].Count;
                             break;
                         }
                     }
 
-                    label += bag.Inventory.QuickCooldownRemaining > 0
+                    label += ledgerBag.Inventory.QuickCooldownRemaining > 0
                         ? $"   potion x{potions} (cd)"
                         : $"   potion x{potions}";
                 }

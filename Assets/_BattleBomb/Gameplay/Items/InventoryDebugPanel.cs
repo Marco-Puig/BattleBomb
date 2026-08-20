@@ -73,7 +73,22 @@ namespace BattleBomb.Gameplay.Items
             StatSheet sheet = actor.Sheet;
 
             GUILayout.Label($"P{actor.PlayerId.Value + 1} — level {bag.Ledger.Level}, "
-                + $"points {bag.Ledger.UnspentPoints}, prestige {bag.Ledger.PrestigeCount}");
+                + $"points {bag.Ledger.UnspentPoints}, prestige {bag.Ledger.PrestigeCount}, "
+                + $"xp {bag.Ledger.XpIntoLevel:F0}/{bag.Curve.XpToNext(bag.Ledger.Level, bag.Ledger.PrestigeCount):F0}");
+
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button("+500 XP (debug)", GUILayout.Width(120f)))
+            {
+                bag.Earn(500f);
+            }
+
+            if (bag.Ledger.CanPrestige(bag.Curve) && GUILayout.Button("PRESTIGE", GUILayout.Width(90f))
+                && bag.TryPrestige())
+            {
+                actor.RefreshStats();
+            }
+
+            GUILayout.EndHorizontal();
             GUILayout.Label($"Dmg {sheet.WeaponDamage:F0}  Def {sheet.Defence * 100f:F0}%  "
                 + $"Crit {sheet.CritChance * 100f:F0}%  Swing x{sheet.SwingSpeedMultiplier:F2}  "
                 + $"Speed x{sheet.NetMoveSpeedMultiplier:F2}  Mana {actor.Mana.Current:F0}/{actor.Mana.Max:F0}");

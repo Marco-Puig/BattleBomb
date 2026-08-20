@@ -356,6 +356,23 @@ namespace BattleBomb.Gameplay.Simulation
                 EnemySpec spec = enemy.Spec;
                 EnemyDied?.Invoke(new EnemyDeath(spec.Rank, spec.XpReward, false, enemy.Position));
 
+                // The kill's XP (task 48, planning decision 3): every living player earns the
+                // full reward — co-op never punishes the reviver. Downed players earn nothing.
+                IReadOnlyList<CharacterActor> earners = Characters.Ordered;
+                for (int p = 0; p < earners.Count; p++)
+                {
+                    if (earners[p].Condition.IsDown)
+                    {
+                        continue;
+                    }
+
+                    PlayerInventory ledger = earners[p].GetComponent<PlayerInventory>();
+                    if (ledger != null)
+                    {
+                        ledger.Earn(spec.XpReward);
+                    }
+                }
+
                 _lootRng = DropRoll.Roll(
                     _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
                 if (drop.Dropped)

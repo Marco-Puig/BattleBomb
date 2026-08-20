@@ -248,8 +248,8 @@ project — loot bugs are subtle, compounding, and destroy trust in the chase.
 The min/max layer is both halves of the inheritance: **affixes roll at the drop and are immutable**
 (the Diablo half — hunting the right combination), while **upgrade capacity** scales with quality
 and is spent by the player after the drop, raising stats of their choice (the Dungeon Defenders
-half — the spend flow lands with M6). Every item is stamped a **required level** from its drop
-context, enforced at equip (D36).
+half — D44's deepen-or-gamble flow, §5.6). Every item is stamped a **required level** from its
+drop context, enforced at equip (D36).
 
 ### 5.4 Drops (D23, D30)
 
@@ -260,6 +260,11 @@ at a quality floor well above the level's norm. A drop is **inspected and taken,
 (D30): walking over it shows the item card, Light grabs it deliberately, and it lands in the
 inventory by default — auto-equip is a setting.
 
+**Drop feel (M6):** a drop glows from beneath in its quality colour — subtle low on the ladder,
+a genuine light source at the top — pops from the corpse with a small bounce, and is taken with
+a quick grab animation and sound, never a swing. A full sack refuses the grab: a red X on the
+card and a 200/200 flash (D43).
+
 ### 5.5 Character progression (D24, D32, D36)
 
 Leveling **never caps** — the main differentiator from Castle Crashers and Dungeon Defenders.
@@ -269,6 +274,27 @@ cycle costing more XP than the last. Level-required gear re-locks at that moment
 the climb re-earns it (D36) — the fresh start is real twice over. The per-cycle reward is
 deliberately small — only the most dedicated players are noticeably stronger — so gear remains the
 dominant power source (pillar 2) while the ladder itself never ends.
+
+### 5.6 The chest, the economy, and investment (D42–D45)
+
+The loot loop lives in **checkpoint rooms** — calm spaces holding a **chest** (the only point of
+inventory access: walk up and it opens, walk away and the sack seals), usually a **shopkeeper**,
+and a training dummy to test builds on. Solo, the chest screen fills the display and pauses the
+world; couch co-op, it takes the opener's half while the partner plays on. Two tabs: **Item
+Sack** (quality-coloured thumbnail grid with a category filter; the selected item's stats,
+vs-worn deltas, and actions alongside) and **Hero** (stat allocation and the worn loadout).
+
+**Money enters only by selling** (D43): one per-player currency, prices scaling with quality ×
+required level so income scales forever. It leaves through shopkeeper stock and **upgrading**
+(D44): capacity points deepen any stat an item already has, the cost doubling per point.
+Duplicates offer the gamble instead — **combining** two identical same-rank items into one fresh
+reroll with a 2% shot at the next rank, spent points dying with the inputs. Worn, sold, or
+combined: the three fates of every drop are the chase.
+
+The sack: 200 slots (worn gear excluded, consumables stacking to 5 per slot), item locks, and an
+auto-sell-at-cap setting that sells the worst unlocked piece. Elites (D22) finally spawn in M6 —
+each rolls its drop at spawn and visibly wears it, armor tinted the drop's quality colour, so
+the fight advertises its own reward.
 
 ---
 

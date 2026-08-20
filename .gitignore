@@ -74,3 +74,6 @@ ehthumbs.db
 
 # Claude Code local state
 /.claude/
+
+# Visual brainstorming sessions (superpowers)
+.superpowers/

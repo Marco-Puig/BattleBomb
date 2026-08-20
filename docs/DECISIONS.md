@@ -865,6 +865,91 @@ Directed by Michael (2026-08-19): "just do Fire for now."
 
 ---
 
+## D42 — The chest: inventory access is a place, not a button · **Locked** *(extends D30)*
+
+Directed by Michael in the M6 design session (2026-08-20). Castle Crashers plans builds between
+levels; Dungeon Defenders organizes in the tavern. BattleBomb's mixture: **checkpoint rooms** as
+the calm spaces, and inside them **the chest** (working name — an ender-chest-like object) as the
+single point of inventory access.
+
+- **Walking up to a chest opens your inventory; away from one, the sack is sealed.** Every
+  checkpoint room contains a chest, and extra chests may be placed mid-level where a stretch
+  needs one. Field pickups queue in the sack until the next chest — which makes D30's auto-equip
+  setting the only field-side equip path, deliberately.
+- **The screen is two tabs.** **Item Sack**: a thumbnail grid (8 wide full-screen, 4 wide in the
+  couch split), background colour = quality, category filter (All / Weapons / Armor / Pets /
+  Equipment / Consumables), with the selected item's stats, vs-worn deltas, and every action —
+  equip, per-stat upgrade, combine, sell, lock — on the right. **Hero**: stat allocation on the
+  left, the worn loadout on the right. Settings live in the global settings menu, never on the
+  chest.
+- **Per mode:** solo, the screen takes the full display and pauses the world. Couch co-op, it
+  takes the opener's half while the other half stays live gameplay — the camera frames only the
+  players still playing; a player at a chest stands idle beside it. Online (whenever D10's
+  deferral ends) returns to full screen on each player's own display.
+- **Shopkeepers are a separate, rarer thing** (D43) — the chest is an inventory button made
+  physical, never a shop.
+
+**Consequence:** checkpoint rooms enter the vocabulary now — M6 builds one in the test scene
+with a chest, a shopkeeper, and an M2 training dummy; M7's chapters place them through real
+levels.
+
+---
+
+## D43 — The economy: selling is the only faucet · **Locked** *(resolves D35's currency sink)*
+
+Directed by Michael (2026-08-20): "Once you have gear that is godly, getting a couple coins here
+and there from killing an enemy means nothing."
+
+- **One currency, per player**, unnamed until the story names it. **No coin drops from enemies —
+  rejected** because any flat drop is rounding error in an uncapped game. Money enters play only
+  by selling items, and **sell prices scale with quality rank × required level**, so the faucet
+  inherits the loot ladder's endless scaling automatically.
+- **Shopkeepers** (DD-style; the story spreads them around in M7, mostly in checkpoint rooms —
+  M6 ships one in the test scene) buy anything at sell price, and sell health and mana potions
+  plus a small rack of 3–4 generator-rolled gear pieces at current progress quality, rerolled
+  per visit.
+- **The sack caps at 200 slots**, worn gear excluded; identical consumables stack to 5, one slot
+  per stack. **Auto-sell at cap** is a per-player setting: an overflowing pickup instantly sells
+  the lowest-quality *unlocked* bagged item. **Locks** protect items absolutely — never
+  auto-sold, and manual sell or combine demands the unlock first. Cap hit with nothing sellable:
+  the pickup refuses — a red X on the walk-over card and a 200/200 flash, punishing on purpose
+  so it is learned once.
+
+---
+
+## D44 — Investment: deepen or gamble · **Locked** *(completes D35's second half)*
+
+Directed by Michael (2026-08-20). Both flows live on the Item Sack panel, at any chest.
+
+- **Upgrading is guaranteed progress:** a capacity point raises **any stat the item already
+  has** — core stat or rolled affix, never adding one (the roll stays immutable) — by ~8% of its
+  rolled value, and **the money cost doubles per point already spent on that item**. Capacity
+  gates the total, money gates the pace; maxing an item costs on the order of twice its own sell
+  price.
+- **Combining is the gamble:** two of the **same item at the same quality rank** are both
+  consumed for one fresh reroll of it — **2% chance (tunable) it returns one rank higher**.
+  Spent points die with the inputs; the result rolls fresh capacity; its required level is the
+  higher of the two inputs; locked items refuse.
+- **The three fates of a drop** — worn (and deepened), sold (guaranteed progress), or combined
+  (the gamble) — are the loot loop. Selling junk funds deepening the keeper; duplicates tempt
+  you off the guaranteed path.
+
+---
+
+## D45 — Play-mode smoke tests arrive · **Locked** *(amends D7)*
+
+Directed by Michael (2026-08-20), on evidence: M4 and M5's only bugs were Gameplay wiring bugs
+invisible to a green EditMode suite — M5's leap was dead in-game while 401 tests passed.
+
+- D7's deferral ("until scenes stabilise") has expired on its own terms: scenes are stable, and
+  M6 is the most wiring-heavy milestone yet.
+- **M6 ships a small PlayMode smoke suite**: boot the gameplay scene, drive synthetic commands
+  through the whole loop — kill, drop, grab, chest, equip, sell — and assert the state. A
+  tripwire for "completely broken", never a feel-check; Michael's mega passes keep that job.
+  EditMode remains the primary gate and the home of all logic coverage.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

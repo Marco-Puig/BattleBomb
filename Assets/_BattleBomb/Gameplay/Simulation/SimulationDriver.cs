@@ -54,6 +54,9 @@ namespace BattleBomb.Gameplay.Simulation
         private const float ProjectileKnockback = 4f;
         private const int ProjectileHitstop = 2;
         private const int ProjectileLifeSteps = 240;
+        private const float PlayerShotKnockback = 3f;
+        private const int PlayerShotHitstop = 1;
+        private const float PlayerShotAimRangeX = 14f;
 
         /// <summary>D28's turn-taking: melee attackers allowed on one player at once (paper value).
         /// Brutes never wait, so the real ceiling a player faces is this plus the brutes.</summary>
@@ -618,6 +621,46 @@ namespace BattleBomb.Gameplay.Simulation
                 shooter.Spec.Tuning.Attack.Damage, shooter.Spec.Tuning.Element, ProjectileLifeSteps));
         }
 
+        /// <summary>
+        /// The bow's Light (D34): an arrow aimed at the nearest live target ahead — depth included,
+        /// which is the whole ranged identity (§2.2) — or straight ahead when nothing is. Damage
+        /// carries the authored attack number; the build's scale, the crit, and the steal price at
+        /// impact from the shooter's live sheet.
+        /// </summary>
+        internal void SpawnPlayerShot(CharacterActor shooter, in AttackTuning attack)
+        {
+            float sign = shooter.Facing == Facing.Right ? 1f : -1f;
+            Vector3 target = shooter.Position + new Vector3(sign * PlayerShotAimRangeX, 0f, 0f);
+            float bestSq = float.MaxValue;
+
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i].IsDepleted)
+                {
+                    continue;
+                }
+
+                Vector3 to = targets[i].Position - shooter.Position;
+                if (to.x * sign <= 0.1f || Mathf.Abs(to.x) > PlayerShotAimRangeX)
+                {
+                    continue;
+                }
+
+                to.y = 0f;
+                float sq = to.sqrMagnitude;
+                if (sq < bestSq)
+                {
+                    bestSq = sq;
+                    target = targets[i].Position;
+                }
+            }
+
+            _projectiles.Add(ProjectileState.Fired(
+                shooter.Position, target, shooter.ShotSpeed, attack.Damage, Element.None,
+                ProjectileLifeSteps, shooter.PlayerId.Value));
+        }
+
         private void StepProjectiles(IReadOnlyList<CharacterActor> players, float dt)
         {
             for (int i = _projectiles.Count - 1; i >= 0; i--)
@@ -626,6 +669,18 @@ namespace BattleBomb.Gameplay.Simulation
                 if (p.IsExpired)
                 {
                     _projectiles.RemoveAt(i);
+                    continue;
+                }
+
+                if (p.FromPlayer)
+                {
+                    if (ResolvePlayerShot(players, p))
+                    {
+                        _projectiles.RemoveAt(i);
+                        continue;
+                    }
+
+                    _projectiles[i] = p;
                     continue;
                 }
 
@@ -646,6 +701,82 @@ namespace BattleBomb.Gameplay.Simulation
 
                 _projectiles[i] = p;
             }
+        }
+
+        /// <summary>
+        /// One arrow against the enemy side (task 46): the same spherical flight test bolts use,
+        /// priced at impact from the shooter's live sheet — scale, crit, steal, knockback — so an
+        /// arrow in flight is as honest as a swing. True when the arrow connected.
+        /// </summary>
+        private bool ResolvePlayerShot(IReadOnlyList<CharacterActor> players, in ProjectileState p)
+        {
+            CollectCandidates(null, includePartners: false);
+            int hit = ProjectileSimulation.HitTest(p, _candidatePositions, ProjectileRadius);
+            if (hit < 0)
+            {
+                return false;
+            }
+
+            CharacterActor shooter = null;
+            for (int i = 0; i < players.Count; i++)
+            {
+                if (players[i].PlayerId.Value == p.OwnerPlayerId)
+                {
+                    shooter = players[i];
+                    break;
+                }
+            }
+
+            float gear = 1f;
+            float knockback = 1f;
+            bool crit = false;
+            if (shooter != null)
+            {
+                gear = shooter.DamageScale;
+                _combatRng = _combatRng.NextFloat(out float critDraw);
+                crit = critDraw < shooter.Sheet.CritChance;
+                if (crit)
+                {
+                    gear *= shooter.Sheet.CritDamageMultiplier;
+                }
+
+                knockback = shooter.Sheet.KnockbackMultiplier;
+            }
+
+            Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
+            direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
+            Vector3 impulse = direction * (PlayerShotKnockback * knockback);
+
+            Component owner = _candidateOwners[hit];
+            if (owner is EnemyActor enemy)
+            {
+                float damage = DamageCalculator.Resolve(
+                    p.Damage, p.Element, enemy.Resistances, ElementalMultipliers.Neutral, gear);
+                enemy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
+                if (shooter != null)
+                {
+                    StealLife(shooter, damage);
+                }
+
+                HitLanded?.Invoke(new HitEvent(shooter, enemy, damage, enemy.Position, false, crit));
+                return true;
+            }
+
+            if (owner is TrainingDummy dummy)
+            {
+                float damage = DamageCalculator.Resolve(
+                    p.Damage, p.Element, ElementalMultipliers.Neutral, ElementalMultipliers.Neutral, gear);
+                dummy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
+                if (shooter != null)
+                {
+                    StealLife(shooter, damage);
+                }
+
+                HitLanded?.Invoke(new HitEvent(shooter, dummy, damage, dummy.Position, false, crit));
+                return true;
+            }
+
+            return false;
         }
 
         private void CollectCandidates(CharacterActor except, bool includePartners)

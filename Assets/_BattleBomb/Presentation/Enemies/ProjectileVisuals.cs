@@ -18,6 +18,7 @@ namespace BattleBomb.Presentation.Enemies
     {
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
         private static readonly Color BoltColor = new Color(1f, 0.85f, 0.3f);
+        private static readonly Color ArrowColor = new Color(0.45f, 0.9f, 1f);
         private static readonly Color BlobColor = new Color(0.1f, 0.1f, 0.1f);
 
         [Tooltip("Driver whose projectiles are shown. Leave empty to find the one in the scene.")]
@@ -28,6 +29,8 @@ namespace BattleBomb.Presentation.Enemies
 
         private readonly List<Transform> _bolts = new List<Transform>();
         private readonly List<Transform> _blobs = new List<Transform>();
+        private readonly List<bool> _tintedAsArrow = new List<bool>();
+        private MaterialPropertyBlock _tintBlock;
 
         private void OnEnable()
         {
@@ -54,6 +57,7 @@ namespace BattleBomb.Presentation.Enemies
 
             _bolts.Clear();
             _blobs.Clear();
+            _tintedAsArrow.Clear();
         }
 
         private void LateUpdate()
@@ -68,6 +72,7 @@ namespace BattleBomb.Presentation.Enemies
             {
                 _bolts.Add(CreateBall("Bolt", BoltColor));
                 _blobs.Add(CreateBall("BoltShadow", BlobColor));
+                _tintedAsArrow.Add(false);
             }
 
             // Straight-line flight, so the render position can lead the fixed step exactly.
@@ -87,6 +92,15 @@ namespace BattleBomb.Presentation.Enemies
                 }
 
                 ProjectileState projectile = projectiles[i];
+                if (_tintedAsArrow[i] != projectile.FromPlayer)
+                {
+                    // A pooled ball changed sides: the player's arrows read cool, bolts warm.
+                    _tintedAsArrow[i] = projectile.FromPlayer;
+                    _tintBlock = _tintBlock ?? new MaterialPropertyBlock();
+                    _tintBlock.SetColor(BaseColor, projectile.FromPlayer ? ArrowColor : BoltColor);
+                    _bolts[i].GetComponent<MeshRenderer>().SetPropertyBlock(_tintBlock);
+                }
+
                 Vector3 at = projectile.Position + projectile.Velocity * lead;
                 float size = 0.3f + 0.03f * projectile.Damage;
                 _bolts[i].position = new Vector3(at.x, at.y + _boltHeight, at.z);

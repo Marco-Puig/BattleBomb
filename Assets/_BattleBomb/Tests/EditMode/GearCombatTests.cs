@@ -1,6 +1,7 @@
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Stats;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace BattleBomb.Tests.EditMode
 {
@@ -101,6 +102,21 @@ namespace BattleBomb.Tests.EditMode
             PlayerCondition after = downed.Healed(50f);
             Assert.That(after.IsDown, Is.True, "the revive is the only way back (D25)");
             Assert.That(after.Health.Current, Is.Zero);
+        }
+
+        [Test]
+        public void An_arrow_keeps_its_owner_through_flight()
+        {
+            ProjectileState arrow = ProjectileState.Fired(
+                Vector3.zero, Vector3.right * 5f, 10f, 6f, Element.None, 60, ownerPlayerId: 1);
+            Assert.That(arrow.FromPlayer, Is.True);
+
+            ProjectileState flown = ProjectileSimulation.Step(arrow, 1f / 60f);
+            Assert.That(flown.OwnerPlayerId, Is.EqualTo(1), "the owner survives every step");
+
+            ProjectileState bolt = ProjectileState.Fired(
+                Vector3.zero, Vector3.right, 8f, 5f, Element.Fire, 60);
+            Assert.That(bolt.FromPlayer, Is.False, "enemy shots stay enemy by default");
         }
 
         [Test]

@@ -11,7 +11,8 @@ namespace BattleBomb.Core.Combat
     public static class ProjectileSimulation
     {
         public static ProjectileState Step(in ProjectileState p, float dt) => new ProjectileState(
-            p.Position + p.Velocity * dt, p.Velocity, p.Damage, p.Element, p.LifeSteps - 1);
+            p.Position + p.Velocity * dt, p.Velocity, p.Damage, p.Element, p.LifeSteps - 1,
+            p.OwnerPlayerId);
 
         /// <summary>
         /// The nearest target within <paramref name="radius"/> of the projectile, or −1. The test

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Movement;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
@@ -77,6 +78,8 @@ namespace BattleBomb.Gameplay.Characters
         private MovementTuning _activeTuning;
         private ManaPool _mana;
         private float _damageScale = 1f;
+        private WeaponClass _weaponClass = WeaponClass.None;
+        private float _shotSpeed = 12f;
         private PlayerInventory _bag;
         private readonly List<GearContribution> _gearScratch = new List<GearContribution>();
 
@@ -118,6 +121,12 @@ namespace BattleBomb.Gameplay.Characters
 
         /// <summary>Authored attack damage × this = final base damage; unarmed is exactly 1.</summary>
         internal float DamageScale => _damageScale;
+
+        /// <summary>The worn weapon's class — a bow turns chain Lights into shots (D34).</summary>
+        public WeaponClass WeaponClass => _weaponClass;
+
+        /// <summary>Arrow flight speed, from the worn bow's roll.</summary>
+        internal float ShotSpeed => _shotSpeed;
 
         /// <summary>
         /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
@@ -228,7 +237,16 @@ namespace BattleBomb.Gameplay.Characters
 
             if (combat.HitWindowOpened && _driver != null)
             {
-                _driver.ResolveHits(this, combat.Attack);
+                // The bow's identity (D34/§2.2): a chain Light looses an arrow instead of a
+                // melee window; Heavy and the aerials keep their swings even with a bow worn.
+                if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
+                {
+                    _driver.SpawnPlayerShot(this, combat.Attack);
+                }
+                else
+                {
+                    _driver.ResolveHits(this, combat.Attack);
+                }
             }
 
             transform.position = _state.Position;
@@ -349,9 +367,12 @@ namespace BattleBomb.Gameplay.Characters
                 velocity.y = attack.ResolvesOnLanding ? -_tuning.MaxFallSpeed : 0f;
             }
 
-            // The slam never lunges: its aim is the shadow mark (D14), not magnetism.
+            // The slam never lunges: its aim is the shadow mark (D14), not magnetism — and a
+            // bow's Light is a shot, so it never scoots toward what it can hit from here.
             Vector3 target = default;
-            bool hasTarget = !attack.ResolvesOnLanding && _driver != null
+            bool hasTarget = !attack.ResolvesOnLanding
+                && !(_weaponClass == WeaponClass.Bow && IsChainLight(attack))
+                && _driver != null
                 && _driver.TryPickLungeTarget(this, attack, out target);
             if (hasTarget)
             {
@@ -454,10 +475,26 @@ namespace BattleBomb.Gameplay.Characters
             _damageScale = _statTuning.UnarmedDamage > 0f
                 ? _sheet.WeaponDamage / _statTuning.UnarmedDamage
                 : 1f;
+            ItemInstance weapon = _bag != null ? _bag.Inventory.Loadout.Weapon : default;
+            _weaponClass = weapon.IsEmpty ? WeaponClass.None : weapon.WeaponClass;
+            _shotSpeed = weapon.ShotSpeed > 0f ? weapon.ShotSpeed : 12f;
             _activeKit = _kit.ScaledBySwingSpeed(_sheet.SwingSpeedMultiplier);
             _activeTuning = ScaledSpeed(_tuning, _sheet.NetMoveSpeedMultiplier);
             _condition = _condition.Resized(_sheet.MaxHealth);
             _mana = _mana.Resized(_sheet.MaxMana);
+        }
+
+        private bool IsChainLight(in AttackTuning attack)
+        {
+            for (int i = 0; i < _activeKit.ChainLength; i++)
+            {
+                if (_activeKit.StepAt(i).OnLight.Equals(attack))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static MovementTuning ScaledSpeed(in MovementTuning tuning, float multiplier) => new MovementTuning(

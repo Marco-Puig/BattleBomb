@@ -112,7 +112,8 @@ namespace BattleBomb.Core.Combat
             attack.LaunchSpeed,
             attack.HitstopSteps,
             attack.MoveSpeedScale,
-            attack.ResolvesOnLanding);
+            attack.ResolvesOnLanding,
+            stunSteps: attack.StunSteps);
 
         private static int ScaledSteps(int steps, float inverse) =>
             steps <= 0 ? steps : Math.Max(1, (int)Math.Round(steps * inverse));

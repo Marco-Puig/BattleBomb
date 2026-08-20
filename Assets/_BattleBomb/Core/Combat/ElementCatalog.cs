@@ -12,11 +12,19 @@ namespace BattleBomb.Core.Combat
         public readonly string Name;
         public readonly StatusSpec Status;
 
-        public ElementSpec(ElementId id, string name, in StatusSpec status = default)
+        /// <summary>
+        /// The element's own press cast (D46) — every character of this element shares it.
+        /// Unauthored means the character's kit keeps whatever its press slot already holds.
+        /// </summary>
+        public readonly MagicCast SignatureCast;
+
+        public ElementSpec(ElementId id, string name, in StatusSpec status = default,
+            in MagicCast signatureCast = default)
         {
             Id = id;
             Name = string.IsNullOrEmpty(name) ? id.ToString() : name;
             Status = status;
+            SignatureCast = signatureCast;
         }
     }
 

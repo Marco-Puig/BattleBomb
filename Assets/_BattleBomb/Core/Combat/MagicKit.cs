@@ -2,12 +2,23 @@ using UnityEngine;
 
 namespace BattleBomb.Core.Combat
 {
+    /// <summary>How a cast's active window delivers its hit (D46).</summary>
+    public enum CastDelivery
+    {
+        /// <summary>An instant shape test — the line, the wall, the gust, every aura.</summary>
+        Hitbox = 0,
+
+        /// <summary>A bolt fired down the caster's lane — Ice's trade for its range.</summary>
+        Projectile,
+    }
+
     /// <summary>Which of the three casts one Magic press meant (D39).</summary>
     public enum MagicCastKind
     {
         None = 0,
 
-        /// <summary>A narrow line erupting from the ground ahead — the default press.</summary>
+        /// <summary>The press slot. Since D46 it holds the element's signature cast — Fire's
+        /// line, Ice's bolt, Earth's wall, Air's gust — so the name is historical.</summary>
         Splash,
 
         /// <summary>A radial burst around the caster — stick down. The crowd moment, and the
@@ -31,11 +42,20 @@ namespace BattleBomb.Core.Combat
         /// <summary>Upward speed the cast grants. Only the leap uses it; 0 everywhere else.</summary>
         public readonly float LiftSpeed;
 
-        public MagicCast(in AttackTuning attack, int manaCost, float liftSpeed = 0f)
+        /// <summary>How the active window delivers the hit (D46). Hitbox for everything but Ice.</summary>
+        public readonly CastDelivery Delivery;
+
+        /// <summary>Bolt speed in units per second; meaningful only for projectile delivery.</summary>
+        public readonly float ProjectileSpeed;
+
+        public MagicCast(in AttackTuning attack, int manaCost, float liftSpeed = 0f,
+            CastDelivery delivery = CastDelivery.Hitbox, float projectileSpeed = 0f)
         {
             Attack = attack;
             ManaCost = Mathf.Max(0, manaCost);
             LiftSpeed = Mathf.Max(0f, liftSpeed);
+            Delivery = delivery;
+            ProjectileSpeed = Mathf.Max(0f, projectileSpeed);
         }
 
         /// <summary>False for a character who simply has no cast in this slot.</summary>
@@ -61,6 +81,13 @@ namespace BattleBomb.Core.Combat
             Aura = aura;
             Leap = leap;
         }
+
+        /// <summary>
+        /// D46's composition: the element supplies the press cast, the character keeps its aura
+        /// and leap. An element without a signature (synthetic test elements) changes nothing.
+        /// </summary>
+        public MagicKit WithSignature(in MagicCast signature) =>
+            signature.IsAuthored ? new MagicKit(signature, Aura, Leap) : this;
 
         public MagicCast For(MagicCastKind kind)
         {
@@ -118,8 +145,9 @@ namespace BattleBomb.Core.Combat
                 a.StartupSteps, a.ActiveSteps, a.RecoverySteps,
                 a.Damage + bonusDamage, a.ReachX + bonusRange, a.DepthTolerance,
                 a.LungeDistance, a.MaxTargets, a.KnockbackSpeed, a.LaunchSpeed, a.HitstopSteps,
-                a.MoveSpeedScale, a.ResolvesOnLanding, a.IsRadial);
-            return new MagicCast(boosted, cast.ManaCost, cast.LiftSpeed);
+                a.MoveSpeedScale, a.ResolvesOnLanding, a.IsRadial, a.StunSteps);
+            return new MagicCast(
+                boosted, cast.ManaCost, cast.LiftSpeed, cast.Delivery, cast.ProjectileSpeed);
         }
 
         /// <summary>The paper kit (D39): a splash ahead, an aura around, a leap up.</summary>

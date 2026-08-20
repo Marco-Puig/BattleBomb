@@ -33,6 +33,12 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public readonly bool ResolvesOnLanding;
 
+        /// <summary>
+        /// Steps of stun this hit inflicts (D46 — Earth's wall). Rides the same hold machinery
+        /// reactions use; 0 for every attack that merely hits.
+        /// </summary>
+        public readonly int StunSteps;
+
         private readonly bool _radial;
 
         /// <summary>
@@ -56,9 +62,11 @@ namespace BattleBomb.Core.Combat
             int hitstopSteps,
             float moveSpeedScale,
             bool resolvesOnLanding = false,
-            bool isRadial = false)
+            bool isRadial = false,
+            int stunSteps = 0)
         {
             _radial = isRadial;
+            StunSteps = stunSteps > 0 ? stunSteps : 0;
             StartupSteps = startupSteps;
             ActiveSteps = activeSteps;
             RecoverySteps = recoverySteps;

@@ -29,6 +29,11 @@ Canonical statement: `docs/hook.md`.
 5. **Every authored space earns twice.** Story content is replayed at scaling difficulty, so content
    serves both narrative and endgame.
 
+**Art direction (D47):** characters, enemies, weapons, and pets are **2D billboarded sprites —
+Castle Crashers-style art — in the 3D environment.** The simulation never knows: hitboxes and
+timing are Core numbers, so the visual layer is swappable by construction. Sprite pipeline and
+resolution targets are decided at the art pass, not before.
+
 ---
 
 ## 2. Combat model
@@ -88,13 +93,13 @@ then the authored assets in `Assets/_BattleBomb/Data/Combat/` are the reference.
 - **Aerials:** Jump→Light pops enemies up for a hit or two, deliberately short of juggling
   (extended "air tech" is a future skill ceiling). Jump→Heavy slams an AoE where the grounded
   shadow marks the landing.
-- **Magic is one button, three casts (D39):** press = a narrow ground **splash** ahead of you
-  (depth-limited like melee — free depth crossing stays the bow's identity); stick down + press =
-  a radial **aura** around the character (the depth answer, the crowd moment); press airborne =
-  the **elemental double jump** (a mana-priced boost up with a small burst at the liftoff point).
-  No charged casts, no chords; stick up + Magic is deliberately unassigned expansion room.
-  Fuelled by slowly regenerating mana; capacity is a base stat, regen is a gear stat (§5, D32).
-  Every cast applies the character's element status (§4).
+- **Magic is one button, three casts (D39, amended by D46):** press = the element's **signature
+  cast** (each element's own move — §4); stick down + press = a radial **aura** around the
+  character (the depth answer, the crowd moment); press airborne = the **elemental double jump**
+  (a mana-priced boost up with a small burst at the liftoff point). No charged casts, no chords;
+  stick up + Magic is deliberately unassigned expansion room. Fuelled by slowly regenerating
+  mana; capacity is a base stat, regen is a gear stat (§5, D32). Every cast applies the
+  character's element status (§4).
 
 ### 2.7 Defence (D26)
 
@@ -121,7 +126,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 |---|---|---|
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
 | Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
-| Elemental attack | **Magic** | The character's element expressed offensively — the three-cast kit: splash, aura, elemental double jump (§2.6, §4, D39). |
+| Elemental attack | **Magic** | The character's element expressed offensively — the three-cast kit: the element's signature cast, aura, elemental double jump (§2.6, §4, D39/D46). |
 | Quick-use | **Quick-use** | Fires the one quick-use slot: a consumable (health potions most commonly) or a worn equipment piece with an active (D37). Equipment itself is two worn slots, passive by default, some pieces carrying an active with derived damage and a real cooldown (D27 as amended). Spice, never the meta (D19). |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
@@ -167,17 +172,27 @@ base damage
 ```
 
 **An element is authored data, never code (D38)** — a definition holding its name, its status
-behaviour, and its visual identity. The roster itself is an open debate (**O11**); **Fire is the
-first authored element** (it is in every candidate set), and its status is **Burn**: damage over
-time, priced from the hit that applied it, so gear scaling flows into statuses automatically.
+behaviour, its signature cast, and its visual identity. **The roster is Fire, Ice, Earth, Air
+(D46, resolving O11), and each element's press cast is its own move:**
+
+| Element | Signature cast | Status |
+|---|---|---|
+| **Fire** | Mid-range ground line ahead | **Burn** — damage over time |
+| **Ice** | Long-range, low-damage bolt in the caster's lane | **Chill** — slowed for a few seconds |
+| **Earth** | Short-range rock wall — decent damage, stuns on hit | *unauthored dial* |
+| **Air** | Mid-range gust that launches enemies for a combo | *unauthored dial* |
+
+Statuses are priced from the hit that applied them, so gear scaling flows into them
+automatically. Earth's stun and Air's launch belong to the hit, not to a mark. Ice's bolt is
+long but lane-bound — free depth crossing stays the bow's identity (§2.2).
 
 **Two element sources per player (D19):** the weapon's infusion applies its status automatically on
 hit (the Dungeon Defenders half), and the character casts their own element on Magic (the Castle
 Crashers half — the three-cast kit, D39). Statuses **react** — a setup status plus a trigger
 status chain-stuns, and a deliberately small set of similar pairs — so a lone player self-combos
 by pairing weapon element against their own, and a co-op partner adds a third source (§7). The
-reaction framework ships with M5; the authored pair table fills when O11 settles the roster
-(D41). Reactions are the elemental depth Castle Crashers never had.
+reaction framework shipped with M5; the authored pair table stays empty until the pairs for this
+roster are designed (D41, D46). Reactions are the elemental depth Castle Crashers never had.
 
 **Statuses are two-way (D40):** enemy casters status players. **Same element cancels:** matching
 elements halve elemental damage both ways and the status never applies; kinetic weapon damage is

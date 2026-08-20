@@ -97,7 +97,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M3** | Enemies — plus the aerial pair, deferred into it | **complete** |
 | **M4** | Gear and stats | **complete** |
 | **M5** | Abilities and elements | **complete** |
-| M6 | Loot loop | **next** |
+| **M5B** | Element rework — D46 signature casts, D47 billboards | **in build** |
+| M6 | Loot loop | designed — starts after M5B |
 | M7 | Chapters *(first point story input is needed)* | |
 | M8 | **Vertical slice** — the real target | |
 

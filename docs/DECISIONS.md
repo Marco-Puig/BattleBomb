@@ -950,16 +950,63 @@ invisible to a green EditMode suite — M5's leap was dead in-game while 401 tes
 
 ---
 
+## D46 — The roster lands; each element owns its signature cast · **Locked** *(resolves O11, amends D39)*
+
+Directed by Michael with his collaborator (2026-08-20). The roster is **Fire, Ice, Earth, Air**.
+The compromise that settled it also reshapes the Magic kit: the press casts were "a similar line
+of splash damage" differing only in status, and now each element's press cast is its own move.
+
+| Element | Signature cast (the press) | Status (infusions and casts alike, D40) |
+|---|---|---|
+| **Fire** | The current line — mid-range ground splash ahead | **Burn** — damage over time (unchanged) |
+| **Ice** | A long-range projectile, low damage | **Chill** (working name) — slowed for a few seconds on contact |
+| **Earth** | A short-range rock wall that erupts and quickly falls — decent damage, **stuns** on hit | *unauthored — an open dial, not a gap* |
+| **Air** | A mid-range gust that **launches** enemies skyward to start a combo | *unauthored — an open dial, not a gap* |
+
+- **The signature cast belongs to the element, not the character** — every Fire character shares
+  the line (the Castle Crashers model, and it keeps "a new element is one authored asset", D38:
+  the asset simply grows its signature cast). Characters still differ in animation, VFX, and
+  their aura/leap tuning.
+- **The aura and the elemental double jump keep their D39 shapes** — radial crowd answer,
+  mana-priced mobility — and carry the element's status, so an Ice aura is a radial chill.
+- **Statuses grow kinds**: damage over time (Burn) and now **slow** (Chill). Earth's stun and
+  Air's launch are properties of the *hit*, never lingering marks — the stun rides D41's
+  existing stun machinery, the launch rides the melee launcher's. Earth and Air infusions
+  therefore mark nothing *for now*: they stay honest elemental damage (same-element rule,
+  resistances, climate all apply), and giving them a mark later is authoring, not code.
+- **Depth rules hold (§2.2, D39's reasoning):** Fire, Earth, and Air press casts are
+  depth-limited like melee. **Ice's bolt flies straight ahead in the caster's lane** — long
+  range is its trade; free depth crossing remains the bow's identity, uneaten.
+- **D41's chain-stun anchor loses its owners** — soak + shock were Water and Electric, both now
+  gone from the roster, and Earth stuns directly. The reaction table still ships empty; picking
+  this roster's pairs is its own short session with Michael and his collaborator.
+
+---
+
+## D47 — Characters are 2D billboards in a 3D world · **Locked**
+
+Directed by Michael with his collaborator (2026-08-20). Characters, enemies, weapons, and pets
+render as **2D billboarded sprites — Castle Crashers-style art — inside the 3D URP environment.**
+
+- **The simulation does not know.** Rule 2 (Gameplay owns state, Presentation observes) means
+  hitboxes, reach, depth, and timing are Core numbers, so the entire visual layer swaps without
+  touching a line of gameplay code. This decision is cheap *because* of that rule.
+- Depth stays a real simulation axis (§2.1), and the **hard-edged grounded shadow stays the
+  primary depth cue** (§2.3) — under flat sprites it becomes more load-bearing, not less.
+- Facing flips are sprite flips; elite quality tinting (D42-era, M6 task 69) tints the sprite.
+- **Deferred to the art pass:** the sprite pipeline (frame sheets vs skeletal 2D), resolution
+  targets, and how depth-band scaling reads. Current placeholder visuals stay as they are until
+  real art exists — converting placeholder capsules into placeholder sprites buys nothing.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
 - **O9 / O10 — resolved 2026-08-19** as D36 (level requirements on gear) and D37 (the quick-use
   slot).
-- **O11 — The element roster.** Michael wants Fire/Earth/Electricity/Poison; his collaborator
-  wants the Avatar quartet Fire/Water/Earth/Air. Fire ships in M5 (it is in both sets); Earth is
-  also in both and is safe to author anytime. Resolving the roster also assigns each new
-  element's status and the chain-stun reaction pair (D41). Nothing technical blocks on it
-  (D38) — it is a content decision between Michael and his collaborator.
+- **O11 — resolved 2026-08-20** as D46: Fire, Ice, Earth, Air, each with its own signature
+  cast. The reaction pairs for this roster remain open (D46's last bullet).
 - **O2 — Git LFS: deliberately deferred (Michael, 2026-08-18).** Working policy: a few hi-res
   hero assets plus lightweight placeholders live in plain git. Rules that keep this safe — no file
   near 100 MB (GitHub hard-rejects; warns at 50 MB), hero binaries are commit-rarely (iterate

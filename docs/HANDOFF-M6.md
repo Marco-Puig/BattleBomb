@@ -143,9 +143,10 @@ Mega-pass fixes, close-out notes in this file, progress tables, memory.
 ## Standing watches
 
 - **Heavy stays on watch** (D26) — unchanged.
-- **O11 (element roster)** — still open with Michael's collaborator; nothing in M6 blocks on it.
-- **The reaction table is still empty and runtime-unexercised** — when O11 lands, treat the
-  first authored pair as unverified code (M5 close-out note 4). The new smoke suite is the
+- **O11 resolved as D46** (Fire/Ice/Earth/Air, signature casts) and built as M5B before this
+  milestone (`HANDOFF-M5B.md`). The reaction *pairs* for the roster remain open design.
+- **The reaction table is still empty and runtime-unexercised** — when the pairs are authored,
+  treat the first one as unverified code (M5 close-out note 4). The new smoke suite is the
   natural home for that verification.
 - **Offered, not actioned (Michael's call):** leap lift add-with-cap instead of replace; magic
   damage percentage instead of flat.

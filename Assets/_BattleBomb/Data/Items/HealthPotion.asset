@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: HealthPotion
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.ItemDefinition
   _id: 9
-  _displayName: Health Potion
+  _displayName: Health
   _slot: 6
   _weaponClass: 0
   _petClass: 0

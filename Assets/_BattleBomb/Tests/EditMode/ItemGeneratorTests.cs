@@ -21,7 +21,7 @@ namespace BattleBomb.Tests.EditMode
             new ItemSpec(3, "Leather Boots", ItemSlot.Boots, new GearContribution(defence: 0.06f, weight: 3f)),
             new ItemSpec(4, "Hunting Knife", ItemSlot.Weapon, new GearContribution(weaponDamage: 40f), WeaponClass.Sword),
             new ItemSpec(5, "Hunting Bow", ItemSlot.Weapon, new GearContribution(weaponDamage: 28f), WeaponClass.Bow, shotSpeed: 14f),
-            new ItemSpec(6, "Health Potion", ItemSlot.Consumable, GearContribution.Zero, consumableHealFraction: 0.35f),
+            new ItemSpec(6, "Health", ItemSlot.Consumable, GearContribution.Zero, consumableHealFraction: 0.35f),
             new ItemSpec(7, "Lucky Charm", ItemSlot.Equipment, new GearContribution(critChance: 0.03f)),
             new ItemSpec(8, "Terrier", ItemSlot.Pet, new GearContribution(maxHealthBonus: 15f), petClass: PetClass.StatBoost),
         };
@@ -160,13 +160,20 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Consumables_roll_clean_of_affixes()
+        public void Consumables_roll_clean_of_affixes_and_potency_follows_the_container()
         {
-            ItemGenerator.Roll(new DeterministicRandom(17u), Context(99f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance item);
+            ItemGenerator.Roll(new DeterministicRandom(17u), Context(99f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance elixir);
 
-            Assert.That(item.IsConsumable, Is.True);
-            Assert.That(item.AffixCount, Is.Zero, "a potion is a potion");
-            Assert.That(item.ConsumableHealFraction, Is.EqualTo(0.35f));
+            Assert.That(elixir.IsConsumable, Is.True);
+            Assert.That(elixir.AffixCount, Is.Zero, "a potion is a potion");
+            Assert.That(elixir.DisplayName, Is.EqualTo("Elixir of Health"));
+            Assert.That(elixir.ConsumableHealFraction, Is.EqualTo(0.875f).Within(1e-4f),
+                "the Godly budget scales the heal");
+
+            ItemGenerator.Roll(new DeterministicRandom(17u), Context(0.1f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance vial);
+            Assert.That(vial.DisplayName, Is.EqualTo("Vial of Health"));
+            Assert.That(vial.ConsumableHealFraction, Is.EqualTo(0.175f).Within(1e-4f),
+                "a Vial is a sip");
         }
 
         [Test]

@@ -128,8 +128,7 @@ namespace BattleBomb.UI.Combat
                     {
                         if (items[s].Item.DefinitionId == ledgerBag.Inventory.QuickConsumableId)
                         {
-                            potions = items[s].Count;
-                            break;
+                            potions += items[s].Count;
                         }
                     }
 

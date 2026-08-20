@@ -61,9 +61,15 @@ namespace BattleBomb.Core.Items
                 }
             }
 
+            // The container is the potency (Michael's mega pass): a Vial heals a sip, an Elixir
+            // heals most of a pool — the rank's budget scales the effect like any other stat.
+            float heal = spec.ConsumableHealFraction > 0f
+                ? Mathf.Clamp01(spec.ConsumableHealFraction * row.StatBudget)
+                : 0f;
+
             item = new ItemInstance(
                 spec.Id,
-                ItemNaming.Compose(rank, spec.Name),
+                ItemNaming.Compose(rank, spec.Slot, spec.Name),
                 spec.Slot,
                 spec.WeaponClass,
                 spec.PetClass,
@@ -74,7 +80,7 @@ namespace BattleBomb.Core.Items
                 upgradeCapacity: row.UpgradeCapacity,
                 upgradesSpent: 0,
                 shotSpeed: spec.ShotSpeed,
-                consumableHealFraction: spec.ConsumableHealFraction);
+                consumableHealFraction: heal);
             return next;
         }
 

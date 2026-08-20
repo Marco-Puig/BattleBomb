@@ -99,8 +99,8 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Ceiling on summed defence — the max-tank build's wall (D35).")]
         [SerializeField] private float _defenceCap = 0.70f;
 
-        [Tooltip("Move-speed slow per unit of worn weight.")]
-        [SerializeField] private float _slowPerWeight = 0.005f;
+        [Tooltip("Move-speed slow per unit of worn weight. Raised from 0.005 at the mega pass — one chestplate must be felt, not just read.")]
+        [SerializeField] private float _slowPerWeight = 0.012f;
 
         [Tooltip("Damage multiplier a critical hit starts from; crit-damage affixes add to it.")]
         [SerializeField] private float _baseCritDamageMultiplier = 1.5f;

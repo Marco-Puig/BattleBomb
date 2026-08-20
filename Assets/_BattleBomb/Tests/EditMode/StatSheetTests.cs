@@ -126,8 +126,8 @@ namespace BattleBomb.Tests.EditMode
                 new GearContribution(weight: 10f),
                 new GearContribution(weight: 10f, weightReduction: 0.25f));
 
-            Assert.That(sheet.WeightSlow, Is.EqualTo(0.075f).Within(1e-4f),
-                "twenty units reduced a quarter, at half a percent each");
+            Assert.That(sheet.WeightSlow, Is.EqualTo(0.18f).Within(1e-4f),
+                "twenty units reduced a quarter, at 1.2% each — weight must be felt");
         }
 
         [Test]
@@ -136,10 +136,10 @@ namespace BattleBomb.Tests.EditMode
             StatSheet sheet = Build(new BaseStats(0, 0, 0, 30),
                 new GearContribution(weight: 15f));
 
-            Assert.That(sheet.WeightSlow, Is.EqualTo(0.075f).Within(1e-4f));
-            Assert.That(sheet.SlowedBy(sheet.WeightSlow), Is.EqualTo(0.06f).Within(1e-4f),
+            Assert.That(sheet.WeightSlow, Is.EqualTo(0.18f).Within(1e-4f));
+            Assert.That(sheet.SlowedBy(sheet.WeightSlow), Is.EqualTo(0.144f).Within(1e-4f),
                 "20% resist shaves the slow");
-            Assert.That(sheet.NetMoveSpeedMultiplier, Is.EqualTo(1.10f * 0.94f).Within(1e-4f));
+            Assert.That(sheet.NetMoveSpeedMultiplier, Is.EqualTo(1.10f * 0.856f).Within(1e-4f));
         }
 
         [Test]

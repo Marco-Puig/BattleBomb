@@ -25,11 +25,12 @@ namespace BattleBomb.Tests.EditMode
                 requiredLevel, upgradeCapacity: 2);
         }
 
-        private static ItemInstance Potion() => new ItemInstance(
-            PotionId, "Health Potion", ItemSlot.Consumable, WeaponClass.None, PetClass.None,
-            QualityRank.Rusty, GearContribution.Zero, Array.Empty<AffixRoll>(),
+        private static ItemInstance Potion(QualityRank quality = QualityRank.Rusty, float heal = 0.35f) => new ItemInstance(
+            PotionId, ItemNaming.Compose(quality, ItemSlot.Consumable, "Health"), ItemSlot.Consumable,
+            WeaponClass.None, PetClass.None,
+            quality, GearContribution.Zero, Array.Empty<AffixRoll>(),
             requiredLevel: 1, upgradeCapacity: 0, upgradesSpent: 0,
-            shotSpeed: 0f, consumableHealFraction: 0.35f);
+            shotSpeed: 0f, consumableHealFraction: heal);
 
         [Test]
         public void Consumables_stack_and_gear_lists_separately()
@@ -173,6 +174,28 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(second.Used, Is.True);
             Assert.That(inventory.Items, Is.Empty, "the stack is gone");
             Assert.That(inventory.QuickKind, Is.EqualTo(QuickSlotKind.Empty), "exhaustion clears the slot");
+        }
+
+        [Test]
+        public void Potions_split_stacks_by_quality_and_the_weakest_drinks_first()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Potion(QualityRank.Godly, 0.875f), 1);
+            inventory.Add(Potion(QualityRank.Torn, 0.3f), 1);
+            inventory.Add(Potion(QualityRank.Torn, 0.3f), 1);
+
+            Assert.That(inventory.Items.Count, Is.EqualTo(2), "a Flask and an Elixir never merge");
+            Assert.That(inventory.AssignQuickConsumable(PotionId), Is.True);
+
+            QuickUseResult first = inventory.UseQuickSlot(0);
+            Assert.That(first.HealFraction, Is.EqualTo(0.3f), "the weakest drinks first");
+
+            QuickUseResult second = inventory.UseQuickSlot(0);
+            Assert.That(second.HealFraction, Is.EqualTo(0.3f));
+
+            QuickUseResult third = inventory.UseQuickSlot(0);
+            Assert.That(third.HealFraction, Is.EqualTo(0.875f), "the Elixir waits its turn");
+            Assert.That(inventory.Items, Is.Empty);
         }
 
         [Test]

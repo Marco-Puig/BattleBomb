@@ -58,9 +58,12 @@ namespace BattleBomb.Core.Items
 
             if (item.IsConsumable)
             {
+                // Stacks split by quality: a Vial and an Elixir heal differently and never merge.
                 for (int i = 0; i < _items.Count; i++)
                 {
-                    if (_items[i].Item.IsConsumable && _items[i].Item.DefinitionId == item.DefinitionId)
+                    if (_items[i].Item.IsConsumable
+                        && _items[i].Item.DefinitionId == item.DefinitionId
+                        && _items[i].Item.Quality == item.Quality)
                     {
                         _items[i] = new ItemStack(_items[i].Item, _items[i].Count + 1);
                         return false;
@@ -227,7 +230,10 @@ namespace BattleBomb.Core.Items
             else
             {
                 _items.RemoveAt(index);
-                ClearQuickSlot();
+                if (FindConsumableStack(_quickConsumableId) < 0)
+                {
+                    ClearQuickSlot();
+                }
             }
 
             _quickCooldown = Mathf.Max(0, cooldownSteps);
@@ -243,17 +249,24 @@ namespace BattleBomb.Core.Items
             }
         }
 
+        /// <summary>The weakest matching stack — the quick slot drinks cheap potions first.</summary>
         private int FindConsumableStack(int definitionId)
         {
+            int best = -1;
             for (int i = 0; i < _items.Count; i++)
             {
-                if (_items[i].Item.IsConsumable && _items[i].Item.DefinitionId == definitionId)
+                if (!_items[i].Item.IsConsumable || _items[i].Item.DefinitionId != definitionId)
                 {
-                    return i;
+                    continue;
+                }
+
+                if (best < 0 || _items[i].Item.Quality < _items[best].Item.Quality)
+                {
+                    best = i;
                 }
             }
 
-            return -1;
+            return best;
         }
     }
 }

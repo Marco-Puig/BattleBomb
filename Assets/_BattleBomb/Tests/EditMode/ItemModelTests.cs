@@ -59,6 +59,23 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Consumables_speak_alchemy_not_gear_quality()
+        {
+            Assert.That(ItemNaming.Compose(QualityRank.Nothing, ItemSlot.Consumable, "Health"),
+                Is.EqualTo("Vial of Health"));
+            Assert.That(ItemNaming.Compose(QualityRank.Rusty, ItemSlot.Consumable, "Health"),
+                Is.EqualTo("Flask of Health"));
+            Assert.That(ItemNaming.Compose(QualityRank.Shiny, ItemSlot.Consumable, "Health"),
+                Is.EqualTo("Bottle of Health"));
+            Assert.That(ItemNaming.Compose(QualityRank.Mythical, ItemSlot.Consumable, "Health"),
+                Is.EqualTo("Philter of Health"));
+            Assert.That(ItemNaming.Compose(QualityRank.Godly, ItemSlot.Consumable, "Health"),
+                Is.EqualTo("Elixir of Health"));
+            Assert.That(ItemNaming.Compose(QualityRank.Godly, ItemSlot.Weapon, "Hunting Knife"),
+                Is.EqualTo("Godly Hunting Knife"), "gear keeps the ladder words");
+        }
+
+        [Test]
         public void Live_affixes_map_to_their_stat()
         {
             Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.CritChance, 0.1f)).CritChance,

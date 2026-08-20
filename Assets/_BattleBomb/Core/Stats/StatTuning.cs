@@ -66,7 +66,7 @@ namespace BattleBomb.Core.Stats
             slowResistPerOverCapPoint: 0.02f,
             slowResistCap: 0.75f,
             defenceCap: 0.70f,
-            slowPerWeight: 0.005f,
+            slowPerWeight: 0.012f,
             baseCritDamageMultiplier: 1.5f);
     }
 }

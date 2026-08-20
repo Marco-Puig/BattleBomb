@@ -105,6 +105,9 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Damage multiplier a critical hit starts from; crit-damage affixes add to it.")]
         [SerializeField] private float _baseCritDamageMultiplier = 1.5f;
 
+        [Tooltip("Steps the quick-use slot rests after firing (D37).")]
+        [SerializeField] private int _quickUseCooldownSteps = 180;
+
         public string DisplayName => _displayName;
 
         public float MaxHealth => Mathf.Max(1f, _maxHealth);
@@ -129,6 +132,8 @@ namespace BattleBomb.Gameplay.Data
         public float ReviveRange => Mathf.Max(0f, _reviveRange);
 
         public int ReviveGraceSteps => Mathf.Max(0, _reviveGraceSteps);
+
+        public int QuickUseCooldownSteps => Mathf.Max(0, _quickUseCooldownSteps);
 
         public CombatKit CombatKitToRuntime() =>
             _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;

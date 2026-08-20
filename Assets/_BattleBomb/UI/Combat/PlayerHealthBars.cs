@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
+using BattleBomb.Core.Items;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
 
@@ -87,6 +89,25 @@ namespace BattleBomb.UI.Combat
                 if (grabs > 0)
                 {
                     label += $"   loot {grabs}";
+                }
+
+                PlayerInventory bag = players[i].GetComponent<PlayerInventory>();
+                if (bag != null && bag.Inventory.QuickKind == QuickSlotKind.Consumable)
+                {
+                    int potions = 0;
+                    IReadOnlyList<ItemStack> items = bag.Inventory.Items;
+                    for (int s = 0; s < items.Count; s++)
+                    {
+                        if (items[s].Item.DefinitionId == bag.Inventory.QuickConsumableId)
+                        {
+                            potions = items[s].Count;
+                            break;
+                        }
+                    }
+
+                    label += bag.Inventory.QuickCooldownRemaining > 0
+                        ? $"   potion x{potions} (cd)"
+                        : $"   potion x{potions}";
                 }
 
                 _style.normal.textColor = new Color(0f, 0f, 0f, 0.8f);

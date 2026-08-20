@@ -80,6 +80,7 @@ namespace BattleBomb.Gameplay.Characters
         private float _damageScale = 1f;
         private WeaponClass _weaponClass = WeaponClass.None;
         private float _shotSpeed = 12f;
+        private int _quickUseCooldownSteps = 180;
         private PlayerInventory _bag;
         private readonly List<GearContribution> _gearScratch = new List<GearContribution>();
 
@@ -187,6 +188,17 @@ namespace BattleBomb.Gameplay.Characters
             {
                 grabbedLoot = true;
                 effective = WithoutLight(effective);
+            }
+
+            // The quick-use press (D37): drinks whatever the slot holds. `effective` is already
+            // idle without control, so the downed and staggered never quaff.
+            if (!frozen && _bag != null && (effective.Pressed & CommandButtons.Equipment) != 0)
+            {
+                QuickUseResult quick = _bag.Inventory.UseQuickSlot(_quickUseCooldownSteps);
+                if (quick.Used && quick.HealFraction > 0f)
+                {
+                    _condition = _condition.Healed(quick.HealFraction * _sheet.MaxHealth);
+                }
             }
 
             CombatStepResult combat = CombatMachine.Step(_combat, effective, _activeKit, _state.IsGrounded);
@@ -539,6 +551,7 @@ namespace BattleBomb.Gameplay.Characters
             _reviveMaxHealthFraction = _definition != null ? _definition.ReviveMaxHealthFraction : 0.65f;
             _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;
             _reviveGraceSteps = _definition != null ? _definition.ReviveGraceSteps : 60;
+            _quickUseCooldownSteps = _definition != null ? _definition.QuickUseCooldownSteps : 180;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
         }

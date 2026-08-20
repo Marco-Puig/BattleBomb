@@ -33,6 +33,15 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public readonly bool ResolvesOnLanding;
 
+        private readonly bool _radial;
+
+        /// <summary>
+        /// Resolves in a circle around the attacker rather than in front of it. The slam is radial
+        /// because it lands (D19); M5's aura is radial without waiting for ground, which is what
+        /// makes the circle magic's answer to depth.
+        /// </summary>
+        public bool IsRadial => _radial || ResolvesOnLanding;
+
         public AttackTuning(
             int startupSteps,
             int activeSteps,
@@ -46,8 +55,10 @@ namespace BattleBomb.Core.Combat
             float launchSpeed,
             int hitstopSteps,
             float moveSpeedScale,
-            bool resolvesOnLanding = false)
+            bool resolvesOnLanding = false,
+            bool isRadial = false)
         {
+            _radial = isRadial;
             StartupSteps = startupSteps;
             ActiveSteps = activeSteps;
             RecoverySteps = recoverySteps;

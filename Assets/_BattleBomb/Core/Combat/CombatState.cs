@@ -35,6 +35,15 @@ namespace BattleBomb.Core.Combat
         /// <summary>The attack in flight; valid during Startup, Active, and Recovery.</summary>
         public readonly AttackTuning CurrentAttack;
 
+        /// <summary>
+        /// Which cast a buffered Magic press meant (D39), decided from the stick at the press
+        /// itself. A flick that has ended by the time the buffer spends must not change the spell.
+        /// </summary>
+        public readonly MagicCastKind BufferedCast;
+
+        /// <summary>The cast in flight, or None when the attack in flight is an ordinary swing.</summary>
+        public readonly MagicCastKind CurrentCast;
+
         public CombatState(
             AttackPhase phase,
             int stepsInPhase,
@@ -44,8 +53,12 @@ namespace BattleBomb.Core.Combat
             int bufferedFor,
             int chargeSteps,
             int hitstopSteps,
-            AttackTuning currentAttack)
+            AttackTuning currentAttack,
+            MagicCastKind bufferedCast = MagicCastKind.None,
+            MagicCastKind currentCast = MagicCastKind.None)
         {
+            BufferedCast = bufferedCast;
+            CurrentCast = currentCast;
             Phase = phase;
             StepsInPhase = stepsInPhase;
             ComboIndex = comboIndex;
@@ -63,6 +76,9 @@ namespace BattleBomb.Core.Combat
         /// <summary>Freezes the character for at least the given steps — landing or taking a hit.</summary>
         public CombatState WithHitstop(int steps) => new CombatState(
             Phase, StepsInPhase, ComboIndex, ComboWindowLeft, Buffered, BufferedFor, ChargeSteps,
-            Mathf.Max(HitstopSteps, steps), CurrentAttack);
+            Mathf.Max(HitstopSteps, steps), CurrentAttack, BufferedCast, CurrentCast);
+
+        /// <summary>True while a cast rather than a swing is in flight.</summary>
+        public bool IsCasting => CurrentCast != MagicCastKind.None && Phase != AttackPhase.Ready;
     }
 }

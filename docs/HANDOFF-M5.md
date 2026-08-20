@@ -1,8 +1,12 @@
 # HANDOFF-M5 — Abilities and elements
 
-**Status — tasks 50–58 built and committed, 401/401 green. Task 59 is Michael's mega pass.**
-Design locked with Michael 2026-08-19 (D38–D41, plus O11 opened). Read first: `DECISIONS.md`
-D38–D41 and O11, then `GAME_DESIGN.md` §2.6 and §4.
+**Status — complete, 2026-08-20.** Tasks 50–60, 401/401 green, Michael play-approved the kit
+("works great now") after the one mega-pass bug was fixed. Design locked 2026-08-19 (D38–D41, plus
+O11 opened). Read first: `DECISIONS.md` D38–D41 and O11, then `GAME_DESIGN.md` §2.6 and §4.
+
+**The one thing M5 deliberately did not finish:** the reaction pair table is empty, because which
+elements pair — and which own D19's chain-stun — waits on the roster (O11). That is a content gap
+by design (D41), not an unfinished system: the framework is built and tested.
 
 ## Build log
 
@@ -45,6 +49,41 @@ Michael wants it.
 scene, and PlayMode tests are deferred (D7). The Core-level test only proves the machine *reports*
 a lift. Re-check the leap by hand, or with the frozen-clock trace above, after touching
 `BeginAttack` or the cast branch.
+
+## Close-out notes — what felt wrong to build
+
+Written for whoever picks up M6, in the M3/M4 tradition of recording the friction rather than
+just the result.
+
+1. **One rule, two implementations, one bug.** "An airborne action zeroes vertical velocity" lives
+   in both `BeginAttack` and the movement branch of `CharacterActor.Step`. I taught one about casts
+   and missed the other, and that was the only bug of the entire milestone. If a third airborne
+   mechanic ever arrives, unify these first — the duplication is the defect, not the oversight.
+
+2. **401 green tests did not catch a completely broken feature.** The leap was visibly dead in the
+   game while every test passed, because the bug lived in Gameplay wiring order, which has no test
+   surface. D7 deferred PlayMode tests "until scenes stabilise" — scenes are now stable, this is
+   the second milestone in a row whose only bugs were wiring bugs, and the argument for revisiting
+   that deferral is now backed by evidence rather than theory. Worth a decision at M6.
+
+3. **`CharacterActor.Step` has the disease task 50 cured in the driver.** It now sequences revive,
+   grab, quick-use, mana, casts, attacks, movement, and hit windows in one method where the order
+   between them is load-bearing and invisible. M6 adds inventory interactions to it. Give it the
+   same named-phase treatment before that, not after.
+
+4. **The reaction system has never fired in the game.** It is thoroughly unit-tested and completely
+   unexercised at runtime, because its table is empty by design. When O11 lands and the first pair
+   is authored, treat it as unverified code: point 2 above is exactly what happens to wiring that
+   only tests have seen.
+
+5. **`Awake` versus `OnEnable` bit again.** `CharacterActor` builds `_kit`, `_magic`, and
+   `_statTuning` in `Awake`, so recompiling during play mode nulls them and throws errors that look
+   like real bugs — it cost me a wrong turn mid-debug. `SimulationDriver` already moved its
+   construction to `OnEnable` for this reason. The actor should follow.
+
+6. **Item constructors are past comfortable.** `ItemInstance` now takes sixteen parameters and
+   `ItemSpec` thirteen, because M5 added consumable restore kinds and the active payload. M6's
+   upgrade-spend flow adds more. Group them before adding the next field.
 
 **Deviations from the design, both deliberate and recorded:**
 

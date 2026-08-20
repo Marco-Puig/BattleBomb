@@ -96,8 +96,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M2** | Combat core — the D19 kit against training dummies | **complete** |
 | **M3** | Enemies — plus the aerial pair, deferred into it | **complete** |
 | **M4** | Gear and stats | **complete** |
-| **M5** | Abilities and elements | **in progress** — design locked (D38–D41), build plan in `docs/HANDOFF-M5.md` |
-| M6 | Loot loop | |
+| **M5** | Abilities and elements | **complete** |
+| M6 | Loot loop | **next** |
 | M7 | Chapters *(first point story input is needed)* | |
 | M8 | **Vertical slice** — the real target | |
 

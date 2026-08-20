@@ -196,6 +196,22 @@ namespace BattleBomb.Gameplay.Characters
             }
         }
 
+        /// <summary>
+        /// A reaction's hold (D41). Unlike a hit's flinch this ignores the brute's uninterruptible
+        /// flag — earning a reaction is a deliberate two-element setup, and it should beat the one
+        /// enemy who shrugs off everything else.
+        /// </summary>
+        internal void ApplyStun(int steps)
+        {
+            if (steps <= 0 || _health.IsDepleted)
+            {
+                return;
+            }
+
+            _brain = EnemyBrain.Interrupted(_brain, _spec.Tuning);
+            _brain = _brain.WithHitstop(steps);
+        }
+
         internal void ApplyHitstop(int steps) => _brain = _brain.WithHitstop(steps);
 
         internal Vector3 Velocity => _state.Velocity;

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Combat;
 
 namespace BattleBomb.Core.Items
 {
@@ -74,6 +75,58 @@ namespace BattleBomb.Core.Items
             {
                 if (!_equipment[i].IsEmpty) into.Add(_equipment[i].TotalContribution());
             }
+        }
+
+        /// <summary>
+        /// Every elemental-resistance roll across the loadout, as raw per-element reductions
+        /// (D40). They cannot ride in the flat contribution block, so they travel beside it and
+        /// the sheet sums and caps them.
+        /// </summary>
+        public void CollectElementalResistances(List<ElementalMultiplier> into)
+        {
+            CollectResistance(_helmet, into);
+            CollectResistance(_chest, into);
+            CollectResistance(_boots, into);
+            CollectResistance(_weapon, into);
+            CollectResistance(_pet, into);
+            for (int i = 0; i < EquipmentSlots; i++)
+            {
+                CollectResistance(_equipment[i], into);
+            }
+        }
+
+        private static void CollectResistance(in ItemInstance item, List<ElementalMultiplier> into)
+        {
+            for (int i = 0; i < item.AffixCount; i++)
+            {
+                AffixRoll affix = item.Affixes[i];
+                if (affix.Id == AffixId.ElementalResistance && !affix.Element.IsNone)
+                {
+                    into.Add(new ElementalMultiplier(affix.Element, affix.Magnitude));
+                }
+            }
+        }
+
+        /// <summary>
+        /// The element the worn weapon infuses into every hit (D19/D35), and how strongly its roll
+        /// carries it. None when nothing is infused — the vast majority of weapons.
+        /// </summary>
+        public bool TryGetInfusion(out ElementId element, out float sourceScale)
+        {
+            for (int i = 0; i < _weapon.AffixCount; i++)
+            {
+                AffixRoll affix = _weapon.Affixes[i];
+                if (affix.Id == AffixId.WeaponInfusion && !affix.Element.IsNone)
+                {
+                    element = affix.Element;
+                    sourceScale = UnityEngine.Mathf.Clamp01(affix.Magnitude);
+                    return true;
+                }
+            }
+
+            element = ElementId.None;
+            sourceScale = 0f;
+            return false;
         }
     }
 }

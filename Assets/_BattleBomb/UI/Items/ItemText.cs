@@ -31,6 +31,8 @@ namespace BattleBomb.UI.Items
             if (stats.MaxManaBonus > 0f) core.Add($"Mana +{stats.MaxManaBonus:F0}");
             if (stats.ManaRegen > 0f) core.Add($"Regen {stats.ManaRegen:F1}/s");
             if (stats.KnockbackBonus > 0f) core.Add($"Knockback +{stats.KnockbackBonus * 100f:F0}%");
+            if (stats.MagicDamage > 0f) core.Add($"Magic +{stats.MagicDamage:F0}");
+            if (stats.MagicRange > 0f) core.Add($"Magic range +{stats.MagicRange:F1}");
             if (item.ConsumableHealFraction > 0f) core.Add($"Heals {item.ConsumableHealFraction * 100f:F0}%");
             if (core.Count > 0)
             {
@@ -76,7 +78,7 @@ namespace BattleBomb.UI.Items
                 case AffixId.MagicDamage: return $"+{m:F0} magic damage";
                 case AffixId.MagicRange: return $"+{m:F1} magic range";
                 case AffixId.ElementalResistance: return $"{element} resistance +{m * 100f:F0}%";
-                case AffixId.WeaponInfusion: return $"{element} infusion";
+                case AffixId.WeaponInfusion: return $"{element} infusion ({m * 100f:F0}%)";
                 default: return string.Empty;
             }
         }

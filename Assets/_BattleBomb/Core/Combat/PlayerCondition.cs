@@ -62,6 +62,14 @@ namespace BattleBomb.Core.Combat
         public PlayerCondition Drained(float amount) =>
             IsDown ? this : new PlayerCondition(Health.Damaged(amount), StaggerSteps, GraceSteps);
 
+        /// <summary>
+        /// A reaction's hold (D41): control is taken for a while, health untouched. The longer of
+        /// the two stagger sources wins, so a hold is never cut short by an ordinary flinch.
+        /// </summary>
+        public PlayerCondition Held(int steps) =>
+            IsDown ? this : new PlayerCondition(
+                Health, StaggerSteps > steps ? StaggerSteps : steps, GraceSteps);
+
         /// <summary>The stat sheet resized the pool (D32/D35); timers and the downed state stand.</summary>
         public PlayerCondition Resized(float newMax) =>
             new PlayerCondition(Health.Resized(newMax), StaggerSteps, GraceSteps);

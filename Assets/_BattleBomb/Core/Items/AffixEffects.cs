@@ -3,8 +3,10 @@ using BattleBomb.Core.Stats;
 namespace BattleBomb.Core.Items
 {
     /// <summary>
-    /// Maps a rolled affix onto the stat block combat reads. The M5-reserved affixes map to
-    /// nothing — they exist on the item and the card, and multiply nothing until M5.
+    /// Maps a rolled affix onto the stat block combat reads. Two affixes deliberately map to
+    /// nothing here: elemental resistance is per-element, so it aggregates outside this flat block
+    /// (<see cref="BattleBomb.Core.Stats.StatSheet"/>), and weapon infusion is an element rather
+    /// than a number — the weapon carries it to the hit.
     /// </summary>
     public static class AffixEffects
     {
@@ -12,6 +14,8 @@ namespace BattleBomb.Core.Items
         {
             switch (affix.Id)
             {
+                case AffixId.MagicDamage: return new GearContribution(magicDamage: affix.Magnitude);
+                case AffixId.MagicRange: return new GearContribution(magicRange: affix.Magnitude);
                 case AffixId.CritChance: return new GearContribution(critChance: affix.Magnitude);
                 case AffixId.CritDamage: return new GearContribution(critDamageBonus: affix.Magnitude);
                 case AffixId.LifeSteal: return new GearContribution(lifeSteal: affix.Magnitude);

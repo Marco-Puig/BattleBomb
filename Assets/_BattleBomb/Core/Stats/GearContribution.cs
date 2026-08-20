@@ -20,6 +20,13 @@ namespace BattleBomb.Core.Stats
         public readonly float WeightReduction;
         public readonly float KnockbackBonus;
 
+        /// <summary>Flat damage added to every cast (M5) — magic's answer to weapon damage, and
+        /// the only source of it, since Strength never touches magic (D32/D39).</summary>
+        public readonly float MagicDamage;
+
+        /// <summary>Units added to a cast's reach: the splash's length, the aura's radius.</summary>
+        public readonly float MagicRange;
+
         public GearContribution(
             float weaponDamage = 0f,
             float swingSpeedBonus = 0f,
@@ -32,8 +39,12 @@ namespace BattleBomb.Core.Stats
             float maxManaBonus = 0f,
             float manaRegen = 0f,
             float weightReduction = 0f,
-            float knockbackBonus = 0f)
+            float knockbackBonus = 0f,
+            float magicDamage = 0f,
+            float magicRange = 0f)
         {
+            MagicDamage = magicDamage;
+            MagicRange = magicRange;
             WeaponDamage = weaponDamage;
             SwingSpeedBonus = swingSpeedBonus;
             Defence = defence;
@@ -63,7 +74,9 @@ namespace BattleBomb.Core.Stats
             MaxManaBonus * factor,
             ManaRegen * factor,
             WeightReduction * factor,
-            KnockbackBonus * factor);
+            KnockbackBonus * factor,
+            MagicDamage * factor,
+            MagicRange * factor);
 
         public static GearContribution operator +(in GearContribution a, in GearContribution b) =>
             new GearContribution(
@@ -78,6 +91,8 @@ namespace BattleBomb.Core.Stats
                 a.MaxManaBonus + b.MaxManaBonus,
                 a.ManaRegen + b.ManaRegen,
                 a.WeightReduction + b.WeightReduction,
-                a.KnockbackBonus + b.KnockbackBonus);
+                a.KnockbackBonus + b.KnockbackBonus,
+                a.MagicDamage + b.MagicDamage,
+                a.MagicRange + b.MagicRange);
     }
 }

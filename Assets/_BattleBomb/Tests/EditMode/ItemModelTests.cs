@@ -89,14 +89,23 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void M5_reserved_affixes_contribute_nothing_yet()
+        public void The_magic_affixes_contribute_to_the_flat_block()
         {
-            Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.MagicDamage, 10f)),
-                Is.EqualTo(GearContribution.Zero));
+            Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.MagicDamage, 10f)).MagicDamage,
+                Is.EqualTo(10f));
+            Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.MagicRange, 1.5f)).MagicRange,
+                Is.EqualTo(1.5f));
+        }
+
+        [Test]
+        public void The_two_element_affixes_deliberately_travel_outside_the_flat_block()
+        {
             Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.ElementalResistance, 0.3f)),
-                Is.EqualTo(GearContribution.Zero));
+                Is.EqualTo(GearContribution.Zero),
+                "Resistance is per-element, so the sheet aggregates it separately (D38/D40).");
             Assert.That(AffixEffects.Contribution(new AffixRoll(AffixId.WeaponInfusion, 1f)),
-                Is.EqualTo(GearContribution.Zero));
+                Is.EqualTo(GearContribution.Zero),
+                "Infusion is an element, not a number — the weapon carries it to the hit.");
         }
 
         [Test]

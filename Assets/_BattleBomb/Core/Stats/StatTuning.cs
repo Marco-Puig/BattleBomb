@@ -21,6 +21,10 @@ namespace BattleBomb.Core.Stats
         public readonly float SlowPerWeight;
         public readonly float BaseCritDamageMultiplier;
 
+        /// <summary>The most any build resists one element (D40) — never immunity, so a hostile
+        /// region always costs you something and gear is an answer rather than an off-switch.</summary>
+        public readonly float ElementalResistCap;
+
         public StatTuning(
             float baseMaxHealth,
             float healthPerPoint,
@@ -35,8 +39,10 @@ namespace BattleBomb.Core.Stats
             float slowResistCap,
             float defenceCap,
             float slowPerWeight,
-            float baseCritDamageMultiplier)
+            float baseCritDamageMultiplier,
+            float elementalResistCap = 0.75f)
         {
+            ElementalResistCap = elementalResistCap;
             BaseMaxHealth = baseMaxHealth;
             HealthPerPoint = healthPerPoint;
             BaseMaxMana = baseMaxMana;
@@ -67,6 +73,7 @@ namespace BattleBomb.Core.Stats
             slowResistCap: 0.75f,
             defenceCap: 0.70f,
             slowPerWeight: 0.012f,
-            baseCritDamageMultiplier: 1.5f);
+            baseCritDamageMultiplier: 1.5f,
+            elementalResistCap: 0.75f);
     }
 }

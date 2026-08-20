@@ -101,6 +101,9 @@ namespace BattleBomb.Gameplay.Simulation
         private DropWeights _dropWeights;
         private ElementCatalog _elements = ElementCatalog.Empty;
         private ElementalMultipliers _climate = ElementalMultipliers.Neutral;
+
+        /// <summary>D41's pair table. Empty through M5 — the pairs wait on the roster (O11).</summary>
+        private ReactionTable _reactions = ReactionTable.Empty;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
@@ -631,6 +634,9 @@ namespace BattleBomb.Gameplay.Simulation
                     StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
                     HitLanded?.Invoke(new HitEvent(attacker, enemy, hit.Damage, enemy.Position, false, crit));
+                    ApplyElementalRider(
+                        attacker.Infusion, attacker.InfusionScale, enemy.Statuses, enemy.Defence,
+                        hit.Damage, enemy, enemy.Position);
                 }
                 else if (owner is TrainingDummy dummy)
                 {
@@ -684,6 +690,49 @@ namespace BattleBomb.Gameplay.Simulation
             return Mathf.Approximately(knockback, 1f)
                 ? hit
                 : new HitResult(hit.Damage, hit.Impulse * knockback, hit.HitstopSteps);
+        }
+
+        /// <summary>
+        /// The elemental half of a landed hit (D19/D40/D41): the weapon's infusion, or a cast's
+        /// own element, leaves its mark and may set off a reaction with whatever was already
+        /// burning. Priced from what actually landed, so a resisted hit leaves a weaker mark.
+        /// </summary>
+        private void ApplyElementalRider(
+            ElementId element, float sourceScale, StatusTrack statuses,
+            in ElementalDefence defence, float landedDamage, Component target, Vector3 position)
+        {
+            if (statuses == null || element.IsNone || sourceScale <= 0f || landedDamage <= 0f
+                || !_elements.TryGet(element, out ElementSpec spec))
+            {
+                return;
+            }
+
+            ElementalStrikeResult result = ElementalStrike.Apply(
+                statuses, spec, defence.Element, _reactions, landedDamage, sourceScale,
+                defence.Resistance.For(element));
+
+            if (!result.Reacted)
+            {
+                return;
+            }
+
+            float burst = 0f;
+            if (target is EnemyActor enemy)
+            {
+                enemy.ApplyStatusDamage(result.BurstDamage);
+                enemy.ApplyStun(result.StunSteps);
+                burst = result.BurstDamage;
+            }
+            else if (target is CharacterActor player)
+            {
+                burst = player.ApplyStatusDamage(result.BurstDamage);
+                player.ApplyStun(result.StunSteps);
+            }
+
+            if (burst > 0f)
+            {
+                HitLanded?.Invoke(new HitEvent(null, target, burst, position, false, false, true));
+            }
         }
 
         private static void StealLife(CharacterActor attacker, float damage)
@@ -876,6 +925,14 @@ namespace BattleBomb.Gameplay.Simulation
                 }
 
                 HitLanded?.Invoke(new HitEvent(shooter, enemy, damage, enemy.Position, false, crit));
+                if (shooter != null)
+                {
+                    // An arrow carries the bow's infusion the same way a swing carries a sword's.
+                    ApplyElementalRider(
+                        shooter.Infusion, shooter.InfusionScale, enemy.Statuses, enemy.Defence,
+                        damage, enemy, enemy.Position);
+                }
+
                 return true;
             }
 

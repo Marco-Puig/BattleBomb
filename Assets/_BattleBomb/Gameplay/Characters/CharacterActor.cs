@@ -83,7 +83,10 @@ namespace BattleBomb.Gameplay.Characters
         private float _shotSpeed = 12f;
         private int _quickUseCooldownSteps = 180;
         private PlayerInventory _bag;
+        private ElementId _infusion = ElementId.None;
+        private float _infusionScale;
         private readonly List<GearContribution> _gearScratch = new List<GearContribution>();
+        private readonly List<ElementalMultiplier> _resistScratch = new List<ElementalMultiplier>();
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -124,8 +127,14 @@ namespace BattleBomb.Gameplay.Characters
         /// <summary>The character's own element (D38) — what they cast, and what cannot mark them.</summary>
         public ElementId Element => _element;
 
-        /// <summary>Their element plus what they resist — gear fills the resistance in task 54.</summary>
-        internal ElementalDefence Defence => new ElementalDefence(_element, ElementalMultipliers.Neutral);
+        /// <summary>Their element plus the resistance their gear rolled (D40).</summary>
+        internal ElementalDefence Defence => new ElementalDefence(_element, _sheet.ElementalResistance);
+
+        /// <summary>The worn weapon's infusion (D19): the element every hit carries, or None.</summary>
+        internal ElementId Infusion => _infusion;
+
+        /// <summary>How much of a cast's mark the infusion roll is worth — its rolled magnitude.</summary>
+        internal float InfusionScale => _infusionScale;
 
         /// <summary>The elements currently marking them (D40) — enemies burn players too.</summary>
         public StatusTrack Statuses { get; } = new StatusTrack();
@@ -325,6 +334,22 @@ namespace BattleBomb.Gameplay.Characters
             return damage;
         }
 
+        /// <summary>
+        /// A reaction's hold (D41) — the one status effect that does take control away, because a
+        /// chain-stun that did not would not be a chain-stun. It grants no grace: the hold is the
+        /// point, and the setup that earned it deserves the follow-up.
+        /// </summary>
+        internal void ApplyStun(int steps)
+        {
+            if (steps <= 0 || _condition.IsDown)
+            {
+                return;
+            }
+
+            _condition = _condition.Held(steps);
+            _combat = CombatState.Ready;
+        }
+
         /// <summary>Life steal's return (D35): heals never overfill, never stand the downed up.</summary>
         internal void Heal(float amount) => _condition = _condition.Healed(amount);
 
@@ -508,14 +533,20 @@ namespace BattleBomb.Gameplay.Characters
         internal void RefreshStats()
         {
             _gearScratch.Clear();
+            _resistScratch.Clear();
+            _infusion = ElementId.None;
+            _infusionScale = 0f;
             BaseStats allocations = BaseStats.Zero;
             if (_bag != null)
             {
-                _bag.Inventory.Loadout.CollectContributions(_gearScratch);
+                Loadout loadout = _bag.Inventory.Loadout;
+                loadout.CollectContributions(_gearScratch);
+                loadout.CollectElementalResistances(_resistScratch);
+                loadout.TryGetInfusion(out _infusion, out _infusionScale);
                 allocations = _bag.Ledger.Allocations;
             }
 
-            _sheet = StatSheet.Build(allocations, _statTuning, _gearScratch);
+            _sheet = StatSheet.Build(allocations, _statTuning, _gearScratch, _resistScratch);
             _damageScale = _statTuning.UnarmedDamage > 0f
                 ? _sheet.WeaponDamage / _statTuning.UnarmedDamage
                 : 1f;

@@ -283,7 +283,9 @@ namespace BattleBomb.Core.Items
                 case AffixId.MagicDamage: min = 5f; max = 15f; break;
                 case AffixId.MagicRange: min = 0.5f; max = 1.5f; break;
                 case AffixId.ElementalResistance: min = 0.05f; max = 0.15f; break;
-                case AffixId.WeaponInfusion: min = 1f; max = 1f; break;
+                // Infusion's magnitude IS its share of a cast's mark, so the ladder decides how
+                // hard the sword burns: a bottom roll is a tenth of a cast, a Godly one matches it.
+                case AffixId.WeaponInfusion: min = 0.2f; max = 0.4f; break;
                 default: min = 0f; max = 0f; break;
             }
         }

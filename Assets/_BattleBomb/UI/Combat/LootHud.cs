@@ -2,19 +2,22 @@ using System.Collections.Generic;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Simulation;
+using BattleBomb.UI.Items;
 using UnityEngine;
 
 namespace BattleBomb.UI.Combat
 {
     /// <summary>
-    /// The drop's inspect panel (D30): while someone stands over a token it says what it is —
-    /// the placeholder prints its quality roll until M4's items carry real stats — and names the
-    /// grab verb. Judging worth is the player's job; grabbing is a deliberate press, so this
+    /// The drop's item card (D30): while someone stands over a drop it shows the real thing —
+    /// name in its quality colour, core stats, every affix, the level requirement — and names
+    /// the grab verb. Judging worth is the player's job; grabbing is a deliberate press, so this
     /// panel is the whole decision surface. Purely observational.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class LootHud : MonoBehaviour
     {
+        private readonly List<string> _lines = new List<string>();
+
         [Tooltip("Driver whose drops are read. Leave empty to find the one in the scene.")]
         [SerializeField] private SimulationDriver _driver;
 
@@ -77,12 +80,25 @@ namespace BattleBomb.UI.Combat
                     continue;
                 }
 
-                float x = screen.x - 90f;
-                float y = Screen.height - screen.y;
-                DrawLine(new Rect(x, y - 22f, 180f, 20f),
-                    $"Quality {pickups[i].Quality:F2}", new Color(1f, 0.85f, 0.4f));
-                DrawLine(new Rect(x, y, 180f, 18f),
-                    "Light to grab", new Color(0.9f, 0.9f, 0.9f));
+                var item = pickups[i].Item;
+                ItemText.BuildLines(item, _lines);
+
+                float lineHeight = _fontSize + 5f;
+                float x = screen.x - 120f;
+                float y = Screen.height - screen.y - (_lines.Count + 1) * lineHeight;
+
+                DrawLine(new Rect(x, y, 240f, lineHeight + 2f),
+                    item.DisplayName, QualityColors.For(item.Quality));
+                y += lineHeight + 2f;
+                for (int line = 0; line < _lines.Count; line++)
+                {
+                    DrawLine(new Rect(x, y, 240f, lineHeight), _lines[line],
+                        new Color(0.92f, 0.92f, 0.92f));
+                    y += lineHeight;
+                }
+
+                DrawLine(new Rect(x, y, 240f, lineHeight),
+                    "Light to grab", new Color(0.65f, 0.65f, 0.65f));
             }
         }
 

@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Loot;
 using BattleBomb.Core.Movement;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.World;
@@ -38,6 +41,12 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Seed for the loot rolls (D23). Gameplay owns the seed; Core owns the maths.")]
         [SerializeField] private int _lootSeed = 1;
 
+        [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
+        [SerializeField] private QualityLadder _qualityLadder;
+
+        [Tooltip("Everything the generator may drop (D35). A new item is a new asset here, never code.")]
+        [SerializeField] private ItemDefinition[] _itemCatalog;
+
         private const float ProjectileRadius = 0.6f;
         private const float ProjectileKnockback = 4f;
         private const int ProjectileHitstop = 2;
@@ -56,6 +65,9 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>The elite quality bonus slot — no elite spawns until M6 pays it (decision 8).</summary>
         private const float LootEliteBonus = 1.5f;
 
+        /// <summary>The D36 level stamp's source — a constant until M7 builds real progress.</summary>
+        private const int StoryProgressLevel = 1;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
         private readonly List<Vector3> _candidatePositions = new List<Vector3>();
@@ -70,6 +82,9 @@ namespace BattleBomb.Gameplay.Simulation
         private bool _warnedMissingArena;
         private AttemptCountdown _attempt;
         private DeterministicRandom _lootRng;
+        private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
+        private QualityTable _qualityTable;
+        private DropWeights _dropWeights;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
@@ -146,6 +161,21 @@ namespace BattleBomb.Gameplay.Simulation
             // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
             _lootRng = new DeterministicRandom((uint)_lootSeed);
+
+            _itemSpecs.Clear();
+            if (_itemCatalog != null)
+            {
+                for (int i = 0; i < _itemCatalog.Length; i++)
+                {
+                    if (_itemCatalog[i] != null)
+                    {
+                        _itemSpecs.Add(_itemCatalog[i].ToRuntime());
+                    }
+                }
+            }
+
+            _qualityTable = _qualityLadder != null ? _qualityLadder.ToTable() : QualityTable.Default;
+            _dropWeights = _qualityLadder != null ? _qualityLadder.ToWeights() : DropWeights.Default;
         }
 
         private void Update()
@@ -178,6 +208,12 @@ namespace BattleBomb.Gameplay.Simulation
                     {
                         int id = actor.PlayerId.Value;
                         _grabCounts[id] = GrabCountFor(id) + 1;
+                        PlayerInventory bag = actor.GetComponent<PlayerInventory>();
+                        if (bag != null)
+                        {
+                            bag.Take(_pickups[grabTarget].Item);
+                        }
+
                         Destroy(_pickups[grabTarget].gameObject);
                         _pickups.RemoveAt(grabTarget);
                     }
@@ -316,7 +352,13 @@ namespace BattleBomb.Gameplay.Simulation
                     _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
                 if (drop.Dropped)
                 {
-                    _pickups.Add(DropPickup.Spawn(enemy.Position, drop.Quality));
+                    var context = new GenerationContext(
+                        drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights);
+                    _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
+                    if (!item.IsEmpty)
+                    {
+                        _pickups.Add(DropPickup.Spawn(enemy.Position, item));
+                    }
                 }
 
                 Destroy(enemy.gameObject);

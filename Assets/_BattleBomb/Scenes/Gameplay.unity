@@ -294,6 +294,20 @@ MonoBehaviour:
   _stepsPerSecond: 60
   _maxStepsPerFrame: 5
   _arena: {fileID: 463551039}
+  _lootSeed: 1
+  _qualityLadder: {fileID: 11400000, guid: 6ab29cad430027a45a2d63cf32bc463c, type: 2}
+  _itemCatalog:
+  - {fileID: 11400000, guid: c53abab63488b2a4299c77d54278ead3, type: 2}
+  - {fileID: 11400000, guid: 15852519fd5c99c41b2ae9cf137cdde8, type: 2}
+  - {fileID: 11400000, guid: 848c2d10a9980e948bd6e6dbe9f1556d, type: 2}
+  - {fileID: 11400000, guid: 53d824fa98fecb2489d1c1c93b1d7dff, type: 2}
+  - {fileID: 11400000, guid: 0ad2684126e1d2f47b810e6dcacafb56, type: 2}
+  - {fileID: 11400000, guid: b0f77394310a58747a7598905fbae7fb, type: 2}
+  - {fileID: 11400000, guid: c17d8c1c897e05544850d50b4eb57264, type: 2}
+  - {fileID: 11400000, guid: 8f8acf4d7e5c19e46a8f05a0f32922ff, type: 2}
+  - {fileID: 11400000, guid: 1c3c065b456d71242be5ca9ce3152d37, type: 2}
+  - {fileID: 11400000, guid: e3453ab6c748a444a9ef36ab0ef830e0, type: 2}
+  - {fileID: 11400000, guid: 750364333ad764f438e9185215094e3e, type: 2}
 --- !u!114 &463551039
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -357,20 +371,6 @@ MonoBehaviour:
   - Definition: {fileID: 11400000, guid: b6907e80fd3843f4481c67c18a63953a, type: 2}
     Position: {x: 9, y: 0, z: 0}
     DelaySteps: 480
---- !u!114 &869505450
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 869505447}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 97b7e467a6add914c90801687b5ef177, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Enemies.ProjectileVisuals
-  _driver: {fileID: 463551038}
-  _boltHeight: 1
 --- !u!4 &869505449
 Transform:
   m_ObjectHideFlags: 0
@@ -386,6 +386,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &869505450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869505447}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97b7e467a6add914c90801687b5ef177, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Enemies.ProjectileVisuals
+  _driver: {fileID: 463551038}
+  _boltHeight: 1
 --- !u!1001 &1227676800
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -523,7 +537,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b41d6cf3822eff146bb4d3bf1db08a9f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.PlayerHealthBars
   _driver: {fileID: 463551038}
   _fontSize: 16
@@ -539,7 +553,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: eb87516edec084544a91b1326b51fbf6, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.ReviveHud
   _driver: {fileID: 463551038}
   _camera: {fileID: 1778134441}
@@ -554,7 +568,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad512674e2e1bc34f99564a4650a6dfe, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Combat.LootHud
   _driver: {fileID: 463551038}
   _camera: {fileID: 1778134441}

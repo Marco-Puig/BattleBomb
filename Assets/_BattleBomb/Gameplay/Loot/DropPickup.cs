@@ -1,26 +1,26 @@
+using BattleBomb.Core.Items;
 using UnityEngine;
 
 namespace BattleBomb.Gameplay.Loot
 {
     /// <summary>
-    /// A dropped placeholder token (D23): spawned at the corpse when the roll pays out, free for
-    /// whichever player reaches it first — the driver resolves grabs inside the fixed step, so a
-    /// simultaneous couch dive has one deterministic winner. The token is abstract until M4's
-    /// item generation gives quality something to mean; the quality rides along regardless.
+    /// A dropped item in the world (D23/D30): spawned at the corpse carrying its generated
+    /// <see cref="ItemInstance"/>, tinted by quality, free for whichever player takes it first —
+    /// the driver resolves grabs inside the fixed step, so a simultaneous couch dive has one
+    /// deterministic winner.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class DropPickup : MonoBehaviour
     {
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-        private static readonly Color TokenColor = new Color(1f, 0.8f, 0.2f);
 
-        private float _quality;
+        private ItemInstance _item;
 
-        public float Quality => _quality;
+        public ItemInstance Item => _item;
 
         public Vector3 Position => transform.position;
 
-        internal static DropPickup Spawn(Vector3 corpse, float quality)
+        internal static DropPickup Spawn(Vector3 corpse, in ItemInstance item)
         {
             GameObject token = GameObject.CreatePrimitive(PrimitiveType.Cube);
             token.name = "Drop";
@@ -31,11 +31,11 @@ namespace BattleBomb.Gameplay.Loot
 
             MeshRenderer renderer = token.GetComponent<MeshRenderer>();
             MaterialPropertyBlock block = new MaterialPropertyBlock();
-            block.SetColor(BaseColor, TokenColor);
+            block.SetColor(BaseColor, QualityColors.For(item.Quality));
             renderer.SetPropertyBlock(block);
 
             DropPickup pickup = token.AddComponent<DropPickup>();
-            pickup._quality = quality;
+            pickup._item = item;
             return pickup;
         }
     }

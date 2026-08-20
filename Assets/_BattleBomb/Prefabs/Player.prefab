@@ -125,7 +125,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f45d3be42312014db18a9d4fba4ed84, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.DownedPose
   _actor: {fileID: 0}
   _fallSeconds: 0.25
@@ -235,6 +235,7 @@ GameObject:
   - component: {fileID: 7782524822534071537}
   - component: {fileID: 8105310037222224716}
   - component: {fileID: 3065311605573934768}
+  - component: {fileID: 837340370530378808}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -316,3 +317,15 @@ MonoBehaviour:
   _definition: {fileID: 11400000, guid: 5e205aa3650cd8d409146d3a74afb79f, type: 2}
   _playerIndex: 0
   _driver: {fileID: 0}
+--- !u!114 &837340370530378808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5304322366050665028}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa4dd71800e518f4aafaee5cb63ad1f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Items.PlayerInventory

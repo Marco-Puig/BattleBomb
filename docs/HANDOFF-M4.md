@@ -1,7 +1,22 @@
 # Handoff — M4: gear and stats
 
-> **Status — not started.** Designed with Michael 2026-08-19; every structural question was
-> settled in that session and recorded as D32–D37.
+> **Status — built through task 48, awaiting Michael's mega pass (task 49), 2026-08-20.**
+> Designed with Michael 2026-08-19 (D32–D37); tasks 39–48 built and committed one green run
+> each (438e100 → 0c22f3d, 323/323). Everything in "M4 is done when" is implemented and
+> machine-verified: the StatSheet and its caps, the nine-rank ladder, the deterministic
+> generator (replay-pinned, elite/boss forcings bound), the XP ledger with the prestige reset,
+> the inventory with the D36 level lock and force-return, real drops with item cards, gear
+> live in combat (damage scale, defence, crits on their own seeded stream, life steal, weight
+> slow, swing-scaled kits), the bow (arrows aim across depth, priced at impact), the quick-use
+> slot, and the ladder HUD. Live-verified by eval: a Godly knife took P1's damage 10→25.5, a
+> 20-raw enemy hit landed 14.17 through 29% defence, an arrow crossed depth and took exactly
+> 6.3 HP, and a level-40 knife force-returned to the bag at the prestige moment. Feel checks
+> (swing speed, bow cadence, the potion press, tank-build movement) are Michael's checklist —
+> synthetic input can't reach actions while the editor is unfocused, the known M1 trap.
+> Deviations from plan, both deliberate: the inventory types live in `Core/Items` (a class
+> named Inventory inside a namespace segment named Inventory fights C# resolution), and the
+> debug panel lives in `Gameplay/Items` (it mutates player state, which UI never may — the
+> observe-only rule outranks the planned file path).
 
 Continues `docs/HANDOFF-M3.md` (tasks 28–38). Same rules, same tools, same reporting format —
 re-read `docs/HANDOFF.md`'s "Non-negotiable rules" and "Tools" sections before starting; they are

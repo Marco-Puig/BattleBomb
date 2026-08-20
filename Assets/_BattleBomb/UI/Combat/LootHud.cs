@@ -81,7 +81,7 @@ namespace BattleBomb.UI.Combat
                 }
 
                 var item = pickups[i].Item;
-                ItemText.BuildLines(item, _lines);
+                ItemText.BuildLines(item, _lines, _driver.Elements);
 
                 float lineHeight = _fontSize + 5f;
                 float x = screen.x - 120f;

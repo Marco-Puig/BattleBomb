@@ -10,9 +10,9 @@ namespace BattleBomb.Core.Items
     {
         public readonly AffixId Id;
         public readonly float Magnitude;
-        public readonly Element Element;
+        public readonly ElementId Element;
 
-        public AffixRoll(AffixId id, float magnitude, Element element = Element.None)
+        public AffixRoll(AffixId id, float magnitude, ElementId element = default)
         {
             Id = id;
             Magnitude = magnitude;

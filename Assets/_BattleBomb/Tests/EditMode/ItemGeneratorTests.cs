@@ -26,8 +26,11 @@ namespace BattleBomb.Tests.EditMode
             new ItemSpec(8, "Terrier", ItemSlot.Pet, new GearContribution(maxHealthBonus: 15f), petClass: PetClass.StatBoost),
         };
 
+        /// <summary>Two synthetic elements (D38) — the generator never learns their names.</summary>
+        private static readonly ElementId[] Elements = { new ElementId(1), new ElementId(2) };
+
         private static GenerationContext Context(float score, int level = 1) =>
-            new GenerationContext(score, level, Catalog, QualityTable.Default, DropWeights.Default);
+            new GenerationContext(score, level, Catalog, QualityTable.Default, DropWeights.Default, Elements);
 
         [Test]
         public void The_same_seed_and_context_replay_the_identical_item()
@@ -191,8 +194,30 @@ namespace BattleBomb.Tests.EditMode
                         "infusion is weapon-only (D35)");
                     if (affix.Id == AffixId.ElementalResistance)
                     {
-                        Assert.That(affix.Element, Is.Not.EqualTo(Element.None));
+                        Assert.That(affix.Element, Is.Not.EqualTo(ElementId.None));
+                        Assert.That(Elements, Contains.Item(affix.Element),
+                            "An element affix only ever names an authored element (D38).");
                     }
+                }
+            }
+        }
+
+        [Test]
+        public void With_no_elements_authored_the_element_affixes_never_roll()
+        {
+            var rng = new DeterministicRandom(31u);
+            var context = new GenerationContext(
+                99f, 1, Catalog, QualityTable.Default, DropWeights.Default)
+                .WithForcedSlot(ItemSlot.Weapon);
+
+            for (int i = 0; i < 200; i++)
+            {
+                rng = ItemGenerator.Roll(rng, context, out ItemInstance item);
+                for (int a = 0; a < item.AffixCount; a++)
+                {
+                    Assert.That(item.Affixes[a].Id, Is.Not.EqualTo(AffixId.WeaponInfusion),
+                        "An infusion with no element to infuse would be a dead affix.");
+                    Assert.That(item.Affixes[a].Id, Is.Not.EqualTo(AffixId.ElementalResistance));
                 }
             }
         }

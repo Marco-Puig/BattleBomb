@@ -24,7 +24,7 @@ namespace BattleBomb.Core.Combat
             Vector3 attackerPosition,
             Facing attackerFacing,
             Vector3 attackerMomentum,
-            Element element,
+            ElementId element,
             float gearMultiplier,
             TargetKind targetKind,
             Vector3 targetPosition,

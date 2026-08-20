@@ -1,4 +1,4 @@
-using BattleBomb.Core.Combat;
+﻿using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
 using NUnit.Framework;
 using UnityEngine;
@@ -16,7 +16,7 @@ namespace BattleBomb.Tests.EditMode
         private static EnemyTuning Tuning(EnemyArchetype archetype, bool interruptible = true) =>
             new EnemyTuning(
                 archetype, Swing, cooldownSteps: 5, interruptible, staggerSteps: 4,
-                Element.None, projectileSpeed: 8f, standoffNearX: 4f, standoffFarX: 7f);
+                ElementId.None, projectileSpeed: 8f, standoffNearX: 4f, standoffFarX: 7f);
 
         private static EnemyPerception At(Vector3 self, Vector3 target) =>
             new EnemyPerception(self, true, target);
@@ -39,8 +39,8 @@ namespace BattleBomb.Tests.EditMode
             EnemyStepResult r = EnemyBrain.Step(
                 EnemyState.Fresh, At(Vector3.zero, new Vector3(5f, 0f, 2f)), grunt);
 
-            Assert.That(r.MoveIntent.x, Is.GreaterThan(0f), "Closes laterally…");
-            Assert.That(r.MoveIntent.y, Is.GreaterThan(0f), "…and closes depth — melee lives under §2.2.");
+            Assert.That(r.MoveIntent.x, Is.GreaterThan(0f), "Closes laterallyâ€¦");
+            Assert.That(r.MoveIntent.y, Is.GreaterThan(0f), "â€¦and closes depth â€” melee lives under Â§2.2.");
         }
 
         [Test]
@@ -52,7 +52,7 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(r.AttackStarted, Is.True, "In reach and in depth: the telegraph opens.");
             Assert.That(r.State.Phase, Is.EqualTo(EnemyPhase.Telegraph));
-            Assert.That(r.MoveIntent, Is.EqualTo(Vector2.zero), "The windup commits — no drift.");
+            Assert.That(r.MoveIntent, Is.EqualTo(Vector2.zero), "The windup commits â€” no drift.");
         }
 
         [Test]
@@ -95,8 +95,8 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(r.State.Phase, Is.EqualTo(EnemyPhase.Cooldown));
 
             EnemyStepResult chasing = EnemyBrain.Step(r.State, far, grunt);
-            Assert.That(chasing.MoveIntent.x, Is.GreaterThan(0f), "Cooldown still moves…");
-            Assert.That(chasing.AttackStarted, Is.False, "…but cannot swing.");
+            Assert.That(chasing.MoveIntent.x, Is.GreaterThan(0f), "Cooldown still movesâ€¦");
+            Assert.That(chasing.AttackStarted, Is.False, "â€¦but cannot swing.");
 
             r = Run(r.State, near, grunt, grunt.CooldownSteps);
             r = EnemyBrain.Step(r.State, near, grunt);
@@ -126,9 +126,9 @@ namespace BattleBomb.Tests.EditMode
             EnemyStepResult shallow = EnemyBrain.Step(
                 EnemyState.Fresh, At(Vector3.zero, new Vector3(9f, 0f, -2.5f)), ranged);
 
-            Assert.That(deep.MoveIntent.y, Is.Not.EqualTo(0f), "Never a statue (D28)…");
+            Assert.That(deep.MoveIntent.y, Is.Not.EqualTo(0f), "Never a statue (D28)â€¦");
             Assert.That(deep.MoveIntent.y, Is.EqualTo(shallow.MoveIntent.y),
-                "…but the drift ignores where the target sits in depth — projectiles cross it (§2.2).");
+                "â€¦but the drift ignores where the target sits in depth â€” projectiles cross it (Â§2.2).");
         }
 
         [Test]
@@ -157,7 +157,7 @@ namespace BattleBomb.Tests.EditMode
 
             EnemyState unmoved = EnemyBrain.Interrupted(midTelegraph, brute);
             Assert.That(unmoved.Phase, Is.EqualTo(EnemyPhase.Telegraph),
-                "The brute never flinches — jump and depth are the answer (D26).");
+                "The brute never flinches â€” jump and depth are the answer (D26).");
             Assert.That(unmoved.StepsInPhase, Is.EqualTo(3));
         }
 
@@ -211,8 +211,8 @@ namespace BattleBomb.Tests.EditMode
             EnemyStepResult r = EnemyBrain.Step(EnemyState.Fresh, noToken, grunt);
 
             Assert.That(r.AttackStarted, Is.False, "Someone else holds the attack token (D28).");
-            Assert.That(r.MoveIntent.x, Is.LessThan(0f), "Inside the hover ring it backs out…");
-            Assert.That(r.MoveIntent.y, Is.Not.EqualTo(0f), "…and strafes depth while it waits.");
+            Assert.That(r.MoveIntent.x, Is.LessThan(0f), "Inside the hover ring it backs outâ€¦");
+            Assert.That(r.MoveIntent.y, Is.Not.EqualTo(0f), "â€¦and strafes depth while it waits.");
         }
 
         [Test]
@@ -232,14 +232,14 @@ namespace BattleBomb.Tests.EditMode
         {
             EnemyTuning brute = new EnemyTuning(
                 EnemyArchetype.Brute, Swing, cooldownSteps: 5, interruptible: false, staggerSteps: 1,
-                Element.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
+                ElementId.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
                 hopPulseSteps: 0, takesTurns: false);
             EnemyPerception noToken = new EnemyPerception(
                 Vector3.zero, true, new Vector3(1f, 0f, 0f), mayAttack: false);
 
             EnemyStepResult r = EnemyBrain.Step(EnemyState.Fresh, noToken, brute);
 
-            Assert.That(r.AttackStarted, Is.True, "He never waits — relentlessness is the identity (D28).");
+            Assert.That(r.AttackStarted, Is.True, "He never waits â€” relentlessness is the identity (D28).");
         }
 
         [Test]
@@ -282,7 +282,7 @@ namespace BattleBomb.Tests.EditMode
             EnemyStepResult r = EnemyBrain.Step(cooling, close, grunt);
 
             Assert.That(r.MoveIntent.x, Is.LessThan(0f),
-                "After the swing it backs out to the hover ring — hit and peel (D28).");
+                "After the swing it backs out to the hover ring â€” hit and peel (D28).");
         }
 
         [Test]
@@ -290,7 +290,7 @@ namespace BattleBomb.Tests.EditMode
         {
             EnemyTuning hopper = new EnemyTuning(
                 EnemyArchetype.Grunt, Swing, cooldownSteps: 5, interruptible: true, staggerSteps: 4,
-                Element.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
+                ElementId.None, 0f, 0f, 0f, hoverDistanceX: 3f, strafePeriodSteps: 90,
                 hopPulseSteps: 4, takesTurns: true);
             EnemyPerception waiting = new EnemyPerception(
                 Vector3.zero, true, new Vector3(6f, 0f, 0f), mayAttack: false);

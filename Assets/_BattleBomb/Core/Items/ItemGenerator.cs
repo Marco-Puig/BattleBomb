@@ -57,7 +57,7 @@ namespace BattleBomb.Core.Items
                 count = Mathf.Min(count, row.AffixMax);
                 if (count > 0)
                 {
-                    next = RollAffixes(next, spec.Slot, count, row.StatBudget, out affixes);
+                    next = RollAffixes(next, spec.Slot, count, row.StatBudget, context.Elements, out affixes);
                 }
             }
 
@@ -211,8 +211,10 @@ namespace BattleBomb.Core.Items
             ItemSlot slot,
             int count,
             float budget,
+            IReadOnlyList<ElementId> elements,
             out AffixRoll[] affixes)
         {
+            bool hasElements = elements != null && elements.Count > 0;
             var pool = new List<AffixId>
             {
                 AffixId.CritChance,
@@ -225,11 +227,17 @@ namespace BattleBomb.Core.Items
                 AffixId.KnockbackPower,
                 AffixId.MagicDamage,
                 AffixId.MagicRange,
-                AffixId.ElementalResistance,
             };
-            if (slot == ItemSlot.Weapon)
+
+            // The element-flavoured affixes only exist while a roster does (D38) — with nothing
+            // authored they leave the pool rather than rolling an affix that names no element.
+            if (hasElements)
             {
-                pool.Add(AffixId.WeaponInfusion);
+                pool.Add(AffixId.ElementalResistance);
+                if (slot == ItemSlot.Weapon)
+                {
+                    pool.Add(AffixId.WeaponInfusion);
+                }
             }
 
             DeterministicRandom next = rng;
@@ -247,11 +255,11 @@ namespace BattleBomb.Core.Items
                 MagnitudeRange(id, out float min, out float max);
                 float magnitude = Mathf.Lerp(min, max, magnitudeDraw) * budget;
 
-                Element element = Element.None;
-                if (id == AffixId.ElementalResistance || id == AffixId.WeaponInfusion)
+                ElementId element = ElementId.None;
+                if (hasElements && (id == AffixId.ElementalResistance || id == AffixId.WeaponInfusion))
                 {
                     next = next.NextFloat(out float elementDraw);
-                    element = (Element)(1 + Mathf.Min(3, (int)(elementDraw * 4f)));
+                    element = elements[Mathf.Min(elements.Count - 1, (int)(elementDraw * elements.Count))];
                 }
 
                 affixes[i] = new AffixRoll(id, magnitude, element);

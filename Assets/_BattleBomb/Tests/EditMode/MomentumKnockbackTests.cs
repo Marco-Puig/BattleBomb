@@ -1,4 +1,4 @@
-using BattleBomb.Core.Combat;
+﻿using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
 using NUnit.Framework;
 using UnityEngine;
@@ -18,7 +18,7 @@ namespace BattleBomb.Tests.EditMode
         private static float ShoveSpeed(Vector3 momentum, TargetKind kind = TargetKind.Enemy)
         {
             HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Right, momentum,
-                Element.None, 1f, kind, new Vector3(1f, 0f, 0f), Neutral, Neutral);
+                ElementId.None, 1f, kind, new Vector3(1f, 0f, 0f), Neutral, Neutral);
             return new Vector2(result.Impulse.x, result.Impulse.z).magnitude;
         }
 
@@ -34,14 +34,14 @@ namespace BattleBomb.Tests.EditMode
             float running = ShoveSpeed(new Vector3(6f, 0f, 0f));
 
             Assert.That(running, Is.GreaterThan(Attack.KnockbackSpeed),
-                "Momentum flows into the shove — the fight keeps moving (Michael).");
+                "Momentum flows into the shove â€” the fight keeps moving (Michael).");
         }
 
         [Test]
         public void The_shove_keeps_its_direction_whatever_the_momentum()
         {
             HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Right,
-                new Vector3(9f, 0f, 0f), Element.None, 1f, TargetKind.Enemy,
+                new Vector3(9f, 0f, 0f), ElementId.None, 1f, TargetKind.Enemy,
                 new Vector3(1f, 0f, -1f), Neutral, Neutral);
 
             Assert.That(result.Impulse.x, Is.GreaterThan(0f));

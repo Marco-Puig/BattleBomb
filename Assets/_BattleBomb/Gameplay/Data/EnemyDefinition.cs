@@ -16,8 +16,8 @@ namespace BattleBomb.Gameplay.Data
     {
         [SerializeField] private EnemyArchetype _archetype = EnemyArchetype.Grunt;
 
-        [Tooltip("The region skin's element (D22). None until M5 gives elements teeth.")]
-        [SerializeField] private Element _element = Element.None;
+        [Tooltip("The region skin's element (D22) — an authored asset, empty for kinetic-only (D38).")]
+        [SerializeField] private ElementDefinition _element;
 
         [Header("Attack")]
         [Tooltip("StartupSteps IS the telegraph — author it long enough to read (D22).")]
@@ -72,11 +72,8 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("D24 payload on the death event; nothing consumes it until M4's ladder.")]
         [SerializeField] private int _xpReward = 10;
 
-        [Header("Elemental resistances (§4 — 1 is neutral)")]
-        [SerializeField] private float _resistFire = 1f;
-        [SerializeField] private float _resistWater = 1f;
-        [SerializeField] private float _resistElectric = 1f;
-        [SerializeField] private float _resistEarth = 1f;
+        [Header("Elemental resistances (§4 — one row per element that is not neutral)")]
+        [SerializeField] private ElementMultiplierSpec[] _resistances = new ElementMultiplierSpec[0];
 
         public EnemySpec ToRuntime() => new EnemySpec(
             new EnemyTuning(
@@ -85,7 +82,7 @@ namespace BattleBomb.Gameplay.Data
                 Mathf.Max(1, _cooldownSteps),
                 _interruptible,
                 Mathf.Max(1, _staggerSteps),
-                _element,
+                _element != null ? _element.Id : ElementId.None,
                 Mathf.Max(0.1f, _projectileSpeed),
                 Mathf.Max(0f, _standoffNearX),
                 Mathf.Max(_standoffNearX, _standoffFarX),
@@ -104,7 +101,7 @@ namespace BattleBomb.Gameplay.Data
                 coyoteSteps: 1,
                 jumpBufferSteps: 1),
             Mathf.Max(1f, _maxHealth),
-            new ElementalMultipliers(_resistFire, _resistWater, _resistElectric, _resistEarth),
+            ElementMultiplierSpec.ToTable(_resistances),
             Mathf.Max(1, _rank),
             Mathf.Max(0, _xpReward));
     }

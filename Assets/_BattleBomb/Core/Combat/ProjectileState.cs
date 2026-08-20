@@ -13,7 +13,7 @@ namespace BattleBomb.Core.Combat
         public readonly Vector3 Position;
         public readonly Vector3 Velocity;
         public readonly float Damage;
-        public readonly Element Element;
+        public readonly ElementId Element;
 
         /// <summary>Steps left before the projectile despawns unhit.</summary>
         public readonly int LifeSteps;
@@ -23,7 +23,7 @@ namespace BattleBomb.Core.Combat
         public readonly int OwnerPlayerId;
 
         public ProjectileState(
-            Vector3 position, Vector3 velocity, float damage, Element element, int lifeSteps,
+            Vector3 position, Vector3 velocity, float damage, ElementId element, int lifeSteps,
             int ownerPlayerId = -1)
         {
             Position = position;
@@ -40,7 +40,7 @@ namespace BattleBomb.Core.Combat
 
         /// <summary>Aims from the muzzle at where the target is right now, depth included.</summary>
         public static ProjectileState Fired(
-            Vector3 origin, Vector3 target, float speed, float damage, Element element, int lifeSteps,
+            Vector3 origin, Vector3 target, float speed, float damage, ElementId element, int lifeSteps,
             int ownerPlayerId = -1)
         {
             Vector3 toTarget = target - origin;

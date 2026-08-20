@@ -1,4 +1,4 @@
-using BattleBomb.Core.Combat;
+﻿using BattleBomb.Core.Combat;
 using BattleBomb.Core.Stats;
 using NUnit.Framework;
 using UnityEngine;
@@ -17,7 +17,7 @@ namespace BattleBomb.Tests.EditMode
             CombatKit fast = CombatKit.Default.ScaledBySwingSpeed(1.25f);
             AttackTuning light = fast.StepAt(0).OnLight;
 
-            Assert.That(light.StartupSteps, Is.EqualTo(4), "5 × 0.8 rounds to 4");
+            Assert.That(light.StartupSteps, Is.EqualTo(4), "5 Ã— 0.8 rounds to 4");
             Assert.That(light.ActiveSteps, Is.EqualTo(3));
             Assert.That(light.RecoverySteps, Is.EqualTo(6));
             Assert.That(light.Damage, Is.EqualTo(CombatKit.Default.StepAt(0).OnLight.Damage),
@@ -108,14 +108,14 @@ namespace BattleBomb.Tests.EditMode
         public void An_arrow_keeps_its_owner_through_flight()
         {
             ProjectileState arrow = ProjectileState.Fired(
-                Vector3.zero, Vector3.right * 5f, 10f, 6f, Element.None, 60, ownerPlayerId: 1);
+                Vector3.zero, Vector3.right * 5f, 10f, 6f, ElementId.None, 60, ownerPlayerId: 1);
             Assert.That(arrow.FromPlayer, Is.True);
 
             ProjectileState flown = ProjectileSimulation.Step(arrow, 1f / 60f);
             Assert.That(flown.OwnerPlayerId, Is.EqualTo(1), "the owner survives every step");
 
             ProjectileState bolt = ProjectileState.Fired(
-                Vector3.zero, Vector3.right, 8f, 5f, Element.Fire, 60);
+                Vector3.zero, Vector3.right, 8f, 5f, new ElementId(1), 60);
             Assert.That(bolt.FromPlayer, Is.False, "enemy shots stay enemy by default");
         }
 

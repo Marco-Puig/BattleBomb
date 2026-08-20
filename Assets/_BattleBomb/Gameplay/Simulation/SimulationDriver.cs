@@ -50,6 +50,9 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Everything the generator may drop (D35). A new item is a new asset here, never code.")]
         [SerializeField] private ItemDefinition[] _itemCatalog;
 
+        [Tooltip("Every element in play (D38). A new element is a new asset here — never code.")]
+        [SerializeField] private ElementDefinition[] _elementCatalog;
+
         private const float ProjectileRadius = 0.6f;
         private const float ProjectileKnockback = 4f;
         private const int ProjectileHitstop = 2;
@@ -92,6 +95,7 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
+        private ElementCatalog _elements = ElementCatalog.Empty;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
@@ -120,6 +124,9 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
         public IReadOnlyList<DropPickup> Pickups => _pickups;
+
+        /// <summary>Every authored element (D38) — the naming authority for UI and Presentation.</summary>
+        public ElementCatalog Elements => _elements;
 
         public PlayerRegistry Players => _players;
 
@@ -184,6 +191,7 @@ namespace BattleBomb.Gameplay.Simulation
 
             _qualityTable = _qualityLadder != null ? _qualityLadder.ToTable() : QualityTable.Default;
             _dropWeights = _qualityLadder != null ? _qualityLadder.ToWeights() : DropWeights.Default;
+            _elements = ElementDefinition.ToCatalog(_elementCatalog);
         }
 
         private void Update()
@@ -418,7 +426,8 @@ namespace BattleBomb.Gameplay.Simulation
                 if (drop.Dropped)
                 {
                     var context = new GenerationContext(
-                        drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights);
+                        drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                        _elements.Ids);
                     _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
                     if (!item.IsEmpty)
                     {
@@ -586,7 +595,7 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     HitResult shove = HitApplication.Apply(
                         attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
-                        Element.None, 1f, TargetKind.Partner, partner.Position,
+                        ElementId.None, 1f, TargetKind.Partner, partner.Position,
                         ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
                     partner.ApplyImpulse(shove.Impulse);
                     HitLanded?.Invoke(new HitEvent(attacker, partner, 0f, partner.Position, true));
@@ -618,7 +627,7 @@ namespace BattleBomb.Gameplay.Simulation
 
             HitResult hit = HitApplication.Apply(
                 attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
-                Element.None, gear, TargetKind.Enemy, targetPosition,
+                ElementId.None, gear, TargetKind.Enemy, targetPosition,
                 resistances, ElementalMultipliers.Neutral);
 
             float knockback = attacker.Sheet.KnockbackMultiplier;
@@ -715,7 +724,7 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _projectiles.Add(ProjectileState.Fired(
-                shooter.Position, target, shooter.ShotSpeed, attack.Damage, Element.None,
+                shooter.Position, target, shooter.ShotSpeed, attack.Damage, ElementId.None,
                 ProjectileLifeSteps, shooter.PlayerId.Value));
         }
 

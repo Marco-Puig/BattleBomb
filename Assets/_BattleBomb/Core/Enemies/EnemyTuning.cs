@@ -24,8 +24,8 @@ namespace BattleBomb.Core.Enemies
         /// <summary>Flinch length when a player hit interrupts an interruptible enemy.</summary>
         public readonly int StaggerSteps;
 
-        /// <summary>The region skin's element (D22). None until M5 gives elements teeth.</summary>
-        public readonly Element Element;
+        /// <summary>The region skin's element (D22) — authored data, never an enum entry (D38).</summary>
+        public readonly ElementId Element;
 
         /// <summary>Ranged/Caster: projectile flight speed in units per second.</summary>
         public readonly float ProjectileSpeed;
@@ -54,7 +54,7 @@ namespace BattleBomb.Core.Enemies
             int cooldownSteps,
             bool interruptible,
             int staggerSteps,
-            Element element,
+            ElementId element,
             float projectileSpeed,
             float standoffNearX,
             float standoffFarX,

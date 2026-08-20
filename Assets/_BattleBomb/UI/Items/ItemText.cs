@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Stats;
 
@@ -11,7 +12,8 @@ namespace BattleBomb.UI.Items
     /// </summary>
     public static class ItemText
     {
-        public static void BuildLines(in ItemInstance item, List<string> lines)
+        public static void BuildLines(
+            in ItemInstance item, List<string> lines, ElementCatalog elements = null)
         {
             lines.Clear();
 
@@ -37,7 +39,7 @@ namespace BattleBomb.UI.Items
 
             for (int i = 0; i < item.AffixCount; i++)
             {
-                lines.Add(AffixLine(item.Affixes[i]));
+                lines.Add(AffixLine(item.Affixes[i], elements));
             }
 
             if (item.UpgradeCapacity > 0)
@@ -51,9 +53,16 @@ namespace BattleBomb.UI.Items
             }
         }
 
-        public static string AffixLine(in AffixRoll affix)
+        /// <summary>
+        /// One affix as a line. Element names come from the authored catalog (D38) — without one,
+        /// the id's debug text stands in rather than a hardcoded roster.
+        /// </summary>
+        public static string AffixLine(in AffixRoll affix, ElementCatalog elements = null)
         {
             float m = affix.Magnitude;
+            string element = elements != null
+                ? elements.NameOf(affix.Element)
+                : affix.Element.ToString();
             switch (affix.Id)
             {
                 case AffixId.CritChance: return $"+{m * 100f:F1}% crit chance";
@@ -66,8 +75,8 @@ namespace BattleBomb.UI.Items
                 case AffixId.KnockbackPower: return $"+{m * 100f:F0}% knockback";
                 case AffixId.MagicDamage: return $"+{m:F0} magic damage";
                 case AffixId.MagicRange: return $"+{m:F1} magic range";
-                case AffixId.ElementalResistance: return $"{affix.Element} resistance +{m * 100f:F0}%";
-                case AffixId.WeaponInfusion: return $"{affix.Element} infusion";
+                case AffixId.ElementalResistance: return $"{element} resistance +{m * 100f:F0}%";
+                case AffixId.WeaponInfusion: return $"{element} infusion";
                 default: return string.Empty;
             }
         }

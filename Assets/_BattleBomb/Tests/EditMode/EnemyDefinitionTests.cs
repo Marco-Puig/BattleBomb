@@ -13,11 +13,22 @@ namespace BattleBomb.Tests.EditMode
         public void Authored_values_carry_through_to_the_runtime_spec()
         {
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
+            ElementDefinition element = ScriptableObject.CreateInstance<ElementDefinition>();
             try
             {
+                SerializedObject authoredElement = new SerializedObject(element);
+                authoredElement.FindProperty("_id").intValue = 4;
+                authoredElement.FindProperty("_displayName").stringValue = "Cinder";
+                authoredElement.ApplyModifiedPropertiesWithoutUndo();
+
                 SerializedObject serialized = new SerializedObject(definition);
                 serialized.FindProperty("_archetype").enumValueIndex = (int)EnemyArchetype.Caster;
-                serialized.FindProperty("_element").enumValueIndex = (int)Element.Fire;
+                serialized.FindProperty("_element").objectReferenceValue = element;
+                SerializedProperty resistances = serialized.FindProperty("_resistances");
+                resistances.arraySize = 1;
+                SerializedProperty row = resistances.GetArrayElementAtIndex(0);
+                row.FindPropertyRelative("_element").objectReferenceValue = element;
+                row.FindPropertyRelative("_multiplier").floatValue = 0.5f;
                 serialized.FindProperty("_attack._startupSteps").intValue = 36;
                 serialized.FindProperty("_attack._damage").floatValue = 10f;
                 serialized.FindProperty("_cooldownSteps").intValue = 150;
@@ -30,13 +41,13 @@ namespace BattleBomb.Tests.EditMode
                 serialized.FindProperty("_maxHealth").floatValue = 25f;
                 serialized.FindProperty("_rank").intValue = 3;
                 serialized.FindProperty("_xpReward").intValue = 40;
-                serialized.FindProperty("_resistFire").floatValue = 0.5f;
                 serialized.ApplyModifiedPropertiesWithoutUndo();
 
                 EnemySpec spec = definition.ToRuntime();
 
                 Assert.That(spec.Tuning.Archetype, Is.EqualTo(EnemyArchetype.Caster));
-                Assert.That(spec.Tuning.Element, Is.EqualTo(Element.Fire));
+                Assert.That(spec.Tuning.Element, Is.EqualTo(element.Id),
+                    "D38: the enemy's element is whatever asset it points at.");
                 Assert.That(spec.Tuning.Attack.StartupSteps, Is.EqualTo(36), "The telegraph.");
                 Assert.That(spec.Tuning.Attack.Damage, Is.EqualTo(10f));
                 Assert.That(spec.Tuning.CooldownSteps, Is.EqualTo(150));
@@ -49,12 +60,14 @@ namespace BattleBomb.Tests.EditMode
                 Assert.That(spec.MaxHealth, Is.EqualTo(25f));
                 Assert.That(spec.Rank, Is.EqualTo(3));
                 Assert.That(spec.XpReward, Is.EqualTo(40));
-                Assert.That(spec.Resistances.For(Element.Fire), Is.EqualTo(0.5f));
-                Assert.That(spec.Resistances.For(Element.Water), Is.EqualTo(1f));
+                Assert.That(spec.Resistances.For(element.Id), Is.EqualTo(0.5f));
+                Assert.That(spec.Resistances.For(new ElementId(1)), Is.EqualTo(1f),
+                    "Elements the definition never mentions stay neutral.");
             }
             finally
             {
                 Object.DestroyImmediate(definition);
+                Object.DestroyImmediate(element);
             }
         }
 

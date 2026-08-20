@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Combat;
 
 namespace BattleBomb.Core.Items
 {
@@ -21,13 +22,20 @@ namespace BattleBomb.Core.Items
         public readonly int ForcedDefinitionId;
         public readonly QualityRank MinQuality;
 
+        /// <summary>
+        /// The elements an element-flavoured affix may roll (D38). Empty means none are authored
+        /// yet, and those affixes simply stay out of the pool rather than rolling a dud.
+        /// </summary>
+        public readonly IReadOnlyList<ElementId> Elements;
+
         public GenerationContext(
             float qualityScore,
             int progressLevel,
             IReadOnlyList<ItemSpec> catalog,
             in QualityTable table,
-            in DropWeights weights)
-            : this(qualityScore, progressLevel, catalog, table, weights,
+            in DropWeights weights,
+            IReadOnlyList<ElementId> elements = null)
+            : this(qualityScore, progressLevel, catalog, table, weights, elements,
                 false, ItemSlot.Helmet, false, 0, QualityRank.Nothing)
         {
         }
@@ -38,6 +46,7 @@ namespace BattleBomb.Core.Items
             IReadOnlyList<ItemSpec> catalog,
             in QualityTable table,
             in DropWeights weights,
+            IReadOnlyList<ElementId> elements,
             bool hasForcedSlot,
             ItemSlot forcedSlot,
             bool hasForcedDefinition,
@@ -49,6 +58,7 @@ namespace BattleBomb.Core.Items
             Catalog = catalog;
             Table = table;
             Weights = weights;
+            Elements = elements;
             HasForcedSlot = hasForcedSlot;
             ForcedSlot = forcedSlot;
             HasForcedDefinition = hasForcedDefinition;
@@ -56,14 +66,17 @@ namespace BattleBomb.Core.Items
             MinQuality = minQuality;
         }
 
+        /// <summary>True when an element-flavoured affix has something to roll.</summary>
+        public bool HasElements => Elements != null && Elements.Count > 0;
+
         /// <summary>D22: an elite drops the slot it visibly wears.</summary>
         public GenerationContext WithForcedSlot(ItemSlot slot) => new GenerationContext(
-            QualityScore, ProgressLevel, Catalog, Table, Weights,
+            QualityScore, ProgressLevel, Catalog, Table, Weights, Elements,
             true, slot, HasForcedDefinition, ForcedDefinitionId, MinQuality);
 
         /// <summary>D23: a boss drops its authored signature at a quality floor.</summary>
         public GenerationContext WithSignature(int definitionId, QualityRank minQuality) => new GenerationContext(
-            QualityScore, ProgressLevel, Catalog, Table, Weights,
+            QualityScore, ProgressLevel, Catalog, Table, Weights, Elements,
             HasForcedSlot, ForcedSlot, true, definitionId, minQuality);
     }
 }

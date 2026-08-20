@@ -11,7 +11,7 @@ namespace BattleBomb.Core.Combat
     {
         public static float Resolve(
             float baseDamage,
-            Element element,
+            ElementId element,
             in ElementalMultipliers resistance,
             in ElementalMultipliers climate,
             float gearMultiplier)

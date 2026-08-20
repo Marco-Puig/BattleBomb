@@ -276,13 +276,20 @@ namespace BattleBomb.Gameplay.Characters
                 if (combat.Cast == MagicCastKind.Leap)
                 {
                     _leapAvailable = false;
-                    _state = WithLift(_state, combat.LiftSpeed);
                 }
             }
 
             if (combat.AttackStarted)
             {
                 BeginAttack(effective, combat.Attack);
+            }
+
+            // The lift lands *after* BeginAttack, never before. Starting an attack in the air
+            // zeroes vertical speed so the swing hangs (M2's aerial rule), and a lunge snap zeroes
+            // velocity outright — either would eat the climb the leap exists to give.
+            if (combat.CastStarted && combat.LiftSpeed > 0f)
+            {
+                _state = WithLift(_state, combat.LiftSpeed);
             }
 
             AttackPhase phase = _combat.Phase;

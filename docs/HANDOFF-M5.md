@@ -18,6 +18,34 @@ D38–D41 and O11, then `GAME_DESIGN.md` §2.6 and §4.
 | 57 | — | Magic made visible: element-coloured burn tint, quiet tick numbers, the mana bar's cost mark, cast tells. 392/392. |
 | 58 | — | The Ember Stone, the mana potion, a cold climate on the test scene. 401/401. |
 
+## Mega-pass fixes
+
+**The elemental leap gave no climb (Michael, 2026-08-20).** He reported it as "it does the Splash
+magic" — the cast was actually the Leap, correctly chosen, but its lift was destroyed inside the
+same step, so all that showed was a burst and an immediate fall.
+
+Root cause: **there are two places that zero vertical velocity for an airborne attack**, and only
+one of them knew about casts. The movement branch was already guarded (`!_combat.IsCasting`), but
+`BeginAttack` carries M2's aerial rule — *an airborne swing hangs, so zero its vertical speed* —
+and it ran **after** the lift was applied, overwriting it. A lunge target would have zeroed
+velocity outright on top of that.
+
+Fix: the lift is applied *after* `BeginAttack`, so a cast's lift is the last word on vertical
+velocity. Traced with the clock frozen (`Time.timeScale = 0`, driving `CharacterActor.Step`
+directly) so the steps were deterministic: before, `vy` went 9.0 → −0.8 on the cast step; after,
+9.0 → 10.3 and the climb continues.
+
+**Not a bug, worth knowing:** the lift *replaces* vertical speed rather than adding to it, so a
+leap pressed instantly after jumping buys almost nothing (peak 1.82 vs 1.70 for a plain jump)
+while one pressed at apex is a genuine second jump (2.95). That is how double jumps conventionally
+work. Making it forgiving means adding-with-a-cap instead of replacing — a one-line change if
+Michael wants it.
+
+**No automated guard exists for this.** The ordering lives in `CharacterActor.Step`, which needs a
+scene, and PlayMode tests are deferred (D7). The Core-level test only proves the machine *reports*
+a lift. Re-check the leap by hand, or with the frozen-clock trace above, after touching
+`BeginAttack` or the cast branch.
+
 **Deviations from the design, both deliberate and recorded:**
 
 - **Magic damage is flat, not a percentage.** D39's parenthetical said "+% cast damage"; it ships

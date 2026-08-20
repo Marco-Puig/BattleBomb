@@ -15,13 +15,17 @@ namespace BattleBomb.Gameplay.Simulation
         public readonly Vector3 Position;
         public readonly bool IsPartner;
 
-        public HitEvent(Component attacker, Component target, float damage, Vector3 position, bool isPartner)
+        /// <summary>The combat stream rolled a critical (M4) — presentation may shout about it.</summary>
+        public readonly bool IsCrit;
+
+        public HitEvent(Component attacker, Component target, float damage, Vector3 position, bool isPartner, bool isCrit = false)
         {
             Attacker = attacker;
             Target = target;
             Damage = damage;
             Position = position;
             IsPartner = isPartner;
+            IsCrit = isCrit;
         }
     }
 }

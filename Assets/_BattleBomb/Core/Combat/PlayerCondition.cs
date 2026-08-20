@@ -49,6 +49,15 @@ namespace BattleBomb.Core.Combat
         public PlayerCondition Revived(float healthFraction, int graceSteps) =>
             new PlayerCondition(Health.Refilled(healthFraction), 0, graceSteps);
 
+        /// <summary>Life steal and potions (M4): a heal touches nothing but the pool — and never
+        /// stands the downed up; the revive is the only way back (D25).</summary>
+        public PlayerCondition Healed(float amount) =>
+            IsDown ? this : new PlayerCondition(Health.Healed(amount), StaggerSteps, GraceSteps);
+
+        /// <summary>The stat sheet resized the pool (D32/D35); timers and the downed state stand.</summary>
+        public PlayerCondition Resized(float newMax) =>
+            new PlayerCondition(Health.Resized(newMax), StaggerSteps, GraceSteps);
+
         public PlayerCondition Hit(float damage, int staggerSteps, int graceSteps)
         {
             if (IsInvulnerable)

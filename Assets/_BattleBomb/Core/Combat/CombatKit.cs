@@ -66,6 +66,57 @@ namespace BattleBomb.Core.Combat
             return _steps[comboIndex];
         }
 
+        /// <summary>
+        /// The weapon's swing speed applied to the authored frame data (D35, planning decision 5):
+        /// every attack's phase counts scale by the inverse multiplier, rounded, never below one
+        /// step — the only sanctioned way a stat touches timing. The input windows and the charge
+        /// threshold are timing promises and stay authored.
+        /// </summary>
+        public CombatKit ScaledBySwingSpeed(float multiplier)
+        {
+            if (multiplier <= 0f || Math.Abs(multiplier - 1f) < 1e-4f)
+            {
+                return this;
+            }
+
+            float inverse = 1f / multiplier;
+            var steps = new ComboStep[_steps.Length];
+            for (int i = 0; i < _steps.Length; i++)
+            {
+                steps[i] = _steps[i].HasHeavy
+                    ? new ComboStep(Scaled(_steps[i].OnLight, inverse), Scaled(_steps[i].OnHeavy, inverse))
+                    : new ComboStep(Scaled(_steps[i].OnLight, inverse));
+            }
+
+            return new CombatKit(
+                steps,
+                Scaled(Heavy, inverse),
+                Scaled(ChargedHeavy, inverse),
+                ChargeThresholdSteps,
+                ComboWindowSteps,
+                InputBufferSteps,
+                Scaled(AerialLight, inverse),
+                Scaled(AerialHeavy, inverse));
+        }
+
+        private static AttackTuning Scaled(in AttackTuning attack, float inverse) => new AttackTuning(
+            ScaledSteps(attack.StartupSteps, inverse),
+            ScaledSteps(attack.ActiveSteps, inverse),
+            ScaledSteps(attack.RecoverySteps, inverse),
+            attack.Damage,
+            attack.ReachX,
+            attack.DepthTolerance,
+            attack.LungeDistance,
+            attack.MaxTargets,
+            attack.KnockbackSpeed,
+            attack.LaunchSpeed,
+            attack.HitstopSteps,
+            attack.MoveSpeedScale,
+            attack.ResolvesOnLanding);
+
+        private static int ScaledSteps(int steps, float inverse) =>
+            steps <= 0 ? steps : Math.Max(1, (int)Math.Round(steps * inverse));
+
         public static CombatKit Default => new CombatKit(
             new[]
             {

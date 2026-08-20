@@ -41,6 +41,9 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Seed for the loot rolls (D23). Gameplay owns the seed; Core owns the maths.")]
         [SerializeField] private int _lootSeed = 1;
 
+        [Tooltip("Seed for combat rolls (crits). Its own stream, so loot replay never shifts with a fight.")]
+        [SerializeField] private int _combatSeed = 2;
+
         [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
         [SerializeField] private QualityLadder _qualityLadder;
 
@@ -82,6 +85,7 @@ namespace BattleBomb.Gameplay.Simulation
         private bool _warnedMissingArena;
         private AttemptCountdown _attempt;
         private DeterministicRandom _lootRng;
+        private DeterministicRandom _combatRng;
         private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
@@ -161,6 +165,7 @@ namespace BattleBomb.Gameplay.Simulation
             // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
             _lootRng = new DeterministicRandom((uint)_lootSeed);
+            _combatRng = new DeterministicRandom((uint)_combatSeed);
 
             _itemSpecs.Clear();
             if (_itemCatalog != null)
@@ -209,9 +214,9 @@ namespace BattleBomb.Gameplay.Simulation
                         int id = actor.PlayerId.Value;
                         _grabCounts[id] = GrabCountFor(id) + 1;
                         PlayerInventory bag = actor.GetComponent<PlayerInventory>();
-                        if (bag != null)
+                        if (bag != null && bag.Take(_pickups[grabTarget].Item))
                         {
-                            bag.Take(_pickups[grabTarget].Item);
+                            actor.RefreshStats();
                         }
 
                         Destroy(_pickups[grabTarget].gameObject);
@@ -500,23 +505,21 @@ namespace BattleBomb.Gameplay.Simulation
                 Component owner = _candidateOwners[_hitIndices[i]];
                 if (owner is EnemyActor enemy)
                 {
-                    HitResult hit = HitApplication.Apply(
-                        attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
-                        Element.None, 1f, TargetKind.Enemy, enemy.Position,
-                        enemy.Resistances, ElementalMultipliers.Neutral);
+                    HitResult hit = RollPlayerHit(
+                        attacker, attack, enemy.Position, enemy.Resistances, out bool crit);
                     enemy.ApplyHit(hit);
+                    StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
-                    HitLanded?.Invoke(new HitEvent(attacker, enemy, hit.Damage, enemy.Position, false));
+                    HitLanded?.Invoke(new HitEvent(attacker, enemy, hit.Damage, enemy.Position, false, crit));
                 }
                 else if (owner is TrainingDummy dummy)
                 {
-                    HitResult hit = HitApplication.Apply(
-                        attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
-                        Element.None, 1f, TargetKind.Enemy, dummy.Position,
-                        ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                    HitResult hit = RollPlayerHit(
+                        attacker, attack, dummy.Position, ElementalMultipliers.Neutral, out bool crit);
                     dummy.ApplyHit(hit);
+                    StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
-                    HitLanded?.Invoke(new HitEvent(attacker, dummy, hit.Damage, dummy.Position, false));
+                    HitLanded?.Invoke(new HitEvent(attacker, dummy, hit.Damage, dummy.Position, false, crit));
                 }
                 else if (owner is CharacterActor partner)
                 {
@@ -536,9 +539,47 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         /// <summary>
+        /// One player hit through the M4 build (D32/D35): the weapon's damage scale feeds the
+        /// pipeline's gear slot, the combat stream prices the crit — always drawn, so the stream
+        /// never depends on the chance — and knockback affixes scale the shove.
+        /// </summary>
+        private HitResult RollPlayerHit(
+            CharacterActor attacker, in AttackTuning attack, Vector3 targetPosition,
+            in ElementalMultipliers resistances, out bool crit)
+        {
+            float gear = attacker.DamageScale;
+            _combatRng = _combatRng.NextFloat(out float critDraw);
+            crit = critDraw < attacker.Sheet.CritChance;
+            if (crit)
+            {
+                gear *= attacker.Sheet.CritDamageMultiplier;
+            }
+
+            HitResult hit = HitApplication.Apply(
+                attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
+                Element.None, gear, TargetKind.Enemy, targetPosition,
+                resistances, ElementalMultipliers.Neutral);
+
+            float knockback = attacker.Sheet.KnockbackMultiplier;
+            return Mathf.Approximately(knockback, 1f)
+                ? hit
+                : new HitResult(hit.Damage, hit.Impulse * knockback, hit.HitstopSteps);
+        }
+
+        private static void StealLife(CharacterActor attacker, float damage)
+        {
+            float steal = attacker.Sheet.LifeSteal;
+            if (steal > 0f && damage > 0f)
+            {
+                attacker.Heal(damage * steal);
+            }
+        }
+
+        /// <summary>
         /// An enemy's melee window: the same reach geometry players use (§2.2), resolved against
         /// players and applied through their condition — grace and the downed state swallow hits
-        /// entirely, and momentum feeds the shove like every other hit.
+        /// entirely, defence shaves what lands (D26), and momentum feeds the shove like every
+        /// other hit.
         /// </summary>
         internal void ResolveEnemyMelee(EnemyActor attacker, in AttackTuning attack)
         {
@@ -558,9 +599,9 @@ namespace BattleBomb.Gameplay.Simulation
                     attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                     attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
                     ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
-                victim.ApplyEnemyHit(hit);
+                float landed = victim.ApplyEnemyHit(hit);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
-                HitLanded?.Invoke(new HitEvent(attacker, victim, hit.Damage, victim.Position, false));
+                HitLanded?.Invoke(new HitEvent(attacker, victim, landed, victim.Position, false));
             }
 
             if (attackerHitstop > 0)
@@ -596,9 +637,9 @@ namespace BattleBomb.Gameplay.Simulation
                         p.Damage, p.Element, ElementalMultipliers.Neutral, ElementalMultipliers.Neutral, 1f);
                     Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
                     direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
-                    victim.ApplyEnemyHit(new HitResult(
+                    float landed = victim.ApplyEnemyHit(new HitResult(
                         damage, direction * ProjectileKnockback, ProjectileHitstop));
-                    HitLanded?.Invoke(new HitEvent(null, victim, damage, victim.Position, false));
+                    HitLanded?.Invoke(new HitEvent(null, victim, landed, victim.Position, false));
                     _projectiles.RemoveAt(i);
                     continue;
                 }

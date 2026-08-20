@@ -38,5 +38,19 @@ namespace BattleBomb.Core.Combat
         /// <summary>A partial refill — the revive's half-health return (D25). Fraction is clamped.</summary>
         public Health Refilled(float fraction) =>
             new Health(Max, Mathf.Clamp01(fraction) * Max);
+
+        /// <summary>Life steal and potions (M4): heals never overfill and never harm.</summary>
+        public Health Healed(float amount) =>
+            amount <= 0f ? this : new Health(Max, Mathf.Min(Max, Current + amount));
+
+        /// <summary>
+        /// The stat sheet changed the pool's size (D32/D35): current health is kept, clamped to
+        /// the new ceiling — equipping +HP gear never heals, unequipping it can wound.
+        /// </summary>
+        public Health Resized(float newMax)
+        {
+            float max = Mathf.Max(1f, newMax);
+            return new Health(max, Mathf.Min(Current, max));
+        }
     }
 }

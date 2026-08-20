@@ -295,6 +295,7 @@ MonoBehaviour:
   _maxStepsPerFrame: 5
   _arena: {fileID: 463551039}
   _lootSeed: 1
+  _combatSeed: 2
   _qualityLadder: {fileID: 11400000, guid: 6ab29cad430027a45a2d63cf32bc463c, type: 2}
   _itemCatalog:
   - {fileID: 11400000, guid: c53abab63488b2a4299c77d54278ead3, type: 2}
@@ -475,6 +476,7 @@ GameObject:
   - component: {fileID: 1619851944}
   - component: {fileID: 1619851945}
   - component: {fileID: 1619851946}
+  - component: {fileID: 1619851947}
   m_Layer: 0
   m_Name: Debug Overlay
   m_TagString: Untagged
@@ -573,6 +575,19 @@ MonoBehaviour:
   _driver: {fileID: 463551038}
   _camera: {fileID: 1778134441}
   _fontSize: 14
+--- !u!114 &1619851947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1619851940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf9a19b7b8201404aaea91c4bf1bf6e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Items.InventoryDebugPanel
+  _driver: {fileID: 0}
 --- !u!1 &1632419326
 GameObject:
   m_ObjectHideFlags: 0

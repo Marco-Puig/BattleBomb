@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
+using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
@@ -68,6 +71,14 @@ namespace BattleBomb.Gameplay.Characters
         private int _reviveGraceSteps = 60;
         private Vector3 _spawnPosition;
         private bool _spawnCaptured;
+        private StatTuning _statTuning;
+        private StatSheet _sheet;
+        private CombatKit _activeKit;
+        private MovementTuning _activeTuning;
+        private ManaPool _mana;
+        private float _damageScale = 1f;
+        private PlayerInventory _bag;
+        private readonly List<GearContribution> _gearScratch = new List<GearContribution>();
 
         /// <summary>
         /// Read live from the command source: PlayerInput assigns its player index after sibling
@@ -95,9 +106,18 @@ namespace BattleBomb.Gameplay.Characters
         public int ReviveBeatSteps => _reviveBeatSteps;
 
         internal float ReviveRange => _reviveRange;
-        public float ChargeFraction => _kit == null || _kit.ChargeThresholdSteps <= 0
+        public float ChargeFraction => _activeKit == null || _activeKit.ChargeThresholdSteps <= 0
             ? 0f
-            : Mathf.Clamp01((float)_combat.ChargeSteps / _kit.ChargeThresholdSteps);
+            : Mathf.Clamp01((float)_combat.ChargeSteps / _activeKit.ChargeThresholdSteps);
+
+        /// <summary>The aggregated build (D32/D35): base points plus everything worn.</summary>
+        public StatSheet Sheet => _sheet;
+
+        /// <summary>The mana pool the sheet sizes; M5's Magic spends it.</summary>
+        public ManaPool Mana => _mana;
+
+        /// <summary>Authored attack damage × this = final base damage; unarmed is exactly 1.</summary>
+        internal float DamageScale => _damageScale;
 
         /// <summary>
         /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
@@ -160,7 +180,7 @@ namespace BattleBomb.Gameplay.Characters
                 effective = WithoutLight(effective);
             }
 
-            CombatStepResult combat = CombatMachine.Step(_combat, effective, _kit, _state.IsGrounded);
+            CombatStepResult combat = CombatMachine.Step(_combat, effective, _activeKit, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
@@ -169,6 +189,11 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             _condition = _condition.Step();
+            _mana = _mana.Step(_sheet.ManaRegen, dt);
+            if (_bag != null)
+            {
+                _bag.Inventory.Step();
+            }
 
             if (combat.AttackStarted)
             {
@@ -180,7 +205,7 @@ namespace BattleBomb.Gameplay.Characters
             {
                 _attackRooted = false;
                 _lungeStepsLeft = 0;
-                _state = CharacterMotor.Step(_state, effective, _tuning, bounds, dt);
+                _state = CharacterMotor.Step(_state, effective, _activeTuning, bounds, dt);
             }
             else if (_attackRooted)
             {
@@ -196,7 +221,7 @@ namespace BattleBomb.Gameplay.Characters
                 bool stallGravity = !_state.IsGrounded
                     && (phase == AttackPhase.Startup || phase == AttackPhase.Active)
                     && !_combat.CurrentAttack.ResolvesOnLanding;
-                MovementTuning tuning = stallGravity ? WithoutGravity(_tuning) : _tuning;
+                MovementTuning tuning = stallGravity ? WithoutGravity(_activeTuning) : _activeTuning;
                 _state = CharacterMotor.Step(_state, CombatMove(effective, phase), tuning, bounds, dt);
                 StepAirLunge(bounds);
             }
@@ -214,25 +239,32 @@ namespace BattleBomb.Gameplay.Characters
 
         /// <summary>
         /// An enemy's landed hit — the seam M3's enemies call (tasks 31–33). Grace and the downed
-        /// state swallow it whole; otherwise damage, stagger, the shove, and the victim's hitstop
-        /// land together, and a damaging hit interrupts whatever swing was in flight.
+        /// state swallow it whole; otherwise the defence stat shaves the damage (D26/D35), then
+        /// damage, stagger, the shove, and the victim's hitstop land together, and a damaging hit
+        /// interrupts whatever swing was in flight. Returns what actually landed, so the number
+        /// the couch sees is the number the pool lost.
         /// </summary>
-        internal void ApplyEnemyHit(in HitResult hit)
+        internal float ApplyEnemyHit(in HitResult hit)
         {
             if (_condition.IsInvulnerable)
             {
-                return;
+                return 0f;
             }
 
-            _condition = _condition.Hit(hit.Damage, _hitStaggerSteps, _hitGraceSteps);
-            if (hit.Damage > 0f)
+            float damage = hit.Damage * (1f - _sheet.Defence);
+            _condition = _condition.Hit(damage, _hitStaggerSteps, _hitGraceSteps);
+            if (damage > 0f)
             {
                 _combat = CombatState.Ready;
             }
 
             ApplyImpulse(hit.Impulse);
             ApplyHitstop(hit.HitstopSteps);
+            return damage;
         }
+
+        /// <summary>Life steal's return (D35): heals never overfill, never stand the downed up.</summary>
+        internal void Heal(float amount) => _condition = _condition.Healed(amount);
 
         /// <summary>A completed partner channel stands this player back up (D25); the fraction
         /// is what the reviver's mash pace earned (D29). Grace is this player's own.</summary>
@@ -245,7 +277,11 @@ namespace BattleBomb.Gameplay.Characters
         /// </summary>
         internal void ResetForAttempt()
         {
-            _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
+            float maxHealth = _sheet.MaxHealth > 0f
+                ? _sheet.MaxHealth
+                : (_definition != null ? _definition.MaxHealth : 100f);
+            _condition = PlayerCondition.Fresh(maxHealth);
+            _mana = ManaPool.Full(_sheet.MaxMana);
             _combat = CombatState.Ready;
             _revive = ReviveChannel.Inactive;
             _lungePerStep = Vector3.zero;
@@ -398,6 +434,43 @@ namespace BattleBomb.Gameplay.Characters
                 command.Released & ~CommandButtons.Jump);
         }
 
+        /// <summary>
+        /// Rebuilds the cached sheet and everything derived from it — the swing-scaled kit, the
+        /// speed-scaled tuning, the resized pools (planning decision 2: only on loadout or
+        /// allocation changes, never per step). The driver calls it after an auto-equip grab; the
+        /// debug panel after every mutation.
+        /// </summary>
+        internal void RefreshStats()
+        {
+            _gearScratch.Clear();
+            BaseStats allocations = BaseStats.Zero;
+            if (_bag != null)
+            {
+                _bag.Inventory.Loadout.CollectContributions(_gearScratch);
+                allocations = _bag.Ledger.Allocations;
+            }
+
+            _sheet = StatSheet.Build(allocations, _statTuning, _gearScratch);
+            _damageScale = _statTuning.UnarmedDamage > 0f
+                ? _sheet.WeaponDamage / _statTuning.UnarmedDamage
+                : 1f;
+            _activeKit = _kit.ScaledBySwingSpeed(_sheet.SwingSpeedMultiplier);
+            _activeTuning = ScaledSpeed(_tuning, _sheet.NetMoveSpeedMultiplier);
+            _condition = _condition.Resized(_sheet.MaxHealth);
+            _mana = _mana.Resized(_sheet.MaxMana);
+        }
+
+        private static MovementTuning ScaledSpeed(in MovementTuning tuning, float multiplier) => new MovementTuning(
+            tuning.MaxSpeed * Mathf.Max(0.05f, multiplier),
+            tuning.Acceleration,
+            tuning.Deceleration,
+            tuning.DepthSpeedScale,
+            tuning.Gravity,
+            tuning.JumpSpeed,
+            tuning.MaxFallSpeed,
+            tuning.CoyoteSteps,
+            tuning.JumpBufferSteps);
+
         private static MovementTuning WithoutGravity(in MovementTuning tuning) => new MovementTuning(
             tuning.MaxSpeed,
             tuning.Acceleration,
@@ -414,6 +487,10 @@ namespace BattleBomb.Gameplay.Characters
             _source = GetComponent<IPlayerCommandSource>();
             _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
             _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
+            _statTuning = _definition != null ? _definition.ToStatTuning() : StatTuning.Default;
+            _activeKit = _kit;
+            _activeTuning = _tuning;
+            _mana = ManaPool.Full(_statTuning.BaseMaxMana);
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
             _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
             _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
@@ -448,6 +525,8 @@ namespace BattleBomb.Gameplay.Characters
                 return;
             }
 
+            _bag = GetComponent<PlayerInventory>();
+            RefreshStats();
             _driver.Characters.Register(this);
         }
 

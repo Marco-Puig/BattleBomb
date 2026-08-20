@@ -1,5 +1,6 @@
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
+using BattleBomb.Core.Stats;
 using UnityEngine;
 
 namespace BattleBomb.Gameplay.Data
@@ -64,6 +65,46 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps of invulnerability granted on being revived.")]
         [SerializeField] private int _reviveGraceSteps = 60;
 
+        [Header("Stats (D32)")]
+        [Tooltip("Max health each allocated HP point adds.")]
+        [SerializeField] private float _healthPerPoint = 5f;
+
+        [Tooltip("Mana capacity before any points or gear.")]
+        [SerializeField] private float _baseMaxMana = 100f;
+
+        [Tooltip("Mana capacity each allocated Mana point adds.")]
+        [SerializeField] private float _manaPerPoint = 5f;
+
+        [Tooltip("Mana per second before gear regen (regen is a gear stat, D32).")]
+        [SerializeField] private float _baseManaRegen = 1f;
+
+        [Tooltip("Bare-hands weapon damage — the baseline the authored attack numbers assume.")]
+        [SerializeField] private float _unarmedDamage = 10f;
+
+        [Tooltip("Fractional weapon-damage bonus per Strength point (0.01 = +1%).")]
+        [SerializeField] private float _damagePerStrengthPoint = 0.01f;
+
+        [Tooltip("Fractional move-speed bonus per Speed point, until the cap.")]
+        [SerializeField] private float _moveSpeedPerPoint = 0.005f;
+
+        [Tooltip("The hard velocity cap as a bonus fraction — Speed can never push past it.")]
+        [SerializeField] private float _moveSpeedCapBonus = 0.10f;
+
+        [Tooltip("Slow resistance each over-cap Speed point buys.")]
+        [SerializeField] private float _slowResistPerOverCapPoint = 0.02f;
+
+        [Tooltip("Ceiling on slow resistance — slows always matter a little.")]
+        [SerializeField] private float _slowResistCap = 0.75f;
+
+        [Tooltip("Ceiling on summed defence — the max-tank build's wall (D35).")]
+        [SerializeField] private float _defenceCap = 0.70f;
+
+        [Tooltip("Move-speed slow per unit of worn weight.")]
+        [SerializeField] private float _slowPerWeight = 0.005f;
+
+        [Tooltip("Damage multiplier a critical hit starts from; crit-damage affixes add to it.")]
+        [SerializeField] private float _baseCritDamageMultiplier = 1.5f;
+
         public string DisplayName => _displayName;
 
         public float MaxHealth => Mathf.Max(1f, _maxHealth);
@@ -91,6 +132,23 @@ namespace BattleBomb.Gameplay.Data
 
         public CombatKit CombatKitToRuntime() =>
             _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;
+
+        /// <summary>The D32 per-point values, with this character's vitals as the base.</summary>
+        public StatTuning ToStatTuning() => new StatTuning(
+            MaxHealth,
+            _healthPerPoint,
+            _baseMaxMana,
+            _manaPerPoint,
+            _baseManaRegen,
+            _unarmedDamage,
+            _damagePerStrengthPoint,
+            _moveSpeedPerPoint,
+            _moveSpeedCapBonus,
+            _slowResistPerOverCapPoint,
+            _slowResistCap,
+            _defenceCap,
+            _slowPerWeight,
+            _baseCritDamageMultiplier);
 
         public MovementTuning ToRuntime() => new MovementTuning(
             _maxSpeed,

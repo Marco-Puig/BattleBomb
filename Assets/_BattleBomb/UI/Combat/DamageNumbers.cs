@@ -30,6 +30,7 @@ namespace BattleBomb.UI.Combat
             public Vector3 World;
             public int Amount;
             public float Born;
+            public bool IsCrit;
         }
 
         private readonly List<Entry> _entries = new List<Entry>();
@@ -75,6 +76,7 @@ namespace BattleBomb.UI.Combat
                 World = hit.Position + Vector3.up * 2.2f,
                 Amount = Mathf.Max(1, Mathf.RoundToInt(hit.Damage)),
                 Born = Time.time,
+                IsCrit = hit.IsCrit,
             });
         }
 
@@ -94,8 +96,6 @@ namespace BattleBomb.UI.Combat
                 };
             }
 
-            _style.fontSize = Mathf.Max(8, _fontSize);
-
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 float age = Time.time - _entries[i].Born;
@@ -112,13 +112,18 @@ namespace BattleBomb.UI.Combat
                     continue;
                 }
 
+                bool crit = _entries[i].IsCrit;
+                _style.fontSize = Mathf.Max(8, crit ? Mathf.RoundToInt(_fontSize * 1.4f) : _fontSize);
+
                 float alpha = 1f - age / _lifetimeSeconds;
                 string text = _entries[i].Amount.ToString();
                 Rect rect = new Rect(screen.x - 60f, Screen.height - screen.y - 20f, 120f, 40f);
 
                 _style.normal.textColor = new Color(0f, 0f, 0f, alpha);
                 GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), text, _style);
-                _style.normal.textColor = new Color(1f, 0.93f, 0.35f, alpha);
+                _style.normal.textColor = crit
+                    ? new Color(1f, 0.45f, 0.15f, alpha)
+                    : new Color(1f, 0.93f, 0.35f, alpha);
                 GUI.Label(rect, text, _style);
             }
         }

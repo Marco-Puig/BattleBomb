@@ -88,8 +88,13 @@ then the authored assets in `Assets/_BattleBomb/Data/Combat/` are the reference.
 - **Aerials:** Jump→Light pops enemies up for a hit or two, deliberately short of juggling
   (extended "air tech" is a future skill ceiling). Jump→Heavy slams an AoE where the grounded
   shadow marks the landing.
-- **Magic is one press.** No charged casts, no chain-into-magic finishers. Fuelled by slowly
-  regenerating mana; capacity is a base stat, regen is a gear stat (§5, D32).
+- **Magic is one button, three casts (D39):** press = a narrow ground **splash** ahead of you
+  (depth-limited like melee — free depth crossing stays the bow's identity); stick down + press =
+  a radial **aura** around the character (the depth answer, the crowd moment); press airborne =
+  the **elemental double jump** (a mana-priced boost up with a small burst at the liftoff point).
+  No charged casts, no chords; stick up + Magic is deliberately unassigned expansion room.
+  Fuelled by slowly regenerating mana; capacity is a base stat, regen is a gear stat (§5, D32).
+  Every cast applies the character's element status (§4).
 
 ### 2.7 Defence (D26)
 
@@ -116,7 +121,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 |---|---|---|
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
 | Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
-| Elemental attack | **Magic** | The character's element expressed offensively (§4). |
+| Elemental attack | **Magic** | The character's element expressed offensively — the three-cast kit: splash, aura, elemental double jump (§2.6, §4, D39). |
 | Quick-use | **Quick-use** | Fires the one quick-use slot: a consumable (health potions most commonly) or a worn equipment piece with an active (D37). Equipment itself is two worn slots, passive by default, some pieces carrying an active with derived damage and a real cooldown (D27 as amended). Spice, never the meta (D19). |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
@@ -161,17 +166,29 @@ base damage
   → final damage
 ```
 
-Environments carry an elemental climate that modifies effectiveness. This makes character choice
-situational without adding a single input to combat — depth via context, not via complexity.
+**An element is authored data, never code (D38)** — a definition holding its name, its status
+behaviour, and its visual identity. The roster itself is an open debate (**O11**); **Fire is the
+first authored element** (it is in every candidate set), and its status is **Burn**: damage over
+time, priced from the hit that applied it, so gear scaling flows into statuses automatically.
 
 **Two element sources per player (D19):** the weapon's infusion applies its status automatically on
 hit (the Dungeon Defenders half), and the character casts their own element on Magic (the Castle
-Crashers half). Statuses react — soak + shock chain-stuns, and a deliberately small set of similar
-pairs — so a lone player self-combos by pairing weapon element against their own, and a co-op
-partner adds a third source (§7). Reactions are the elemental depth Castle Crashers never had.
+Crashers half — the three-cast kit, D39). Statuses **react** — a setup status plus a trigger
+status chain-stuns, and a deliberately small set of similar pairs — so a lone player self-combos
+by pairing weapon element against their own, and a co-op partner adds a third source (§7). The
+reaction framework ships with M5; the authored pair table fills when O11 settles the roster
+(D41). Reactions are the elemental depth Castle Crashers never had.
 
-**Baseline roster** (inherited from the 2019 `CharacterClassData`, ⚠ confirm): Fire, Water, Electric,
-Earth.
+**Statuses are two-way (D40):** enemy casters status players. **Same element cancels:** matching
+elements halve elemental damage both ways and the status never applies; kinetic weapon damage is
+untouched, so an infused blade is never worse than a plain one. Mitigation splits into two jobs —
+**Defence** reduces hits, **Elemental Resistance** (per-element, from gear) reduces that
+element's damage and shortens its statuses.
+
+**Environments carry an elemental climate** that multiplies all elemental damage regardless of
+who deals it (D41) — symmetric, so region intel drives gear and character choice both ways. This
+makes character choice situational without adding a single input to combat — depth via context,
+not via complexity.
 
 ---
 
@@ -209,8 +226,10 @@ damage), **HP** (pure pool — resistance is gear's job), **Mana** (capacity —
 Swing Speed (bows: Draw and Shot Speed); armor rolls **Defence** (% reduction — additive, a
 max-tank build caps ~70% and a max-lightweight ~30% at top rolls, both scaling down the ladder)
 + **Weight** (the speed tax; tankier rolls weigh more). The affix pool: Crit Chance, Crit Damage,
-Life Steal, +Max HP, +Max Mana, Mana Regen, Reduced Weight, Knockback Power, plus the M5-reserved
-group (Magic Damage, Magic Range, Elemental Resistance, Weapon Infusion element).
+Life Steal, +Max HP, +Max Mana, Mana Regen, Reduced Weight, Knockback Power, plus the magic group
+(live with M5): **Magic Damage** (+% cast damage), **Magic Range** (splash length and aura
+radius), **Elemental Resistance** (per-element — reduces that element's damage and shortens its
+statuses, D40), and **Weapon Infusion** (the weapon applies its element's status on every hit).
 
 **Weapon classes:** Sword (the whole D19 kit) and Bow (Light becomes a shot — weaker per hit,
 crossing depth freely per §2.2). **Pets** come in three classes (D34): attackers, stat pets, and
@@ -261,7 +280,7 @@ Enemy mechanics are **standardized archetypes**; regions and ranks style and sca
 |---|---|
 | **Melee grunt** | Depth-limited like the player (§2.2) — crowds you into managing depth. |
 | **Ranged** | Crosses depth freely — punishes standing still. |
-| **Caster** | Slow, hard-hitting elemental artillery behind the longest telegraphs — the priority target, and where M5's statuses will land (§4). |
+| **Caster** | Slow, hard-hitting elemental artillery behind the longest telegraphs — the priority target; its hits apply its element's status to players (§4, D40). |
 | **Brute** | Slow, telegraphed, jump- and depth-dodgeable — tests both defensive verbs. |
 
 - **A region authors 2–3 skins** of these archetypes — its element, its attacks, its look. A new

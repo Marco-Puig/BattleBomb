@@ -782,11 +782,99 @@ Directed by Michael (2026-08-19).
 
 ---
 
+## D38 — Elements are authored data; the roster itself is open · **Locked** *(amends §4's baseline roster)*
+
+Directed by Michael in the M5 design session (2026-08-19). The element roster is genuinely
+contested — Michael wants Fire/Earth/Electricity/Poison; his collaborator wants the Avatar
+quartet Fire/Water/Earth/Air — so the roster becomes **O11** and the framework stops caring.
+
+- **An element is an authored definition, never an enum entry**: id, display name, status
+  behaviour, colour/VFX identity — ScriptableObject in, struct out, like characters and enemies
+  (pillar 3). Core knows element ids exist, never what they are named. Adding an element is
+  creating one asset.
+- **Fire ships first** — it is in both candidate sets. Its status is **Burn**: damage over time,
+  priced from the hit that applied it (paper: ~50% of the applying hit's damage again over 3
+  seconds; reapplication refreshes, the stronger source wins). Deriving status strength from the
+  applying hit means gear scaling flows into statuses with no second tuning axis.
+- The 2019-inherited baseline roster in §4 (Fire/Water/Electric/Earth) is superseded; Core's
+  `Element` enum is replaced by ids plus authored definitions.
+
+---
+
+## D39 — The Magic kit: three casts on one button · **Locked** *(amends D19)*
+
+Directed by Michael (2026-08-19). Magic stays one **button** — the amendment is that stick
+flavours and aerials, always legal combo grammar (D17), now apply to it:
+
+| Input | Cast | Space it owns | Paper mana |
+|---|---|---|---|
+| Press | **Splash** — a narrow ground line erupts ahead, in facing direction | The line in front; depth-limited like melee | 20 |
+| Stick down + press | **Aura** — radial AoE around the character | The circle around you — the depth answer, the crowd moment | 45 |
+| Press airborne | **Elemental double jump** — a burst boosts you up, chip damage at the liftoff point | Vertical mobility; once per airborne | 15 |
+
+- All three cast the character's element and apply its status at full strength. Base pool 100,
+  regen ~1/s: magic is a rhythm within the fight, never a rotation. An empty pool means the
+  press does nothing; the fizzle cue is presentation's job.
+- **The splash is deliberately depth-limited** — free depth crossing is the bow's identity
+  (§2.2) and magic must not eat it. Magic's depth answer is the aura's radius.
+- **Magic damage is character base × gear.** Strength never touches it (D32). The caster build
+  lives in loot: Magic Damage (+% cast damage), Magic Range (splash length + aura radius), Mana
+  Regen. Casts are combat-machine phases like swings — no casting mid-swing, no swinging
+  mid-cast.
+- **Stick up + Magic is deliberately unassigned** — expansion room, not a gap.
+- **Amends D19:** "Magic is one press", and — for Magic only — "the stick aims; it never picks
+  the combo" (the stick-down flavour explicitly picks the cast; melee is untouched). **D18
+  stands**: the double jump is exactly the explicit layered mechanic it reserved space for; the
+  base jump arc never varies. Charged casts stay rejected; Heavy remains the only hold.
+
+---
+
+## D40 — Statuses are two-way; same element cancels; two mitigation stats · **Locked**
+
+Directed by Michael (2026-08-19): "full two-way."
+
+- **Enemies status players.** The caster archetype's artillery applies its element's status —
+  the priority target D22 promised. Every combatant carries the same status machinery.
+- **The same-element rule, symmetric and automatic:** matching attacker and defender elements
+  halve **elemental** damage both ways, and the status never applies (a Fire being cannot
+  burn). Kinetic weapon damage is untouched — an infused blade against its own element behaves
+  like a plain sword, never worse: no affix may ever roll as a penalty. Chosen over full
+  cancellation so a matchup is punished, never nulled.
+- **Mitigation splits into two jobs:** **Defence** (armor's core stat) reduces *hits*, as it
+  has since M4. **Elemental Resistance** (the per-element affix) reduces that element's damage
+  *and* shortens its statuses on you — the counter-purchase to a region's element, the Dungeon
+  Defenders loop working.
+
+---
+
+## D41 — Reactions ship framework-first; climate is symmetric · **Locked** *(amends D19's chain-stun)*
+
+Directed by Michael (2026-08-19): "just do Fire for now."
+
+- **The reaction system is built and pinned in M5** — target carries status A, is hit by
+  element B, the authored pair table names the effect (burst damage, stun, consume rules) —
+  tested with synthetic elements. **The authored table ships empty** until O11 settles the
+  roster.
+- D19's *soak + shock → chain-stun* survives as the anchor **pattern** — a setup status plus a
+  trigger status producing a chain-stun — but which elements own it joins O11, since Water and
+  Electric are exactly the contested names.
+- **Climate multiplies all elemental damage regardless of who deals it** — a cold region's
+  Fire ×1.25 helps your Fire and the enemy caster's alike. The symmetry is what makes it
+  strategy rather than a buff (§4's "depth via context"): region intel drives gear and roster
+  choice both ways. M5 sets climate at scene level; chapters author it properly in M7.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
 - **O9 / O10 — resolved 2026-08-19** as D36 (level requirements on gear) and D37 (the quick-use
   slot).
+- **O11 — The element roster.** Michael wants Fire/Earth/Electricity/Poison; his collaborator
+  wants the Avatar quartet Fire/Water/Earth/Air. Fire ships in M5 (it is in both sets); Earth is
+  also in both and is safe to author anytime. Resolving the roster also assigns each new
+  element's status and the chain-stun reaction pair (D41). Nothing technical blocks on it
+  (D38) — it is a content decision between Michael and his collaborator.
 - **O2 — Git LFS: deliberately deferred (Michael, 2026-08-18).** Working policy: a few hi-res
   hero assets plus lightweight placeholders live in plain git. Rules that keep this safe — no file
   near 100 MB (GitHub hard-rejects; warns at 50 MB), hero binaries are commit-rarely (iterate

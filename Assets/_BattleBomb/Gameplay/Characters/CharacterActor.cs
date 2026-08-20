@@ -83,6 +83,9 @@ namespace BattleBomb.Gameplay.Characters
         private float _shotSpeed = 12f;
         private int _quickUseCooldownSteps = 180;
         private PlayerInventory _bag;
+        private MagicKit _magic;
+        private MagicKit _activeMagic;
+        private bool _leapAvailable = true;
         private ElementId _infusion = ElementId.None;
         private float _infusionScale;
         private readonly List<GearContribution> _gearScratch = new List<GearContribution>();
@@ -220,7 +223,16 @@ namespace BattleBomb.Gameplay.Characters
                 }
             }
 
-            CombatStepResult combat = CombatMachine.Step(_combat, effective, _activeKit, _state.IsGrounded);
+            // The leap is once per airborne (D39): touching ground restores it, so it can never
+            // become an infinite mana-priced climb.
+            if (_state.IsGrounded)
+            {
+                _leapAvailable = true;
+            }
+
+            var magic = new MagicContext(_activeMagic, _mana.Current, _leapAvailable);
+            CombatStepResult combat = CombatMachine.Step(
+                _combat, effective, _activeKit, magic, _state.IsGrounded);
             _combat = combat.State;
             if (frozen)
             {
@@ -233,6 +245,17 @@ namespace BattleBomb.Gameplay.Characters
             if (_bag != null)
             {
                 _bag.Inventory.Step();
+            }
+
+            if (combat.CastStarted)
+            {
+                // The machine confirmed it was affordable; the pool is ours to spend (D39).
+                _mana = _mana.Spent(combat.ManaSpent);
+                if (combat.Cast == MagicCastKind.Leap)
+                {
+                    _leapAvailable = false;
+                    _state = WithLift(_state, combat.LiftSpeed);
+                }
             }
 
             if (combat.AttackStarted)
@@ -258,9 +281,12 @@ namespace BattleBomb.Gameplay.Characters
                 // and charging at their reduced speed, and an airborne swing hangs — vertical
                 // speed stays zeroed through startup and the hit window, recovery falls normally.
                 // The slam is the exception: it dives instead of hanging.
+                // The leap is the one airborne action that must not hang: its whole point is the
+                // climb, so a cast never stalls gravity.
                 bool stallGravity = !_state.IsGrounded
                     && (phase == AttackPhase.Startup || phase == AttackPhase.Active)
-                    && !_combat.CurrentAttack.ResolvesOnLanding;
+                    && !_combat.CurrentAttack.ResolvesOnLanding
+                    && !_combat.IsCasting;
                 MovementTuning tuning = stallGravity ? WithoutGravity(_activeTuning) : _activeTuning;
                 _state = CharacterMotor.Step(_state, CombatMove(effective, phase), tuning, bounds, dt);
                 StepAirLunge(bounds);
@@ -268,10 +294,16 @@ namespace BattleBomb.Gameplay.Characters
 
             if (combat.HitWindowOpened && _driver != null)
             {
-                // The bow's identity (D34/§2.2): a chain Light looses an arrow instead of a
-                // melee window; Heavy and the aerials keep their swings even with a bow worn.
-                if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
+                if (combat.Cast != MagicCastKind.None)
                 {
+                    // A cast resolves through the same geometry a swing does — the splash's line
+                    // in front, the aura's circle around — but priced as magic, not as a weapon.
+                    _driver.ResolveCast(this, combat.Attack, combat.Cast);
+                }
+                else if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
+                {
+                    // The bow's identity (D34/§2.2): a chain Light looses an arrow instead of a
+                    // melee window; Heavy and the aerials keep their swings even with a bow worn.
                     _driver.SpawnPlayerShot(this, combat.Attack);
                 }
                 else
@@ -371,6 +403,8 @@ namespace BattleBomb.Gameplay.Characters
             _mana = ManaPool.Full(_sheet.MaxMana);
             _combat = CombatState.Ready;
             _revive = ReviveChannel.Inactive;
+            Statuses.Clear();
+            _leapAvailable = true;
             _lungePerStep = Vector3.zero;
             _lungeStepsLeft = 0;
             _attackRooted = false;
@@ -554,6 +588,7 @@ namespace BattleBomb.Gameplay.Characters
             _weaponClass = weapon.IsEmpty ? WeaponClass.None : weapon.WeaponClass;
             _shotSpeed = weapon.ShotSpeed > 0f ? weapon.ShotSpeed : 12f;
             _activeKit = _kit.ScaledBySwingSpeed(_sheet.SwingSpeedMultiplier);
+            _activeMagic = _magic.ScaledByGear(_sheet.MagicDamage, _sheet.MagicRange);
             _activeTuning = ScaledSpeed(_tuning, _sheet.NetMoveSpeedMultiplier);
             _condition = _condition.Resized(_sheet.MaxHealth);
             _mana = _mana.Resized(_sheet.MaxMana);
@@ -571,6 +606,19 @@ namespace BattleBomb.Gameplay.Characters
 
             return false;
         }
+
+        /// <summary>
+        /// The leap's boost: vertical speed is replaced rather than added, so the climb is the same
+        /// whether it is spent rising or falling — the constant-promise rule D18 set for the base
+        /// jump, kept for the layered one.
+        /// </summary>
+        private static MotorState WithLift(in MotorState state, float liftSpeed) => new MotorState(
+            state.Position,
+            new Vector3(state.Velocity.x, liftSpeed, state.Velocity.z),
+            state.Facing,
+            false,
+            state.StepsSinceGrounded,
+            0);
 
         private static MovementTuning ScaledSpeed(in MovementTuning tuning, float multiplier) => new MovementTuning(
             tuning.MaxSpeed * Mathf.Max(0.05f, multiplier),
@@ -600,7 +648,10 @@ namespace BattleBomb.Gameplay.Characters
             _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
             _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
             _statTuning = _definition != null ? _definition.ToStatTuning() : StatTuning.Default;
+            _magic = _definition != null ? _definition.MagicKitToRuntime() : default;
+            _element = _definition != null ? _definition.Element : ElementId.None;
             _activeKit = _kit;
+            _activeMagic = _magic;
             _activeTuning = _tuning;
             _mana = ManaPool.Full(_statTuning.BaseMaxMana);
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);

@@ -108,6 +108,31 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Steps the quick-use slot rests after firing (D37).")]
         [SerializeField] private int _quickUseCooldownSteps = 180;
 
+        [Header("Magic (D39)")]
+        [Tooltip("The element this character casts (D38). Empty means they have no magic at all.")]
+        [SerializeField] private ElementDefinition _element;
+
+        [Tooltip("Mana one splash costs — the plain press.")]
+        [SerializeField] private int _splashManaCost = 20;
+
+        [Tooltip("Mana one aura costs — stick down. The crowd answer, priced like one.")]
+        [SerializeField] private int _auraManaCost = 45;
+
+        [Tooltip("Mana the elemental double jump costs — pressed airborne.")]
+        [SerializeField] private int _leapManaCost = 15;
+
+        [Tooltip("Upward speed the leap grants. 0 removes the double jump entirely.")]
+        [SerializeField] private float _leapLiftSpeed = 11f;
+
+        [Tooltip("Base damage of each cast before gear: splash, aura, leap.")]
+        [SerializeField] private float _splashDamage = 22f;
+        [SerializeField] private float _auraDamage = 30f;
+        [SerializeField] private float _leapDamage = 8f;
+
+        [Tooltip("Reach of the splash's line and radius of the aura, before magic-range gear.")]
+        [SerializeField] private float _splashReach = 3.2f;
+        [SerializeField] private float _auraRadius = 2.6f;
+
         public string DisplayName => _displayName;
 
         public float MaxHealth => Mathf.Max(1f, _maxHealth);
@@ -137,6 +162,40 @@ namespace BattleBomb.Gameplay.Data
 
         public CombatKit CombatKitToRuntime() =>
             _combatKit != null ? _combatKit.ToRuntime() : CombatKit.Default;
+
+        /// <summary>The character's element (D38), or None for a character with no magic.</summary>
+        public ElementId Element => _element != null ? _element.Id : ElementId.None;
+
+        /// <summary>
+        /// The three casts (D39), built on the paper kit's frame data with this character's
+        /// authored numbers. A character with no element has no magic: the button does nothing,
+        /// which is a legal character rather than a broken one.
+        /// </summary>
+        public MagicKit MagicKitToRuntime()
+        {
+            if (_element == null)
+            {
+                return default;
+            }
+
+            MagicKit paper = MagicKit.Default;
+            return new MagicKit(
+                Retuned(paper.Splash, _splashManaCost, _splashDamage, _splashReach, 0f),
+                Retuned(paper.Aura, _auraManaCost, _auraDamage, _auraRadius, 0f),
+                Retuned(paper.Leap, _leapManaCost, _leapDamage, paper.Leap.Attack.ReachX, _leapLiftSpeed));
+        }
+
+        private static MagicCast Retuned(
+            in MagicCast cast, int manaCost, float damage, float reach, float liftSpeed)
+        {
+            AttackTuning a = cast.Attack;
+            var tuned = new AttackTuning(
+                a.StartupSteps, a.ActiveSteps, a.RecoverySteps,
+                Mathf.Max(0f, damage), Mathf.Max(0.1f, reach), a.DepthTolerance,
+                a.LungeDistance, a.MaxTargets, a.KnockbackSpeed, a.LaunchSpeed, a.HitstopSteps,
+                a.MoveSpeedScale, a.ResolvesOnLanding, a.IsRadial);
+            return new MagicCast(tuned, manaCost, liftSpeed);
+        }
 
         /// <summary>The D32 per-point values, with this character's vitals as the base.</summary>
         public StatTuning ToStatTuning() => new StatTuning(

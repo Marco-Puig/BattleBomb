@@ -23,3 +23,38 @@ MonoBehaviour:
   _coyoteSteps: 6
   _jumpBufferSteps: 6
   _combatKit: {fileID: 11400000, guid: 416b20a6c2fc08047934ca2ed8a2befd, type: 2}
+  _maxHealth: 100
+  _hitStaggerSteps: 15
+  _hitGraceSteps: 30
+  _reviveRequiredProgress: 10
+  _reviveBeatSteps: 45
+  _reviveRushSteps: 15
+  _revivePumpDecaySteps: 60
+  _reviveMinHealthFraction: 0.25
+  _reviveMaxHealthFraction: 0.65
+  _reviveRange: 1.8
+  _reviveGraceSteps: 60
+  _healthPerPoint: 5
+  _baseMaxMana: 100
+  _manaPerPoint: 5
+  _baseManaRegen: 1
+  _unarmedDamage: 10
+  _damagePerStrengthPoint: 0.01
+  _moveSpeedPerPoint: 0.005
+  _moveSpeedCapBonus: 0.1
+  _slowResistPerOverCapPoint: 0.02
+  _slowResistCap: 0.75
+  _defenceCap: 0.7
+  _slowPerWeight: 0.012
+  _baseCritDamageMultiplier: 1.5
+  _quickUseCooldownSteps: 180
+  _element: {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
+  _splashManaCost: 20
+  _auraManaCost: 45
+  _leapManaCost: 15
+  _leapLiftSpeed: 11
+  _splashDamage: 22
+  _auraDamage: 30
+  _leapDamage: 8
+  _splashReach: 3.2
+  _auraRadius: 2.6

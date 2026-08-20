@@ -81,6 +81,9 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>The D36 level stamp's source — a constant until M7 builds real progress.</summary>
         private const int StoryProgressLevel = 1;
 
+        /// <summary>A cast leaves the element's full mark; a weapon infusion is a rolled share of it.</summary>
+        private const float CastSourceScale = 1f;
+
         private readonly PlayerRegistry _players = new PlayerRegistry();
         private readonly Dictionary<int, PlayerCommand> _commands = new Dictionary<int, PlayerCommand>();
         private readonly List<Vector3> _candidatePositions = new List<Vector3>();
@@ -665,6 +668,87 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         /// <summary>
+        /// A cast's hit window (D39). It uses the same reach geometry a swing does — the splash's
+        /// line in front, the aura's circle around the caster — but the damage is magic: the cast's
+        /// own number plus gear, never the weapon's, and never Strength (D32). The caster's element
+        /// rides every hit, so a cast marks and reacts exactly like an infused weapon does.
+        /// </summary>
+        internal void ResolveCast(CharacterActor caster, in AttackTuning cast, MagicCastKind kind)
+        {
+            CollectCandidates(caster, includePartners: true);
+            if (cast.IsRadial)
+            {
+                HitResolver.ResolveRadial(caster.Position, cast, _candidatePositions, _hitIndices);
+            }
+            else
+            {
+                HitResolver.Resolve(caster.Position, caster.Facing, cast, _candidatePositions, _hitIndices);
+            }
+
+            ElementId element = caster.Element;
+            int casterHitstop = 0;
+            for (int i = 0; i < _hitIndices.Count; i++)
+            {
+                Component owner = _candidateOwners[_hitIndices[i]];
+                if (owner is CharacterActor partner)
+                {
+                    // D21 holds for magic too: a partner caught in the blast is shoved, never
+                    // burned and never hurt. No damage resolves, so no number appears.
+                    HitResult shove = HitApplication.Apply(
+                        cast, caster.Position, caster.Facing, caster.StrikeMomentum,
+                        ElementId.None, 1f, TargetKind.Partner, partner.Position,
+                        ElementalDefence.None, ElementalMultipliers.Neutral);
+                    partner.ApplyImpulse(shove.Impulse);
+                    HitLanded?.Invoke(new HitEvent(caster, partner, 0f, partner.Position, true));
+                    continue;
+                }
+
+                ISimTarget target = owner as ISimTarget;
+                EnemyActor enemy = owner as EnemyActor;
+                TrainingDummy dummy = owner as TrainingDummy;
+                if (target == null)
+                {
+                    continue;
+                }
+
+                ElementalDefence defence = enemy != null ? enemy.Defence : ElementalDefence.None;
+                _combatRng = _combatRng.NextFloat(out float critDraw);
+                bool crit = critDraw < caster.Sheet.CritChance;
+                float gear = crit ? caster.Sheet.CritDamageMultiplier : 1f;
+
+                HitResult hit = HitApplication.Apply(
+                    cast, caster.Position, caster.Facing, caster.StrikeMomentum,
+                    element, gear, TargetKind.Enemy, target.Position, defence, _climate);
+                float knockback = caster.Sheet.KnockbackMultiplier;
+                if (!Mathf.Approximately(knockback, 1f))
+                {
+                    hit = new HitResult(hit.Damage, hit.Impulse * knockback, hit.HitstopSteps);
+                }
+
+                if (enemy != null)
+                {
+                    enemy.ApplyHit(hit);
+                }
+                else
+                {
+                    dummy.ApplyHit(hit);
+                }
+
+                StealLife(caster, hit.Damage);
+                casterHitstop = Mathf.Max(casterHitstop, hit.HitstopSteps);
+                HitLanded?.Invoke(new HitEvent(caster, owner, hit.Damage, target.Position, false, crit));
+                ApplyElementalRider(
+                    element, CastSourceScale, enemy != null ? enemy.Statuses : null, defence,
+                    hit.Damage, owner, target.Position);
+            }
+
+            if (casterHitstop > 0)
+            {
+                caster.ApplyHitstop(casterHitstop);
+            }
+        }
+
+        /// <summary>
         /// One player hit through the M4 build (D32/D35): the weapon's damage scale feeds the
         /// pipeline's gear slot, the combat stream prices the crit — always drawn, so the stream
         /// never depends on the chance — and knockback affixes scale the shove.
@@ -771,6 +855,9 @@ namespace BattleBomb.Gameplay.Simulation
                 float landed = victim.ApplyEnemyHit(hit);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
                 HitLanded?.Invoke(new HitEvent(attacker, victim, landed, victim.Position, false));
+                ApplyElementalRider(
+                    attacker.Spec.Tuning.Element, CastSourceScale, victim.Statuses, victim.Defence,
+                    landed, victim, victim.Position);
             }
 
             if (attackerHitstop > 0)
@@ -861,6 +948,11 @@ namespace BattleBomb.Gameplay.Simulation
                     float landed = victim.ApplyEnemyHit(new HitResult(
                         damage, direction * ProjectileKnockback, ProjectileHitstop));
                     HitLanded?.Invoke(new HitEvent(null, victim, landed, victim.Position, false));
+
+                    // D40's other direction: a caster's bolt marks the player it lands on.
+                    ApplyElementalRider(
+                        p.Element, CastSourceScale, victim.Statuses, victim.Defence,
+                        landed, victim, victim.Position);
                     _projectiles.RemoveAt(i);
                     continue;
                 }

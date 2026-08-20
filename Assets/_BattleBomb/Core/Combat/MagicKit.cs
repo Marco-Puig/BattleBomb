@@ -88,6 +88,40 @@ namespace BattleBomb.Core.Combat
             return stick.y <= AuraStickThreshold ? MagicCastKind.Aura : MagicCastKind.Splash;
         }
 
+        /// <summary>
+        /// The kit as gear makes it (D39): magic damage and magic range are flat additions to
+        /// every cast, which is the entire caster build — Strength never reaches here (D32), so
+        /// what a character's magic is worth is decided in loot.
+        /// </summary>
+        public MagicKit ScaledByGear(float bonusDamage, float bonusRange)
+        {
+            if (bonusDamage <= 0f && bonusRange <= 0f)
+            {
+                return this;
+            }
+
+            return new MagicKit(
+                Boosted(Splash, bonusDamage, bonusRange),
+                Boosted(Aura, bonusDamage, bonusRange),
+                Boosted(Leap, bonusDamage, bonusRange));
+        }
+
+        private static MagicCast Boosted(in MagicCast cast, float bonusDamage, float bonusRange)
+        {
+            if (!cast.IsAuthored)
+            {
+                return cast;
+            }
+
+            AttackTuning a = cast.Attack;
+            var boosted = new AttackTuning(
+                a.StartupSteps, a.ActiveSteps, a.RecoverySteps,
+                a.Damage + bonusDamage, a.ReachX + bonusRange, a.DepthTolerance,
+                a.LungeDistance, a.MaxTargets, a.KnockbackSpeed, a.LaunchSpeed, a.HitstopSteps,
+                a.MoveSpeedScale, a.ResolvesOnLanding, a.IsRadial);
+            return new MagicCast(boosted, cast.ManaCost, cast.LiftSpeed);
+        }
+
         /// <summary>The paper kit (D39): a splash ahead, an aura around, a leap up.</summary>
         public static MagicKit Default => new MagicKit(
             new MagicCast(

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Caster
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.EnemyDefinition
   _archetype: 2
-  _element: 0
+  _element: {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
   _attack:
     _startupSteps: 36
     _activeSteps: 1
@@ -46,7 +46,4 @@ MonoBehaviour:
   _maxHealth: 25
   _rank: 3
   _xpReward: 20
-  _resistFire: 1
-  _resistWater: 1
-  _resistElectric: 1
-  _resistEarth: 1
+  _resistances: []

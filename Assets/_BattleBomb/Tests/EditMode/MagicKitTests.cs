@@ -209,6 +209,39 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Gear_adds_flat_damage_and_reach_to_every_cast()
+        {
+            MagicKit geared = Magic.ScaledByGear(bonusDamage: 12f, bonusRange: 1.5f);
+
+            Assert.That(geared.Splash.Attack.Damage, Is.EqualTo(Magic.Splash.Attack.Damage + 12f));
+            Assert.That(geared.Aura.Attack.ReachX, Is.EqualTo(Magic.Aura.Attack.ReachX + 1.5f),
+                "Magic range is the aura's radius as much as the splash's length.");
+            Assert.That(geared.Leap.Attack.Damage, Is.EqualTo(Magic.Leap.Attack.Damage + 12f));
+        }
+
+        [Test]
+        public void Gear_never_changes_what_a_cast_costs_or_how_it_is_shaped()
+        {
+            MagicKit geared = Magic.ScaledByGear(50f, 5f);
+
+            Assert.That(geared.Aura.ManaCost, Is.EqualTo(Magic.Aura.ManaCost),
+                "Gear makes magic stronger, never cheaper.");
+            Assert.That(geared.Aura.Attack.IsRadial, Is.True);
+            Assert.That(geared.Leap.LiftSpeed, Is.EqualTo(Magic.Leap.LiftSpeed));
+            Assert.That(geared.Splash.Attack.TotalSteps, Is.EqualTo(Magic.Splash.Attack.TotalSteps),
+                "And never faster — swing speed is the weapon's stat, not magic's.");
+        }
+
+        [Test]
+        public void A_bare_build_leaves_the_kit_exactly_as_authored()
+        {
+            MagicKit geared = Magic.ScaledByGear(0f, 0f);
+
+            Assert.That(geared.Splash.Attack.Damage, Is.EqualTo(Magic.Splash.Attack.Damage));
+            Assert.That(geared.Aura.Attack.ReachX, Is.EqualTo(Magic.Aura.Attack.ReachX));
+        }
+
+        [Test]
         public void The_old_two_argument_step_still_behaves_exactly_as_it_did()
         {
             CombatStepResult result = CombatMachine.Step(

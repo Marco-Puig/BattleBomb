@@ -192,101 +192,141 @@ namespace BattleBomb.Gameplay.Simulation
 
             while (_clock.TryConsumeStep(out int frame))
             {
-                _players.SampleAll(frame, _commands);
+                RunStep(frame);
+            }
+        }
 
-                IReadOnlyList<CharacterActor> actors = Characters.Ordered;
-                ArenaBounds bounds = Bounds;
-                for (int i = 0; i < actors.Count; i++)
+        /// <summary>
+        /// One fixed simulation step, as an ordered list of named phases. The order is the design:
+        /// intent is sampled before anything moves, players act before the enemies who react to
+        /// them, bodies separate only once every motor has run, and the world's bookkeeping —
+        /// flight, death, loot, the attempt — settles before presentation is told the step happened.
+        /// Adding a phase means adding a line here, in the place its ordering requires.
+        /// </summary>
+        private void RunStep(int frame)
+        {
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            ArenaBounds bounds = Bounds;
+
+            SampleCommands(frame);
+            StepPlayers(frame, actors, bounds);
+            CapturePlayerSnapshot(actors);
+            StepEnemies(frame, actors, bounds);
+            SeparateBodies(actors, bounds);
+            StepProjectiles(actors, StepDuration);
+            ResolveDeaths();
+            StepPickups();
+            StepAttemptFlow(actors);
+            Stepped?.Invoke(frame);
+        }
+
+        /// <summary>Every player's intent for this step — commands, never polling (D10).</summary>
+        private void SampleCommands(int frame) => _players.SampleAll(frame, _commands);
+
+        /// <summary>
+        /// Each player acts on their command, in registry order (D10). Contextual Light is resolved
+        /// here by handing the actor what is in reach — a downed partner, a drop — and applying
+        /// what it reports back: one actor never reaches across and rewrites another.
+        /// </summary>
+        private void StepPlayers(int frame, IReadOnlyList<CharacterActor> actors, in ArenaBounds bounds)
+        {
+            for (int i = 0; i < actors.Count; i++)
+            {
+                CharacterActor actor = actors[i];
+                PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
+                    ? sampled
+                    : PlayerCommand.Idle(frame);
+                int grabTarget = FindGrabTarget(actor);
+                ActorStepResult result = actor.Step(
+                    frame, command, bounds, StepDuration,
+                    FindReviveTarget(actors, i), grabTarget >= 0);
+                if (result.RevivedPartner >= 0 && result.RevivedPartner < actors.Count)
                 {
-                    CharacterActor actor = actors[i];
-                    PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
-                        ? sampled
-                        : PlayerCommand.Idle(frame);
-                    int grabTarget = FindGrabTarget(actor);
-                    ActorStepResult result = actor.Step(
-                        frame, command, bounds, StepDuration,
-                        FindReviveTarget(actors, i), grabTarget >= 0);
-                    if (result.RevivedPartner >= 0 && result.RevivedPartner < actors.Count)
-                    {
-                        actors[result.RevivedPartner].ApplyRevive(result.ReviveFraction);
-                    }
-
-                    if (result.GrabbedLoot && grabTarget >= 0 && grabTarget < _pickups.Count
-                        && _pickups[grabTarget] != null)
-                    {
-                        int id = actor.PlayerId.Value;
-                        _grabCounts[id] = GrabCountFor(id) + 1;
-                        PlayerInventory bag = actor.GetComponent<PlayerInventory>();
-                        if (bag != null && bag.Take(_pickups[grabTarget].Item))
-                        {
-                            actor.RefreshStats();
-                        }
-
-                        Destroy(_pickups[grabTarget].gameObject);
-                        _pickups.RemoveAt(grabTarget);
-                    }
+                    actors[result.RevivedPartner].ApplyRevive(result.ReviveFraction);
                 }
 
-                // What the enemies may know this step (their perception is built from this).
-                _playerPositions.Clear();
-                _playerDowned.Clear();
-                for (int i = 0; i < actors.Count; i++)
+                if (result.GrabbedLoot && grabTarget >= 0 && grabTarget < _pickups.Count
+                    && _pickups[grabTarget] != null)
                 {
-                    _playerPositions.Add(actors[i].Position);
-                    _playerDowned.Add(actors[i].Condition.IsDown);
-                }
-
-                // D28's turn-taking: count who already holds each player's melee attack token,
-                // then walk the registry order — waiting melee hovers and circles instead.
-                _attackTokens.Clear();
-                for (int i = 0; i < actors.Count; i++)
-                {
-                    _attackTokens.Add(0);
-                }
-
-                IReadOnlyList<ISimTarget> targets = Targets.Ordered;
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    if (targets[i] is EnemyActor holder && !holder.IsDepleted
-                        && holder.TakesMeleeTurns && holder.IsAttacking
-                        && holder.TargetIndex >= 0 && holder.TargetIndex < _attackTokens.Count)
+                    int id = actor.PlayerId.Value;
+                    _grabCounts[id] = GrabCountFor(id) + 1;
+                    PlayerInventory bag = actor.GetComponent<PlayerInventory>();
+                    if (bag != null && bag.Take(_pickups[grabTarget].Item))
                     {
-                        _attackTokens[holder.TargetIndex] += 1;
+                        actor.RefreshStats();
+                    }
+
+                    Destroy(_pickups[grabTarget].gameObject);
+                    _pickups.RemoveAt(grabTarget);
+                }
+            }
+        }
+
+        /// <summary>
+        /// What the enemies may know this step: player positions and who is down. Taken once, after
+        /// the players have moved, and read by every phase that follows — enemy perception, their
+        /// melee resolution, and the attempt countdown all see the same picture of the step.
+        /// </summary>
+        private void CapturePlayerSnapshot(IReadOnlyList<CharacterActor> actors)
+        {
+            _playerPositions.Clear();
+            _playerDowned.Clear();
+            for (int i = 0; i < actors.Count; i++)
+            {
+                _playerPositions.Add(actors[i].Position);
+                _playerDowned.Add(actors[i].Condition.IsDown);
+            }
+        }
+
+        /// <summary>
+        /// Every enemy acts, under D28's turn-taking: count who already holds each player's melee
+        /// attack token, then walk the registry order handing out what is left — melee without a
+        /// token hovers and circles instead of queueing up on the player's face. Brutes never wait.
+        /// Dummies are stepped here too; they are tuning props on the same clock.
+        /// </summary>
+        private void StepEnemies(int frame, IReadOnlyList<CharacterActor> actors, in ArenaBounds bounds)
+        {
+            _attackTokens.Clear();
+            for (int i = 0; i < actors.Count; i++)
+            {
+                _attackTokens.Add(0);
+            }
+
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] is EnemyActor holder && !holder.IsDepleted
+                    && holder.TakesMeleeTurns && holder.IsAttacking
+                    && holder.TargetIndex >= 0 && holder.TargetIndex < _attackTokens.Count)
+                {
+                    _attackTokens[holder.TargetIndex] += 1;
+                }
+            }
+
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] is EnemyActor enemy)
+                {
+                    bool mayAttack = true;
+                    if (enemy.TakesMeleeTurns && !enemy.IsAttacking)
+                    {
+                        int target = enemy.TargetIndex;
+                        mayAttack = target < 0 || target >= _attackTokens.Count
+                            || _attackTokens[target] < MaxMeleeAttackersPerTarget;
+                    }
+
+                    bool started = enemy.Step(
+                        frame, _playerPositions, _playerDowned, mayAttack, bounds, StepDuration);
+                    if (started && enemy.TakesMeleeTurns
+                        && enemy.TargetIndex >= 0 && enemy.TargetIndex < _attackTokens.Count)
+                    {
+                        _attackTokens[enemy.TargetIndex] += 1;
                     }
                 }
-
-                for (int i = 0; i < targets.Count; i++)
+                else if (targets[i] is TrainingDummy dummy)
                 {
-                    if (targets[i] is EnemyActor enemy)
-                    {
-                        bool mayAttack = true;
-                        if (enemy.TakesMeleeTurns && !enemy.IsAttacking)
-                        {
-                            int target = enemy.TargetIndex;
-                            mayAttack = target < 0 || target >= _attackTokens.Count
-                                || _attackTokens[target] < MaxMeleeAttackersPerTarget;
-                        }
-
-                        bool started = enemy.Step(
-                            frame, _playerPositions, _playerDowned, mayAttack, bounds, StepDuration);
-                        if (started && enemy.TakesMeleeTurns
-                            && enemy.TargetIndex >= 0 && enemy.TargetIndex < _attackTokens.Count)
-                        {
-                            _attackTokens[enemy.TargetIndex] += 1;
-                        }
-                    }
-                    else if (targets[i] is TrainingDummy dummy)
-                    {
-                        dummy.Step(frame, bounds, StepDuration);
-                    }
+                    dummy.Step(frame, bounds, StepDuration);
                 }
-
-                SeparateBodies(actors, bounds);
-                StepProjectiles(actors, StepDuration);
-                ResolveDeaths();
-                StepPickups(actors);
-                StepAttemptFlow(actors);
-                Stepped?.Invoke(frame);
             }
         }
 
@@ -420,7 +460,8 @@ namespace BattleBomb.Gameplay.Simulation
             return best;
         }
 
-        private void StepPickups(IReadOnlyList<CharacterActor> players)
+        /// <summary>Drops whose token was destroyed this step leave the list.</summary>
+        private void StepPickups()
         {
             for (int i = _pickups.Count - 1; i >= 0; i--)
             {

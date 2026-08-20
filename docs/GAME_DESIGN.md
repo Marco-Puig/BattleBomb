@@ -89,7 +89,7 @@ then the authored assets in `Assets/_BattleBomb/Data/Combat/` are the reference.
   (extended "air tech" is a future skill ceiling). Jump→Heavy slams an AoE where the grounded
   shadow marks the landing.
 - **Magic is one press.** No charged casts, no chain-into-magic finishers. Fuelled by slowly
-  regenerating mana; regen and capacity are gear stats (§5).
+  regenerating mana; capacity is a base stat, regen is a gear stat (§5, D32).
 
 ### 2.7 Defence (D26)
 
@@ -117,7 +117,7 @@ element, VFX, and small tuning values — the Castle Crashers model, stated expl
 | Basic attack | **Light** | Grounded melee combo chain. The default verb; performs **Interact** when an interactable is in range. |
 | Heavy attack | **Heavy** | Slower, cleaves a crowd, longer lunge; hold to charge a bigger single-target hit (§2.6). As the `L-L-H` combo ender it launches. |
 | Elemental attack | **Magic** | The character's element expressed offensively (§4). |
-| Equipment use | **Equipment** | Two equipped slots with **passive** effects (D27) — no deployables, no progression keys; potions are inventory instant-use. Spice, never the meta (D19). The button itself now has nothing to activate — whether the verb survives is **O10**. |
+| Quick-use | **Quick-use** | Fires the one quick-use slot: a consumable (health potions most commonly) or a worn equipment piece with an active (D37). Equipment itself is two worn slots, passive by default, some pieces carrying an active with derived damage and a real cooldown (D27 as amended). Spice, never the meta (D19). |
 | Jump | **Jump** | Shared, universal (§2.4). |
 
 ### 3.1 Controls
@@ -131,7 +131,7 @@ Five verbs after the movement stick — the complete input surface, sized for on
 | Light | J | X (west) |
 | Heavy | K | Y (north) |
 | Magic | L | B (east) |
-| Equipment | I | RB (right shoulder) |
+| Quick-use | I | RB (right shoulder) |
 | Jump | Space | A (south) |
 
 There is **no dodge button and no block button** — evasion and defence are jump (§2.4), free depth
@@ -180,46 +180,76 @@ Earth.
 The retention engine. Depth here is intentional and unbounded, unlike combat.
 
 **Terminology, binding (D19):** *gear* = armor + weapon, the build this section describes;
-*Equipment* = the two-slot passive loadout (D27 — the button it once activated is O10). Bows are
-**weapons**, a deliberate ranged weapon class, never equipment; potions are inventory instant-use.
+*Equipment* = the two-slot worn loadout, passive by default with some actives (D27, D37). Bows are
+**weapons**, a deliberate ranged weapon class, never equipment; potions are consumables, fired
+mid-fight from the quick-use slot (D37).
 
-### 5.1 Axes
+### 5.1 The quality ladder (D33)
 
-- **Tier** — caps maximum potential. Low-tier gear cannot reach high-tier ceilings regardless of rolls.
-- **Quality / rarity** — better stat rolls *and* more customization surface.
-- **Add-ons / enchants** — the min/max layer. Rarer items afford more of it.
+One player-facing ladder carries the whole arc — the hook's tier and quality axes, merged:
 
-### 5.2 Slots and attributes
+**Nothing < Battlescarred < Torn < Rusty < Shiny < Pristine < Legendary < Mythical < Godly**
 
-**Slots** (from the 2019 `ItemType`, ⚠ confirm): Helmet, Chest, Pants, Boots, Gloves, Weapon, Pet,
-plus Food as a consumable.
+Each rank does three jobs at once: a **stat budget** multiplier, an **affix count** (a rolled
+range capping at 3–4 on Godly — even a Godly can come up short), and **upgrade capacity** (§5.3).
+Progress and difficulty push drops up the ladder; within a rank, the rolls vary. Materials are
+name flavor ("Shiny Leather Chestplate", "Rusty Steel Helmet"), never a hidden axis; weapons start
+plain and grow Destiny-style signature names as content, boss drops especially.
 
-**Attributes** (from the 2019 `Attributes`, ⚠ confirm): Strength, Agility, Intellect, Stamina.
+### 5.2 Slots and stats (D32, D34, D35)
 
-### 5.3 Generation
+**Gear slots:** Helmet, Chest, Boots, Weapon, Pet — plus the two worn equipment pieces and one
+quick-use slot.
+
+**Base stats** — the character, leveled with allocated points (D32): **Strength** (+% weapon
+damage), **HP** (pure pool — resistance is gear's job), **Mana** (capacity — regen lives on gear),
+**Speed** (hard velocity cap; over-cap points shrink slows, armor weight and combat effects alike).
+
+**Gear stats are direct and concrete.** Core stats every item of a slot has: weapons roll Damage +
+Swing Speed (bows: Draw and Shot Speed); armor rolls **Defence** (% reduction — additive, a
+max-tank build caps ~70% and a max-lightweight ~30% at top rolls, both scaling down the ladder)
++ **Weight** (the speed tax; tankier rolls weigh more). The affix pool: Crit Chance, Crit Damage,
+Life Steal, +Max HP, +Max Mana, Mana Regen, Reduced Weight, Knockback Power, plus the M5-reserved
+group (Magic Damage, Magic Range, Elemental Resistance, Weapon Infusion element).
+
+**Weapon classes:** Sword (the whole D19 kit) and Bow (Light becomes a shot — weaker per hit,
+crossing depth freely per §2.2). **Pets** come in three classes (D34): attackers, stat pets, and
+uniques with one bespoke effect each.
+
+### 5.3 Generation and the min/max layer (D35, D36)
 
 ```
-tier + quality  →  stat ranges  →  roll  →  affix slot count  →  affix selection  →  item
+drop context → quality rank → kind → definition → core stat rolls → affix rolls → required level → item
 ```
 
 Entirely **pure logic with no scene dependency**. It lives in Core, is covered by EditMode tests, and
 is called identically by story and endless modes. This is the highest-value test surface in the
 project — loot bugs are subtle, compounding, and destroy trust in the chase.
 
-### 5.4 Drops (D23)
+The min/max layer is both halves of the inheritance: **affixes roll at the drop and are immutable**
+(the Diablo half — hunting the right combination), while **upgrade capacity** scales with quality
+and is spent by the player after the drop, raising stats of their choice (the Dungeon Defenders
+half — the spend flow lands with M6). Every item is stamped a **required level** from its drop
+context, enforced at equip (D36).
+
+### 5.4 Drops (D23, D30)
 
 Drops are **shared and free-grab**: one roll per drop, it lands in the world, whoever grabs it
 keeps it. **Chance** scales with enemy rank; **quality** scales with story progress × difficulty ×
 active multipliers, elites adding ~5–10% on top. **Bosses always drop an authored signature item**
-at a quality floor well above the level's norm.
+at a quality floor well above the level's norm. A drop is **inspected and taken, never hoovered**
+(D30): walking over it shows the item card, Light grabs it deliberately, and it lands in the
+inventory by default — auto-equip is a setting.
 
-### 5.5 Character progression (D24)
+### 5.5 Character progression (D24, D32, D36)
 
 Leveling **never caps** — the main differentiator from Castle Crashers and Dungeon Defenders.
-Levels run 1–99, then **prestige**: back to 1 with one permanent stat point and a visible prestige
-badge, each cycle costing more XP than the last. The reward per cycle is deliberately small — only
-the most dedicated players are noticeably stronger — so gear remains the dominant power source
-(pillar 2) while the ladder itself never ends.
+Levels run 1–99 granting **one allocatable stat point each** (D32), then **prestige**: back to
+level 1, allocations reset, banking one permanent stat point and a visible prestige badge, each
+cycle costing more XP than the last. Level-required gear re-locks at that moment and returns as
+the climb re-earns it (D36) — the fresh start is real twice over. The per-cycle reward is
+deliberately small — only the most dedicated players are noticeably stronger — so gear remains the
+dominant power source (pillar 2) while the ladder itself never ends.
 
 ---
 

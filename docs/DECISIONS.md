@@ -674,20 +674,119 @@ button mash with very little hp."
 
 ---
 
+## D32 — The stat language: four base stats, direct gear stats · **Locked** *(amends D19, refines D24)*
+
+Directed by Michael in the M4 design session (2026-08-19). The split honors both halves of the
+hook: leveling feels Castle Crashers, loot reads Dungeon Defenders.
+
+- **Base stats**, leveled with allocated points: **Strength** (+% weapon damage), **HP** (pure
+  health pool — resistance is gear's job), **Mana** (capacity only), **Speed**. Paper: +1% damage,
+  +5 HP, +5 mana, +0.5% move speed per point — all authored data.
+- **Speed has a hard velocity cap.** Points past the cap never raise velocity — they shrink
+  **speed penalties**, armor weight and combat slows alike (paper: 2% per over-cap point, resist
+  capped at 75% so slows always matter a little).
+- **One point per level, player-allocated** — the Castle Crashers allocate screen. **Prestige
+  resets allocations along with the level** and banks +1 permanent point (D24 refined: a cycle's
+  ~98 points are re-earned every climb — that reset is half of what makes the fresh start real;
+  D36 is the other half).
+- **Gear rolls direct concrete stats**, never attributes — D35's catalog.
+- **Amends D19:** mana *capacity* is a base stat; *regen* stays a gear stat.
+
+---
+
+## D33 — One quality ladder: nine ranks carry the whole arc · **Locked**
+
+Directed by Michael (2026-08-19). The hook's tier and quality axes merge into one player-facing
+ladder:
+
+**Nothing < Battlescarred < Torn < Rusty < Shiny < Pristine < Legendary < Mythical < Godly.**
+
+- Each rank does **three jobs at once**: a stat budget multiplier, an affix count (a rolled range
+  capping at **3–4 on Godly** — even a Godly can come up short), and upgrade capacity (D35).
+  Paper table lives in `HANDOFF-M4.md`.
+- **Progress and difficulty push drops up the ladder** — D23's continuous quality score maps onto
+  a rank through authored thresholds, so M3's tested `DropRoll` feeds the ladder unchanged.
+  Finding your first Legendary *is* progression.
+- **Materials are name flavor, never a hidden axis** — "Shiny Leather Chestplate," "Rusty Steel
+  Helmet." Weapons start plain ("Pristine Hunting Bow," "Legendary Hunting Knife"); Destiny-style
+  signature names are planned content, boss drops especially.
+
+---
+
+## D34 — Slots: a lean five, plus the worn loadout · **Locked**
+
+Directed by Michael (2026-08-19), trimming the 2019 list (Helmet, Chest, Pants, Boots, Gloves,
+Weapon, Pet).
+
+- **Gear slots: Helmet, Chest, Boots, Weapon, Pet.** Every drop is chunky, and a region armor set
+  is three art pieces (D22's elites visibly wear what they drop).
+- **Weapon classes: Sword and Bow** through the vertical slice. A bow turns Light into a shot
+  through M3's projectile simulation — weaker per hit, crossing depth freely (§2.2's ranged
+  identity). Class is a data field; more classes are content, never code.
+- **Pets come in three classes**, all data: **attackers** (fight their own way, minimal stats),
+  **stat pets** (pure character boost), and **uniques** (one bespoke designed-in effect — e.g.
+  +0.1% to prestige stats). M4 ships stat pets end to end; attacker behaviour (an ally brain) and
+  unique effects are deferred to their own design moment.
+- Alongside gear: two worn equipment pieces (D27) and one quick-use slot (D37).
+
+---
+
+## D35 — Gear stats and the min/max layer: Diablo rolls, DD investment · **Locked**
+
+Directed by Michael (2026-08-19): *"I like the Diablo model, however upgrade capacity increases
+with quality as well."*
+
+- **Core stats** every item of a slot always has: weapons roll Damage + Swing Speed (bows: Draw
+  Speed and Shot Speed); armor rolls **Defence** (D26's stat, % damage reduction) + **Weight**
+  (the speed tax — tankier rolls weigh more).
+- **Affixes roll at the drop and are immutable** — present-or-absent per item, count from D33's
+  range. Live in M4: Crit Chance, Crit Damage, Life Steal, +Max HP, +Max Mana, Mana Regen,
+  Reduced Weight, Knockback Power. Generated but neutral until M5: Magic Damage, Magic Range,
+  Elemental Resistance, Weapon Infusion element.
+- **Upgrade capacity scales with quality** — the Dungeon Defenders half. M4 stamps it on the
+  instance; the flow that spends it (player-chosen stat raises, a currency sink) lands with M6.
+- **Defence spectrum:** additive across pieces. At top-quality rolls a max-tank build caps at
+  ~70% reduction and a max-lightweight build lands around ~30%, both ends scaling down with
+  lesser quality. Defence and weight travel together on armor rolls, so the spectrum *is* the
+  build choice. Fine-tuning explicitly expected.
+- **Equipment drops from the same generator** — one loot pipeline. The catalog (each piece's
+  passive, optional active) is authored content; which piece drops and how it rolled is the
+  generator's job.
+
+---
+
+## D36 — O9 resolved: level requirements on gear · **Locked**
+
+Directed by Michael (2026-08-19), confirming the proposal on file.
+
+- Every item is stamped a **required level** from its drop context — gear from level-40 content
+  asks for level 40. Equip validation enforces it.
+- **Prestige to level 1 re-locks the stash**, and it comes back online continuously as levels are
+  re-earned. The fresh start is real, the loot grind is never invalidated, and there is no chunky
+  progress-chest recovery — the concern that killed the chest proposal.
+
+---
+
+## D37 — O10 resolved: the Equipment button is the quick-use slot · **Locked** *(amends D27)*
+
+Directed by Michael (2026-08-19).
+
+- The button survives, repurposed: it fires **one quick-use slot**, which holds **a consumable or
+  a worn equipment piece with an active**. Health potions will be the most common tenant —
+  mid-fight healing never opens a menu.
+- **Amends D27:** *some* equipment carries an active effect; worn effects stay passive by
+  default. D19's structural guards return for actives — damage **derived** from weapon damage,
+  **real cooldowns** — so an active can never outgrow the build.
+- The five-verb surface stands: Light, Heavy, Magic, Quick-use, Jump. The input action keeps its
+  binding (I / RB); only its meaning changed.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).
-- **O10 — The Equipment verb after D27 (2026-08-18).** Passive equipment leaves the Equipment
-  button without a function: potions bypass it (inventory instant-use) and nothing else activates.
-  Candidate resolution: cut the verb — four buttons (Light, Heavy, Magic, Jump), which hands back
-  exactly the mobile control-budget headroom that put Heavy on watch in D26. Michael to rule.
-- **O9 — Prestige must feel like a fresh start without invalidating the loot grind
-  (2026-08-18).** D24 resets the level, but endgame gear carries, so a prestiged player stomps the
-  early game and the reset is theatre. Michael and his collaborator floated story-milestone
-  "progress chests" that return old gear — and flagged their own concern: chunky recovery means
-  the fresh start only lasts until the first chest. Proposal under discussion: **level
-  requirements on gear**, so prestige-to-level-1 re-locks the stash and it comes back online
-  continuously as the level is re-earned. Resolves with M4's item design.
+- **O9 / O10 — resolved 2026-08-19** as D36 (level requirements on gear) and D37 (the quick-use
+  slot).
 - **O2 — Git LFS: deliberately deferred (Michael, 2026-08-18).** Working policy: a few hi-res
   hero assets plus lightweight placeholders live in plain git. Rules that keep this safe — no file
   near 100 MB (GitHub hard-rejects; warns at 50 MB), hero binaries are commit-rarely (iterate

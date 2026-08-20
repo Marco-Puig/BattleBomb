@@ -142,6 +142,16 @@ namespace BattleBomb.Gameplay.Characters
         /// <summary>The elements currently marking them (D40) — enemies burn players too.</summary>
         public StatusTrack Statuses { get; } = new StatusTrack();
 
+        /// <summary>What the plain Magic press costs right now, for the HUD to mark on the pool.</summary>
+        public float SplashManaCost => _activeMagic.Splash.IsAuthored ? _activeMagic.Splash.ManaCost : 0f;
+
+        /// <summary>The cast currently resolving, for Presentation to draw. None most of the time.</summary>
+        public MagicCastKind ActiveCast =>
+            _combat.Phase == AttackPhase.Active ? _combat.CurrentCast : MagicCastKind.None;
+
+        /// <summary>The shape of the cast in flight — reach, radius, depth — as gear made it.</summary>
+        public AttackTuning CurrentCastTuning => _combat.CurrentAttack;
+
         /// <summary>Authored attack damage × this = final base damage; unarmed is exactly 1.</summary>
         internal float DamageScale => _damageScale;
 

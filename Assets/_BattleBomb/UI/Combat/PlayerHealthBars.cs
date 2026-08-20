@@ -99,6 +99,20 @@ namespace BattleBomb.UI.Combat
                     GUI.DrawTexture(new Rect(back.x, back.yMax + 6f, back.width, 4f), Texture2D.whiteTexture);
                     GUI.color = new Color(0.3f, 0.55f, 1f);
                     GUI.DrawTexture(new Rect(back.x, back.yMax + 6f, back.width * manaFraction, 4f), Texture2D.whiteTexture);
+
+                    // The splash's price, marked on the pool: what a press costs is visible
+                    // before it is pressed, so an empty pool never reads as a broken button (D39).
+                    float cost = players[i].SplashManaCost;
+                    if (cost > 0f && players[i].Mana.Max > 0f)
+                    {
+                        float costFraction = Mathf.Clamp01(cost / players[i].Mana.Max);
+                        GUI.color = manaFraction >= costFraction
+                            ? new Color(1f, 1f, 1f, 0.65f)
+                            : new Color(1f, 0.35f, 0.3f, 0.9f);
+                        GUI.DrawTexture(
+                            new Rect(back.x + back.width * costFraction, back.yMax + 5f, 1.5f, 6f),
+                            Texture2D.whiteTexture);
+                    }
                 }
 
                 GUI.color = restore;

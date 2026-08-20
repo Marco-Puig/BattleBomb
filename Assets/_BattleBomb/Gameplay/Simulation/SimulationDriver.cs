@@ -142,6 +142,26 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>This area's climate (D41): it scales elemental damage from every side.</summary>
         public ElementalMultipliers Climate => _climate;
 
+        /// <summary>
+        /// An element's authored colour, for Presentation to tint with (D38). A new element brings
+        /// its own colour, so nothing downstream carries a palette that has to be kept in sync.
+        /// </summary>
+        public Color ColorOf(ElementId element)
+        {
+            if (_elementCatalog != null)
+            {
+                for (int i = 0; i < _elementCatalog.Length; i++)
+                {
+                    if (_elementCatalog[i] != null && _elementCatalog[i].Id == element)
+                    {
+                        return _elementCatalog[i].Color;
+                    }
+                }
+            }
+
+            return Color.white;
+        }
+
         public PlayerRegistry Players => _players;
 
         public CharacterRegistry Characters { get; } = new CharacterRegistry();

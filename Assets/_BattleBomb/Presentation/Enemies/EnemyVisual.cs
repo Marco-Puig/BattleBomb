@@ -102,10 +102,18 @@ namespace BattleBomb.Presentation.Enemies
             float windup = _enemy.Phase == EnemyPhase.Telegraph ? _enemy.TelegraphFraction : 0f;
             transform.localScale = _bodyScale * (1f + _windupSwell * windup);
 
+            // A mark pulses the body toward its element's colour (D40) — read from the catalog, so
+            // a new element is visible the moment its asset exists.
             Color color = _restColor;
+            if (_enemy.Statuses.Count > 0)
+            {
+                Color mark = _driver.ColorOf(_enemy.Statuses.Active[0].Element);
+                color = Color.Lerp(color, mark, 0.45f + 0.2f * Mathf.Sin(Time.time * 9f));
+            }
+
             if (windup > 0f)
             {
-                color = Color.Lerp(_restColor, _tellColor, windup);
+                color = Color.Lerp(color, _tellColor, windup);
                 if (_archetype == EnemyArchetype.Caster && windup > 0.6f)
                 {
                     // The caster's hit is the biggest, so its tell ends in a white flicker — the

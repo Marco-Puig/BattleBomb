@@ -311,6 +311,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 750364333ad764f438e9185215094e3e, type: 2}
   _elementCatalog:
   - {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
+  _climateRows: []
 --- !u!114 &463551039
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,6 +327,52 @@ MonoBehaviour:
   _minX: -10
   _maxX: 10
   _groundY: 0
+--- !u!1 &868317172
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 868317174}
+  - component: {fileID: 868317173}
+  m_Layer: 0
+  m_Name: Cast Tells
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &868317173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868317172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a29b0f0c9f2c024db64b33566633f2c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Presentation::BattleBomb.Presentation.Characters.CastTell
+  _driver: {fileID: 0}
+  _lifetimeSeconds: 0.28
+--- !u!4 &868317174
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868317172}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &869505447
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,3 +939,4 @@ SceneRoots:
   - {fileID: 1227676800}
   - {fileID: 1619851941}
   - {fileID: 869505449}
+  - {fileID: 868317174}

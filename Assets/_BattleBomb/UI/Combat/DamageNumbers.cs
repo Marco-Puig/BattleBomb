@@ -31,6 +31,7 @@ namespace BattleBomb.UI.Combat
             public int Amount;
             public float Born;
             public bool IsCrit;
+            public bool IsDamageOverTime;
         }
 
         private readonly List<Entry> _entries = new List<Entry>();
@@ -77,6 +78,7 @@ namespace BattleBomb.UI.Combat
                 Amount = Mathf.Max(1, Mathf.RoundToInt(hit.Damage)),
                 Born = Time.time,
                 IsCrit = hit.IsCrit,
+                IsDamageOverTime = hit.IsDamageOverTime,
             });
         }
 
@@ -113,7 +115,12 @@ namespace BattleBomb.UI.Combat
                 }
 
                 bool crit = _entries[i].IsCrit;
-                _style.fontSize = Mathf.Max(8, crit ? Mathf.RoundToInt(_fontSize * 1.4f) : _fontSize);
+                bool overTime = _entries[i].IsDamageOverTime;
+
+                // A tick is small and quiet: the same information, styled so it never competes
+                // with the strike that started it.
+                float scale = crit ? 1.4f : (overTime ? 0.7f : 1f);
+                _style.fontSize = Mathf.Max(8, Mathf.RoundToInt(_fontSize * scale));
 
                 float alpha = 1f - age / _lifetimeSeconds;
                 string text = _entries[i].Amount.ToString();
@@ -123,7 +130,9 @@ namespace BattleBomb.UI.Combat
                 GUI.Label(new Rect(rect.x + 2f, rect.y + 2f, rect.width, rect.height), text, _style);
                 _style.normal.textColor = crit
                     ? new Color(1f, 0.45f, 0.15f, alpha)
-                    : new Color(1f, 0.93f, 0.35f, alpha);
+                    : overTime
+                        ? new Color(1f, 0.62f, 0.30f, alpha * 0.85f)
+                        : new Color(1f, 0.93f, 0.35f, alpha);
                 GUI.Label(rect, text, _style);
             }
         }

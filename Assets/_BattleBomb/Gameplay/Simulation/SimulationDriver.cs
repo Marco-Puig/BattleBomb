@@ -53,6 +53,10 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Every element in play (D38). A new element is a new asset here — never code.")]
         [SerializeField] private ElementDefinition[] _elementCatalog;
 
+        [Tooltip("This area's elemental climate (§4, D41) — it multiplies elemental damage from " +
+            "every side, yours and theirs alike. Chapters own this from M7; a scene value until then.")]
+        [SerializeField] private ElementMultiplierSpec[] _climateRows = new ElementMultiplierSpec[0];
+
         private const float ProjectileRadius = 0.6f;
         private const float ProjectileKnockback = 4f;
         private const int ProjectileHitstop = 2;
@@ -96,6 +100,7 @@ namespace BattleBomb.Gameplay.Simulation
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
         private ElementCatalog _elements = ElementCatalog.Empty;
+        private ElementalMultipliers _climate = ElementalMultipliers.Neutral;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
@@ -127,6 +132,9 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Every authored element (D38) — the naming authority for UI and Presentation.</summary>
         public ElementCatalog Elements => _elements;
+
+        /// <summary>This area's climate (D41): it scales elemental damage from every side.</summary>
+        public ElementalMultipliers Climate => _climate;
 
         public PlayerRegistry Players => _players;
 
@@ -192,6 +200,7 @@ namespace BattleBomb.Gameplay.Simulation
             _qualityTable = _qualityLadder != null ? _qualityLadder.ToTable() : QualityTable.Default;
             _dropWeights = _qualityLadder != null ? _qualityLadder.ToWeights() : DropWeights.Default;
             _elements = ElementDefinition.ToCatalog(_elementCatalog);
+            _climate = ElementMultiplierSpec.ToTable(_climateRows);
         }
 
         private void Update()
@@ -222,6 +231,7 @@ namespace BattleBomb.Gameplay.Simulation
             StepEnemies(frame, actors, bounds);
             SeparateBodies(actors, bounds);
             StepProjectiles(actors, StepDuration);
+            StepStatuses(actors);
             ResolveDeaths();
             StepPickups();
             StepAttemptFlow(actors);
@@ -334,6 +344,46 @@ namespace BattleBomb.Gameplay.Simulation
                 else if (targets[i] is TrainingDummy dummy)
                 {
                     dummy.Step(frame, bounds, StepDuration);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Every burning thing pays its tick (D40), players and enemies alike. Ticks land before
+        /// deaths resolve, so a burn can be the killing blow. They deal damage and nothing else:
+        /// no stagger, no interrupt — a status that broke the player's rhythm would be a
+        /// punishment the combat model never agreed to.
+        /// </summary>
+        private void StepStatuses(IReadOnlyList<CharacterActor> actors)
+        {
+            for (int i = 0; i < actors.Count; i++)
+            {
+                float damage = actors[i].Statuses.Step();
+                if (damage > 0f)
+                {
+                    float landed = actors[i].ApplyStatusDamage(damage);
+                    if (landed > 0f)
+                    {
+                        HitLanded?.Invoke(new HitEvent(
+                            null, actors[i], landed, actors[i].Position, false, false, true));
+                    }
+                }
+            }
+
+            IReadOnlyList<ISimTarget> targets = Targets.Ordered;
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (!(targets[i] is EnemyActor enemy) || enemy.IsDepleted)
+                {
+                    continue;
+                }
+
+                float damage = enemy.Statuses.Step();
+                if (damage > 0f)
+                {
+                    enemy.ApplyStatusDamage(damage);
+                    HitLanded?.Invoke(new HitEvent(
+                        null, enemy, damage, enemy.Position, false, false, true));
                 }
             }
         }
@@ -576,7 +626,7 @@ namespace BattleBomb.Gameplay.Simulation
                 if (owner is EnemyActor enemy)
                 {
                     HitResult hit = RollPlayerHit(
-                        attacker, attack, enemy.Position, enemy.Resistances, out bool crit);
+                        attacker, attack, enemy.Position, enemy.Defence, out bool crit);
                     enemy.ApplyHit(hit);
                     StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
@@ -585,7 +635,7 @@ namespace BattleBomb.Gameplay.Simulation
                 else if (owner is TrainingDummy dummy)
                 {
                     HitResult hit = RollPlayerHit(
-                        attacker, attack, dummy.Position, ElementalMultipliers.Neutral, out bool crit);
+                        attacker, attack, dummy.Position, ElementalDefence.None, out bool crit);
                     dummy.ApplyHit(hit);
                     StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
@@ -596,7 +646,7 @@ namespace BattleBomb.Gameplay.Simulation
                     HitResult shove = HitApplication.Apply(
                         attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                         ElementId.None, 1f, TargetKind.Partner, partner.Position,
-                        ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                        ElementalDefence.None, ElementalMultipliers.Neutral);
                     partner.ApplyImpulse(shove.Impulse);
                     HitLanded?.Invoke(new HitEvent(attacker, partner, 0f, partner.Position, true));
                 }
@@ -615,7 +665,7 @@ namespace BattleBomb.Gameplay.Simulation
         /// </summary>
         private HitResult RollPlayerHit(
             CharacterActor attacker, in AttackTuning attack, Vector3 targetPosition,
-            in ElementalMultipliers resistances, out bool crit)
+            in ElementalDefence defence, out bool crit)
         {
             float gear = attacker.DamageScale;
             _combatRng = _combatRng.NextFloat(out float critDraw);
@@ -628,7 +678,7 @@ namespace BattleBomb.Gameplay.Simulation
             HitResult hit = HitApplication.Apply(
                 attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                 ElementId.None, gear, TargetKind.Enemy, targetPosition,
-                resistances, ElementalMultipliers.Neutral);
+                defence, _climate);
 
             float knockback = attacker.Sheet.KnockbackMultiplier;
             return Mathf.Approximately(knockback, 1f)
@@ -668,7 +718,7 @@ namespace BattleBomb.Gameplay.Simulation
                 HitResult hit = HitApplication.Apply(
                     attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                     attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
-                    ElementalMultipliers.Neutral, ElementalMultipliers.Neutral);
+                    victim.Defence, _climate);
                 float landed = victim.ApplyEnemyHit(hit);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
                 HitLanded?.Invoke(new HitEvent(attacker, victim, landed, victim.Position, false));
@@ -756,7 +806,7 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     CharacterActor victim = players[hit];
                     float damage = DamageCalculator.Resolve(
-                        p.Damage, p.Element, ElementalMultipliers.Neutral, ElementalMultipliers.Neutral, 1f);
+                        p.Damage, p.Element, victim.Defence, _climate, 1f);
                     Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
                     direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
                     float landed = victim.ApplyEnemyHit(new HitResult(
@@ -818,7 +868,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is EnemyActor enemy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, enemy.Resistances, ElementalMultipliers.Neutral, gear);
+                    p.Damage, p.Element, enemy.Defence, _climate, gear);
                 enemy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {
@@ -832,7 +882,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is TrainingDummy dummy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, ElementalMultipliers.Neutral, ElementalMultipliers.Neutral, gear);
+                    p.Damage, p.Element, ElementalDefence.None, _climate, gear);
                 dummy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {

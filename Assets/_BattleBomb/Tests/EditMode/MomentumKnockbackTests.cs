@@ -18,7 +18,7 @@ namespace BattleBomb.Tests.EditMode
         private static float ShoveSpeed(Vector3 momentum, TargetKind kind = TargetKind.Enemy)
         {
             HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Right, momentum,
-                ElementId.None, 1f, kind, new Vector3(1f, 0f, 0f), Neutral, Neutral);
+                ElementId.None, 1f, kind, new Vector3(1f, 0f, 0f), ElementalDefence.None, Neutral);
             return new Vector2(result.Impulse.x, result.Impulse.z).magnitude;
         }
 
@@ -42,7 +42,7 @@ namespace BattleBomb.Tests.EditMode
         {
             HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Right,
                 new Vector3(9f, 0f, 0f), ElementId.None, 1f, TargetKind.Enemy,
-                new Vector3(1f, 0f, -1f), Neutral, Neutral);
+                new Vector3(1f, 0f, -1f), ElementalDefence.None, Neutral);
 
             Assert.That(result.Impulse.x, Is.GreaterThan(0f));
             Assert.That(result.Impulse.z, Is.LessThan(0f), "Still away from the attacker.");

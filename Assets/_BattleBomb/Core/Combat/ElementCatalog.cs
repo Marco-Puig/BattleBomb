@@ -3,18 +3,20 @@ using System.Collections.Generic;
 namespace BattleBomb.Core.Combat
 {
     /// <summary>
-    /// One authored element (D38): its id, and the name the player reads. Status behaviour joins
-    /// this struct when M5 gives elements teeth.
+    /// One authored element (D38): its id, the name the player reads, and the mark it leaves on
+    /// what it hits.
     /// </summary>
     public readonly struct ElementSpec
     {
         public readonly ElementId Id;
         public readonly string Name;
+        public readonly StatusSpec Status;
 
-        public ElementSpec(ElementId id, string name)
+        public ElementSpec(ElementId id, string name, in StatusSpec status = default)
         {
             Id = id;
             Name = string.IsNullOrEmpty(name) ? id.ToString() : name;
+            Status = status;
         }
     }
 

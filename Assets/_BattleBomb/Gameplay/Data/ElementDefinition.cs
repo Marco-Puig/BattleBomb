@@ -21,13 +21,30 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("The element's colour, for Presentation — tints, statuses, cast VFX.")]
         [SerializeField] private Color _color = new Color(1f, 0.45f, 0.15f);
 
+        [Header("Status (D40) — the mark this element leaves")]
+        [Tooltip("What the player calls it: Burn, Soak, Shock. Empty means this element marks nothing.")]
+        [SerializeField] private string _statusName = string.Empty;
+
+        [Tooltip("How long the mark lasts, in simulation steps. 0 means no status at all.")]
+        [SerializeField] private int _statusDurationSteps = 180;
+
+        [Tooltip("Steps between damage ticks.")]
+        [SerializeField] private int _statusTickSteps = 30;
+
+        [Tooltip("Total damage over the mark's life, as a share of the hit that applied it.")]
+        [SerializeField] private float _statusDamageShare = 0.5f;
+
         public ElementId Id => new ElementId(_id);
 
         public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
 
         public Color Color => _color;
 
-        public ElementSpec ToRuntime() => new ElementSpec(Id, DisplayName);
+        public ElementSpec ToRuntime() => new ElementSpec(Id, DisplayName, ToStatus());
+
+        private StatusSpec ToStatus() => string.IsNullOrEmpty(_statusName)
+            ? default
+            : new StatusSpec(_statusName, _statusDurationSteps, _statusTickSteps, _statusDamageShare);
 
         /// <summary>Builds the runtime catalog from an authored list, skipping empty slots.</summary>
         public static ElementCatalog ToCatalog(IReadOnlyList<ElementDefinition> definitions)

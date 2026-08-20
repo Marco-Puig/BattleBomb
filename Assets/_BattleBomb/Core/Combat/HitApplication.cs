@@ -28,7 +28,7 @@ namespace BattleBomb.Core.Combat
             float gearMultiplier,
             TargetKind targetKind,
             Vector3 targetPosition,
-            in ElementalMultipliers targetResistance,
+            in ElementalDefence targetDefence,
             in ElementalMultipliers climate)
         {
             Vector3 away = targetPosition - attackerPosition;
@@ -54,7 +54,7 @@ namespace BattleBomb.Core.Combat
             }
 
             float damage = DamageCalculator.Resolve(
-                attack.Damage, element, targetResistance, climate, gearMultiplier);
+                attack.Damage, element, targetDefence, climate, gearMultiplier);
             return new HitResult(damage, impulse, attack.HitstopSteps);
         }
     }

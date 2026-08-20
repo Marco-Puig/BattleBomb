@@ -7,6 +7,7 @@ namespace BattleBomb.Tests.EditMode
     public sealed class DamageCalculatorTests
     {
         private static readonly ElementalMultipliers Neutral = ElementalMultipliers.Neutral;
+        private static readonly ElementalDefence Undefended = ElementalDefence.None;
 
         // Synthetic ids (D38): the pipeline is tested without naming a single element, which is
         // the whole point of the roster being data — these tests survive O11 whatever it decides.
@@ -25,10 +26,13 @@ namespace BattleBomb.Tests.EditMode
             return ElementalMultipliers.From(entries);
         }
 
+        private static ElementalDefence Resisting(params (ElementId Element, float Value)[] rows) =>
+            new ElementalDefence(Table(rows));
+
         [Test]
         public void Neutral_everything_passes_base_damage_through()
         {
-            float damage = DamageCalculator.Resolve(10f, First, Neutral, Neutral, 1f);
+            float damage = DamageCalculator.Resolve(10f, First, Undefended, Neutral, 1f);
 
             Assert.That(damage, Is.EqualTo(10f));
         }
@@ -55,13 +59,13 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void Resistance_scales_only_the_matching_element()
         {
-            ElementalMultipliers resistance = Table((First, 0.5f), (Second, 2f));
+            ElementalDefence defender = Resisting((First, 0.5f), (Second, 2f));
 
-            Assert.That(DamageCalculator.Resolve(10f, First, resistance, Neutral, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, First, defender, Neutral, 1f),
                 Is.EqualTo(5f));
-            Assert.That(DamageCalculator.Resolve(10f, Second, resistance, Neutral, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, Second, defender, Neutral, 1f),
                 Is.EqualTo(20f));
-            Assert.That(DamageCalculator.Resolve(10f, Unauthored, resistance, Neutral, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, Unauthored, defender, Neutral, 1f),
                 Is.EqualTo(10f));
         }
 
@@ -70,28 +74,28 @@ namespace BattleBomb.Tests.EditMode
         {
             ElementalMultipliers climate = ElementalMultipliers.Single(First, 1.3f);
 
-            Assert.That(DamageCalculator.Resolve(10f, First, Neutral, climate, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, First, Undefended, climate, 1f),
                 Is.EqualTo(13f).Within(1e-4f));
-            Assert.That(DamageCalculator.Resolve(10f, Second, Neutral, climate, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, Second, Undefended, climate, 1f),
                 Is.EqualTo(10f));
         }
 
         [Test]
         public void The_gear_multiplier_scales_every_element_including_none()
         {
-            Assert.That(DamageCalculator.Resolve(10f, ElementId.None, Neutral, Neutral, 1.5f),
+            Assert.That(DamageCalculator.Resolve(10f, ElementId.None, Undefended, Neutral, 1.5f),
                 Is.EqualTo(15f));
-            Assert.That(DamageCalculator.Resolve(10f, Second, Neutral, Neutral, 1.5f),
+            Assert.That(DamageCalculator.Resolve(10f, Second, Undefended, Neutral, 1.5f),
                 Is.EqualTo(15f));
         }
 
         [Test]
         public void Every_stage_compounds_in_one_resolution()
         {
-            ElementalMultipliers resistance = ElementalMultipliers.Single(First, 0.5f);
+            ElementalDefence defender = new ElementalDefence(ElementalMultipliers.Single(First, 0.5f));
             ElementalMultipliers climate = ElementalMultipliers.Single(First, 1.3f);
 
-            float damage = DamageCalculator.Resolve(10f, First, resistance, climate, 1.2f);
+            float damage = DamageCalculator.Resolve(10f, First, defender, climate, 1.2f);
 
             Assert.That(damage, Is.EqualTo(10f * 0.5f * 1.3f * 1.2f).Within(1e-4f));
         }
@@ -99,18 +103,19 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void Elementless_damage_ignores_resistance_and_climate()
         {
-            ElementalMultipliers hostile = Table((First, 0.1f), (Second, 0.1f));
+            ElementalDefence hostile = Resisting((First, 0.1f), (Second, 0.1f));
+            ElementalMultipliers climate = Table((First, 0.1f), (Second, 0.1f));
 
-            Assert.That(DamageCalculator.Resolve(10f, ElementId.None, hostile, hostile, 1f),
+            Assert.That(DamageCalculator.Resolve(10f, ElementId.None, hostile, climate, 1f),
                 Is.EqualTo(10f));
         }
 
         [Test]
         public void Damage_never_resolves_negative()
         {
-            Assert.That(DamageCalculator.Resolve(-10f, First, Neutral, Neutral, 1f),
+            Assert.That(DamageCalculator.Resolve(-10f, First, Undefended, Neutral, 1f),
                 Is.EqualTo(0f));
-            Assert.That(DamageCalculator.Resolve(10f, First, Neutral, Neutral, -2f),
+            Assert.That(DamageCalculator.Resolve(10f, First, Undefended, Neutral, -2f),
                 Is.EqualTo(0f));
         }
     }

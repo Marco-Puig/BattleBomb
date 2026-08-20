@@ -18,7 +18,12 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>The combat stream rolled a critical (M4) — presentation may shout about it.</summary>
         public readonly bool IsCrit;
 
-        public HitEvent(Component attacker, Component target, float damage, Vector3 position, bool isPartner, bool isCrit = false)
+        /// <summary>A status tick rather than a strike (M5) — no attacker, and styled apart.</summary>
+        public readonly bool IsDamageOverTime;
+
+        public HitEvent(
+            Component attacker, Component target, float damage, Vector3 position, bool isPartner,
+            bool isCrit = false, bool isDamageOverTime = false)
         {
             Attacker = attacker;
             Target = target;
@@ -26,6 +31,7 @@ namespace BattleBomb.Gameplay.Simulation
             Position = position;
             IsPartner = isPartner;
             IsCrit = isCrit;
+            IsDamageOverTime = isDamageOverTime;
         }
     }
 }

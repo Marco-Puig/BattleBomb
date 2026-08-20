@@ -79,6 +79,7 @@ namespace BattleBomb.Gameplay.Characters
         private ManaPool _mana;
         private float _damageScale = 1f;
         private WeaponClass _weaponClass = WeaponClass.None;
+        private ElementId _element = ElementId.None;
         private float _shotSpeed = 12f;
         private int _quickUseCooldownSteps = 180;
         private PlayerInventory _bag;
@@ -119,6 +120,15 @@ namespace BattleBomb.Gameplay.Characters
 
         /// <summary>The mana pool the sheet sizes; M5's Magic spends it.</summary>
         public ManaPool Mana => _mana;
+
+        /// <summary>The character's own element (D38) — what they cast, and what cannot mark them.</summary>
+        public ElementId Element => _element;
+
+        /// <summary>Their element plus what they resist — gear fills the resistance in task 54.</summary>
+        internal ElementalDefence Defence => new ElementalDefence(_element, ElementalMultipliers.Neutral);
+
+        /// <summary>The elements currently marking them (D40) — enemies burn players too.</summary>
+        public StatusTrack Statuses { get; } = new StatusTrack();
 
         /// <summary>Authored attack damage × this = final base damage; unarmed is exactly 1.</summary>
         internal float DamageScale => _damageScale;
@@ -290,6 +300,28 @@ namespace BattleBomb.Gameplay.Characters
 
             ApplyImpulse(hit.Impulse);
             ApplyHitstop(hit.HitstopSteps);
+            return damage;
+        }
+
+        /// <summary>
+        /// One status tick (D40). Defence never shaves it — that stat answers hits, and a burn is
+        /// not a hit — and it never staggers, shoves, or interrupts a swing: it only removes
+        /// health. Grace does not save you either, because waiting out a burn behind i-frames
+        /// would make the mark meaningless. Returns what landed.
+        /// </summary>
+        internal float ApplyStatusDamage(float damage)
+        {
+            if (damage <= 0f || _condition.IsDown)
+            {
+                return 0f;
+            }
+
+            _condition = _condition.Drained(damage);
+            if (_condition.IsDown)
+            {
+                Statuses.Clear();
+            }
+
             return damage;
         }
 

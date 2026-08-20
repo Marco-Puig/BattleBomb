@@ -1,4 +1,4 @@
-using BattleBomb.Core.Combat;
+﻿using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
 using NUnit.Framework;
 using UnityEngine;
@@ -18,14 +18,14 @@ namespace BattleBomb.Tests.EditMode
         private static readonly ElementId Element = new ElementId(1);
 
         private static HitResult Apply(TargetKind kind, Vector3 target,
-            in ElementalMultipliers resistance, in ElementalMultipliers climate) =>
+            in ElementalDefence resistance, in ElementalMultipliers climate) =>
             HitApplication.Apply(Attack, Vector3.zero, Facing.Right, Vector3.zero, Element, 1f,
                 kind, target, resistance, climate);
 
         [Test]
         public void An_enemy_hit_runs_the_full_damage_pipeline()
         {
-            ElementalMultipliers resistance = ElementalMultipliers.Single(Element, 0.5f);
+            ElementalDefence resistance = new ElementalDefence(ElementalMultipliers.Single(Element, 0.5f));
             ElementalMultipliers climate = ElementalMultipliers.Single(Element, 1.3f);
 
             HitResult result = Apply(TargetKind.Enemy, new Vector3(1f, 0f, 0f), resistance, climate);
@@ -37,7 +37,7 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void A_partner_hit_shoves_without_damage_or_hitstop()
         {
-            HitResult result = Apply(TargetKind.Partner, new Vector3(1f, 0f, 0f), Neutral, Neutral);
+            HitResult result = Apply(TargetKind.Partner, new Vector3(1f, 0f, 0f), ElementalDefence.None, Neutral);
 
             Assert.That(result.Damage, Is.EqualTo(0f), "D21: never damage.");
             Assert.That(result.HitstopSteps, Is.EqualTo(0), "A shove earns no hitstop.");
@@ -47,7 +47,7 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void Knockback_points_away_from_the_attacker_on_both_axes()
         {
-            HitResult result = Apply(TargetKind.Enemy, new Vector3(1f, 0f, -1f), Neutral, Neutral);
+            HitResult result = Apply(TargetKind.Enemy, new Vector3(1f, 0f, -1f), ElementalDefence.None, Neutral);
 
             Assert.That(result.Impulse.x, Is.GreaterThan(0f));
             Assert.That(result.Impulse.z, Is.LessThan(0f), "A shove works in depth too.");
@@ -58,7 +58,7 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void The_launcher_speed_becomes_upward_velocity()
         {
-            HitResult result = Apply(TargetKind.Enemy, new Vector3(1f, 0f, 0f), Neutral, Neutral);
+            HitResult result = Apply(TargetKind.Enemy, new Vector3(1f, 0f, 0f), ElementalDefence.None, Neutral);
 
             Assert.That(result.Impulse.y, Is.EqualTo(Attack.LaunchSpeed));
         }
@@ -67,7 +67,7 @@ namespace BattleBomb.Tests.EditMode
         public void A_target_on_top_of_the_attacker_is_shoved_along_the_facing()
         {
             HitResult result = HitApplication.Apply(Attack, Vector3.zero, Facing.Left, Vector3.zero,
-                ElementId.None, 1f, TargetKind.Enemy, Vector3.zero, Neutral, Neutral);
+                ElementId.None, 1f, TargetKind.Enemy, Vector3.zero, ElementalDefence.None, Neutral);
 
             Assert.That(result.Impulse.x, Is.LessThan(0f),
                 "With no separation, the shove follows the attacker's facing.");
@@ -76,7 +76,7 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void A_launched_hit_and_the_motor_bring_the_target_back_down()
         {
-            HitResult hit = Apply(TargetKind.Enemy, new Vector3(1f, 0f, 0f), Neutral, Neutral);
+            HitResult hit = Apply(TargetKind.Enemy, new Vector3(1f, 0f, 0f), ElementalDefence.None, Neutral);
             var bounds = new BattleBomb.Core.Spatial.ArenaBounds(-100f, 100f);
             var state = MotorState.AtRest(new Vector3(1f, 0f, 0f));
             state = new MotorState(state.Position, hit.Impulse, state.Facing, false,

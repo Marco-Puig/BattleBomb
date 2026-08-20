@@ -54,6 +54,14 @@ namespace BattleBomb.Core.Combat
         public PlayerCondition Healed(float amount) =>
             IsDown ? this : new PlayerCondition(Health.Healed(amount), StaggerSteps, GraceSteps);
 
+        /// <summary>
+        /// A status tick (D40): health only. No stagger, no grace check, no interrupt — a burn is
+        /// not a hit, so neither the defence stat nor i-frames answer it, and it never takes
+        /// control away. Depletion still downs the player, so a mark can be what finishes them.
+        /// </summary>
+        public PlayerCondition Drained(float amount) =>
+            IsDown ? this : new PlayerCondition(Health.Damaged(amount), StaggerSteps, GraceSteps);
+
         /// <summary>The stat sheet resized the pool (D32/D35); timers and the downed state stand.</summary>
         public PlayerCondition Resized(float newMax) =>
             new PlayerCondition(Health.Resized(newMax), StaggerSteps, GraceSteps);

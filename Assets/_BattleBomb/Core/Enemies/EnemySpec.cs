@@ -15,6 +15,9 @@ namespace BattleBomb.Core.Enemies
         public readonly MovementTuning Movement;
         public readonly float MaxHealth;
         public readonly ElementalMultipliers Resistances;
+
+        /// <summary>Resistances plus the skin's own element — what the damage pipeline asks for.</summary>
+        public ElementalDefence Defence => new ElementalDefence(Tuning.Element, Resistances);
         public readonly int Rank;
         public readonly int XpReward;
 

@@ -58,6 +58,12 @@ namespace BattleBomb.Gameplay.Characters
 
         internal Vector3 StrikeMomentum => _strikeMomentum;
         internal ElementalMultipliers Resistances => _spec.Resistances;
+
+        /// <summary>Resistances plus its own element — what every damage resolution asks for (D40).</summary>
+        internal ElementalDefence Defence => _spec.Defence;
+
+        /// <summary>The elements currently marking it (D40). Presentation reads; the driver ticks.</summary>
+        public StatusTrack Statuses { get; } = new StatusTrack();
         internal int TargetIndex => _targetIndex;
 
         /// <summary>A melee turn-taker competes for the per-target attack token (D28).</summary>
@@ -169,6 +175,25 @@ namespace BattleBomb.Gameplay.Characters
 
             _brain = _brain.WithHitstop(hit.HitstopSteps);
             _brain = EnemyBrain.Interrupted(_brain, _spec.Tuning);
+        }
+
+        /// <summary>
+        /// One status tick (D40): health only. It never flinches the enemy and never interrupts a
+        /// telegraph — a burning brute still lands his swing, which is what keeps the mark a
+        /// damage source rather than a stunlock.
+        /// </summary>
+        internal void ApplyStatusDamage(float damage)
+        {
+            if (damage <= 0f || _health.IsDepleted)
+            {
+                return;
+            }
+
+            _health = _health.Damaged(damage);
+            if (_health.IsDepleted)
+            {
+                Statuses.Clear();
+            }
         }
 
         internal void ApplyHitstop(int steps) => _brain = _brain.WithHitstop(steps);

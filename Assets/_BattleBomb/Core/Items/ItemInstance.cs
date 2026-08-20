@@ -56,15 +56,18 @@ namespace BattleBomb.Core.Items
             ConsumableHealFraction = consumableHealFraction;
         }
 
-        public int AffixCount => Affixes.Length;
+        public int AffixCount => Affixes != null ? Affixes.Length : 0;
 
         public bool IsConsumable => Slot == ItemSlot.Consumable;
+
+        /// <summary>A default-constructed instance never went through the generator — the "no item" value.</summary>
+        public bool IsEmpty => Affixes == null;
 
         /// <summary>The whole block this item hands the StatSheet: core stats plus every affix.</summary>
         public GearContribution TotalContribution()
         {
             GearContribution total = CoreStats;
-            for (int i = 0; i < Affixes.Length; i++)
+            for (int i = 0; i < AffixCount; i++)
             {
                 total += AffixEffects.Contribution(Affixes[i]);
             }

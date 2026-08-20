@@ -80,7 +80,14 @@ namespace BattleBomb.Core.Items
                 upgradeCapacity: row.UpgradeCapacity,
                 upgradesSpent: 0,
                 shotSpeed: spec.ShotSpeed,
-                consumableHealFraction: heal);
+                consumableHealFraction: heal,
+                restores: spec.Restores,
+                // An active's damage is a share of the wearer's weapon damage (D19/D37), so the
+                // ladder scales how big the moment is without ever letting it outgrow the build.
+                activeWeaponDamageShare: spec.ActiveWeaponDamageShare * row.StatBudget,
+                activeElement: spec.ActiveElement,
+                activeRadius: spec.ActiveRadius,
+                activeCooldownSteps: spec.ActiveCooldownSteps);
             return next;
         }
 

@@ -49,10 +49,29 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private float _maxManaBonus;
         [SerializeField] private float _manaRegen;
         [SerializeField] private float _knockbackBonus;
+        [SerializeField] private float _magicDamage;
+        [SerializeField] private float _magicRange;
 
         [Header("Consumable")]
-        [Tooltip("Fraction of max health a use restores (potions).")]
+        [Tooltip("Fraction of the pool a use restores (potions).")]
         [SerializeField] private float _healFraction;
+
+        [Tooltip("Which pool it refills — health potions and mana potions differ only here (D27).")]
+        [SerializeField] private RestoreKind _restores = RestoreKind.Health;
+
+        [Header("Equipment active (D37) — leave the share at 0 for a passive piece")]
+        [Tooltip("Damage as a share of the wearer's weapon damage. Derived on purpose: an active " +
+            "scales with the build and can never outgrow it (D19).")]
+        [SerializeField] private float _activeWeaponDamageShare;
+
+        [Tooltip("The element the burst carries, marking what it hits like any other elemental hit.")]
+        [SerializeField] private ElementDefinition _activeElement;
+
+        [Tooltip("Radius of the burst, in world units.")]
+        [SerializeField] private float _activeRadius = 2.5f;
+
+        [Tooltip("The active's own cooldown in steps. A moment, never a rotation.")]
+        [SerializeField] private int _activeCooldownSteps = 900;
 
         public int Id => _id;
 
@@ -71,10 +90,17 @@ namespace BattleBomb.Gameplay.Data
                 maxHealthBonus: _maxHealthBonus,
                 maxManaBonus: _maxManaBonus,
                 manaRegen: _manaRegen,
-                knockbackBonus: _knockbackBonus),
+                knockbackBonus: _knockbackBonus,
+                magicDamage: _magicDamage,
+                magicRange: _magicRange),
             _weaponClass,
             _petClass,
             _shotSpeed,
-            _healFraction);
+            _healFraction,
+            _restores,
+            _activeWeaponDamageShare,
+            _activeElement != null ? _activeElement.Id : Core.Combat.ElementId.None,
+            _activeRadius,
+            _activeCooldownSteps);
     }
 }

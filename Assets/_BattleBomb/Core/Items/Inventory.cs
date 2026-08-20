@@ -204,14 +204,29 @@ namespace BattleBomb.Core.Items
         }
 
         /// <summary>
-        /// The quick-use press. A slotted potion heals and starts the cooldown; an exhausted
-        /// stack clears the slot; equipment actives fire nothing until M5 authors one.
+        /// The quick-use press (D37). A slotted potion restores its pool and starts the cooldown;
+        /// an exhausted stack clears the slot; a worn equipment piece with an active fires it on
+        /// the item's own cooldown, which is what keeps an active a moment rather than a rotation.
         /// </summary>
         public QuickUseResult UseQuickSlot(int cooldownSteps)
         {
-            if (_quickCooldown > 0 || _quickKind != QuickSlotKind.Consumable)
+            if (_quickCooldown > 0 || _quickKind == QuickSlotKind.Empty)
             {
                 return QuickUseResult.Nothing;
+            }
+
+            if (_quickKind == QuickSlotKind.EquipmentActive)
+            {
+                ItemInstance worn = Loadout.Equipment(_quickEquipmentIndex);
+                if (worn.IsEmpty || !worn.HasActive)
+                {
+                    return QuickUseResult.Nothing;
+                }
+
+                _quickCooldown = Mathf.Max(0, worn.ActiveCooldownSteps);
+                return new QuickUseResult(
+                    true, 0f, RestoreKind.Health,
+                    worn.ActiveWeaponDamageShare, worn.ActiveElement, worn.ActiveRadius);
             }
 
             int index = FindConsumableStack(_quickConsumableId);
@@ -223,6 +238,7 @@ namespace BattleBomb.Core.Items
 
             ItemStack stack = _items[index];
             float heal = stack.Item.ConsumableHealFraction;
+            RestoreKind restores = stack.Item.Restores;
             if (stack.Count > 1)
             {
                 _items[index] = new ItemStack(stack.Item, stack.Count - 1);
@@ -237,7 +253,7 @@ namespace BattleBomb.Core.Items
             }
 
             _quickCooldown = Mathf.Max(0, cooldownSteps);
-            return new QuickUseResult(true, heal);
+            return new QuickUseResult(true, heal, restores);
         }
 
         /// <summary>One fixed step of cooldown time.</summary>

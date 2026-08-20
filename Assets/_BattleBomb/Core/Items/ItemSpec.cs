@@ -1,3 +1,4 @@
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Stats;
 
 namespace BattleBomb.Core.Items
@@ -18,6 +19,21 @@ namespace BattleBomb.Core.Items
         public readonly float ShotSpeed;
         public readonly float ConsumableHealFraction;
 
+        /// <summary>Which pool this consumable refills — health potions and mana potions differ
+        /// only in this field and their essence name.</summary>
+        public readonly RestoreKind Restores;
+
+        /// <summary>An equipment active's damage as a share of the wearer's weapon damage (D37).
+        /// Zero for the passive majority.</summary>
+        public readonly float ActiveWeaponDamageShare;
+
+        /// <summary>The active's element, and the radius its burst covers.</summary>
+        public readonly ElementId ActiveElement;
+        public readonly float ActiveRadius;
+
+        /// <summary>The active's own cooldown in steps — a moment, never a rotation (D19/D37).</summary>
+        public readonly int ActiveCooldownSteps;
+
         public ItemSpec(
             int id,
             string name,
@@ -26,7 +42,12 @@ namespace BattleBomb.Core.Items
             WeaponClass weaponClass = WeaponClass.None,
             PetClass petClass = PetClass.None,
             float shotSpeed = 0f,
-            float consumableHealFraction = 0f)
+            float consumableHealFraction = 0f,
+            RestoreKind restores = RestoreKind.Health,
+            float activeWeaponDamageShare = 0f,
+            ElementId activeElement = default,
+            float activeRadius = 0f,
+            int activeCooldownSteps = 0)
         {
             Id = id;
             Name = name ?? string.Empty;
@@ -36,6 +57,14 @@ namespace BattleBomb.Core.Items
             BaseStats = baseStats;
             ShotSpeed = shotSpeed;
             ConsumableHealFraction = consumableHealFraction;
+            Restores = restores;
+            ActiveWeaponDamageShare = activeWeaponDamageShare;
+            ActiveElement = activeElement;
+            ActiveRadius = activeRadius;
+            ActiveCooldownSteps = activeCooldownSteps;
         }
+
+        /// <summary>True for the rare equipment piece that does something when pressed (D37).</summary>
+        public bool HasActive => ActiveWeaponDamageShare > 0f;
     }
 }

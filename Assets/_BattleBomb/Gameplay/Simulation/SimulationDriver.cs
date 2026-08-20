@@ -769,6 +769,55 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         /// <summary>
+        /// An equipment active's burst (D37): a radial hit around the wearer whose damage is a
+        /// share of their weapon damage — derived, never its own number, so it scales with the
+        /// build and can never outgrow it (D19's surviving guard). It carries the item's element,
+        /// so it marks and reacts like every other elemental hit.
+        /// </summary>
+        internal void ResolveEquipmentActive(CharacterActor wearer, in QuickUseResult active)
+        {
+            float damage = wearer.Sheet.WeaponDamage * active.ActiveWeaponDamageShare;
+            var burst = new AttackTuning(
+                startupSteps: 0, activeSteps: 1, recoverySteps: 0,
+                damage: damage, reachX: active.ActiveRadius, depthTolerance: active.ActiveRadius,
+                lungeDistance: 0f, maxTargets: 8, knockbackSpeed: 5f, launchSpeed: 0f,
+                hitstopSteps: 2, moveSpeedScale: 1f, resolvesOnLanding: false, isRadial: true);
+
+            CollectCandidates(wearer, includePartners: false);
+            HitResolver.ResolveRadial(wearer.Position, burst, _candidatePositions, _hitIndices);
+
+            for (int i = 0; i < _hitIndices.Count; i++)
+            {
+                Component owner = _candidateOwners[_hitIndices[i]];
+                EnemyActor enemy = owner as EnemyActor;
+                ISimTarget target = owner as ISimTarget;
+                if (target == null)
+                {
+                    continue;
+                }
+
+                ElementalDefence defence = enemy != null ? enemy.Defence : ElementalDefence.None;
+                HitResult hit = HitApplication.Apply(
+                    burst, wearer.Position, wearer.Facing, Vector3.zero,
+                    active.ActiveElement, 1f, TargetKind.Enemy, target.Position, defence, _climate);
+
+                if (enemy != null)
+                {
+                    enemy.ApplyHit(hit);
+                }
+                else if (owner is TrainingDummy dummy)
+                {
+                    dummy.ApplyHit(hit);
+                }
+
+                HitLanded?.Invoke(new HitEvent(wearer, owner, hit.Damage, target.Position, false));
+                ApplyElementalRider(
+                    active.ActiveElement, CastSourceScale, enemy != null ? enemy.Statuses : null,
+                    defence, hit.Damage, owner, target.Position);
+            }
+        }
+
+        /// <summary>
         /// One player hit through the M4 build (D32/D35): the weapon's damage scale feeds the
         /// pipeline's gear slot, the combat stream prices the crit — always drawn, so the stream
         /// never depends on the chance — and knockback affixes scale the shove.

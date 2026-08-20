@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Stats;
@@ -9,7 +9,7 @@ namespace BattleBomb.Tests.EditMode
     /// <summary>
     /// The whole task-43 inventory surface, pinned: stacking, the equip flow with D36's level
     /// lock, the prestige force-return, D30's auto-equip semantics, and the quick-use slot with
-    /// its cooldown (D37). This is the piece 2019 never finished — its scope is these tests.
+    /// its cooldown (D37). This is the piece 2019 never finished â€” its scope is these tests.
     /// </summary>
     public sealed class InventoryTests
     {
@@ -160,7 +160,7 @@ namespace BattleBomb.Tests.EditMode
 
             QuickUseResult first = inventory.UseQuickSlot(QuickCooldown);
             Assert.That(first.Used, Is.True);
-            Assert.That(first.HealFraction, Is.EqualTo(0.35f));
+            Assert.That(first.RestoreFraction, Is.EqualTo(0.35f));
             Assert.That(inventory.Items[0].Count, Is.EqualTo(1));
 
             Assert.That(inventory.UseQuickSlot(QuickCooldown).Used, Is.False, "the cooldown gates");
@@ -188,13 +188,13 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(inventory.AssignQuickConsumable(PotionId), Is.True);
 
             QuickUseResult first = inventory.UseQuickSlot(0);
-            Assert.That(first.HealFraction, Is.EqualTo(0.3f), "the weakest drinks first");
+            Assert.That(first.RestoreFraction, Is.EqualTo(0.3f), "the weakest drinks first");
 
             QuickUseResult second = inventory.UseQuickSlot(0);
-            Assert.That(second.HealFraction, Is.EqualTo(0.3f));
+            Assert.That(second.RestoreFraction, Is.EqualTo(0.3f));
 
             QuickUseResult third = inventory.UseQuickSlot(0);
-            Assert.That(third.HealFraction, Is.EqualTo(0.875f), "the Elixir waits its turn");
+            Assert.That(third.RestoreFraction, Is.EqualTo(0.875f), "the Elixir waits its turn");
             Assert.That(inventory.Items, Is.Empty);
         }
 
@@ -210,7 +210,7 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(inventory.AssignQuickEquipment(0), Is.True);
             Assert.That(inventory.QuickKind, Is.EqualTo(QuickSlotKind.EquipmentActive));
             Assert.That(inventory.UseQuickSlot(QuickCooldown).Used, Is.False,
-                "no authored actives until M5 — the seam stays a seam");
+                "no authored actives until M5 â€” the seam stays a seam");
 
             inventory.Unequip(ItemSlot.Equipment, 0);
             Assert.That(inventory.QuickKind, Is.EqualTo(QuickSlotKind.Empty),

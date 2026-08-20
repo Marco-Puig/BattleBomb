@@ -1,4 +1,5 @@
 using System;
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Stats;
 
 namespace BattleBomb.Core.Items
@@ -26,6 +27,15 @@ namespace BattleBomb.Core.Items
         public readonly float ShotSpeed;
         public readonly float ConsumableHealFraction;
 
+        /// <summary>Which pool this consumable refills (D27).</summary>
+        public readonly RestoreKind Restores;
+
+        /// <summary>An equipment active's payload (D37), zero on everything passive.</summary>
+        public readonly float ActiveWeaponDamageShare;
+        public readonly ElementId ActiveElement;
+        public readonly float ActiveRadius;
+        public readonly int ActiveCooldownSteps;
+
         public ItemInstance(
             int definitionId,
             string displayName,
@@ -39,8 +49,18 @@ namespace BattleBomb.Core.Items
             int upgradeCapacity,
             int upgradesSpent = 0,
             float shotSpeed = 0f,
-            float consumableHealFraction = 0f)
+            float consumableHealFraction = 0f,
+            RestoreKind restores = RestoreKind.Health,
+            float activeWeaponDamageShare = 0f,
+            ElementId activeElement = default,
+            float activeRadius = 0f,
+            int activeCooldownSteps = 0)
         {
+            Restores = restores;
+            ActiveWeaponDamageShare = activeWeaponDamageShare;
+            ActiveElement = activeElement;
+            ActiveRadius = activeRadius;
+            ActiveCooldownSteps = activeCooldownSteps;
             DefinitionId = definitionId;
             DisplayName = displayName ?? string.Empty;
             Slot = slot;
@@ -59,6 +79,9 @@ namespace BattleBomb.Core.Items
         public int AffixCount => Affixes != null ? Affixes.Length : 0;
 
         public bool IsConsumable => Slot == ItemSlot.Consumable;
+
+        /// <summary>True for the rare equipment piece the quick slot can fire (D37).</summary>
+        public bool HasActive => ActiveWeaponDamageShare > 0f;
 
         /// <summary>A default-constructed instance never went through the generator — the "no item" value.</summary>
         public bool IsEmpty => Affixes == null;

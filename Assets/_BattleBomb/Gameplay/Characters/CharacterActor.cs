@@ -227,9 +227,21 @@ namespace BattleBomb.Gameplay.Characters
             if (!frozen && _bag != null && (effective.Pressed & CommandButtons.Equipment) != 0)
             {
                 QuickUseResult quick = _bag.Inventory.UseQuickSlot(_quickUseCooldownSteps);
-                if (quick.Used && quick.HealFraction > 0f)
+                if (quick.Used && quick.RestoreFraction > 0f)
                 {
-                    _condition = _condition.Healed(quick.HealFraction * _sheet.MaxHealth);
+                    if (quick.Restores == RestoreKind.Mana)
+                    {
+                        _mana = _mana.Restored(quick.RestoreFraction * _sheet.MaxMana);
+                    }
+                    else
+                    {
+                        _condition = _condition.Healed(quick.RestoreFraction * _sheet.MaxHealth);
+                    }
+                }
+
+                if (quick.FiredActive && _driver != null)
+                {
+                    _driver.ResolveEquipmentActive(this, quick);
                 }
             }
 

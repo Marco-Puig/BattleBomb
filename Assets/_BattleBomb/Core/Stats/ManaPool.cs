@@ -33,6 +33,10 @@ namespace BattleBomb.Core.Stats
         public ManaPool Spent(float amount) =>
             new ManaPool(Max, Mathf.Max(0f, Current - Mathf.Max(0f, amount)));
 
+        /// <summary>A mana potion's refill (D27); never overfills.</summary>
+        public ManaPool Restored(float amount) =>
+            new ManaPool(Max, Mathf.Min(Max, Current + Mathf.Max(0f, amount)));
+
         /// <summary>The stat sheet resized the pool; current mana is kept, clamped.</summary>
         public ManaPool Resized(float newMax)
         {

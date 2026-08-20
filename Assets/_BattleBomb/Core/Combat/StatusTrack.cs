@@ -144,6 +144,21 @@ namespace BattleBomb.Core.Combat
             return damage;
         }
 
+        /// <summary>A reaction spending the mark it consumed (D41).</summary>
+        public bool Remove(ElementId element)
+        {
+            for (int i = 0; i < _active.Count; i++)
+            {
+                if (_active[i].Element == element)
+                {
+                    _active.RemoveAt(i);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Death, a downed player, and the attempt reset all start clean.</summary>
         public void Clear() => _active.Clear();
     }

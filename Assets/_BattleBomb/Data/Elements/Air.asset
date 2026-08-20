@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 43f9acdf9e39bb84797fbca963c17de8, type: 3}
-  m_Name: Fire
+  m_Name: Air
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.ElementDefinition
-  _id: 1
-  _displayName: Fire
-  _color: {r: 1, g: 0.45, b: 0.15, a: 1}
-  _statusName: Burn
+  _id: 4
+  _displayName: Air
+  _color: {r: 0.85, g: 0.95, b: 1, a: 1}
+  _statusName: 
   _statusDurationSteps: 180
   _statusTickSteps: 30
   _statusDamageShare: 0.5
@@ -24,14 +24,14 @@ MonoBehaviour:
   _signature:
     _startupSteps: 10
     _activeSteps: 4
-    _recoverySteps: 16
-    _damage: 22
-    _reachX: 3.2
+    _recoverySteps: 14
+    _damage: 12
+    _reachX: 2.4
     _depthTolerance: 0.9
     _lungeDistance: 0
-    _maxTargets: 3
-    _knockbackSpeed: 4
-    _launchSpeed: 0
+    _maxTargets: 4
+    _knockbackSpeed: 2
+    _launchSpeed: 11
     _hitstopSteps: 2
     _moveSpeedScale: 0.4
     _resolvesOnLanding: 0

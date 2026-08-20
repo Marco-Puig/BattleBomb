@@ -10,32 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 43f9acdf9e39bb84797fbca963c17de8, type: 3}
-  m_Name: Fire
+  m_Name: Earth
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.ElementDefinition
-  _id: 1
-  _displayName: Fire
-  _color: {r: 1, g: 0.45, b: 0.15, a: 1}
-  _statusName: Burn
+  _id: 3
+  _displayName: Earth
+  _color: {r: 0.55, g: 0.42, b: 0.25, a: 1}
+  _statusName: 
   _statusDurationSteps: 180
   _statusTickSteps: 30
   _statusDamageShare: 0.5
   _statusMoveScale: 1
   _hasSignature: 1
   _signature:
-    _startupSteps: 10
+    _startupSteps: 14
     _activeSteps: 4
     _recoverySteps: 16
-    _damage: 22
-    _reachX: 3.2
+    _damage: 30
+    _reachX: 1.6
     _depthTolerance: 0.9
     _lungeDistance: 0
     _maxTargets: 3
-    _knockbackSpeed: 4
+    _knockbackSpeed: 2
     _launchSpeed: 0
-    _hitstopSteps: 2
+    _hitstopSteps: 3
     _moveSpeedScale: 0.4
     _resolvesOnLanding: 0
-    _stunSteps: 0
-  _signatureManaCost: 20
+    _stunSteps: 45
+  _signatureManaCost: 25
   _signatureDelivery: 0
   _signatureBoltSpeed: 0

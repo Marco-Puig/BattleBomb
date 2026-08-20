@@ -34,17 +34,44 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Total damage over the mark's life, as a share of the hit that applied it.")]
         [SerializeField] private float _statusDamageShare = 0.5f;
 
+        [Tooltip("Movement multiplier while marked (D46) — 1 leaves movement alone; Chill authors 0.55.")]
+        [SerializeField] private float _statusMoveScale = 1f;
+
+        [Header("Signature cast (D46) — the press every character of this element shares")]
+        [Tooltip("Off means no signature: characters keep whatever their own press cast authors.")]
+        [SerializeField] private bool _hasSignature;
+
+        [Tooltip("The signature's frame data and shape (stun steps included — Earth's wall).")]
+        [SerializeField] private AttackSpec _signature;
+
+        [Tooltip("Mana the signature press costs.")]
+        [SerializeField] private int _signatureManaCost = 20;
+
+        [Tooltip("Hitbox resolves a shape in front; Projectile fires a bolt down the caster's lane (Ice).")]
+        [SerializeField] private CastDelivery _signatureDelivery = CastDelivery.Hitbox;
+
+        [Tooltip("Bolt speed in units per second — projectile delivery only.")]
+        [SerializeField] private float _signatureBoltSpeed = 14f;
+
         public ElementId Id => new ElementId(_id);
 
         public string DisplayName => string.IsNullOrEmpty(_displayName) ? name : _displayName;
 
         public Color Color => _color;
 
-        public ElementSpec ToRuntime() => new ElementSpec(Id, DisplayName, ToStatus());
+        public ElementSpec ToRuntime() => new ElementSpec(Id, DisplayName, ToStatus(), ToSignature());
 
         private StatusSpec ToStatus() => string.IsNullOrEmpty(_statusName)
             ? default
-            : new StatusSpec(_statusName, _statusDurationSteps, _statusTickSteps, _statusDamageShare);
+            : new StatusSpec(
+                _statusName, _statusDurationSteps, _statusTickSteps, _statusDamageShare,
+                _statusMoveScale);
+
+        private MagicCast ToSignature() => !_hasSignature || _signature == null
+            ? default
+            : new MagicCast(
+                _signature.ToRuntime(), _signatureManaCost, 0f, _signatureDelivery,
+                _signatureBoltSpeed);
 
         /// <summary>Builds the runtime catalog from an authored list, skipping empty slots.</summary>
         public static ElementCatalog ToCatalog(IReadOnlyList<ElementDefinition> definitions)

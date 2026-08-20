@@ -141,8 +141,10 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             CommandButtons held = result.JumpRequested ? CommandButtons.Jump : CommandButtons.None;
+            float slow = Statuses.MoveScale;
             PlayerCommand intent = PlayerCommand.FromState(
-                frame, result.MoveIntent, held, CommandButtons.None);
+                frame, slow < 1f ? result.MoveIntent * slow : result.MoveIntent, held,
+                CommandButtons.None);
             _state = CharacterMotor.Step(_state, intent, _spec.Movement, bounds, dt);
 
             if (result.HitWindowOpened && _driver != null)

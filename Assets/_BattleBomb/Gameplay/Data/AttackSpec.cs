@@ -27,6 +27,9 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("The slam pattern: startup holds until landing and the hit is radial at the landing point.")]
         [SerializeField] private bool _resolvesOnLanding;
 
+        [Tooltip("Steps of stun the hit inflicts (D46 — Earth's wall). 0 for attacks that merely hit.")]
+        [SerializeField] private int _stunSteps;
+
         public static AttackSpec From(in AttackTuning tuning)
         {
             AttackSpec spec = new AttackSpec
@@ -44,6 +47,7 @@ namespace BattleBomb.Gameplay.Data
                 _hitstopSteps = tuning.HitstopSteps,
                 _moveSpeedScale = tuning.MoveSpeedScale,
                 _resolvesOnLanding = tuning.ResolvesOnLanding,
+                _stunSteps = tuning.StunSteps,
             };
             return spec;
         }
@@ -61,6 +65,7 @@ namespace BattleBomb.Gameplay.Data
             _launchSpeed,
             _hitstopSteps,
             _moveSpeedScale,
-            _resolvesOnLanding);
+            _resolvesOnLanding,
+            stunSteps: _stunSteps);
     }
 }

@@ -670,6 +670,7 @@ namespace BattleBomb.Gameplay.Simulation
                     HitResult hit = RollPlayerHit(
                         attacker, attack, enemy.Position, enemy.Defence, out bool crit);
                     enemy.ApplyHit(hit);
+                    enemy.ApplyStun(attack.StunSteps);
                     StealLife(attacker, hit.Damage);
                     attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
                     HitLanded?.Invoke(new HitEvent(attacker, enemy, hit.Damage, enemy.Position, false, crit));
@@ -764,6 +765,7 @@ namespace BattleBomb.Gameplay.Simulation
                 if (enemy != null)
                 {
                     enemy.ApplyHit(hit);
+                    enemy.ApplyStun(cast.StunSteps);
                 }
                 else
                 {
@@ -938,6 +940,7 @@ namespace BattleBomb.Gameplay.Simulation
                     attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
                     victim.Defence, _climate);
                 float landed = victim.ApplyEnemyHit(hit);
+                victim.ApplyStun(attack.StunSteps);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
                 HitLanded?.Invoke(new HitEvent(attacker, victim, landed, victim.Position, false));
                 ApplyElementalRider(
@@ -997,6 +1000,20 @@ namespace BattleBomb.Gameplay.Simulation
             _projectiles.Add(ProjectileState.Fired(
                 shooter.Position, target, shooter.ShotSpeed, attack.Damage, ElementId.None,
                 ProjectileLifeSteps, shooter.PlayerId.Value));
+        }
+
+        /// <summary>
+        /// A projectile cast's bolt (D46 — Ice): fired straight down the caster's lane, never
+        /// aimed across depth, so free depth crossing stays the bow's identity (§2.2). The bolt
+        /// carries the caster's element, which is also how impact pricing knows it is magic.
+        /// </summary>
+        internal void SpawnCastBolt(CharacterActor caster, in AttackTuning cast, float speed)
+        {
+            float sign = caster.Facing == Facing.Right ? 1f : -1f;
+            Vector3 target = caster.Position + new Vector3(sign * PlayerShotAimRangeX, 0f, 0f);
+            _projectiles.Add(ProjectileState.Fired(
+                caster.Position, target, speed, cast.Damage, caster.Element,
+                ProjectileLifeSteps, caster.PlayerId.Value));
         }
 
         private void StepProjectiles(IReadOnlyList<CharacterActor> players, float dt)
@@ -1070,12 +1087,15 @@ namespace BattleBomb.Gameplay.Simulation
                 }
             }
 
+            // A bolt with its own element is a cast (D46): its damage was priced as magic when
+            // the kit was built, so the weapon's damage scale never touches it — only the crit.
+            bool isCast = !p.Element.IsNone;
             float gear = 1f;
             float knockback = 1f;
             bool crit = false;
             if (shooter != null)
             {
-                gear = shooter.DamageScale;
+                gear = isCast ? 1f : shooter.DamageScale;
                 _combatRng = _combatRng.NextFloat(out float critDraw);
                 crit = critDraw < shooter.Sheet.CritChance;
                 if (crit)
@@ -1102,7 +1122,14 @@ namespace BattleBomb.Gameplay.Simulation
                 }
 
                 HitLanded?.Invoke(new HitEvent(shooter, enemy, damage, enemy.Position, false, crit));
-                if (shooter != null)
+                if (isCast)
+                {
+                    // The bolt marks with its own element, priced as a cast — Chill lands here.
+                    ApplyElementalRider(
+                        p.Element, CastSourceScale, enemy.Statuses, enemy.Defence,
+                        damage, enemy, enemy.Position);
+                }
+                else if (shooter != null)
                 {
                     // An arrow carries the bow's infusion the same way a swing carries a sword's.
                     ApplyElementalRider(

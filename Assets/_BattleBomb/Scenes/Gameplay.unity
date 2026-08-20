@@ -313,6 +313,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3d484a85673f94c468b64cfbe3c19a32, type: 2}
   _elementCatalog:
   - {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
+  - {fileID: 11400000, guid: 730f40ea4b55f0a419466713887f71dc, type: 2}
+  - {fileID: 11400000, guid: f415c5a4300d7aa468c4507a9f849015, type: 2}
+  - {fileID: 11400000, guid: 7228903af5813e9498a58c5534aecf32, type: 2}
   _climateRows:
   - _element: {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
     _multiplier: 1.25

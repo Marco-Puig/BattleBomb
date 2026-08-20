@@ -293,11 +293,12 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             AttackPhase phase = _combat.Phase;
+            MovementTuning stepTuning = SlowedByStatuses(_activeTuning);
             if (phase == AttackPhase.Ready)
             {
                 _attackRooted = false;
                 _lungeStepsLeft = 0;
-                _state = CharacterMotor.Step(_state, effective, _activeTuning, bounds, dt);
+                _state = CharacterMotor.Step(_state, effective, stepTuning, bounds, dt);
             }
             else if (_attackRooted)
             {
@@ -316,7 +317,7 @@ namespace BattleBomb.Gameplay.Characters
                     && (phase == AttackPhase.Startup || phase == AttackPhase.Active)
                     && !_combat.CurrentAttack.ResolvesOnLanding
                     && !_combat.IsCasting;
-                MovementTuning tuning = stallGravity ? WithoutGravity(_activeTuning) : _activeTuning;
+                MovementTuning tuning = stallGravity ? WithoutGravity(stepTuning) : stepTuning;
                 _state = CharacterMotor.Step(_state, CombatMove(effective, phase), tuning, bounds, dt);
                 StepAirLunge(bounds);
             }
@@ -325,9 +326,19 @@ namespace BattleBomb.Gameplay.Characters
             {
                 if (combat.Cast != MagicCastKind.None)
                 {
-                    // A cast resolves through the same geometry a swing does — the splash's line
-                    // in front, the aura's circle around — but priced as magic, not as a weapon.
-                    _driver.ResolveCast(this, combat.Attack, combat.Cast);
+                    MagicCast spell = _activeMagic.For(combat.Cast);
+                    if (spell.Delivery == CastDelivery.Projectile)
+                    {
+                        // D46: a projectile cast looses a bolt down the lane instead of testing
+                        // a shape — Ice's trade for its range.
+                        _driver.SpawnCastBolt(this, combat.Attack, spell.ProjectileSpeed);
+                    }
+                    else
+                    {
+                        // A cast resolves through the same geometry a swing does — the line in
+                        // front, the aura's circle around — but priced as magic, not as a weapon.
+                        _driver.ResolveCast(this, combat.Attack, combat.Cast);
+                    }
                 }
                 else if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
                 {
@@ -648,6 +659,21 @@ namespace BattleBomb.Gameplay.Characters
             false,
             state.StepsSinceGrounded,
             0);
+
+        /// <summary>
+        /// An active chill reshapes this step's tuning (D46); the Speed stat's slow resistance
+        /// softens it, capped so slows always matter a little (D35).
+        /// </summary>
+        private MovementTuning SlowedByStatuses(in MovementTuning tuning)
+        {
+            float scale = Statuses.MoveScale;
+            if (scale >= 1f)
+            {
+                return tuning;
+            }
+
+            return ScaledSpeed(tuning, 1f - _sheet.SlowedBy(1f - scale));
+        }
 
         private static MovementTuning ScaledSpeed(in MovementTuning tuning, float multiplier) => new MovementTuning(
             tuning.MaxSpeed * Mathf.Max(0.05f, multiplier),

@@ -168,8 +168,10 @@ namespace BattleBomb.Gameplay.Data
 
         /// <summary>
         /// The three casts (D39), built on the paper kit's frame data with this character's
-        /// authored numbers. A character with no element has no magic: the button does nothing,
-        /// which is a legal character rather than a broken one.
+        /// authored numbers — then the element's signature takes the press slot (D46), leaving
+        /// the character's splash fields as the fallback for an element that authors none. A
+        /// character with no element has no magic: the button does nothing, which is a legal
+        /// character rather than a broken one.
         /// </summary>
         public MagicKit MagicKitToRuntime()
         {
@@ -179,10 +181,11 @@ namespace BattleBomb.Gameplay.Data
             }
 
             MagicKit paper = MagicKit.Default;
-            return new MagicKit(
+            var kit = new MagicKit(
                 Retuned(paper.Splash, _splashManaCost, _splashDamage, _splashReach, 0f),
                 Retuned(paper.Aura, _auraManaCost, _auraDamage, _auraRadius, 0f),
                 Retuned(paper.Leap, _leapManaCost, _leapDamage, paper.Leap.Attack.ReachX, _leapLiftSpeed));
+            return kit.WithSignature(_element.ToRuntime().SignatureCast);
         }
 
         private static MagicCast Retuned(

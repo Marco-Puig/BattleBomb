@@ -49,5 +49,35 @@ namespace BattleBomb.Core.Stats
         }
 
         public static GearContribution Zero => default;
+
+        /// <summary>Every field scaled — how a quality budget grows a definition's base block.</summary>
+        public GearContribution Scaled(float factor) => new GearContribution(
+            WeaponDamage * factor,
+            SwingSpeedBonus * factor,
+            Defence * factor,
+            Weight * factor,
+            CritChance * factor,
+            CritDamageBonus * factor,
+            LifeSteal * factor,
+            MaxHealthBonus * factor,
+            MaxManaBonus * factor,
+            ManaRegen * factor,
+            WeightReduction * factor,
+            KnockbackBonus * factor);
+
+        public static GearContribution operator +(in GearContribution a, in GearContribution b) =>
+            new GearContribution(
+                a.WeaponDamage + b.WeaponDamage,
+                a.SwingSpeedBonus + b.SwingSpeedBonus,
+                a.Defence + b.Defence,
+                a.Weight + b.Weight,
+                a.CritChance + b.CritChance,
+                a.CritDamageBonus + b.CritDamageBonus,
+                a.LifeSteal + b.LifeSteal,
+                a.MaxHealthBonus + b.MaxHealthBonus,
+                a.MaxManaBonus + b.MaxManaBonus,
+                a.ManaRegen + b.ManaRegen,
+                a.WeightReduction + b.WeightReduction,
+                a.KnockbackBonus + b.KnockbackBonus);
     }
 }

@@ -136,7 +136,7 @@ namespace BattleBomb.UI.Chest
 
             _tabStrip.text = TabLine();
 
-            bool sack = _tab == ChestTab.ItemSack;
+            bool sack = _nav.Tab == ChestTab.ItemSack;
             _sackRoot.gameObject.SetActive(sack);
             _heroRoot.gameObject.SetActive(!sack);
 
@@ -157,9 +157,9 @@ namespace BattleBomb.UI.Chest
 
         private string TabLine()
         {
-            string sack = _tab == ChestTab.ItemSack ? "[ ITEM SACK ]" : "  Item Sack  ";
-            string hero = _tab == ChestTab.Hero ? "[ HERO ]" : "  Hero  ";
-            if (_focus == ChestFocus.Tabs)
+            string sack = _nav.Tab == ChestTab.ItemSack ? "[ ITEM SACK ]" : "  Item Sack  ";
+            string hero = _nav.Tab == ChestTab.Hero ? "[ HERO ]" : "  Hero  ";
+            if (_nav.Focus == ChestFocus.Tabs)
             {
                 sack = UiBuild.Tint(sack, UiBuild.Focus);
                 hero = UiBuild.Tint(hero, UiBuild.Focus);
@@ -173,8 +173,8 @@ namespace BattleBomb.UI.Chest
             _text.Clear();
             for (int i = 0; i < FilterNames.Length; i++)
             {
-                string name = i == _filter ? $"[{FilterNames[i]}]" : $" {FilterNames[i]} ";
-                _text.Append(_focus == ChestFocus.Filters && i == _filter
+                string name = i == _nav.Filter ? $"[{FilterNames[i]}]" : $" {FilterNames[i]} ";
+                _text.Append(_nav.Focus == ChestFocus.Filters && i == _nav.Filter
                     ? UiBuild.Tint(name, UiBuild.Focus)
                     : name);
             }
@@ -193,10 +193,10 @@ namespace BattleBomb.UI.Chest
 
                 ItemStack stack = items[_visible[cell]];
                 Color quality = QualityColors.For(stack.Item.Quality);
-                bool selected = cell == _cursor;
-                bool pending = _visible[cell] == _pendingCombine;
+                bool selected = cell == _nav.Cursor;
+                bool pending = _visible[cell] == _nav.PendingCombine;
 
-                _cells[cell].color = selected && _focus == ChestFocus.Grid
+                _cells[cell].color = selected && _nav.Focus == ChestFocus.Grid
                     ? Color.Lerp(quality, UiBuild.Focus, 0.45f)
                     : quality * 0.75f;
 
@@ -220,16 +220,16 @@ namespace BattleBomb.UI.Chest
                 _cellLabels[cell].text = _text.ToString();
             }
 
-            int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_cursor, 0, _visible.Count - 1)] : -1;
+            int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_nav.Cursor, 0, _visible.Count - 1)] : -1;
             BuildMenu(bagIndex);
             RefreshDropdown(bagIndex);
             RefreshShopRow();
 
-            if (_focus == ChestFocus.Stock && _stockCursor < _stock.Count)
+            if (_nav.Focus == ChestFocus.Stock && _nav.StockCursor < _stock.Count)
             {
-                _detail.text = DetailFor(_stock[_stockCursor]);
+                _detail.text = DetailFor(_stock[_nav.StockCursor]);
             }
-            else if (_focus == ChestFocus.Upgrade && bagIndex >= 0)
+            else if (_nav.Focus == ChestFocus.Upgrade && bagIndex >= 0)
             {
                 _detail.text = UpgradePanelFor(items[bagIndex].Item);
             }
@@ -245,7 +245,7 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         private void RefreshDropdown(int bagIndex)
         {
-            bool showing = _focus == ChestFocus.Menu && bagIndex >= 0 && _menu.Count > 0;
+            bool showing = _nav.Focus == ChestFocus.Menu && bagIndex >= 0 && _menu.Count > 0;
             _menuRoot.gameObject.SetActive(showing);
             if (!showing)
             {
@@ -257,8 +257,8 @@ namespace BattleBomb.UI.Chest
             // Anchored to the selected cell, and flipped upward when the cell is low enough that
             // the list would fall off the bottom.
             int columns = Columns;
-            int row = _cursor / columns;
-            int column = _cursor % columns;
+            int row = _nav.Cursor / columns;
+            int column = _nav.Cursor % columns;
             float cellW = 1f / columns;
             float cellH = 1f / GridRows;
             float gridTop = 0.9f;
@@ -281,8 +281,8 @@ namespace BattleBomb.UI.Chest
             for (int i = 0; i < _menu.Count; i++)
             {
                 string label = LabelFor(_menu[i], item);
-                string line = i == _action ? $"> {label}" : $"  {label}";
-                _text.Append(i == _action ? UiBuild.Tint(line, UiBuild.Focus) : line).Append('\n');
+                string line = i == _nav.Action ? $"> {label}" : $"  {label}";
+                _text.Append(i == _nav.Action ? UiBuild.Tint(line, UiBuild.Focus) : line).Append('\n');
             }
 
             _menuText.text = _text.ToString();
@@ -308,9 +308,9 @@ namespace BattleBomb.UI.Chest
                 string name = NameOf(item, _upgradeTargets[i]);
                 float current = ValueOf(item, _upgradeTargets[i]);
                 float raised = current * (1f + ItemUpgrade.StepFraction);
-                string line = $"{(i == _upgradeCursor ? ">" : " ")} {name}  {current:F2}  "
+                string line = $"{(i == _nav.UpgradeCursor ? ">" : " ")} {name}  {current:F2}  "
                     + $"→ {raised:F2}";
-                _text.Append(i == _upgradeCursor
+                _text.Append(i == _nav.UpgradeCursor
                     ? UiBuild.Tint(line, UiBuild.Focus)
                     : line).Append('\n');
             }
@@ -349,12 +349,12 @@ namespace BattleBomb.UI.Chest
                 {
                     int price = _bag.Inventory.Prices.BuyPrice(_stock[i]);
                     string label = $" {_stock[i].DisplayName} {price} ";
-                    if (i == _stockCursor)
+                    if (i == _nav.StockCursor)
                     {
                         label = $"[{_stock[i].DisplayName} {price}]";
                     }
 
-                    _text.Append(_focus == ChestFocus.Stock && i == _stockCursor
+                    _text.Append(_nav.Focus == ChestFocus.Stock && i == _nav.StockCursor
                         ? UiBuild.Tint(label, UiBuild.Focus)
                         : UiBuild.Tint(label, QualityColors.For(_stock[i].Quality)));
                 }
@@ -485,8 +485,8 @@ namespace BattleBomb.UI.Chest
 
             for (int i = 0; i < names.Length; i++)
             {
-                string line = $"{(i == _cursor && _focus != ChestFocus.Tabs ? ">" : " ")} {names[i]}  {values[i]}";
-                _text.Append(i == _cursor && _focus != ChestFocus.Tabs
+                string line = $"{(i == _nav.Cursor && _nav.Focus != ChestFocus.Tabs ? ">" : " ")} {names[i]}  {values[i]}";
+                _text.Append(i == _nav.Cursor && _nav.Focus != ChestFocus.Tabs
                     ? UiBuild.Tint(line, UiBuild.Focus)
                     : line).Append('\n');
             }

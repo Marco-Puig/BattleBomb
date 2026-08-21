@@ -23,10 +23,26 @@ namespace BattleBomb.UI.Chest
         Tabs = 0,
         Filters = 1,
         Grid = 2,
-        Actions = 3,
+
+        /// <summary>The dropdown that opens on the selected item: equip, upgrade, combine, sell, lock.</summary>
+        Menu = 3,
+
+        /// <summary>The stat list in the right panel, once "Upgrade" is chosen (Michael, M6 pass).</summary>
+        Upgrade = 4,
 
         /// <summary>The shopkeeper's rack, on the shop screen only (D43).</summary>
-        Stock = 4,
+        Stock = 5,
+    }
+
+    /// <summary>What one row of the item dropdown does.</summary>
+    internal enum ItemAction
+    {
+        Equip = 0,
+        QuickUse = 1,
+        Upgrade = 2,
+        Combine = 3,
+        Sell = 4,
+        Lock = 5,
     }
 
     /// <summary>
@@ -74,6 +90,7 @@ namespace BattleBomb.UI.Chest
         private int _filter;
         private int _cursor;
         private int _action;
+        private int _upgradeCursor;
         private int _pendingCombine = -1;
 
         /// <summary>Ignore input until every menu button has been let go at least once.</summary>
@@ -85,7 +102,9 @@ namespace BattleBomb.UI.Chest
 
         private readonly List<int> _visible = new List<int>();
         private readonly List<UpgradeTarget> _upgradeTargets = new List<UpgradeTarget>();
-        private readonly List<string> _actions = new List<string>();
+
+        /// <summary>The dropdown's rows for the selected item, rebuilt whenever it changes.</summary>
+        private readonly List<ItemAction> _menu = new List<ItemAction>();
 
         /// <summary>The shopkeeper's rack for this visit (D43) — empty at a chest.</summary>
         private readonly List<ItemInstance> _stock = new List<ItemInstance>();
@@ -270,19 +289,20 @@ namespace BattleBomb.UI.Chest
                     MoveInGrid(dx, dy);
                     break;
 
-                case ChestFocus.Actions:
-                    if (dx != 0)
+                case ChestFocus.Menu:
+                    // A dropdown is a vertical list: up and down walk it, nothing else.
+                    if (dy != 0 && _menu.Count > 0)
                     {
-                        _action = Mathf.Clamp(_action + dx, 0, Mathf.Max(0, _actions.Count - 1));
+                        _action = (_action - dy + _menu.Count) % _menu.Count;
                     }
-                    else if (dy > 0)
+
+                    break;
+
+                case ChestFocus.Upgrade:
+                    if (dy != 0 && _upgradeTargets.Count > 0)
                     {
-                        _focus = ChestFocus.Grid;
-                    }
-                    else if (dy < 0 && _stock.Count > 0)
-                    {
-                        _focus = ChestFocus.Stock;
-                        _stockCursor = 0;
+                        _upgradeCursor = (_upgradeCursor - dy + _upgradeTargets.Count)
+                            % _upgradeTargets.Count;
                     }
 
                     break;
@@ -294,7 +314,7 @@ namespace BattleBomb.UI.Chest
                     }
                     else if (dy > 0)
                     {
-                        _focus = ChestFocus.Actions;
+                        _focus = ChestFocus.Grid;
                     }
 
                     break;
@@ -331,8 +351,13 @@ namespace BattleBomb.UI.Chest
 
             if (next >= _visible.Count)
             {
-                _focus = ChestFocus.Actions;
-                _action = 0;
+                // Off the bottom: the shop rack if there is one, otherwise stay put.
+                if (_stock.Count > 0)
+                {
+                    _focus = ChestFocus.Stock;
+                    _stockCursor = 0;
+                }
+
                 return;
             }
 
@@ -357,7 +382,14 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
-            if (_focus == ChestFocus.Actions)
+            if (_focus == ChestFocus.Upgrade)
+            {
+                _focus = ChestFocus.Menu;
+                Refresh();
+                return;
+            }
+
+            if (_focus == ChestFocus.Menu || _focus == ChestFocus.Stock)
             {
                 _focus = ChestFocus.Grid;
                 Refresh();
@@ -397,11 +429,19 @@ namespace BattleBomb.UI.Chest
                     _focus = ChestFocus.Grid;
                     break;
                 case ChestFocus.Grid:
-                    _focus = ChestFocus.Actions;
-                    _action = 0;
+                    // Clicking an item opens its dropdown (Michael, M6 pass).
+                    if (_visible.Count > 0)
+                    {
+                        _focus = ChestFocus.Menu;
+                        _action = 0;
+                    }
+
                     break;
-                case ChestFocus.Actions:
-                    RunAction();
+                case ChestFocus.Menu:
+                    RunMenuAction();
+                    break;
+                case ChestFocus.Upgrade:
+                    RunUpgrade();
                     break;
                 case ChestFocus.Stock:
                     RunBuy();
@@ -433,46 +473,52 @@ namespace BattleBomb.UI.Chest
             Refresh();
         }
 
-        private void RunAction()
+        private void RunMenuAction()
         {
             CollectVisible();
-            if (_visible.Count == 0 || _action >= _actions.Count)
+            if (_visible.Count == 0 || _action >= _menu.Count)
             {
                 return;
             }
 
             int bagIndex = _visible[Mathf.Clamp(_cursor, 0, _visible.Count - 1)];
             ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
-            string action = _actions[_action];
 
-            if (action.StartsWith("Equip"))
+            switch (_menu[_action])
             {
-                Flash(_bag.RequestEquip(bagIndex) ? "Equipped." : "Cannot equip — check the level.");
-            }
-            else if (action.StartsWith("Quick"))
-            {
-                Flash(_bag.RequestQuickConsumable(item.DefinitionId) ? "Quick-use set." : "Cannot set.");
-            }
-            else if (action.StartsWith("Sell"))
-            {
-                int coins = _bag.RequestSell(bagIndex);
-                Flash(coins > 0 ? $"Sold for {coins}." : "Locked — release it first.");
-            }
-            else if (action.StartsWith("Lock") || action.StartsWith("Unlock"))
-            {
-                _bag.RequestLock(bagIndex, !item.Locked);
-                Flash(item.Locked ? "Released." : "Locked.");
-            }
-            else if (action.StartsWith("Combine"))
-            {
-                RunCombine(bagIndex);
-            }
-            else if (action.StartsWith("+"))
-            {
-                RunUpgrade(bagIndex, action);
+                case ItemAction.Equip:
+                    Flash(_bag.RequestEquip(bagIndex) ? "Equipped." : "Cannot equip — check the level.");
+                    break;
+
+                case ItemAction.QuickUse:
+                    Flash(_bag.RequestQuickConsumable(item.DefinitionId)
+                        ? "Quick-use set." : "Cannot set.");
+                    break;
+
+                case ItemAction.Upgrade:
+                    // Deepening moves to the right panel, where the stats already are — so the
+                    // choice is made looking at the numbers it changes (Michael, M6 pass).
+                    ItemUpgrade.Targets(item, _upgradeTargets);
+                    _focus = ChestFocus.Upgrade;
+                    _upgradeCursor = 0;
+                    return;
+
+                case ItemAction.Combine:
+                    RunCombine(bagIndex);
+                    break;
+
+                case ItemAction.Sell:
+                    int coins = _bag.RequestSell(bagIndex);
+                    Flash(coins > 0 ? $"Sold for {coins}." : "Locked — release it first.");
+                    break;
+
+                case ItemAction.Lock:
+                    _bag.RequestLock(bagIndex, !item.Locked);
+                    Flash(item.Locked ? "Released." : "Locked.");
+                    break;
             }
 
-            _cursor = Mathf.Clamp(_cursor, 0, Mathf.Max(0, _bag.Inventory.Items.Count - 1));
+            _cursor = Mathf.Clamp(_cursor, 0, Mathf.Max(0, _visible.Count - 1));
             _focus = ChestFocus.Grid;
         }
 
@@ -533,19 +579,38 @@ namespace BattleBomb.UI.Chest
             _pendingCombine = -1;
         }
 
-        private void RunUpgrade(int bagIndex, string action)
+        /// <summary>
+        /// Spends one point into the stat under the cursor in the right panel. Focus stays here
+        /// afterwards: a player deepening an item usually wants to keep going, and the panel
+        /// shows the cost doubling as they do.
+        /// </summary>
+        private void RunUpgrade()
         {
-            ItemUpgrade.Targets(_bag.Inventory.Items[bagIndex].Item, _upgradeTargets);
-            int index = _actions.IndexOf(action) - FixedActionCount(bagIndex);
-            if (index < 0 || index >= _upgradeTargets.Count)
+            CollectVisible();
+            if (_visible.Count == 0 || _upgradeCursor >= _upgradeTargets.Count)
             {
                 return;
             }
 
+            int bagIndex = _visible[Mathf.Clamp(_cursor, 0, _visible.Count - 1)];
             int price = _bag.Inventory.Prices.UpgradeCost(_bag.Inventory.Items[bagIndex].Item);
-            Flash(_bag.RequestUpgrade(bagIndex, _upgradeTargets[index])
-                ? $"Deepened for {price}."
-                : "Cannot afford it, or the capacity is spent.");
+
+            if (_bag.RequestUpgrade(bagIndex, _upgradeTargets[_upgradeCursor]))
+            {
+                Flash($"Deepened for {price}.");
+                ItemUpgrade.Targets(_bag.Inventory.Items[bagIndex].Item, _upgradeTargets);
+                if (!ItemUpgrade.CanUpgrade(_bag.Inventory.Items[bagIndex].Item))
+                {
+                    // Nothing left to spend — back out rather than leaving a dead cursor.
+                    _focus = ChestFocus.Grid;
+                }
+
+                return;
+            }
+
+            Flash(_bag.Wallet.CanAfford(price)
+                ? "The capacity is spent."
+                : $"Not enough coin ({price}).");
         }
 
         private void Flash(string message)
@@ -590,47 +655,53 @@ namespace BattleBomb.UI.Chest
             }
         }
 
-        private int FixedActionCount(int bagIndex)
+        /// <summary>
+        /// The dropdown's rows for this item. Only what the item can actually do appears — a
+        /// potion has no Combine, a maxed item has no Upgrade — so a row on screen is always a
+        /// row that works.
+        /// </summary>
+        private void BuildMenu(int bagIndex)
         {
-            ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
-            int count = 2; // equip/quick + sell
-            count += 1; // lock
-            if (!item.IsConsumable)
-            {
-                count += 1; // combine
-            }
-
-            return count;
-        }
-
-        private void BuildActions(int bagIndex)
-        {
-            _actions.Clear();
+            _menu.Clear();
             if (bagIndex < 0)
             {
                 return;
             }
 
             ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
-            _actions.Add(item.IsConsumable ? "Quick-use" : "Equip");
-            _actions.Add($"Sell {_bag.Inventory.Prices.SellPrice(item)}");
-            _actions.Add(item.Locked ? "Unlock" : "Lock");
-            if (!item.IsConsumable)
-            {
-                _actions.Add("Combine");
-            }
+            _menu.Add(item.IsConsumable ? ItemAction.QuickUse : ItemAction.Equip);
 
-            ItemUpgrade.Targets(item, _upgradeTargets);
             if (ItemUpgrade.CanUpgrade(item))
             {
-                int price = _bag.Inventory.Prices.UpgradeCost(item);
-                for (int i = 0; i < _upgradeTargets.Count; i++)
-                {
-                    _actions.Add($"+{NameOf(item, _upgradeTargets[i])} {price}");
-                }
+                _menu.Add(ItemAction.Upgrade);
             }
 
-            _action = Mathf.Clamp(_action, 0, Mathf.Max(0, _actions.Count - 1));
+            if (!item.IsConsumable)
+            {
+                _menu.Add(ItemAction.Combine);
+            }
+
+            _menu.Add(ItemAction.Sell);
+            _menu.Add(ItemAction.Lock);
+
+            _action = Mathf.Clamp(_action, 0, Mathf.Max(0, _menu.Count - 1));
+        }
+
+        /// <summary>The row's label, with the number that makes the choice concrete.</summary>
+        private string LabelFor(ItemAction action, in ItemInstance item)
+        {
+            switch (action)
+            {
+                case ItemAction.Equip: return "Equip";
+                case ItemAction.QuickUse: return "Set as quick-use";
+                case ItemAction.Upgrade:
+                    return $"Upgrade  ({_bag.Inventory.Prices.UpgradeCost(item)})";
+                case ItemAction.Combine:
+                    return _pendingCombine >= 0 ? "Combine with this" : "Combine…";
+                case ItemAction.Sell:
+                    return $"Sell  ({_bag.Inventory.Prices.SellPrice(item)})";
+                default: return item.Locked ? "Unlock" : "Lock";
+            }
         }
 
         private static string NameOf(in ItemInstance item, in UpgradeTarget target)

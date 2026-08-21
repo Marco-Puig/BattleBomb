@@ -46,9 +46,31 @@ namespace BattleBomb.Tests.EditMode
         {
             PriceBook book = PriceBook.Default;
 
-            Assert.That(book.SellPrice(QualityRank.Rusty, 5), Is.EqualTo(29));
-            Assert.That(book.SellPrice(QualityRank.Shiny, 12), Is.EqualTo(71));
-            Assert.That(book.SellPrice(QualityRank.Godly, 60), Is.EqualTo(2611));
+            // Halved after Michael's M6 pass ("cut them all by 50%") — the raw ladder is
+            // unchanged, the player's cut of it is not.
+            Assert.That(book.SellPrice(QualityRank.Rusty, 5), Is.EqualTo(14));
+            Assert.That(book.SellPrice(QualityRank.Shiny, 12), Is.EqualTo(36));
+            Assert.That(book.SellPrice(QualityRank.Godly, 60), Is.EqualTo(1306));
+        }
+
+        [Test]
+        public void Selling_returns_half_an_items_value_while_the_sinks_hold()
+        {
+            PriceBook book = PriceBook.Default;
+            var full = new PriceBook(3f, 2f, 0.04f, 3f, 2f, sellReturn: 1f);
+
+            Assert.That(book.SellPrice(QualityRank.Godly, 60),
+                Is.EqualTo(full.SellPrice(QualityRank.Godly, 60) / 2).Within(1),
+                "Income is halved…");
+
+            Assert.That(book.BuyPrice(QualityRank.Godly, 60),
+                Is.EqualTo(full.BuyPrice(QualityRank.Godly, 60)),
+                "…while what the shop charges is untouched…");
+
+            Assert.That(book.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 0),
+                Is.EqualTo(full.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 0)),
+                "…and so is the upgrade sink. Halving both would shrink every number and " +
+                "change nothing, because the grind is the ratio between them.");
         }
 
         [Test]
@@ -97,7 +119,7 @@ namespace BattleBomb.Tests.EditMode
         // ── The upgrade sink (D44) ───────────────────────────────────────────────────
 
         [Test]
-        public void Upgrade_steps_double_and_sum_to_the_share_of_the_sell_price()
+        public void Upgrade_steps_double_and_sum_to_the_share_of_the_item_value()
         {
             PriceBook book = PriceBook.Default;
             int sell = book.SellPrice(QualityRank.Godly, 60);
@@ -111,9 +133,12 @@ namespace BattleBomb.Tests.EditMode
             };
 
             Assert.That(steps, Is.EqualTo(new[] { 348, 696, 1393, 2785 }));
-            Assert.That(steps[0] + steps[1] + steps[2] + steps[3],
-                Is.EqualTo(2 * sell).Within(0.01f * sell),
-                "Maxing an item costs about two of its own castoffs, whatever its capacity.");
+
+            // The sink is priced off the item's value, not off what selling returns — so with
+            // the return at half, maxing an item costs roughly four of its own castoffs.
+            int total = steps[0] + steps[1] + steps[2] + steps[3];
+            Assert.That(total / (float)sell, Is.EqualTo(4f).Within(0.1f),
+                "Four castoffs to max one keeper. Michael tunes this with SellReturn.");
         }
 
         [Test]
@@ -146,7 +171,7 @@ namespace BattleBomb.Tests.EditMode
                 QualityRank.Shiny, new GearContribution(weaponDamage: 20f), new AffixRoll[0],
                 requiredLevel: 12, new ItemInvestment(capacity: 2, spent: 1));
 
-            Assert.That(book.SellPrice(item), Is.EqualTo(71));
+            Assert.That(book.SellPrice(item), Is.EqualTo(36));
             Assert.That(book.UpgradeCost(item), Is.EqualTo(95),
                 "The second point's price, because one is already spent.");
         }

@@ -60,6 +60,13 @@ namespace BattleBomb.UI.Chest
             UiBuild.Box("Back", actionRow, UiBuild.PanelInner);
             _actionStrip = UiBuild.Label("Text", actionRow, string.Empty, 12, UiBuild.Ink, TextAnchor.UpperLeft);
 
+            // The item dropdown floats over the grid, anchored under whichever cell is selected.
+            _menuRoot = UiBuild.Place(UiBuild.Rect("Dropdown", sack), 0f, 0f, 0.34f, 0.34f);
+            UiBuild.Box("Back", _menuRoot, new Color(0.07f, 0.09f, 0.14f, 0.98f));
+            RectTransform menuPad = UiBuild.Place(UiBuild.Rect("Pad", _menuRoot), 0f, 0f, 1f, 1f, 8f);
+            _menuText = UiBuild.Label("Text", menuPad, string.Empty, 12, UiBuild.Ink, TextAnchor.UpperLeft);
+            _menuRoot.gameObject.SetActive(false);
+
             RectTransform hintRow = UiBuild.Place(UiBuild.Rect("Hint", sack), 0f, 0f, 1f, 0.10f, 6f);
             _hint = UiBuild.Label("Text", hintRow, string.Empty, 11, UiBuild.InkDim, TextAnchor.MiddleLeft);
 
@@ -84,6 +91,8 @@ namespace BattleBomb.UI.Chest
         }
 
         private RectTransform _sackRoot;
+        private RectTransform _menuRoot;
+        private Text _menuText;
 
         private void BuildGrid()
         {
@@ -212,12 +221,17 @@ namespace BattleBomb.UI.Chest
             }
 
             int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_cursor, 0, _visible.Count - 1)] : -1;
-            BuildActions(bagIndex);
-            RefreshActions();
+            BuildMenu(bagIndex);
+            RefreshDropdown(bagIndex);
+            RefreshShopRow();
 
             if (_focus == ChestFocus.Stock && _stockCursor < _stock.Count)
             {
                 _detail.text = DetailFor(_stock[_stockCursor]);
+            }
+            else if (_focus == ChestFocus.Upgrade && bagIndex >= 0)
+            {
+                _detail.text = UpgradePanelFor(items[bagIndex].Item);
             }
             else
             {
@@ -225,21 +239,109 @@ namespace BattleBomb.UI.Chest
             }
         }
 
-        private void RefreshActions()
+        /// <summary>
+        /// The item dropdown, floated under the selected cell so the menu belongs to the thing
+        /// it acts on rather than to a strip at the bottom of the screen (Michael, M6 pass).
+        /// </summary>
+        private void RefreshDropdown(int bagIndex)
         {
-            _text.Clear();
-            for (int i = 0; i < _actions.Count; i++)
+            bool showing = _focus == ChestFocus.Menu && bagIndex >= 0 && _menu.Count > 0;
+            _menuRoot.gameObject.SetActive(showing);
+            if (!showing)
             {
-                string label = i == _action ? $"[{_actions[i]}]" : $" {_actions[i]} ";
-                _text.Append(_focus == ChestFocus.Actions && i == _action
-                    ? UiBuild.Tint(label, UiBuild.Focus)
-                    : label);
-                if (i % 3 == 2)
-                {
-                    _text.Append('\n');
-                }
+                return;
             }
 
+            ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
+
+            // Anchored to the selected cell, and flipped upward when the cell is low enough that
+            // the list would fall off the bottom.
+            int columns = Columns;
+            int row = _cursor / columns;
+            int column = _cursor % columns;
+            float cellW = 1f / columns;
+            float cellH = 1f / GridRows;
+            float gridTop = 0.9f;
+            float gridBottom = 0.22f;
+            float gridHeight = gridTop - gridBottom;
+
+            float left = 0.6f * (column * cellW);
+            float cellBottomY = gridTop - (row + 1) * cellH * gridHeight;
+            float height = Mathf.Clamp(0.062f * _menu.Count + 0.03f, 0.1f, 0.5f);
+            float bottom = cellBottomY - height;
+            if (bottom < 0.1f)
+            {
+                bottom = cellBottomY + cellH * gridHeight;
+            }
+
+            left = Mathf.Min(left, 0.6f - 0.30f);
+            UiBuild.Place(_menuRoot, left, bottom, left + 0.30f, bottom + height);
+
+            _text.Clear();
+            for (int i = 0; i < _menu.Count; i++)
+            {
+                string label = LabelFor(_menu[i], item);
+                string line = i == _action ? $"> {label}" : $"  {label}";
+                _text.Append(i == _action ? UiBuild.Tint(line, UiBuild.Focus) : line).Append('\n');
+            }
+
+            _menuText.text = _text.ToString();
+        }
+
+        /// <summary>
+        /// The right panel while deepening: every stat this item can raise, the cursor on one of
+        /// them, and the price. The choice is made looking at the numbers it changes.
+        /// </summary>
+        private string UpgradePanelFor(in ItemInstance item)
+        {
+            _text.Clear();
+            _text.Append(UiBuild.Tint(item.DisplayName, QualityColors.For(item.Quality))).Append('\n');
+            _text.Append("Capacity ").Append(item.UpgradesSpent).Append('/').Append(item.UpgradeCapacity);
+            _text.Append("   next point ")
+                .Append(UiBuild.Tint(_bag.Inventory.Prices.UpgradeCost(item).ToString(), UiBuild.Coin));
+            _text.Append("\n   you have ")
+                .Append(UiBuild.Tint(_bag.Wallet.Balance.ToString(), UiBuild.Coin));
+            _text.Append("\n\nDEEPEN WHICH STAT\n\n");
+
+            for (int i = 0; i < _upgradeTargets.Count; i++)
+            {
+                string name = NameOf(item, _upgradeTargets[i]);
+                float current = ValueOf(item, _upgradeTargets[i]);
+                float raised = current * (1f + ItemUpgrade.StepFraction);
+                string line = $"{(i == _upgradeCursor ? ">" : " ")} {name}  {current:F2}  "
+                    + $"→ {raised:F2}";
+                _text.Append(i == _upgradeCursor
+                    ? UiBuild.Tint(line, UiBuild.Focus)
+                    : line).Append('\n');
+            }
+
+            _text.Append("\nLight: spend a point   Heavy: back");
+            return _text.ToString();
+        }
+
+        /// <summary>What a target's stat currently reads, so the panel can show the step.</summary>
+        private static float ValueOf(in ItemInstance item, in UpgradeTarget target)
+        {
+            if (target.IsAffix)
+            {
+                return target.AffixIndex < item.AffixCount
+                    ? item.Affixes[target.AffixIndex].Magnitude
+                    : 0f;
+            }
+
+            switch (target.CoreStat)
+            {
+                case CoreStatId.WeaponDamage: return item.CoreStats.WeaponDamage;
+                case CoreStatId.SwingSpeed: return item.CoreStats.SwingSpeedBonus;
+                case CoreStatId.Defence: return item.CoreStats.Defence;
+                case CoreStatId.ShotSpeed: return item.ShotSpeed;
+                default: return 0f;
+            }
+        }
+
+        private void RefreshShopRow()
+        {
+            _text.Clear();
             if (_stock.Count > 0)
             {
                 _text.Append("\nFOR SALE  ");

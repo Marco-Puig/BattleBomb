@@ -23,18 +23,28 @@ namespace BattleBomb.Core.Items
         /// <summary>The shop sells at this multiple of what it pays (D43).</summary>
         public readonly float ShopPremium;
 
-        /// <summary>Fully deepening an item costs about this share of its own sell price (D44).</summary>
+        /// <summary>Fully deepening an item costs about this share of its item value (D44).</summary>
         public readonly float UpgradeShare;
+
+        /// <summary>
+        /// The share of an item's value the player actually receives for it (Michael, after the
+        /// M6 pass: "cut them all by 50%"). Applied to selling alone, deliberately: halving the
+        /// sinks alongside the faucet would shrink every number and change nothing, since the
+        /// grind is set by the ratio between them. Income falls, prices hold, money gets
+        /// scarcer — which is what the instruction was actually asking for.
+        /// </summary>
+        public readonly float SellReturn;
 
         public PriceBook(
             float sellBase, float sellRankFactor, float sellLevelFactor,
-            float shopPremium, float upgradeShare)
+            float shopPremium, float upgradeShare, float sellReturn = 1f)
         {
             SellBase = Mathf.Max(0f, sellBase);
             SellRankFactor = Mathf.Max(1f, sellRankFactor);
             SellLevelFactor = Mathf.Max(0f, sellLevelFactor);
             ShopPremium = Mathf.Max(1f, shopPremium);
             UpgradeShare = Mathf.Max(0f, upgradeShare);
+            SellReturn = Mathf.Clamp(sellReturn, 0.01f, 1f);
         }
 
         /// <summary>The paper numbers (HANDOFF-M6) — authored data overrides them per scene.</summary>
@@ -43,11 +53,12 @@ namespace BattleBomb.Core.Items
             sellRankFactor: 2f,
             sellLevelFactor: 0.04f,
             shopPremium: 3f,
-            upgradeShare: 2f);
+            upgradeShare: 2f,
+            sellReturn: 0.5f);
 
         /// <summary>What the shopkeeper (or the auto-sell setting) pays. Never below one coin.</summary>
         public int SellPrice(QualityRank rank, int requiredLevel) =>
-            Mathf.Max(1, Mathf.RoundToInt(RawSell(rank, requiredLevel)));
+            Mathf.Max(1, Mathf.RoundToInt(RawSell(rank, requiredLevel) * SellReturn));
 
         public int SellPrice(in ItemInstance item) => SellPrice(item.Quality, item.RequiredLevel);
 

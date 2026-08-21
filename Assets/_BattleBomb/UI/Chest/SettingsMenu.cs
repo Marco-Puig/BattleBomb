@@ -14,9 +14,8 @@ namespace BattleBomb.UI.Chest
     /// settings menu" — never on the chest screen). Minimal by design: it exists because D30's
     /// auto-equip and D43's auto-sell need a home, and it grows as real settings arrive.
     ///
-    /// Opened with Pause by any player, closed the same way. It shows every player's toggles at
-    /// once, because they are per-player settings and a couch pair should not have to take turns
-    /// opening a menu to find them.
+    /// Opened with Pause by any player, closed the same way. D51 made the couch share one save,
+    /// so the two toggles are one row each for the whole machine, not one pair per player.
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SettingsMenu : MonoBehaviour
@@ -122,7 +121,7 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectBags();
-            int rows = Mathf.Max(1, _bags.Count * 2 + 1);
+            const int rows = 3;
             _cursor = (_cursor - (move.y > 0f ? 1 : -1) + rows) % rows;
         }
 
@@ -134,23 +133,25 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
-            int toggleRows = _bags.Count * 2;
-            if (_cursor >= toggleRows)
+            if (_cursor == 2)
             {
                 GrantTestLoot();
                 return;
             }
 
-            int player = _cursor / 2;
-            bool autoSell = _cursor % 2 == 1;
-            PlayerInventory bag = _bags[Mathf.Clamp(player, 0, _bags.Count - 1)];
-            if (autoSell)
+            bool autoSell = _cursor == 1;
+            bool current = autoSell ? _bags[0].Inventory.AutoSell : _bags[0].Inventory.AutoEquip;
+            for (int i = 0; i < _bags.Count; i++)
             {
-                bag.SetAutoSell(!bag.Inventory.AutoSell);
-            }
-            else
-            {
-                bag.SetAutoEquip(!bag.Inventory.AutoEquip);
+                PlayerInventory bag = _bags[i];
+                if (autoSell)
+                {
+                    bag.SetAutoSell(!current);
+                }
+                else
+                {
+                    bag.SetAutoEquip(!current);
+                }
             }
         }
 
@@ -277,15 +278,13 @@ namespace BattleBomb.UI.Chest
             _text.Clear();
             _text.Append("SETTINGS\n\n");
 
-            for (int i = 0; i < _bags.Count; i++)
-            {
-                _text.Append("Player ").Append(i + 1).Append('\n');
-                AppendToggle(i * 2, "Auto-equip upgrades", _bags[i].Inventory.AutoEquip);
-                AppendToggle(i * 2 + 1, "Auto-sell at the cap", _bags[i].Inventory.AutoSell);
-                _text.Append('\n');
-            }
+            bool autoEquip = _bags.Count > 0 && _bags[0].Inventory.AutoEquip;
+            bool autoSell = _bags.Count > 0 && _bags[0].Inventory.AutoSell;
+            AppendToggle(0, "Auto-equip upgrades", autoEquip);
+            AppendToggle(1, "Auto-sell at the cap", autoSell);
+            _text.Append('\n');
 
-            int debugRow = _bags.Count * 2;
+            int debugRow = 2;
             string debugLine = $"  {(debugRow == _cursor ? ">" : " ")} [ DEBUG ] grant test loot, coin and XP";
             _text.Append(debugRow == _cursor ? UiBuild.Tint(debugLine, UiBuild.Coin) : debugLine);
 

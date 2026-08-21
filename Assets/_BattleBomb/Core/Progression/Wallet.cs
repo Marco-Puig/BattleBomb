@@ -3,9 +3,10 @@ using System;
 namespace BattleBomb.Core.Progression
 {
     /// <summary>
-    /// One player's money (D43) — per player like the XP ledger, because drops are free-grab:
-    /// your loot, your income. It only ever enters through selling and leaves through the
-    /// shopkeeper and the upgrade sink; nothing else touches it.
+    /// The couch's money (D51, amending D43): one purse for the machine, not one per player —
+    /// like the sack it buys into, spending is a couch decision, not a personal one. It only
+    /// ever enters through selling and leaves through the shopkeeper and the upgrade sink;
+    /// nothing else touches it.
     /// </summary>
     public readonly struct Wallet
     {

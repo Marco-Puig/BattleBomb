@@ -18,40 +18,68 @@ namespace BattleBomb.Core.Items
     }
 
     /// <summary>
-    /// One player's whole item state (task 43, the 2019 antidote): an unbounded bag, the worn
-    /// loadout, and the quick-use slot. The complete M4 surface is add, equip/unequip with the
-    /// D36 level lock, quick-slot assign and use, the D30 auto-equip flag, and the prestige
-    /// re-validation — nothing more, by design.
+    /// One player's whole item state (task 43, the 2019 antidote): the worn loadout and the
+    /// quick-use slot are personal, but since D51 the bag itself is shared storage — a
+    /// <see cref="Core.Items.Sack"/> any number of couch players' inventories can wrap. The
+    /// complete M4 surface is add, equip/unequip with the D36 level lock, quick-slot assign and
+    /// use, the D30 auto-equip flag, and the prestige re-validation — nothing more, by design.
     /// </summary>
     public sealed class Inventory
     {
-        private readonly List<ItemStack> _items = new List<ItemStack>();
+        private readonly Sack _sack;
 
         private QuickSlotKind _quickKind;
         private int _quickConsumableId;
         private int _quickEquipmentIndex;
         private int _quickCooldown;
 
+        /// <summary>A private sack — one player alone, and every pre-D51 test.</summary>
+        public Inventory() : this(new Sack())
+        {
+        }
+
+        /// <summary>A loadout over a sack that other inventories may share (D51).</summary>
+        public Inventory(Sack sack)
+        {
+            _sack = sack ?? new Sack();
+        }
+
+        /// <summary>The shared storage — the chest screens of both couch players look at this.</summary>
+        public Sack Sack => _sack;
+
+        private List<ItemStack> _items => _sack.Entries;
+
         public Loadout Loadout { get; } = new Loadout();
 
-        /// <summary>D30: off by default — grabbed loot lands in the bag unless the player opts in.</summary>
-        public bool AutoEquip { get; set; }
+        public bool AutoEquip
+        {
+            get => _sack.AutoEquip;
+            set => _sack.AutoEquip = value;
+        }
 
-        /// <summary>D43: off by default — at the cap, a pickup sells the worst unlocked piece.</summary>
-        public bool AutoSell { get; set; }
+        public bool AutoSell
+        {
+            get => _sack.AutoSell;
+            set => _sack.AutoSell = value;
+        }
 
-        /// <summary>The carry limits (D43). Authored per game, not per player.</summary>
-        public SackRules Rules { get; set; } = SackRules.Default;
+        public SackRules Rules
+        {
+            get => _sack.Rules;
+            set => _sack.Rules = value;
+        }
 
-        /// <summary>The rulebook every coin flows through — auto-sell needs it to pay out.</summary>
-        public PriceBook Prices { get; set; } = PriceBook.Default;
+        public PriceBook Prices
+        {
+            get => _sack.Prices;
+            set => _sack.Prices = value;
+        }
 
-        public IReadOnlyList<ItemStack> Items => _items;
+        public IReadOnlyList<ItemStack> Items => _sack.Items;
 
-        /// <summary>Slots in use: one per stack, however deep the stack is (D43).</summary>
-        public int SlotsUsed => _items.Count;
+        public int SlotsUsed => _sack.SlotsUsed;
 
-        public bool IsFull => _items.Count >= Rules.Capacity;
+        public bool IsFull => _sack.IsFull;
 
         public QuickSlotKind QuickKind => _quickKind;
         public int QuickConsumableId => _quickConsumableId;

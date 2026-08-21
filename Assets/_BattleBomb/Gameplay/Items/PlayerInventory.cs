@@ -38,21 +38,45 @@ namespace BattleBomb.Gameplay.Items
         [Tooltip("Driver supplying the loot catalog a combine rerolls from. Empty finds it.")]
         [SerializeField] private SimulationDriver _driver;
 
+        [Tooltip("The couch's sack and wallet (D51). Empty finds the one in the scene.")]
+        [SerializeField] private SharedStash _stash;
+
         private Inventory _inventory;
         private XpLedger _ledger;
-        private Wallet _wallet;
 
         /// <summary>Raised after anything in the bag, loadout, wallet, or ladder moved.</summary>
         public event Action Changed;
 
-        public Inventory Inventory => _inventory ?? (_inventory = new Inventory());
+        public Inventory Inventory => _inventory ?? (_inventory = new Inventory(Stash.Sack));
 
         public XpLedger Ledger => _ledger;
 
         public int Level => _ledger.Level;
 
-        /// <summary>This player's money (D43) — theirs alone, like the loot that made it.</summary>
-        public Wallet Wallet => _wallet;
+        /// <summary>The couch's money (D51) — shared, like the sack that made it.</summary>
+        public Wallet Wallet => Stash.Wallet;
+
+        /// <summary>The stash this loadout sits over. Found late because Player objects enable
+        /// before the Simulation object does on some load orders.</summary>
+        public SharedStash Stash
+        {
+            get
+            {
+                if (_stash == null)
+                {
+                    _stash = FindAnyObjectByType<SharedStash>();
+                }
+
+                if (_stash == null)
+                {
+                    // No stash in the scene: a private one, so a bare test scene still works.
+                    var go = new GameObject("Shared Stash");
+                    _stash = go.AddComponent<SharedStash>();
+                }
+
+                return _stash;
+            }
+        }
 
         public XpCurve Curve => new XpCurve(
             _xpBase, _xpExponent, _prestigeCostMultiplier, _maxLevel, _pointsPerLevel);
@@ -61,7 +85,7 @@ namespace BattleBomb.Gameplay.Items
         {
             if (_inventory == null)
             {
-                _inventory = new Inventory();
+                _inventory = new Inventory(Stash.Sack);
             }
 
             if (_ledger.Level < 1)
@@ -73,7 +97,21 @@ namespace BattleBomb.Gameplay.Items
             {
                 _driver = FindAnyObjectByType<SimulationDriver>();
             }
+
+            Stash.Changed += OnStashChanged;
         }
+
+        private void OnDisable()
+        {
+            if (_stash != null)
+            {
+                _stash.Changed -= OnStashChanged;
+            }
+        }
+
+        /// <summary>The partner moved money or the sack was reloaded — that is a change to
+        /// this player's view too (D51), so the sheet and the screen both hear it.</summary>
+        private void OnStashChanged() => Changed?.Invoke();
 
         /// <summary>
         /// A grabbed drop lands here (D30). The sack may refuse it outright (D43), and auto-sell
@@ -84,12 +122,12 @@ namespace BattleBomb.Gameplay.Items
             AddResult result = Inventory.Add(item, Level);
             if (result.CoinsEarned > 0)
             {
-                _wallet = _wallet.Earned(result.CoinsEarned);
+                Stash.Earn(result.CoinsEarned);
             }
 
             if (result.Taken)
             {
-                Changed?.Invoke();
+                Stash.NotifyChanged();
             }
 
             return result;
@@ -111,7 +149,7 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            Changed?.Invoke();
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -122,7 +160,7 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            Changed?.Invoke();
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -132,8 +170,8 @@ namespace BattleBomb.Gameplay.Items
             int coins = Inventory.Sell(bagIndex);
             if (coins > 0)
             {
-                _wallet = _wallet.Earned(coins);
-                Changed?.Invoke();
+                Stash.Earn(coins);
+                Stash.NotifyChanged();
             }
 
             return coins;
@@ -146,7 +184,7 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            Changed?.Invoke();
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -173,7 +211,7 @@ namespace BattleBomb.Gameplay.Items
             }
 
             int price = Inventory.Prices.UpgradeCost(Inventory.Items[bagIndex].Item);
-            if (price <= 0 || !_wallet.CanAfford(price))
+            if (price <= 0 || !Stash.CanAfford(price))
             {
                 return false;
             }
@@ -183,8 +221,8 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            _wallet = _wallet.Spent(price);
-            Changed?.Invoke();
+            Stash.TrySpend(price);
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -197,7 +235,7 @@ namespace BattleBomb.Gameplay.Items
             }
 
             int price = Inventory.Prices.UpgradeCost(worn);
-            if (price <= 0 || !_wallet.CanAfford(price))
+            if (price <= 0 || !Stash.CanAfford(price))
             {
                 return false;
             }
@@ -207,8 +245,8 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            _wallet = _wallet.Spent(price);
-            Changed?.Invoke();
+            Stash.TrySpend(price);
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -227,7 +265,7 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            Changed?.Invoke();
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -274,7 +312,7 @@ namespace BattleBomb.Gameplay.Items
             }
 
             Inventory.AutoEquip = value;
-            Changed?.Invoke();
+            Stash.NotifyChanged();
         }
 
         public void SetAutoSell(bool value)
@@ -285,7 +323,7 @@ namespace BattleBomb.Gameplay.Items
             }
 
             Inventory.AutoSell = value;
-            Changed?.Invoke();
+            Stash.NotifyChanged();
         }
 
         /// <summary>
@@ -302,7 +340,7 @@ namespace BattleBomb.Gameplay.Items
 
             _ledger = _ledger.Prestige(Curve);
             Inventory.ReturnOverLevelGear(_ledger.Level);
-            Changed?.Invoke();
+            Stash.NotifyChanged();
             return true;
         }
 
@@ -321,8 +359,8 @@ namespace BattleBomb.Gameplay.Items
                 return;
             }
 
-            _wallet = _wallet.Earned(amount);
-            Changed?.Invoke();
+            Stash.Earn(amount);
+            Stash.NotifyChanged();
         }
 
         /// <summary>Buying from the shopkeeper (D43): the price leaves the wallet, the item
@@ -330,7 +368,7 @@ namespace BattleBomb.Gameplay.Items
         /// first.</summary>
         public bool RequestBuy(in ItemInstance item, int price)
         {
-            if (item.IsEmpty || price < 0 || !_wallet.CanAfford(price) || Inventory.IsFull)
+            if (item.IsEmpty || price < 0 || !Stash.CanAfford(price) || Inventory.IsFull)
             {
                 return false;
             }
@@ -341,8 +379,13 @@ namespace BattleBomb.Gameplay.Items
                 return false;
             }
 
-            _wallet = _wallet.Spent(price).Earned(result.CoinsEarned);
-            Changed?.Invoke();
+            Stash.TrySpend(price);
+            if (result.CoinsEarned > 0)
+            {
+                Stash.Earn(result.CoinsEarned);
+            }
+
+            Stash.NotifyChanged();
             return true;
         }
     }

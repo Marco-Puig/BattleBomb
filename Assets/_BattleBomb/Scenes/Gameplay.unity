@@ -257,6 +257,7 @@ GameObject:
   - component: {fileID: 463551037}
   - component: {fileID: 463551038}
   - component: {fileID: 463551039}
+  - component: {fileID: 463551040}
   m_Layer: 0
   m_Name: Simulation
   m_TagString: Untagged
@@ -336,6 +337,18 @@ MonoBehaviour:
   _minX: -10
   _maxX: 10
   _groundY: 0
+--- !u!114 &463551040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 463551036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0167b606c28a884ab59e491a91b1934, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Items.SharedStash
 --- !u!1001 &550982941
 PrefabInstance:
   m_ObjectHideFlags: 0

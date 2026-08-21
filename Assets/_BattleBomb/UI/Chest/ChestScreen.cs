@@ -232,8 +232,13 @@ namespace BattleBomb.UI.Chest
         /// <summary>The X in the corner, and any other pointer route out.</summary>
         internal void CloseFromPointer() => Host?.RequestClose(_playerId);
 
-        /// <summary>The bag moved — repaint from the new truth (M6 planning decision 2).</summary>
-        internal void OnBagChanged() => Refresh();
+        /// <summary>The bag moved — possibly under the partner's hand (D51). Repaint from the
+        /// new truth, and drop a combine whose first pick no longer exists.</summary>
+        internal void OnBagChanged()
+        {
+            _nav.ClampPendingCombine(_bag.Inventory.Items.Count);
+            Refresh();
+        }
 
         // ── Actions ──────────────────────────────────────────────────────────────────
 

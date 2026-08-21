@@ -1006,6 +1006,128 @@ render as **2D billboarded sprites — Castle Crashers-style art — inside the 
 
 ---
 
+## D48 — Chapters are stages; stages stream through checkpoint airlocks · **Locked** *(implements D4's interface)*
+
+Directed by Michael in the M7 design session (2026-08-20). The structural fork he called before
+anything else: **the goal is something you move toward, never something you defend.** Chapters
+are constant forward progression; no defence-objective encounter type exists or is planned.
+
+- **A chapter is an ordered list of stages.** A stage is 5–10 minutes of play, the unit of
+  resume and selection; the whole game must not be completable in a day (Castle Crashers is
+  the explicit counter-example). The ender-chest rooms of D42 are the stage checkpoints —
+  always between stages, mid-stage where a stretch needs one.
+- **A stage has two natures, authored apart.** *The space* is a small additive Unity scene,
+  hand-built in the scene view — Michael wants to design story levels by hand — holding
+  geometry and dumb marker components only. *The game* — arenas, spawn waves, climate, level
+  stamp, loot progress, checkpoint and shopkeeper placement — is a data asset consumed as a
+  `StageSpec`. An architecture test fails any stage scene carrying a non-whitelisted component.
+  This is rule 2 made mechanical for levels, and it is what keeps D4 intact: endless mode's
+  generator produces the same `StageSpec` and points its geometry field at prefab chunks
+  instead of a scene. One field differs; neither mode is "the real one."
+- **The Gameplay scene is the machine** and never reboots; stage scenes load additively into
+  it. **The checkpoint room is the airlock** — Destiny 2's load zones on our floor plan: the
+  next stage streams in behind the door while the player sells and re-equips, and the finished
+  stage unloads once they cross out. No loading screen is ever shown.
+- **Rejected:** a scene per stage carrying its own encounters (a generator cannot emit scenes,
+  so story would become structurally special); stages as pure data with prefab geometry (right
+  for endless, wrong for the hand-crafted story Michael asked for). The split takes the half of
+  each that fits.
+- **The LittleBigPlanet-style map** Michael wants for stage selection is a view over a Core
+  selection model; M7 renders that model as a list, the map arrives with art.
+
+**Consequence:** D23's loot progress, D36's level stamp, and D41's climate — the three constants
+M6 left at scene level — become per-stage data. `SimulationDriver._lootProgress` and the
+hardcoded level stamp are deleted, not defaulted.
+
+---
+
+## D49 — A wipe keeps the loot and respawns at the chest · **Locked** *(refines D25)*
+
+Directed by Michael (2026-08-20): *"If you wipe you should be able to keep the loot you
+collected, you will respawn at your most recent checkpoint or shopkeeper and have a chance to
+try to upgrade and equip stuff to go again."*
+
+- Loot, XP, and money earned since the checkpoint are kept; enemies since it reset. The cost
+  of a wipe is the refight. Genre precedent (Castle Crashers, Dungeon Defenders) is unanimous,
+  and in a game where selling is the only faucet (D43), confiscating grabbed drops would be
+  theft against the loop's core pleasure.
+- The respawn point is the last checkpoint or shopkeeper room — where the chest is — so a wipe
+  funnels the player into the economy. The loop teaches itself.
+- **Quitting mid-stage resumes from the same point by the same rule.** One boundary to learn.
+- **Rejected:** losing gains since the checkpoint (roguelike tension, but against D23's shared
+  grab moment); keeping loot but restarting the stage (a second rule for no new information).
+
+---
+
+## D50 — Difficulty tiers are data rows, unlocked per chapter, hidden behind names · **Locked**
+
+Directed by Michael (2026-08-20). Dungeon Defenders' shape, with the numbers kept from the
+player.
+
+- **A tier is a row:** enemy stat multiplier, enemy level bump, loot-progress multiplier. Three
+  rows at launch; a fourth is a row, and endless mode may one day generate rows. Applied by one
+  pure function, `tier × stage → EncounterInputs`, which feeds the spawner and D23's quality
+  roll.
+- **Per-chapter unlock, deliberately light:** chapter N opens when N−1 is beaten on any tier;
+  tier T+1 of a chapter opens when it is beaten on tier T. A player may rush the newest chapter
+  on tier 1 or grind an early chapter to tier 3. Both overreach paths are open on purpose.
+- **The player sees names only.** No multiplier is displayed anywhere in the shipped UI —
+  *"they should figure out pretty quick if they bit off more than they can chew if they wipe
+  quickly."* A dev-only overlay shows the rows and effective numbers, compiled out of release.
+- **Rejected:** a single difficulty with NG+ after the credits (back-loads all replay value,
+  fighting the not-done-in-a-day goal); unbounded tiers (endless mode already owns scaling
+  forever, and every tier past four is unbalanced by construction).
+
+---
+
+## D51 — One save per machine, Castle Crashers style; the couch shares the sack · **Locked** *(amends D43, D42)*
+
+Directed by Michael (2026-08-20), reversing a profiles-per-person model he had first leaned
+toward: *"No profiles, make it like CC … profile should not matter locally because all progress
+is shared. For online play the profile is tied to their account anyways."*
+
+- **No local profiles.** One save on the machine, named from `IPlayerIdentity` when a platform
+  supplies one and `local` when it does not. Title → character select; Player 2 joins at
+  character select and picks a character. Online play is each participant bringing their own
+  account's save; reconciling two saves' progress is the networking milestone's problem.
+- **The sack and wallet belong to the save, not the player** — D43's "one currency, per
+  player" and "per-player setting" are amended to per save. Both couch players' chest screens
+  (D42's split halves) are views over the same 200 slots. Shared across the roster too: farm
+  with Fire, gear up Ice. Per character: XP, level, prestige, the worn loadout, quick-use.
+- D23's "whoever grabs it keeps it" becomes a moment locally and keeps its meaning online.
+- **Rejected:** a sack per character (reverses the shared-roster rule and makes trying an
+  element cost the inventory); a sack per player slot (the same human on the other controller
+  loses their gear).
+- **Progress gating stands:** nothing launches above the save's unlocks. Couch play is at the
+  machine's save, so the earlier "furthest-progressed account" exception is now simply the rule.
+
+**Consequence:** `PlayerInventory` splits — sack, wallet, and settings move to a session-owned
+stash; the worn loadout and quick-use stay per player. Settings persist in the save — the
+PlayerPrefs path M6 planned was never built, and now never will be.
+
+---
+
+## D52 — Saves: a pure model in Core, a store behind the Platform seam · **Locked** *(extends D4, D5)*
+
+Settled in the M7 design session (2026-08-20), the engineering shape of D51.
+
+- **Core owns the model** (plain serializable data), the mapping to and from live simulation
+  state, the versioned text codec, and the migration table. `JsonUtility` is permitted in Core:
+  it is not on §2's forbidden list and needs no scene, so round-trip tests are plain EditMode.
+- **Core never touches a disk.** `ISaveStore` (named text blobs: read, write, list, delete)
+  joins the Platform layer beside `IPlayerIdentity`; `FileSaveStore` is the default in
+  `NullPlatformServices`; Steam Cloud is a later second implementation, zero Core changes.
+- **Story progress is its own namespace** inside the save (D4); endless mode adds its own
+  later; the roster, sack, and wallet sit outside both because the loot chase lives in every
+  mode (D12).
+- **Versioned and conservative:** every save carries a schema version; older migrates forward
+  on load; **newer refuses to load** rather than corrupt. Items save by identity id plus rolled
+  values, never by name.
+- **Autosave** on checkpoint-room entry, stage completion, chest close, and clean quit — so a
+  crash costs exactly what a wipe costs (D49), and the player never learns a second rule.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

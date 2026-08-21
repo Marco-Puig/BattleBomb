@@ -103,13 +103,14 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M5** | Abilities and elements | **complete** |
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
 | **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
-| M7 | Chapters *(first point story input is needed)* | **next** |
+| M7 | Chapters — story-free half designed (D48–D52, `docs/HANDOFF-M7.md`); authored chapters wait on story | **next** |
 | M8 | **Vertical slice** — the real target | |
 
 Build order and completion criteria: `docs/GAME_DESIGN.md` §10.
 
-**Story and world are being written outside this repo and are not needed before M7.** Do not draft
-placeholder lore to fill the gap; it will only be thrown away.
+**Story and world are being written outside this repo.** M7's machine is built story-free against
+a graybox fixture; only authored chapters need the story. Do not draft placeholder lore to fill
+the gap; it will only be thrown away.
 
 ---
 

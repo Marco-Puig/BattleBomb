@@ -301,7 +301,8 @@ world; couch co-op, it takes the opener's half while the partner plays on. Two t
 Sack** (quality-coloured thumbnail grid with a category filter; the selected item's stats,
 vs-worn deltas, and actions alongside) and **Hero** (stat allocation and the worn loadout).
 
-**Money enters only by selling** (D43): one per-player currency, prices scaling with quality ×
+**Money enters only by selling** (D43): one currency — per save, shared by the couch and across
+the roster (D51) — with prices scaling with quality ×
 required level so income scales forever, and the player receives **half** an item's value —
 income is tuned against unchanged sinks, never by shrinking both. It leaves through shopkeeper
 stock and **upgrading**
@@ -357,7 +358,12 @@ Design consequences:
 - **Loot is shared and free-grab (D23)** — the discovery moment belongs to the whole couch,
   grabbing included.
 - **A downed player is revived by their partner** — contextual Light (D17), so a revive is walking
-  over and pressing the button you already know. Both down = back to the last checkpoint (D25).
+  over and pressing the button you already know. Both down = back to the last checkpoint (D25),
+  **keeping everything grabbed and earned** (D49) — the respawn room holds the chest, so a wipe
+  funnels the couch into selling, deepening, and re-equipping before going again.
+- **One save per machine, Castle Crashers style (D51).** No local profiles: Player 2 joins at
+  character select and picks a character; the sack, wallet, and story progress are the couch's.
+  Online play will be each participant bringing their own account's save.
 
 ---
 
@@ -376,6 +382,36 @@ Mode is a first-class concept from the first line of code. No core system assume
 Difficulty tier and loot table are **inputs** to encounter and reward generation, never baked into a
 chapter's authored data. A chapter is content; the tier applied to it is state.
 
+### 8.1 Chapters and stages (D48)
+
+A **chapter** is an ordered list of **stages**; a stage is 5–10 minutes of constant forward
+progression — the goal is always something you move toward, never something you defend. The
+whole game must outlast a single day. Each stage has two natures: **the space**, a small
+hand-built additive scene of geometry and markers, and **the game**, a data asset holding the
+arenas, spawn waves, climate, level stamp, loot progress, and checkpoint placement. The
+Gameplay scene is the machine that runs any stage; stage scenes stream into it through the
+**checkpoint rooms**, which double as Destiny-style airlocks — the next stage loads behind the
+chest while you re-equip, and nobody sees a loading screen. The three constants the scene held
+through M6 (loot progress, level stamp, climate) live in stage data from M7 on.
+
+Stage selection is a list for now; the LittleBigPlanet-style map Michael wants is a later view
+over the same selection model.
+
+### 8.2 Difficulty tiers (D50)
+
+Three authored tier rows at launch — enemy stat multiplier, enemy level bump, loot-progress
+multiplier — **shown to the player by name only**; the numbers are a dev overlay. Unlocking is
+light so players can overreach: a chapter opens when the previous one is beaten on any tier; a
+chapter's next tier opens when it is beaten on the tier below.
+
+### 8.3 The save (D51, D52)
+
+One save per machine, namespaced per mode (D4). Per save: the sack, the wallet, settings, and
+story progress (per chapter, the highest tier beaten and the resume point). Per character: XP,
+level, prestige, the worn loadout. Autosave at checkpoint rooms, stage completion, chest close,
+and quit, so a crash costs exactly what a wipe costs. Core owns the versioned model; disk IO
+sits behind the Platform seam so Steam Cloud is a later implementation, not a rewrite.
+
 ---
 
 ## 9. World and story
@@ -383,14 +419,18 @@ chapter's authored data. A chapter is content; the tier applied to it is state.
 ⚠ **NEEDS INPUT — do not invent. Being written by Michael and a collaborator, outside this repo.**
 
 **This does not block engineering.** Milestones M0–M6 are entirely systemic and require no narrative
-input. Story is first needed at **M7 (chapters)**. Do not stall on it, and do not draft placeholder
-lore to fill the gap — it will only have to be thrown away.
+input, and M7's machine — stage streaming, saves, tiers, the front door (D48–D52) — is built
+against a graybox fixture. Story is first needed for **authored chapters**, M7's second half. Do
+not stall on it, and do not draft placeholder lore to fill the gap — it will only have to be
+thrown away.
 
 The 2019 build implies a planet-hopping premise: scenes named Moon Dungeon, Mercury, and Training
 Grounds, plus starfield and planetary skyboxes and a moon cutscene. Treat that as a hint about
 original intent, not as canon.
 
-Needed by M7: setting and tone, the chapter spine, who the characters are and why they fight, and how
+Needed for authored chapters: the goal that pulls the player through the game (Michael's
+princesses-and-crystals question — something moved toward, never defended, per D48), setting
+and tone, the chapter spine, who the characters are and why they fight, and how
 elements are justified in the fiction. §3 (roster) and §6 (enemy and boss families) resolve alongside it.
 
 ---
@@ -408,7 +448,7 @@ Dependency-ordered. Each milestone is verifiable before the next begins.
 | **M4** | Gear and stats | Item generation, equipment, stat aggregation — all Core, all tested. |
 | **M5** | Abilities and elements | Ability framework, per-character variants, environment climate modifiers. |
 | **M6** | Loot loop | The chest, the economy, deepen-or-gamble, elites. The chase is legible and satisfying. |
-| **M7** | Chapters | Chapter flow, save/progression, difficulty tiers. |
+| **M7** | Chapters | The story-free half first (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door — proven on a graybox fixture. Authored chapters follow when the story lands. |
 | **M8** | **Vertical slice** | One chapter, two characters, one boss, full loop, co-op, polished. |
 | **M9+** | Scale | More chapters and characters, endless mode, then PvP. |
 

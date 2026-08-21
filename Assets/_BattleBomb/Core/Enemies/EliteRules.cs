@@ -55,49 +55,7 @@ namespace BattleBomb.Core.Enemies
         /// a fight the player already knows how to read, never a different one — the telegraphs,
         /// reach, and rhythm the archetype teaches all survive (D22/D28).
         /// </summary>
-        public static EnemySpec Promote(in EnemySpec spec, in EliteRules rules)
-        {
-            AttackTuning attack = spec.Tuning.Attack;
-            var harder = new AttackTuning(
-                attack.StartupSteps,
-                attack.ActiveSteps,
-                attack.RecoverySteps,
-                attack.Damage * rules.DamageMultiplier,
-                attack.ReachX,
-                attack.DepthTolerance,
-                attack.LungeDistance,
-                attack.MaxTargets,
-                attack.KnockbackSpeed,
-                attack.LaunchSpeed,
-                attack.HitstopSteps,
-                attack.MoveSpeedScale,
-                attack.ResolvesOnLanding,
-                attack.IsRadial,
-                attack.StunSteps);
-
-            EnemyTuning tuning = spec.Tuning;
-            var promoted = new EnemyTuning(
-                tuning.Archetype,
-                harder,
-                tuning.CooldownSteps,
-                tuning.Interruptible,
-                tuning.StaggerSteps,
-                tuning.Element,
-                tuning.ProjectileSpeed,
-                tuning.StandoffNearX,
-                tuning.StandoffFarX,
-                tuning.HoverDistanceX,
-                tuning.StrafePeriodSteps,
-                tuning.HopPulseSteps,
-                tuning.TakesTurns);
-
-            return new EnemySpec(
-                promoted,
-                spec.Movement,
-                spec.MaxHealth * rules.HealthMultiplier,
-                spec.Resistances,
-                spec.Rank,
-                spec.XpReward);
-        }
+        public static EnemySpec Promote(in EnemySpec spec, in EliteRules rules) =>
+            EnemyScaling.Scale(spec, rules.HealthMultiplier, rules.DamageMultiplier);
     }
 }

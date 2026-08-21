@@ -75,6 +75,9 @@ namespace BattleBomb.UI.Chest
         private int _cursor;
         private int _action;
         private int _pendingCombine = -1;
+
+        /// <summary>Ignore input until every menu button has been let go at least once.</summary>
+        private bool _swallowUntilRelease = true;
         private string _flash = string.Empty;
         private float _flashUntil;
         private float _repeatAt;
@@ -130,7 +133,31 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
+            // The press that opened this screen must not also act inside it. Without this, the
+            // opening Light arrives here on the same step and immediately dives into the action
+            // row — which is what made Heavy look like it would not close the screen during
+            // Michael's M6 pass: it was faithfully backing out of a level he never chose.
+            if (_swallowUntilRelease)
+            {
+                if (command.IsHeld(CommandButtons.Light)
+                    || command.IsHeld(CommandButtons.Heavy)
+                    || command.IsHeld(CommandButtons.Pause))
+                {
+                    return;
+                }
+
+                _swallowUntilRelease = false;
+            }
+
             StepCursor(command, deltaTime);
+
+            if (command.WasPressed(CommandButtons.Pause))
+            {
+                // Escape / Start always leaves, from anywhere in the screen — no unwinding
+                // through focus levels first. Getting out must never be a puzzle.
+                Host?.RequestClose(_playerId);
+                return;
+            }
 
             if (command.WasPressed(CommandButtons.Light))
             {
@@ -344,6 +371,9 @@ namespace BattleBomb.UI.Chest
         internal ChestScreenHost Host { get; set; }
 
         internal PlayerInventory Bag => _bag;
+
+        /// <summary>The X in the corner, and any other pointer route out.</summary>
+        internal void CloseFromPointer() => Host?.RequestClose(_playerId);
 
         /// <summary>The bag moved — repaint from the new truth (M6 planning decision 2).</summary>
         internal void OnBagChanged() => Refresh();

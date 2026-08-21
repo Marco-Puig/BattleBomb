@@ -12,6 +12,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using UnityEngine.UI;
 
 namespace BattleBomb.Tests.PlayMode
 {
@@ -180,6 +181,58 @@ namespace BattleBomb.Tests.PlayMode
             _input.Release();
             Assert.That(Vector3.Distance(before, _player.Position), Is.LessThan(0.05f),
                 "A player browsing a chest walked away while their hands were on the menu (D42).");
+        }
+
+        /// <summary>
+        /// Every route out of the chest screen, because M6's pass found a screen a player could
+        /// not leave: the logic was fine and nothing had ever exercised it. A menu you can enter
+        /// and not exit is worse than one that never opens, so all three routes are pinned.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Every_way_out_of_the_chest_screen_works(
+            [Values("pause", "heavy", "close button")] string route)
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(CommandButtons.Light);
+            yield return Until(
+                () => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            switch (route)
+            {
+                case "pause":
+                    yield return Press(CommandButtons.Pause);
+                    break;
+
+                case "heavy":
+                    yield return Press(CommandButtons.Heavy);
+                    break;
+
+                default:
+                    Button close = FindCloseButton();
+                    Assert.That(close, Is.Not.Null,
+                        "The chest screen has no close button — a pointer or a tap has no way out.");
+                    close.onClick.Invoke();
+                    yield return null;
+                    break;
+            }
+
+            Assert.That(_driver.TryGetOpenScreen(_player.PlayerId.Value, out _), Is.False,
+                $"'{route}' did not close the chest screen.");
+        }
+
+        private static Button FindCloseButton()
+        {
+            foreach (Button candidate in Object.FindObjectsByType<Button>(FindObjectsInactive.Exclude))
+            {
+                if (candidate.name == "Close")
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         // ── Helpers ──────────────────────────────────────────────────────────────────

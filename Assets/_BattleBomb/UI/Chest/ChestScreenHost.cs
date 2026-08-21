@@ -5,6 +5,8 @@ using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 namespace BattleBomb.UI.Chest
@@ -103,6 +105,28 @@ namespace BattleBomb.UI.Chest
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
+
+            // Pointer input only. Navigation stays on the command stream — this exists so a
+            // click or a touch can hit the close button, which is the route out that does not
+            // require knowing which gamepad button means "back" (D5's mobile viability, and
+            // Michael's M6 pass).
+            go.AddComponent<GraphicRaycaster>();
+            EnsureEventSystem();
+        }
+
+        /// <summary>
+        /// One event system for pointer hits. The project has none otherwise, because the menus
+        /// are driven by commands — so this is created rather than assumed, and only once.
+        /// </summary>
+        private static void EnsureEventSystem()
+        {
+            if (EventSystem.current != null)
+            {
+                return;
+            }
+
+            var go = new GameObject("Chest Event System", typeof(EventSystem));
+            go.AddComponent<InputSystemUIInputModule>();
         }
 
         private void OnScreenChanged(int playerId, InteractionKind kind, bool opened)

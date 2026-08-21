@@ -25,8 +25,24 @@ namespace BattleBomb.UI.Chest
             var root = (RectTransform)transform;
             UiBuild.Box("Backdrop", root, UiBuild.Panel);
 
-            RectTransform headerRow = UiBuild.Place(UiBuild.Rect("Header", root), 0f, 0.93f, 1f, 1f, 6f);
+            RectTransform headerRow = UiBuild.Place(UiBuild.Rect("Header", root), 0f, 0.93f, 0.88f, 1f, 6f);
             _header = UiBuild.Label("Text", headerRow, string.Empty, 15, UiBuild.Ink, TextAnchor.MiddleLeft);
+
+            // Leaving must be obvious and reachable by every input the game has: a tap or click
+            // on this, Escape/Start, or Heavy. Michael's M6 pass found the screen with no way
+            // out that a player could see, which is the same as having no way out.
+            RectTransform closeRow = UiBuild.Place(UiBuild.Rect("Close", root), 0.88f, 0.93f, 1f, 1f, 6f);
+            Image closeBox = UiBuild.Box("Back", closeRow, new Color(0.30f, 0.15f, 0.16f, 1f));
+            closeBox.raycastTarget = true;
+            UiBuild.Label("Text", closeRow, "✕  Esc", 14, UiBuild.Ink, TextAnchor.MiddleCenter);
+
+            var button = closeRow.gameObject.AddComponent<Button>();
+            button.targetGraphic = closeBox;
+            ColorBlock colors = button.colors;
+            colors.highlightedColor = new Color(0.55f, 0.22f, 0.22f);
+            colors.pressedColor = new Color(0.75f, 0.28f, 0.26f);
+            button.colors = colors;
+            button.onClick.AddListener(CloseFromPointer);
 
             RectTransform tabRow = UiBuild.Place(UiBuild.Rect("Tabs", root), 0f, 0.87f, 1f, 0.93f, 6f);
             _tabStrip = UiBuild.Label("Text", tabRow, string.Empty, 14, UiBuild.Ink, TextAnchor.MiddleLeft);
@@ -126,7 +142,8 @@ namespace BattleBomb.UI.Chest
 
             _hint.text = _flash.Length > 0
                 ? UiBuild.Tint(_flash, UiBuild.Coin)
-                : "Stick: move   Light: select   Heavy: back / close";
+                : "Stick: move   Light: select   Heavy: back   "
+                    + UiBuild.Tint("Esc / Start or ✕: leave", UiBuild.Coin);
         }
 
         private string TabLine()

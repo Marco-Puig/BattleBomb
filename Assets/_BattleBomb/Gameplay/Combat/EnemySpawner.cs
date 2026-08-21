@@ -81,8 +81,15 @@ namespace BattleBomb.Gameplay.Combat
             EnemyActor actor = spawned.GetComponent<EnemyActor>();
             if (actor != null)
             {
+                // The elite draw happens here, before the body exists to be looked at (D22).
+                bool isElite = _driver.RollEliteSpawn(out Core.Items.ItemInstance carried);
+
                 // The entry index is the D28 variation seed: deterministic, unique per spawn.
-                actor.Configure(entry.Definition, index);
+                actor.Configure(entry.Definition, index, isElite, carried);
+                if (isElite)
+                {
+                    spawned.name += " (Elite)";
+                }
             }
 
             _brood.Add(spawned);

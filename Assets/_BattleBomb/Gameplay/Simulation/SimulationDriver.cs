@@ -44,6 +44,10 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Seed for combat rolls (crits). Its own stream, so loot replay never shifts with a fight.")]
         [SerializeField] private int _combatSeed = 2;
 
+        [Tooltip("Seed for elite spawn decisions and the gear they wear (D22). Its own stream " +
+            "again, so an elite appearing never shifts what an ordinary kill would have dropped.")]
+        [SerializeField] private int _spawnSeed = 3;
+
         [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
         [SerializeField] private QualityLadder _qualityLadder;
 
@@ -75,7 +79,7 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Planar reach of a grab, and of the drop's inspect panel (D23/D30, paper value).</summary>
         public const float GrabRadius = 0.9f;
 
-        /// <summary>The elite quality bonus slot — no elite spawns until M6 pays it (decision 8).</summary>
+        /// <summary>D23's bonus on a *boss* signature roll. Elites carry their own (EliteRules).</summary>
         private const float LootEliteBonus = 1.5f;
 
         /// <summary>The D36 level stamp's source — a constant until M7 builds real progress.</summary>
@@ -99,6 +103,7 @@ namespace BattleBomb.Gameplay.Simulation
         private AttemptCountdown _attempt;
         private DeterministicRandom _lootRng;
         private DeterministicRandom _combatRng;
+        private DeterministicRandom _spawnRng;
         private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
@@ -107,6 +112,9 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>D41's pair table. Empty through M5 — the pairs wait on the roster (O11).</summary>
         private ReactionTable _reactions = ReactionTable.Empty;
+
+        /// <summary>D22's elite modifier, on Core's paper numbers until a chapter authors them.</summary>
+        private readonly EliteRules _eliteRules = EliteRules.Default;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
 
@@ -117,6 +125,14 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Per player, steps left on the "sack full" refusal (D43).</summary>
         private readonly Dictionary<int, int> _refusedGrabs = new Dictionary<int, int>();
         private readonly List<int> _refusalScratch = new List<int>();
+
+        /// <summary>Chests and shopkeepers in the scene (D42), registered like every other actor.</summary>
+        private readonly List<WorldInteractable> _interactables = new List<WorldInteractable>();
+
+        /// <summary>Which screen each player has open right now, by player id (D42).</summary>
+        private readonly Dictionary<int, InteractionKind> _openScreens =
+            new Dictionary<int, InteractionKind>();
+        private readonly List<int> _screenScratch = new List<int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
         private readonly List<Vector3> _bodyVelocities = new List<Vector3>();
         private readonly List<Vector3> _bodyPushes = new List<Vector3>();
@@ -153,6 +169,41 @@ namespace BattleBomb.Gameplay.Simulation
             return item;
         }
 
+        /// <summary>
+        /// The spawner's question at spawn time (D22): is this one an elite, and if so what is it
+        /// wearing? Rolling the gear now — not at death — is what lets the body advertise its own
+        /// reward, and both draws come off the spawn stream so an elite never shifts the loot an
+        /// ordinary kill would have produced.
+        /// </summary>
+        internal bool RollEliteSpawn(out ItemInstance carried)
+        {
+            carried = default;
+            _spawnRng = _eliteRules.Roll(_spawnRng, out bool isElite);
+            if (!isElite)
+            {
+                return false;
+            }
+
+            _spawnRng = _spawnRng.NextFloat(out float spread);
+            float quality = (DropRoll.SpreadMin + spread) * _eliteRules.QualityBonus;
+            var context = new GenerationContext(
+                quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+            _spawnRng = ItemGenerator.Roll(_spawnRng, context, out carried);
+            return true;
+        }
+
+        /// <summary>
+        /// D44's gamble, run against the authored catalog. The driver owns the streams and the
+        /// catalog, so the reroll is deterministic and the inventory stays a pure rulebook.
+        /// </summary>
+        internal void RunCombine(
+            Inventory inventory, int firstIndex, int secondIndex, out CombineResult result)
+        {
+            var context = new GenerationContext(
+                0f, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+            _lootRng = inventory.TryCombine(_lootRng, firstIndex, secondIndex, context, out result);
+        }
+
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;
@@ -164,6 +215,75 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
         public IReadOnlyList<DropPickup> Pickups => _pickups;
+
+        internal void RegisterInteractable(WorldInteractable interactable)
+        {
+            if (interactable != null && !_interactables.Contains(interactable))
+            {
+                _interactables.Add(interactable);
+            }
+        }
+
+        internal void UnregisterInteractable(WorldInteractable interactable) =>
+            _interactables.Remove(interactable);
+
+        /// <summary>Raised when a player opens or closes a chest or shop screen (D42) — the UI
+        /// listens, builds its half of the display, and never reaches into the simulation.</summary>
+        public event Action<int, InteractionKind, bool> ScreenChanged;
+
+        /// <summary>The screen this player has open, if any (D42).</summary>
+        public bool TryGetOpenScreen(int playerIdValue, out InteractionKind kind) =>
+            _openScreens.TryGetValue(playerIdValue, out kind);
+
+        public bool AnyScreenOpen => _openScreens.Count > 0;
+
+        /// <summary>
+        /// D42's per-mode rule: alone, opening a chest pauses the world, because there is nobody
+        /// left to play it. In couch co-op it never pauses — the partner is still fighting, and
+        /// the player at the chest simply stands there taking no orders.
+        /// </summary>
+        public bool PausedForScreen =>
+            Characters.Ordered.Count <= 1 && _openScreens.Count > 0;
+
+        /// <summary>Opens a screen for this player. The UI draws it; the simulation only records
+        /// that their hands are busy.</summary>
+        public void OpenScreen(int playerIdValue, InteractionKind kind)
+        {
+            _openScreens[playerIdValue] = kind;
+            ScreenChanged?.Invoke(playerIdValue, kind, true);
+        }
+
+        /// <summary>Closes it again — the UI's back button, or walking away from the chest.</summary>
+        public void CloseScreen(int playerIdValue)
+        {
+            if (!_openScreens.TryGetValue(playerIdValue, out InteractionKind kind))
+            {
+                return;
+            }
+
+            _openScreens.Remove(playerIdValue);
+            ScreenChanged?.Invoke(playerIdValue, kind, false);
+        }
+
+        /// <summary>Everyone out — the attempt reset cannot leave a menu open over a fresh run.</summary>
+        private void CloseAllScreens()
+        {
+            if (_openScreens.Count == 0)
+            {
+                return;
+            }
+
+            _screenScratch.Clear();
+            foreach (KeyValuePair<int, InteractionKind> entry in _openScreens)
+            {
+                _screenScratch.Add(entry.Key);
+            }
+
+            for (int i = 0; i < _screenScratch.Count; i++)
+            {
+                CloseScreen(_screenScratch[i]);
+            }
+        }
 
         /// <summary>Every authored element (D38) — the naming authority for UI and Presentation.</summary>
         public ElementCatalog Elements => _elements;
@@ -238,6 +358,7 @@ namespace BattleBomb.Gameplay.Simulation
             // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
             _lootRng = new DeterministicRandom((uint)_lootSeed);
+            _spawnRng = new DeterministicRandom((uint)_spawnSeed);
             _combatRng = new DeterministicRandom((uint)_combatSeed);
 
             _itemSpecs.Clear();
@@ -260,6 +381,13 @@ namespace BattleBomb.Gameplay.Simulation
 
         private void Update()
         {
+            if (PausedForScreen)
+            {
+                // Solo at a chest: the world stops (D42). The accumulator is deliberately not
+                // fed, so no time banks up to be spent in a burst the moment the screen closes.
+                return;
+            }
+
             _clock.Accumulate(Time.deltaTime);
 
             while (_clock.TryConsumeStep(out int frame))
@@ -306,13 +434,39 @@ namespace BattleBomb.Gameplay.Simulation
             for (int i = 0; i < actors.Count; i++)
             {
                 CharacterActor actor = actors[i];
-                PlayerCommand command = _commands.TryGetValue(actor.PlayerId.Value, out PlayerCommand sampled)
+                int playerId = actor.PlayerId.Value;
+                PlayerCommand command = _commands.TryGetValue(playerId, out PlayerCommand sampled)
                     ? sampled
                     : PlayerCommand.Idle(frame);
+
+                int interactable = FindInteractable(actor);
+                bool screenOpen = _openScreens.ContainsKey(playerId);
+                if (screenOpen)
+                {
+                    // Their hands are on the menu (D42): the body stands there taking no orders,
+                    // exactly like a staggered player, while physics still applies.
+                    command = PlayerCommand.Idle(frame);
+
+                    // Walking away is impossible while idle, but the chest can vanish — an
+                    // attempt reset, a despawn — and a screen with no chest under it would strand
+                    // the player in a menu they cannot leave.
+                    if (interactable < 0)
+                    {
+                        CloseScreen(playerId);
+                        screenOpen = false;
+                    }
+                }
+
                 int grabTarget = FindGrabTarget(actor);
                 ActorStepResult result = actor.Step(
                     frame, command, bounds, StepDuration,
-                    FindReviveTarget(actors, i), grabTarget >= 0);
+                    FindReviveTarget(actors, i), grabTarget >= 0,
+                    !screenOpen && interactable >= 0);
+
+                if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count)
+                {
+                    OpenScreen(playerId, _interactables[interactable].Kind);
+                }
                 if (result.RevivedPartner >= 0 && result.RevivedPartner < actors.Count)
                 {
                     actors[result.RevivedPartner].ApplyRevive(result.ReviveFraction);
@@ -323,11 +477,6 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     PlayerInventory bag = actor.GetComponent<PlayerInventory>();
                     AddResult taken = bag != null ? bag.Take(_pickups[grabTarget].Item) : AddResult.Refused;
-                    if (taken.Equipped)
-                    {
-                        actor.RefreshStats();
-                    }
-
                     if (taken.Taken)
                     {
                         int id = actor.PlayerId.Value;
@@ -517,7 +666,7 @@ namespace BattleBomb.Gameplay.Simulation
                 }
 
                 EnemySpec spec = enemy.Spec;
-                EnemyDied?.Invoke(new EnemyDeath(spec.Rank, spec.XpReward, false, enemy.Position));
+                EnemyDied?.Invoke(new EnemyDeath(spec.Rank, spec.XpReward, enemy.IsElite, enemy.Position));
 
                 // The kill's XP (task 48, planning decision 3): every living player earns the
                 // full reward — co-op never punishes the reviver. Downed players earn nothing.
@@ -536,17 +685,26 @@ namespace BattleBomb.Gameplay.Simulation
                     }
                 }
 
-                _lootRng = DropRoll.Roll(
-                    _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
-                if (drop.Dropped)
+                if (enemy.IsElite && !enemy.CarriedDrop.IsEmpty)
                 {
-                    var context = new GenerationContext(
-                        drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
-                        _elements.Ids);
-                    _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
-                    if (!item.IsEmpty)
+                    // It drops what it wears (D22) — the piece was rolled at spawn and has been
+                    // tinting its armor ever since, so the kill owes exactly that item.
+                    _pickups.Add(DropPickup.Spawn(enemy.Position, enemy.CarriedDrop));
+                }
+                else
+                {
+                    _lootRng = DropRoll.Roll(
+                        _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
+                    if (drop.Dropped)
                     {
-                        _pickups.Add(DropPickup.Spawn(enemy.Position, item));
+                        var context = new GenerationContext(
+                            drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                            _elements.Ids);
+                        _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
+                        if (!item.IsEmpty)
+                        {
+                            _pickups.Add(DropPickup.Spawn(enemy.Position, item));
+                        }
                     }
                 }
 
@@ -575,6 +733,35 @@ namespace BattleBomb.Gameplay.Simulation
                 to.y = 0f;
                 float sq = to.sqrMagnitude;
                 if (sq <= radiusSq && sq < bestSq)
+                {
+                    best = i;
+                    bestSq = sq;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>
+        /// The chest or shopkeeper this player is standing at (D42), or -1. Each carries its own
+        /// reach, so a big shop counter can be more welcoming than a small chest.
+        /// </summary>
+        private int FindInteractable(CharacterActor player)
+        {
+            int best = -1;
+            float bestSq = float.MaxValue;
+            for (int i = 0; i < _interactables.Count; i++)
+            {
+                if (_interactables[i] == null)
+                {
+                    continue;
+                }
+
+                Vector3 to = _interactables[i].Position - player.Position;
+                to.y = 0f;
+                float sq = to.sqrMagnitude;
+                float radius = _interactables[i].Radius;
+                if (sq <= radius * radius && sq < bestSq)
                 {
                     best = i;
                     bestSq = sq;
@@ -667,6 +854,7 @@ namespace BattleBomb.Gameplay.Simulation
             _pickups.Clear();
             _grabCounts.Clear();
             _refusedGrabs.Clear();
+            CloseAllScreens();
             AttemptReset?.Invoke();
         }
 

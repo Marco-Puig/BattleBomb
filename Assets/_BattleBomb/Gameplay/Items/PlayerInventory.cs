@@ -1,13 +1,23 @@
+using System;
 using BattleBomb.Core.Items;
+using BattleBomb.Core.Loot;
 using BattleBomb.Core.Progression;
+using BattleBomb.Core.Stats;
+using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
 
 namespace BattleBomb.Gameplay.Items
 {
     /// <summary>
-    /// One player's bag, loadout, and ladder place — a thin owner around Core's
-    /// <see cref="Core.Items.Inventory"/> and <see cref="XpLedger"/>. Gameplay owns the state;
-    /// the rules all live in Core under tests (the 2019 antidote, by construction).
+    /// One player's bag, loadout, wallet, and ladder place — a thin owner around Core's
+    /// <see cref="Core.Items.Inventory"/>, <see cref="XpLedger"/>, and <see cref="Wallet"/>.
+    /// Gameplay owns the state; the rules all live in Core under tests (the 2019 antidote, by
+    /// construction).
+    ///
+    /// Every mutation the chest screen can ask for is a <c>Request</c> method here, and every one
+    /// that changes anything raises <see cref="Changed"/>. The UI sends requests and redraws from
+    /// the event — it never reaches in (M6 planning decision 2, and the M4 close-out's complaint
+    /// about manual RefreshStats choreography).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class PlayerInventory : MonoBehaviour
@@ -25,9 +35,15 @@ namespace BattleBomb.Gameplay.Items
         [SerializeField] private int _maxLevel = 99;
         [SerializeField] private int _pointsPerLevel = 1;
 
+        [Tooltip("Driver supplying the loot catalog a combine rerolls from. Empty finds it.")]
+        [SerializeField] private SimulationDriver _driver;
+
         private Inventory _inventory;
         private XpLedger _ledger;
         private Wallet _wallet;
+
+        /// <summary>Raised after anything in the bag, loadout, wallet, or ladder moved.</summary>
+        public event Action Changed;
 
         public Inventory Inventory => _inventory ?? (_inventory = new Inventory());
 
@@ -52,6 +68,11 @@ namespace BattleBomb.Gameplay.Items
             {
                 _ledger = XpLedger.Fresh;
             }
+
+            if (_driver == null)
+            {
+                _driver = FindAnyObjectByType<SimulationDriver>();
+            }
         }
 
         /// <summary>
@@ -66,28 +87,211 @@ namespace BattleBomb.Gameplay.Items
                 _wallet = _wallet.Earned(result.CoinsEarned);
             }
 
+            if (result.Taken)
+            {
+                Changed?.Invoke();
+            }
+
             return result;
         }
 
+        /// <summary>A kill's reward (task 48): every living player earns the full amount.</summary>
+        public void Earn(float xp)
+        {
+            _ledger = _ledger.Earn(xp, Curve);
+            Changed?.Invoke();
+        }
+
+        // ── Requests: everything the chest screen can ask for ────────────────────────
+
+        public bool RequestEquip(int bagIndex, int equipmentIndex = 0)
+        {
+            if (!Inventory.TryEquip(bagIndex, Level, equipmentIndex))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        public bool RequestUnequip(ItemSlot slot, int equipmentIndex = 0)
+        {
+            if (!Inventory.Unequip(slot, equipmentIndex))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
         /// <summary>Sells one bagged stack outright, banking what it fetched (D43).</summary>
-        public int Sell(int bagIndex)
+        public int RequestSell(int bagIndex)
         {
             int coins = Inventory.Sell(bagIndex);
             if (coins > 0)
             {
                 _wallet = _wallet.Earned(coins);
+                Changed?.Invoke();
             }
 
             return coins;
         }
 
-        /// <summary>A kill's reward (task 48): every living player earns the full amount.</summary>
-        public void Earn(float xp) => _ledger = _ledger.Earn(xp, Curve);
+        public bool RequestLock(int bagIndex, bool locked)
+        {
+            if (!Inventory.SetLock(bagIndex, locked))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        public bool RequestLockWorn(ItemSlot slot, int equipmentIndex, bool locked)
+        {
+            if (!Inventory.SetWornLock(slot, equipmentIndex, locked))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>
+        /// D44's deepening, money first: the price is checked and taken before the point is
+        /// spent, and a refused upgrade never takes the coins.
+        /// </summary>
+        public bool RequestUpgrade(int bagIndex, in UpgradeTarget target)
+        {
+            if (bagIndex < 0 || bagIndex >= Inventory.Items.Count)
+            {
+                return false;
+            }
+
+            int price = Inventory.Prices.UpgradeCost(Inventory.Items[bagIndex].Item);
+            if (price <= 0 || !_wallet.CanAfford(price))
+            {
+                return false;
+            }
+
+            if (!Inventory.TryUpgradeBagged(bagIndex, target))
+            {
+                return false;
+            }
+
+            _wallet = _wallet.Spent(price);
+            Changed?.Invoke();
+            return true;
+        }
+
+        public bool RequestUpgradeWorn(ItemSlot slot, int equipmentIndex, in UpgradeTarget target)
+        {
+            ItemInstance worn = Inventory.Loadout.Worn(slot, equipmentIndex);
+            if (worn.IsEmpty)
+            {
+                return false;
+            }
+
+            int price = Inventory.Prices.UpgradeCost(worn);
+            if (price <= 0 || !_wallet.CanAfford(price))
+            {
+                return false;
+            }
+
+            if (!Inventory.TryUpgradeWorn(slot, equipmentIndex, target))
+            {
+                return false;
+            }
+
+            _wallet = _wallet.Spent(price);
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>D44's gamble. The reroll comes from the driver's catalog and its own stream.</summary>
+        public bool RequestCombine(int firstIndex, int secondIndex, out CombineResult result)
+        {
+            result = CombineResult.Refused;
+            if (_driver == null)
+            {
+                return false;
+            }
+
+            _driver.RunCombine(Inventory, firstIndex, secondIndex, out result);
+            if (!result.Combined)
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        public bool RequestQuickConsumable(int definitionId)
+        {
+            if (!Inventory.AssignQuickConsumable(definitionId))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        public bool RequestQuickEquipment(int equipmentIndex)
+        {
+            if (!Inventory.AssignQuickEquipment(equipmentIndex))
+            {
+                return false;
+            }
+
+            Changed?.Invoke();
+            return true;
+        }
+
+        /// <summary>D32's allocation, from the Hero tab.</summary>
+        public bool RequestAllocate(StatId stat)
+        {
+            if (_ledger.UnspentPoints <= 0)
+            {
+                return false;
+            }
+
+            _ledger = _ledger.Spend(stat);
+            Changed?.Invoke();
+            return true;
+        }
+
+        public void SetAutoEquip(bool value)
+        {
+            if (Inventory.AutoEquip == value)
+            {
+                return;
+            }
+
+            Inventory.AutoEquip = value;
+            Changed?.Invoke();
+        }
+
+        public void SetAutoSell(bool value)
+        {
+            if (Inventory.AutoSell == value)
+            {
+                return;
+            }
+
+            Inventory.AutoSell = value;
+            Changed?.Invoke();
+        }
 
         /// <summary>
         /// D24's reset, made real: the ledger resets and banks its permanent point, then D36
         /// re-locks the stash — every worn piece above level one returns to the bag, no
-        /// grandfather clause. The caller refreshes the actor's stats after.
+        /// grandfather clause.
         /// </summary>
         public bool TryPrestige()
         {
@@ -98,9 +302,47 @@ namespace BattleBomb.Gameplay.Items
 
             _ledger = _ledger.Prestige(Curve);
             Inventory.ReturnOverLevelGear(_ledger.Level);
+            Changed?.Invoke();
             return true;
         }
 
-        internal void SetLedger(in XpLedger ledger) => _ledger = ledger;
+        internal void SetLedger(in XpLedger ledger)
+        {
+            _ledger = ledger;
+            Changed?.Invoke();
+        }
+
+        /// <summary>Debug and shop entry point: money in, without a sale behind it.</summary>
+        internal void GrantCoins(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            _wallet = _wallet.Earned(amount);
+            Changed?.Invoke();
+        }
+
+        /// <summary>Buying from the shopkeeper (D43): the price leaves the wallet, the item
+        /// lands in the sack — and a sack that refuses it refunds nothing, so the check comes
+        /// first.</summary>
+        internal bool TryBuy(in ItemInstance item, int price)
+        {
+            if (item.IsEmpty || price < 0 || !_wallet.CanAfford(price) || Inventory.IsFull)
+            {
+                return false;
+            }
+
+            AddResult result = Inventory.Add(item, Level);
+            if (!result.Taken)
+            {
+                return false;
+            }
+
+            _wallet = _wallet.Spent(price).Earned(result.CoinsEarned);
+            Changed?.Invoke();
+            return true;
+        }
     }
 }

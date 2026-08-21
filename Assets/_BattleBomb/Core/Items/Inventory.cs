@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Loot;
 using UnityEngine;
 
 namespace BattleBomb.Core.Items
@@ -144,6 +145,110 @@ namespace BattleBomb.Core.Items
             ItemStack stack = _items[bagIndex];
             _items[bagIndex] = new ItemStack(stack.Item.WithLock(locked), stack.Count);
             return true;
+        }
+
+        /// <summary>
+        /// Spends one capacity point into a bagged item's stat (D44). The caller has already
+        /// taken the money, so a refusal here must be a refusal there too.
+        /// </summary>
+        public bool TryUpgradeBagged(int bagIndex, in UpgradeTarget target)
+        {
+            if (bagIndex < 0 || bagIndex >= _items.Count)
+            {
+                return false;
+            }
+
+            ItemStack stack = _items[bagIndex];
+            if (!ItemUpgrade.TryApply(stack.Item, target, out ItemInstance upgraded))
+            {
+                return false;
+            }
+
+            _items[bagIndex] = new ItemStack(upgraded, stack.Count);
+            return true;
+        }
+
+        /// <summary>The same, for a piece already being worn — deepening your best item should
+        /// never require taking it off first.</summary>
+        public bool TryUpgradeWorn(ItemSlot slot, int equipmentIndex, in UpgradeTarget target)
+        {
+            ItemInstance worn = Loadout.Worn(slot, equipmentIndex);
+            if (worn.IsEmpty || !ItemUpgrade.TryApply(worn, target, out ItemInstance upgraded))
+            {
+                return false;
+            }
+
+            Loadout.Swap(slot, equipmentIndex, upgraded);
+            return true;
+        }
+
+        /// <summary>Locks or releases a worn piece, so a keeper stays safe while it is in use.</summary>
+        public bool SetWornLock(ItemSlot slot, int equipmentIndex, bool locked)
+        {
+            ItemInstance worn = Loadout.Worn(slot, equipmentIndex);
+            if (worn.IsEmpty)
+            {
+                return false;
+            }
+
+            Loadout.Swap(slot, equipmentIndex, worn.WithLock(locked));
+            return true;
+        }
+
+        /// <summary>
+        /// D44's gamble across two bag slots: both stacks give up one item each, and the reroll
+        /// lands in the bag. Refuses anything <see cref="ItemCombine.CanCombine"/> refuses.
+        /// </summary>
+        public DeterministicRandom TryCombine(
+            in DeterministicRandom rng,
+            int firstIndex,
+            int secondIndex,
+            in GenerationContext context,
+            out CombineResult result)
+        {
+            result = CombineResult.Refused;
+            DeterministicRandom next = rng;
+            if (firstIndex == secondIndex
+                || firstIndex < 0 || firstIndex >= _items.Count
+                || secondIndex < 0 || secondIndex >= _items.Count)
+            {
+                return next;
+            }
+
+            ItemInstance a = _items[firstIndex].Item;
+            ItemInstance b = _items[secondIndex].Item;
+            if (!ItemCombine.CanCombine(a, b))
+            {
+                return next;
+            }
+
+            next = ItemCombine.Combine(next, a, b, context, out result);
+            if (!result.Combined)
+            {
+                return next;
+            }
+
+            // Highest index first, so removing one never shifts the other out from under us.
+            int high = Mathf.Max(firstIndex, secondIndex);
+            int low = Mathf.Min(firstIndex, secondIndex);
+            RemoveOne(high);
+            RemoveOne(low);
+            _items.Add(new ItemStack(result.Item, 1));
+            return next;
+        }
+
+        /// <summary>Takes one item off a stack, dropping the stack when it empties.</summary>
+        private void RemoveOne(int index)
+        {
+            ItemStack stack = _items[index];
+            if (stack.Count > 1)
+            {
+                _items[index] = new ItemStack(stack.Item, stack.Count - 1);
+            }
+            else
+            {
+                _items.RemoveAt(index);
+            }
         }
 
         /// <summary>

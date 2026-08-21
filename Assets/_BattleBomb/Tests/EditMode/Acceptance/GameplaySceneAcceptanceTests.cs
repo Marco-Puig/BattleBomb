@@ -29,6 +29,7 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             "Debug Overlay",
             "Enemies",   // M3 (HANDOFF-M3 task 33): the spawner and its brood live under one root
             "Cast Tells", // M5 (task 57): the cast VFX pool — one host, not one per player
+            "Checkpoint", // M6 (task 66, D42): the chest, the shopkeeper, and a dummy to test on
         };
 
         private Scene _scene;

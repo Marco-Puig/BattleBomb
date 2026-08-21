@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Movement;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
@@ -39,6 +40,8 @@ namespace BattleBomb.Gameplay.Characters
         private Vector3 _strikeMomentum;
         private int _depletedSteps;
         private bool _deathReported;
+        private bool _isElite;
+        private ItemInstance _carriedDrop;
 
         public Component Body => this;
         public Vector3 Position => _state.Position;
@@ -48,6 +51,13 @@ namespace BattleBomb.Gameplay.Characters
         public bool IsDepleted => !_configured || _health.IsDepleted;
         public bool IsConfigured => _configured;
         public EnemySpec Spec => _spec;
+
+        /// <summary>D22's rare modifier: tougher, and it drops what it wears.</summary>
+        public bool IsElite => _isElite;
+
+        /// <summary>The piece an elite is wearing — Presentation tints its armor this item's
+        /// quality colour, and the kill hands over exactly this.</summary>
+        public ItemInstance CarriedDrop => _carriedDrop;
         public EnemyPhase Phase => _brain.Phase;
 
         /// <summary>How far into the telegraph, 0–1 — the tell Presentation ramps on (task 34).</summary>
@@ -74,11 +84,24 @@ namespace BattleBomb.Gameplay.Characters
         internal bool IsAttacking =>
             _brain.Phase == EnemyPhase.Telegraph || _brain.Phase == EnemyPhase.Active;
 
-        /// <summary>The spawner assigns the authored archetype right after instantiating.</summary>
-        internal void Configure(EnemyDefinition definition, int seed = 0)
+        /// <summary>
+        /// The spawner assigns the authored archetype right after instantiating. An elite (D22)
+        /// arrives already promoted and already carrying the piece it will drop — the fight
+        /// advertises its own reward, so the reward has to exist before the fight does.
+        /// </summary>
+        internal void Configure(
+            EnemyDefinition definition, int seed = 0,
+            bool isElite = false, in ItemInstance carriedDrop = default)
         {
             _definition = definition;
             _spec = definition.ToRuntime();
+            _isElite = isElite;
+            _carriedDrop = carriedDrop;
+            if (isElite)
+            {
+                _spec = EliteSpec.Promote(_spec, EliteRules.Default);
+            }
+
             _health = new Health(_spec.MaxHealth);
             _brain = EnemyState.Seeded(seed);
             _targetIndex = -1;

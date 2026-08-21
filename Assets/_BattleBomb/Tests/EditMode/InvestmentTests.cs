@@ -287,6 +287,53 @@ namespace BattleBomb.Tests.EditMode
             }
         }
 
+        // ── Through the inventory, the way the chest screen asks ─────────────────────
+
+        [Test]
+        public void Combining_from_the_bag_consumes_both_slots_and_leaves_one()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.Add(Knife(), currentLevel: 99);
+
+            inventory.TryCombine(
+                new DeterministicRandom(5u), 0, 1, Context(), out CombineResult result);
+
+            Assert.That(result.Combined, Is.True);
+            Assert.That(inventory.SlotsUsed, Is.EqualTo(1), "Two went in, one came out.");
+            Assert.That(inventory.Items[0].Item.DefinitionId, Is.EqualTo(4));
+        }
+
+        [Test]
+        public void Combining_an_item_with_itself_is_refused()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+
+            inventory.TryCombine(
+                new DeterministicRandom(5u), 0, 0, Context(), out CombineResult result);
+
+            Assert.That(result.Combined, Is.False, "One knife is not two knives.");
+            Assert.That(inventory.SlotsUsed, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Upgrading_reaches_a_worn_piece_without_taking_it_off()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.TryEquip(0, currentLevel: 99);
+
+            Assert.That(
+                inventory.TryUpgradeWorn(ItemSlot.Weapon, 0, UpgradeTarget.Core(CoreStatId.WeaponDamage)),
+                Is.True);
+
+            Assert.That(inventory.Loadout.Weapon.CoreStats.WeaponDamage,
+                Is.EqualTo(40f * 1.08f).Within(1e-4f));
+            Assert.That(inventory.Loadout.Weapon.UpgradesSpent, Is.EqualTo(1),
+                "Deepening your best item should never require unequipping it first.");
+        }
+
         [Test]
         public void The_stream_advances_identically_whether_the_jackpot_lands()
         {

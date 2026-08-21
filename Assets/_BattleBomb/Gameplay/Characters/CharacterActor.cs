@@ -24,11 +24,16 @@ namespace BattleBomb.Gameplay.Characters
         public readonly float ReviveFraction;
         public readonly bool GrabbedLoot;
 
-        public ActorStepResult(int revivedPartner, float reviveFraction, bool grabbedLoot)
+        /// <summary>Light landed on a chest or shopkeeper this step (D42) — the driver opens it.</summary>
+        public readonly bool OpenedInteractable;
+
+        public ActorStepResult(
+            int revivedPartner, float reviveFraction, bool grabbedLoot, bool openedInteractable = false)
         {
             RevivedPartner = revivedPartner;
             ReviveFraction = reviveFraction;
             GrabbedLoot = grabbedLoot;
+            OpenedInteractable = openedInteractable;
         }
     }
 
@@ -163,14 +168,16 @@ namespace BattleBomb.Gameplay.Characters
 
         /// <summary>
         /// One fixed step. <paramref name="reviveTarget"/> is the downed partner in revive range
-        /// this step (or -1) and <paramref name="lootInReach"/> whether a drop sits in grab range —
-        /// both computed by the driver, which alone acts on the result. Contextual Light resolves
-        /// in priority order: the revive channel first (D25), then the loot grab (D30), then the
-        /// swing.
+        /// this step (or -1), <paramref name="lootInReach"/> whether a drop sits in grab range,
+        /// and <paramref name="interactableInReach"/> whether a chest or shopkeeper is beside
+        /// them — all computed by the driver, which alone acts on the result. Contextual Light
+        /// resolves in priority order: the revive channel first (D25), then the loot grab (D30),
+        /// then the chest (D42), then the swing. Loot outranks the chest deliberately: you pick
+        /// the drop up, then open the bag to sort it.
         /// </summary>
         internal ActorStepResult Step(
             int frame, in PlayerCommand command, in ArenaBounds bounds, float dt,
-            int reviveTarget, bool lootInReach)
+            int reviveTarget, bool lootInReach, bool interactableInReach = false)
         {
             _previous = _state;
 
@@ -185,12 +192,13 @@ namespace BattleBomb.Gameplay.Characters
             // word on velocity; hit windows resolve only after the body has moved.
             int completedRevive = PhaseRevive(ref effective, frozen, reviveTarget, out float reviveFraction);
             bool grabbedLoot = PhaseLootGrab(ref effective, frozen, lootInReach, completedRevive);
+            bool opened = PhaseInteract(ref effective, frozen, interactableInReach, completedRevive, grabbedLoot);
             PhaseQuickUse(effective, frozen);
             CombatStepResult combat = PhaseCombatMachine(effective);
             if (frozen)
             {
                 // Hitstop freezes the whole character — the machine above only counted it down.
-                return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
+                return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot, opened);
             }
 
             PhaseVitals(dt);
@@ -199,7 +207,7 @@ namespace BattleBomb.Gameplay.Characters
             PhaseHitWindows(combat);
 
             transform.position = _state.Position;
-            return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
+            return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot, opened);
         }
 
         /// <summary>
@@ -249,6 +257,27 @@ namespace BattleBomb.Gameplay.Characters
         {
             if (frozen || !lootInReach || _revive.IsActive || completedRevive >= 0
                 || !_condition.InControl || _combat.Phase != AttackPhase.Ready
+                || (effective.Pressed & CommandButtons.Light) == 0)
+            {
+                return false;
+            }
+
+            effective = WithoutLight(effective);
+            return true;
+        }
+
+        /// <summary>
+        /// Contextual Light's last claim before the swing (D42): beside a chest or shopkeeper the
+        /// press opens it. A drop underfoot wins first — you take the loot, then open the bag to
+        /// sort it — and a downed partner outranks both.
+        /// </summary>
+        private bool PhaseInteract(
+            ref PlayerCommand effective, bool frozen, bool interactableInReach,
+            int completedRevive, bool grabbedLoot)
+        {
+            if (frozen || !interactableInReach || grabbedLoot || _revive.IsActive
+                || completedRevive >= 0 || !_condition.InControl
+                || _combat.Phase != AttackPhase.Ready
                 || (effective.Pressed & CommandButtons.Light) == 0)
             {
                 return false;
@@ -817,12 +846,24 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             _bag = GetComponent<PlayerInventory>();
+            if (_bag != null)
+            {
+                // The sheet rebuilds itself whenever the bag moves (M6 planning decision 2) —
+                // no caller anywhere has to remember to ask.
+                _bag.Changed += RefreshStats;
+            }
+
             RefreshStats();
             _driver.Characters.Register(this);
         }
 
         private void OnDisable()
         {
+            if (_bag != null)
+            {
+                _bag.Changed -= RefreshStats;
+            }
+
             if (_driver != null)
             {
                 _driver.Characters.Unregister(this);

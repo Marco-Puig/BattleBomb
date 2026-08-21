@@ -91,10 +91,14 @@ namespace BattleBomb.Gameplay.Items
                 bag.Earn(500f);
             }
 
-            if (bag.Ledger.CanPrestige(bag.Curve) && GUILayout.Button("PRESTIGE", GUILayout.Width(90f))
-                && bag.TryPrestige())
+            if (GUILayout.Button("+1000 ⛃", GUILayout.Width(80f)))
             {
-                actor.RefreshStats();
+                bag.GrantCoins(1000);
+            }
+
+            if (bag.Ledger.CanPrestige(bag.Curve) && GUILayout.Button("PRESTIGE", GUILayout.Width(90f)))
+            {
+                bag.TryPrestige();
             }
 
             GUILayout.EndHorizontal();
@@ -102,6 +106,7 @@ namespace BattleBomb.Gameplay.Items
                 + $"Crit {sheet.CritChance * 100f:F0}%  Swing x{sheet.SwingSpeedMultiplier:F2}  "
                 + $"Speed x{sheet.NetMoveSpeedMultiplier:F2}  Mana {actor.Mana.Current:F0}/{actor.Mana.Max:F0}");
             GUILayout.Label($"Magic +{sheet.MagicDamage:F0} dmg, +{sheet.MagicRange:F1} range");
+            GUILayout.Label($"⛃ {bag.Wallet.Balance}   Sack {inventory.SlotsUsed}/{inventory.Rules.Capacity}");
 
             // Testing magic needs specific loot, and drops are random by design. These hand it
             // over directly so a play session can reach the content it means to judge.
@@ -118,27 +123,24 @@ namespace BattleBomb.Gameplay.Items
             {
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Allocate:", GUILayout.Width(60f));
-                DrawAllocate(actor, bag, StatId.Strength, "Str");
-                DrawAllocate(actor, bag, StatId.Hp, "HP");
-                DrawAllocate(actor, bag, StatId.Mana, "Mana");
-                DrawAllocate(actor, bag, StatId.Speed, "Spd");
+                DrawAllocate(bag, StatId.Strength, "Str");
+                DrawAllocate(bag, StatId.Hp, "HP");
+                DrawAllocate(bag, StatId.Mana, "Mana");
+                DrawAllocate(bag, StatId.Speed, "Spd");
                 GUILayout.EndHorizontal();
             }
 
-            bool autoEquip = GUILayout.Toggle(inventory.AutoEquip, " auto-equip upgrades (D30)");
-            if (autoEquip != inventory.AutoEquip)
-            {
-                inventory.AutoEquip = autoEquip;
-            }
+            bag.SetAutoEquip(GUILayout.Toggle(inventory.AutoEquip, " auto-equip upgrades (D30)"));
+            bag.SetAutoSell(GUILayout.Toggle(inventory.AutoSell, " auto-sell at the cap (D43)"));
 
             GUILayout.Label("Worn:");
-            DrawWorn(actor, inventory, ItemSlot.Helmet);
-            DrawWorn(actor, inventory, ItemSlot.Chest);
-            DrawWorn(actor, inventory, ItemSlot.Boots);
-            DrawWorn(actor, inventory, ItemSlot.Weapon);
-            DrawWorn(actor, inventory, ItemSlot.Pet);
-            DrawWorn(actor, inventory, ItemSlot.Equipment, 0);
-            DrawWorn(actor, inventory, ItemSlot.Equipment, 1);
+            DrawWorn(bag, ItemSlot.Helmet);
+            DrawWorn(bag, ItemSlot.Chest);
+            DrawWorn(bag, ItemSlot.Boots);
+            DrawWorn(bag, ItemSlot.Weapon);
+            DrawWorn(bag, ItemSlot.Pet);
+            DrawWorn(bag, ItemSlot.Equipment, 0);
+            DrawWorn(bag, ItemSlot.Equipment, 1);
 
             string quick = inventory.QuickKind == QuickSlotKind.Empty
                 ? "empty"
@@ -153,34 +155,34 @@ namespace BattleBomb.Gameplay.Items
             {
                 ItemStack stack = inventory.Items[i];
                 GUILayout.BeginHorizontal();
-                GUILayout.Label($"{stack.Item.DisplayName} x{stack.Count}", GUILayout.Width(210f));
+                string locked = stack.Item.Locked ? " [L]" : string.Empty;
+                GUILayout.Label($"{stack.Item.DisplayName} x{stack.Count}{locked}", GUILayout.Width(180f));
                 if (stack.Item.IsConsumable)
                 {
                     if (GUILayout.Button("Quick", GUILayout.Width(52f)))
                     {
-                        inventory.AssignQuickConsumable(stack.Item.DefinitionId);
+                        bag.RequestQuickConsumable(stack.Item.DefinitionId);
                     }
                 }
                 else if (stack.Item.Slot == ItemSlot.Equipment)
                 {
-                    bool first = GUILayout.Button("E1", GUILayout.Width(34f));
-                    bool second = GUILayout.Button("E2", GUILayout.Width(34f));
-                    if (first && inventory.TryEquip(i, bag.Level, 0))
-                    {
-                        actor.RefreshStats();
-                        mutated = true;
-                    }
-                    else if (second && inventory.TryEquip(i, bag.Level, 1))
-                    {
-                        actor.RefreshStats();
-                        mutated = true;
-                    }
+                    bool first = GUILayout.Button("E1", GUILayout.Width(30f));
+                    bool second = GUILayout.Button("E2", GUILayout.Width(30f));
+                    mutated = (first && bag.RequestEquip(i, 0)) || (second && bag.RequestEquip(i, 1));
                 }
-                else if (GUILayout.Button("Equip", GUILayout.Width(52f))
-                    && inventory.TryEquip(i, bag.Level))
+                else if (GUILayout.Button("Equip", GUILayout.Width(52f)))
                 {
-                    actor.RefreshStats();
-                    mutated = true;
+                    mutated = bag.RequestEquip(i);
+                }
+
+                if (!mutated && GUILayout.Button(stack.Item.Locked ? "Unlock" : "Lock", GUILayout.Width(52f)))
+                {
+                    mutated = bag.RequestLock(i, !stack.Item.Locked);
+                }
+
+                if (!mutated && GUILayout.Button($"Sell {inventory.Prices.SellPrice(stack.Item)}", GUILayout.Width(64f)))
+                {
+                    mutated = bag.RequestSell(i) > 0;
                 }
 
                 GUILayout.EndHorizontal();
@@ -197,31 +199,29 @@ namespace BattleBomb.Gameplay.Items
             // Mid-ladder on purpose: a Godly grant would make every feel judgement about an
             // absurd item rather than about the mechanic being judged.
             ItemInstance rolled = _driver.RollDebugItem(definitionId, DebugGrantQuality);
-            if (!rolled.IsEmpty && bag.Take(rolled).Equipped)
+            if (!rolled.IsEmpty)
             {
-                actor.RefreshStats();
+                bag.Take(rolled);
             }
         }
 
-        private static void DrawAllocate(CharacterActor actor, PlayerInventory bag, StatId stat, string label)
+        private static void DrawAllocate(PlayerInventory bag, StatId stat, string label)
         {
             if (GUILayout.Button("+" + label, GUILayout.Width(58f)))
             {
-                bag.SetLedger(bag.Ledger.Spend(stat));
-                actor.RefreshStats();
+                bag.RequestAllocate(stat);
             }
         }
 
-        private static void DrawWorn(CharacterActor actor, Inventory inventory, ItemSlot slot, int equipmentIndex = 0)
+        private static void DrawWorn(PlayerInventory bag, ItemSlot slot, int equipmentIndex = 0)
         {
-            ItemInstance worn = inventory.Loadout.Worn(slot, equipmentIndex);
+            ItemInstance worn = bag.Inventory.Loadout.Worn(slot, equipmentIndex);
             string label = slot == ItemSlot.Equipment ? $"Equipment {equipmentIndex + 1}" : slot.ToString();
             GUILayout.BeginHorizontal();
             GUILayout.Label($"  {label}: {(worn.IsEmpty ? "—" : worn.DisplayName)}", GUILayout.Width(270f));
-            if (!worn.IsEmpty && GUILayout.Button("Off", GUILayout.Width(40f))
-                && inventory.Unequip(slot, equipmentIndex))
+            if (!worn.IsEmpty && GUILayout.Button("Off", GUILayout.Width(40f)))
             {
-                actor.RefreshStats();
+                bag.RequestUnequip(slot, equipmentIndex);
             }
 
             GUILayout.EndHorizontal();

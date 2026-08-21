@@ -39,6 +39,14 @@ namespace BattleBomb.Tests.EditMode
             requiredLevel,
             new ItemInvestment(capacity));
 
+        private static ItemInstance Helmet() => new ItemInstance(
+            new ItemIdentity(1, "Leather Helmet", ItemSlot.Helmet),
+            QualityRank.Shiny,
+            new GearContribution(defence: 0.08f, weight: 4f),
+            new AffixRoll[0],
+            10,
+            new ItemInvestment(3));
+
         private static List<UpgradeTarget> TargetsOf(in ItemInstance item)
         {
             var buffer = new List<UpgradeTarget>();
@@ -315,6 +323,76 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(result.Combined, Is.False, "One knife is not two knives.");
             Assert.That(inventory.SlotsUsed, Is.EqualTo(1));
+        }
+
+        // ── What the chest grid may offer once a combine is pending ──────────────────
+
+        [Test]
+        public void The_choices_for_a_pending_combine_are_the_pick_and_its_duplicates()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.Add(Helmet(), currentLevel: 99);
+            inventory.Add(Knife(QualityRank.Godly), currentLevel: 99);
+            inventory.Add(Knife(), currentLevel: 99);
+
+            var choices = new List<int>();
+            inventory.CombineChoices(0, choices);
+
+            Assert.That(choices, Is.EqualTo(new[] { 0, 3 }),
+                "A different item and a different rank are not duplicates; only the pick and its "
+                + "true twin belong on the grid.");
+        }
+
+        [Test]
+        public void A_pick_with_no_twin_offers_only_itself_and_no_combine_row()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.Add(Helmet(), currentLevel: 99);
+
+            var choices = new List<int>();
+            inventory.CombineChoices(0, choices);
+
+            Assert.That(choices, Is.EqualTo(new[] { 0 }));
+            Assert.That(inventory.HasCombinePartner(0), Is.False,
+                "Combine must not be offered when choosing it would open onto an empty grid.");
+        }
+
+        [Test]
+        public void A_locked_twin_is_not_a_choice()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.SetLock(1, true);
+
+            var choices = new List<int>();
+            inventory.CombineChoices(0, choices);
+
+            Assert.That(choices, Is.EqualTo(new[] { 0 }), "A locked item is protected from the gamble.");
+            Assert.That(inventory.HasCombinePartner(0), Is.False);
+            Assert.That(inventory.HasCombinePartner(1), Is.False, "Protection runs both ways.");
+        }
+
+        [Test]
+        public void A_choice_the_grid_offers_is_one_the_bag_will_actually_combine()
+        {
+            var inventory = new Inventory();
+            inventory.Add(Knife(), currentLevel: 99);
+            inventory.Add(Helmet(), currentLevel: 99);
+            inventory.Add(Knife(), currentLevel: 99);
+
+            var choices = new List<int>();
+            inventory.CombineChoices(2, choices);
+            Assert.That(choices, Is.EqualTo(new[] { 0, 2 }));
+
+            inventory.TryCombine(
+                new DeterministicRandom(11u), 2, choices[0], Context(), out CombineResult result);
+
+            Assert.That(result.Combined, Is.True,
+                "The grid may only show picks that work — anything else is a refusal the player "
+                + "was invited to make.");
         }
 
         [Test]

@@ -265,6 +265,51 @@ namespace BattleBomb.Core.Items
             return next;
         }
 
+        /// <summary>
+        /// The item at <paramref name="bagIndex"/> and every duplicate it can combine with, in
+        /// bag order — the whole of what the chest grid offers while a combine is pending. A
+        /// duplicate is the only pick that can work, so it is the only pick shown (Michael, M7
+        /// pass). An index with nothing to pair with answers with itself alone.
+        /// </summary>
+        public void CombineChoices(int bagIndex, List<int> into)
+        {
+            into.Clear();
+            if (bagIndex < 0 || bagIndex >= _items.Count)
+            {
+                return;
+            }
+
+            ItemInstance anchor = _items[bagIndex].Item;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (i == bagIndex || ItemCombine.CanCombine(anchor, _items[i].Item))
+                {
+                    into.Add(i);
+                }
+            }
+        }
+
+        /// <summary>Whether anything else in the bag can pair with this one — what decides
+        /// whether the chest screen offers Combine at all.</summary>
+        public bool HasCombinePartner(int bagIndex)
+        {
+            if (bagIndex < 0 || bagIndex >= _items.Count)
+            {
+                return false;
+            }
+
+            ItemInstance anchor = _items[bagIndex].Item;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (i != bagIndex && ItemCombine.CanCombine(anchor, _items[i].Item))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>Takes one item off a stack, dropping the stack when it empties.</summary>
         private void RemoveOne(int index)
         {

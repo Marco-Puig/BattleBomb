@@ -266,6 +266,11 @@ namespace BattleBomb.UI.Chest
 
         public void CancelCombine() => PendingCombine = -1;
 
+        /// <summary>Puts the cursor on a known cell — the screen jumping it onto the first
+        /// duplicate the moment a combine begins, so the pick is one press away.</summary>
+        public void SelectCell(int index, int visibleCount) =>
+            Cursor = Mathf.Clamp(index, 0, Mathf.Max(0, visibleCount - 1));
+
         /// <summary>The sack changed under us: keep the cursor inside what is left.</summary>
         public void ClampCursor(int visibleCount)
         {
@@ -281,15 +286,6 @@ namespace BattleBomb.UI.Chest
         }
 
         public void ClampAction(int menuCount) => Action = Mathf.Clamp(Action, 0, Mathf.Max(0, menuCount - 1));
-
-        /// <summary>Drops a pending combine whose first pick is no longer in the bag.</summary>
-        public void ClampPendingCombine(int bagCount)
-        {
-            if (PendingCombine >= bagCount)
-            {
-                PendingCombine = -1;
-            }
-        }
 
         private void MoveInHero(int dx, int dy)
         {
@@ -332,6 +328,14 @@ namespace BattleBomb.UI.Chest
             }
 
             int next = Cursor - dy * layout.Columns;
+            if (PendingCombine >= 0 && (next < 0 || next >= layout.VisibleCount))
+            {
+                // Mid-combine the grid is the whole question, and everything in it is an answer.
+                // Walking off either edge into the filters or the rack would leave a pick open
+                // behind a screen that no longer mentions it; Heavy is the way out.
+                return;
+            }
+
             if (next < 0)
             {
                 Focus = ChestFocus.Filters;

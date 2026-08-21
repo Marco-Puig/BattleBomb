@@ -168,8 +168,22 @@ namespace BattleBomb.UI.Chest
             return sack + "   " + hero;
         }
 
-        private void RefreshSack()
+        /// <summary>
+        /// The row above the grid. Normally the six category filters; mid-combine it says what
+        /// the grid has become instead, because the filters are neither what is being asked nor
+        /// reachable while the pick is open.
+        /// </summary>
+        private string FilterLine(IReadOnlyList<ItemStack> items)
         {
+            int pending = _nav.PendingCombine;
+            if (pending >= 0 && pending < items.Count)
+            {
+                return UiBuild.Tint(
+                    "COMBINING " + items[pending].Item.DisplayName
+                        + " — pick a duplicate.   Heavy: cancel",
+                    UiBuild.Coin);
+            }
+
             _text.Clear();
             for (int i = 0; i < FilterNames.Length; i++)
             {
@@ -179,9 +193,14 @@ namespace BattleBomb.UI.Chest
                     : name);
             }
 
-            _filterStrip.text = _text.ToString();
+            return _text.ToString();
+        }
 
+        private void RefreshSack()
+        {
             IReadOnlyList<ItemStack> items = _bag.Inventory.Items;
+            _filterStrip.text = FilterLine(items);
+
             for (int cell = 0; cell < _cells.Count; cell++)
             {
                 if (cell >= _visible.Count)
@@ -280,7 +299,7 @@ namespace BattleBomb.UI.Chest
             _text.Clear();
             for (int i = 0; i < _menu.Count; i++)
             {
-                string label = LabelFor(_menu[i], item);
+                string label = LabelFor(_menu[i], item, bagIndex);
                 string line = i == _nav.Action ? $"> {label}" : $"  {label}";
                 _text.Append(i == _nav.Action ? UiBuild.Tint(line, UiBuild.Focus) : line).Append('\n');
             }

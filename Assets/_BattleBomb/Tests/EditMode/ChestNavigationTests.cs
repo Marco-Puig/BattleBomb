@@ -68,6 +68,26 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void A_pending_combine_keeps_the_cursor_inside_the_grid()
+        {
+            var nav = new ChestNavigation();
+            nav.BeginCombine(0);
+
+            nav.Move(0, 1, Layout(visible: 2, stock: 4));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid),
+                "The filters are not the question while a pick is open, and leaving for them "
+                + "would strand the pick behind a screen that no longer mentions it.");
+
+            nav.Move(0, -1, Layout(visible: 2, stock: 4));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "Nor is the shopkeeper's rack.");
+
+            Assert.That(nav.Cancel(), Is.EqualTo(ChestOutcome.CombineCancelled));
+            nav.Move(0, 1, Layout(visible: 2, stock: 4));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Filters),
+                "With the pick released the grid's edges open again.");
+        }
+
+        [Test]
         public void Off_the_top_of_the_grid_is_the_filter_row_then_the_tabs()
         {
             var nav = new ChestNavigation();
@@ -121,10 +141,14 @@ namespace BattleBomb.Tests.EditMode
         {
             var nav = new ChestNavigation();
             nav.Move(1, 0, Layout());
-            nav.BeginCombine(1);
             nav.Move(0, 1, Layout());
             nav.Move(0, 1, Layout());
             Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Tabs));
+
+            // A pick cannot be opened from the tabs by any route a player has — the grid holds
+            // the cursor while one is pending — but the reset stays, so no path can carry a
+            // stale bag index into a tab that indexes something else.
+            nav.BeginCombine(1);
 
             Assert.That(nav.Confirm(Layout()), Is.EqualTo(ChestOutcome.TabSwitched));
             Assert.That(nav.Tab, Is.EqualTo(ChestTab.Hero));

@@ -208,9 +208,11 @@ namespace BattleBomb.UI.Chest
 
         private void Cancel()
         {
+            int pending = _nav.PendingCombine;
             switch (_nav.Cancel())
             {
                 case ChestOutcome.CombineCancelled:
+                    RecollectOnto(pending);
                     Flash("Combine cancelled.");
                     break;
 
@@ -232,11 +234,21 @@ namespace BattleBomb.UI.Chest
         /// <summary>The X in the corner, and any other pointer route out.</summary>
         internal void CloseFromPointer() => Host?.RequestClose(_playerId);
 
-        /// <summary>The bag moved — possibly under the partner's hand (D51). Repaint from the
-        /// new truth, and drop a combine whose first pick no longer exists.</summary>
+        /// <summary>
+        /// The bag moved — possibly under the partner's hand (D51). Repaint from the new truth,
+        /// and drop any combine in progress: the pick is a bag index, and selling or equipping
+        /// anything above it slides every index below down one. Holding the number through that
+        /// would gamble away an item the player never pointed at.
+        /// </summary>
         internal void OnBagChanged()
         {
-            _nav.ClampPendingCombine(_bag.Inventory.Items.Count);
+            if (_nav.PendingCombine >= 0)
+            {
+                _nav.CancelCombine();
+                Flash("Combine cancelled — the sack moved.");
+                return;
+            }
+
             Refresh();
         }
 
@@ -344,6 +356,12 @@ namespace BattleBomb.UI.Chest
             if (_nav.PendingCombine < 0)
             {
                 _nav.BeginCombine(bagIndex);
+
+                // The grid has just collapsed to this item and its duplicates; put the cursor on
+                // the first duplicate rather than back on the pick, so the answer is one press away.
+                CollectVisible();
+                int anchorCell = _visible.IndexOf(bagIndex);
+                _nav.SelectCell(anchorCell == 0 ? 1 : 0, _visible.Count);
                 Flash("Pick the duplicate to combine with.");
                 return;
             }
@@ -351,22 +369,37 @@ namespace BattleBomb.UI.Chest
             if (_nav.PendingCombine == bagIndex)
             {
                 _nav.CancelCombine();
+                RecollectOnto(bagIndex);
                 Flash("Combine cancelled.");
                 return;
             }
 
-            if (_bag.RequestCombine(_nav.PendingCombine, bagIndex, out CombineResult result))
+            // The pick is released before the bag is touched: combining raises Changed, and
+            // OnBagChanged reads a still-pending index as a sack that moved under it.
+            int first = _nav.PendingCombine;
+            _nav.CancelCombine();
+
+            if (_bag.RequestCombine(first, bagIndex, out CombineResult result))
             {
+                // The reroll lands at the end of the bag; the cursor follows it, since seeing
+                // what the gamble returned is the whole reason the gamble was taken.
+                RecollectOnto(_bag.Inventory.Items.Count - 1);
                 Flash(result.Promoted
                     ? $"UPGRADED! {result.Item.DisplayName}"
                     : $"Rerolled: {result.Item.DisplayName}");
-            }
-            else
-            {
-                Flash("These two cannot combine.");
+                return;
             }
 
-            _nav.CancelCombine();
+            RecollectOnto(bagIndex);
+            Flash("These two cannot combine.");
+        }
+
+        /// <summary>Rebuilds the grid and puts the cursor back on a known bag index — where the
+        /// eye already is when a combine ends and the whole sack returns to the screen.</summary>
+        private void RecollectOnto(int bagIndex)
+        {
+            CollectVisible();
+            _nav.SelectCell(_visible.IndexOf(bagIndex), _visible.Count);
         }
 
         /// <summary>
@@ -409,8 +442,17 @@ namespace BattleBomb.UI.Chest
 
         private void CollectVisible()
         {
-            _visible.Clear();
             IReadOnlyList<ItemStack> items = _bag.Inventory.Items;
+            if (_nav.PendingCombine >= 0 && _nav.PendingCombine < items.Count)
+            {
+                // Only duplicates can combine, so only duplicates are shown — the category
+                // filter set aside, since the pick is not a category question (Michael, M7 pass).
+                _bag.Inventory.CombineChoices(_nav.PendingCombine, _visible);
+                _nav.ClampCursor(_visible.Count);
+                return;
+            }
+
+            _visible.Clear();
             for (int i = 0; i < items.Count; i++)
             {
                 if (MatchesFilter(items[i].Item))
@@ -450,6 +492,16 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
+            if (_nav.PendingCombine >= 0)
+            {
+                // One question is open, so the menu asks only it. Every other row acts on the
+                // item under the cursor, and two of them — Equip and Sell — would shift the very
+                // index the pending pick is stored as.
+                _menu.Add(ItemAction.Combine);
+                _nav.ClampAction(_menu.Count);
+                return;
+            }
+
             ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
             _menu.Add(item.IsConsumable ? ItemAction.QuickUse : ItemAction.Equip);
 
@@ -458,8 +510,10 @@ namespace BattleBomb.UI.Chest
                 _menu.Add(ItemAction.Upgrade);
             }
 
-            if (!item.IsConsumable)
+            if (!item.IsConsumable && _bag.Inventory.HasCombinePartner(bagIndex))
             {
+                // Nothing to pair with means nothing the row could do: a Combine that opens onto
+                // an empty grid is the dead end this list exists to avoid.
                 _menu.Add(ItemAction.Combine);
             }
 
@@ -470,7 +524,7 @@ namespace BattleBomb.UI.Chest
         }
 
         /// <summary>The row's label, with the number that makes the choice concrete.</summary>
-        private string LabelFor(ItemAction action, in ItemInstance item)
+        private string LabelFor(ItemAction action, in ItemInstance item, int bagIndex)
         {
             switch (action)
             {
@@ -479,7 +533,12 @@ namespace BattleBomb.UI.Chest
                 case ItemAction.Upgrade:
                     return $"Upgrade  ({_bag.Inventory.Prices.UpgradeCost(item)})";
                 case ItemAction.Combine:
-                    return _nav.PendingCombine >= 0 ? "Combine with this" : "Combine…";
+                    if (_nav.PendingCombine < 0)
+                    {
+                        return "Combine…";
+                    }
+
+                    return _nav.PendingCombine == bagIndex ? "Cancel combine" : "Combine with this";
                 case ItemAction.Sell:
                     return $"Sell  ({_bag.Inventory.Prices.SellPrice(item)})";
                 default: return item.Locked ? "Unlock" : "Lock";

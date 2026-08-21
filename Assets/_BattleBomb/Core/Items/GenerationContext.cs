@@ -22,6 +22,10 @@ namespace BattleBomb.Core.Items
         public readonly int ForcedDefinitionId;
         public readonly QualityRank MinQuality;
 
+        /// <summary>The ceiling a roll may reach — Godly for an ordinary drop, and the same rank
+        /// as <see cref="MinQuality"/> when a combine (D44) pins the reroll to one rank.</summary>
+        public readonly QualityRank MaxQuality;
+
         /// <summary>
         /// The elements an element-flavoured affix may roll (D38). Empty means none are authored
         /// yet, and those affixes simply stay out of the pool rather than rolling a dud.
@@ -36,7 +40,7 @@ namespace BattleBomb.Core.Items
             in DropWeights weights,
             IReadOnlyList<ElementId> elements = null)
             : this(qualityScore, progressLevel, catalog, table, weights, elements,
-                false, ItemSlot.Helmet, false, 0, QualityRank.Nothing)
+                false, ItemSlot.Helmet, false, 0, QualityRank.Nothing, QualityRank.Godly)
         {
         }
 
@@ -51,8 +55,10 @@ namespace BattleBomb.Core.Items
             ItemSlot forcedSlot,
             bool hasForcedDefinition,
             int forcedDefinitionId,
-            QualityRank minQuality)
+            QualityRank minQuality,
+            QualityRank maxQuality)
         {
+            MaxQuality = maxQuality;
             QualityScore = qualityScore;
             ProgressLevel = progressLevel;
             Catalog = catalog;
@@ -72,11 +78,19 @@ namespace BattleBomb.Core.Items
         /// <summary>D22: an elite drops the slot it visibly wears.</summary>
         public GenerationContext WithForcedSlot(ItemSlot slot) => new GenerationContext(
             QualityScore, ProgressLevel, Catalog, Table, Weights, Elements,
-            true, slot, HasForcedDefinition, ForcedDefinitionId, MinQuality);
+            true, slot, HasForcedDefinition, ForcedDefinitionId, MinQuality, MaxQuality);
 
         /// <summary>D23: a boss drops its authored signature at a quality floor.</summary>
         public GenerationContext WithSignature(int definitionId, QualityRank minQuality) => new GenerationContext(
             QualityScore, ProgressLevel, Catalog, Table, Weights, Elements,
-            HasForcedSlot, ForcedSlot, true, definitionId, minQuality);
+            HasForcedSlot, ForcedSlot, true, definitionId, minQuality, MaxQuality);
+
+        /// <summary>
+        /// D44's combine: this exact definition at this exact rank. Floor and ceiling meet, so
+        /// the reroll varies in everything except what it is and how good it is allowed to be.
+        /// </summary>
+        public GenerationContext WithExactRoll(int definitionId, QualityRank rank) => new GenerationContext(
+            QualityScore, ProgressLevel, Catalog, Table, Weights, Elements,
+            HasForcedSlot, ForcedSlot, true, definitionId, rank, rank);
     }
 }

@@ -36,6 +36,13 @@ namespace BattleBomb.Core.Items
                 rank = context.MinQuality;
             }
 
+            // Nothing means "no ceiling was set" — only a deliberate cap (a combine's exact
+            // rank, D44) ever pulls a roll back down.
+            if (context.MaxQuality > QualityRank.Nothing && rank > context.MaxQuality)
+            {
+                rank = context.MaxQuality;
+            }
+
             QualityRow row = context.Table.For(rank);
 
             next = PickSpec(next, context, out ItemSpec spec, out bool found);

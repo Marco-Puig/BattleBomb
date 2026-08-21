@@ -1157,9 +1157,21 @@ glitch, and it quietly made abandoning your partner free.
 the couch whole and costs the survivor only a rollback. Michael chose the version where abandoning
 a partner actually abandons them. The pressure is to go back and revive, not to run ahead.
 
+- **A body on the floor is not moved — by the arena, or by anyone.** Exempting the downed from the
+  clamp is only half of it: the surviving partner's own swing still shoved the corpse (D21's
+  knockback, 9 m/s on a Heavy), which walks it forward one hit at a time and rebuilds the very
+  problem this decision closes. `ApplyImpulse` refuses a downed body outright. The swing still
+  lands and still announces itself — it simply moves nothing. The one exception is the sub-unit
+  crowding nudge, deliberately kept so a reviver cannot stand inside the corpse.
+
 **Consequence:** solo play is unaffected (one player down is a wipe, D25). `StageRun` learns whether
 the couch is whole when a room is reached; the clamp learns to skip the downed. `_roomBehind` can
 go back to counting only living players, since a body no longer needs protecting from the clamp.
+
+**Known edge, accepted:** the rule does not reach across a stage boundary. Press on through an
+airlock with a partner down and the old stage's rooms unload with it, so a wipe restarts the new
+stage and the partner returns at its spawn. Blocking the airlock would strand the survivor in a
+stage they cannot finish, which is worse.
 
 ---
 

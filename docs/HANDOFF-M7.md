@@ -309,8 +309,14 @@ commit (`78b`, `81b`, `82b`) where a review found something worth its own entry 
 | 82 | `fda4a1b` | The M7 tripwire (D45) and the dev-only tier overlay (D50) |
 | 79 | `30babb8` | Tiers applied: `EncounterInputs` reaches the loot roll and the spawner; four scene orphans deleted |
 | 82b | `cb4193d` | The second player the suite never had — the two-player regression the milestone most needed |
+| 84 | `43cdef5` | **After Michael's pass:** D53 — a downed partner is left where they fell, the run stops banking checkpoints, and nothing moves a body on the floor |
 
-**Gates at close: EditMode 582/582, PlayMode 13/13.** Up from 476 and 5 at M6's close.
+**Gates at close: EditMode 584/584, PlayMode 15/15.** Up from 476 and 5 at M6's close.
+
+Michael played the machine on 2026-08-21 and reported it working as described, with one change
+(D53) and one confusion — pressing Play started him mid-game, because Unity plays the *open* scene
+rather than the build's first. `Gameplay` running the fixture standalone is deliberate; `Frontend`
+is now the open scene so Play starts at the title.
 
 Note the order: **79 was executed last, out of sequence.** It was skipped by mistake during the
 long 78/78b review cycle and only noticed when Task 82's implementer went to break the encounter

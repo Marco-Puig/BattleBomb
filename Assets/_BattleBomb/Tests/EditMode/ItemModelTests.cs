@@ -145,6 +145,25 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Locking_flips_nothing_but_the_lock()
+        {
+            var item = new ItemInstance(
+                new ItemIdentity(7, "Shiny Hunting Knife", ItemSlot.Weapon, WeaponClass.Sword),
+                QualityRank.Shiny, new GearContribution(weaponDamage: 40f),
+                new[] { new AffixRoll(AffixId.CritChance, 0.1f) },
+                requiredLevel: 5, new ItemInvestment(capacity: 3, spent: 1));
+
+            ItemInstance locked = item.WithLock(true);
+
+            Assert.That(locked.Locked, Is.True);
+            Assert.That(item.Locked, Is.False, "The original is untouched — instances are values.");
+            Assert.That(locked.Quality, Is.EqualTo(item.Quality));
+            Assert.That(locked.Affixes, Is.SameAs(item.Affixes), "The roll itself never re-rolls.");
+            Assert.That(locked.UpgradesSpent, Is.EqualTo(1));
+            Assert.That(locked.WithLock(false).Locked, Is.False);
+        }
+
+        [Test]
         public void Scaling_grows_the_whole_block()
         {
             var block = new GearContribution(weaponDamage: 10f, defence: 0.1f, weight: 4f);

@@ -1,0 +1,29 @@
+using System;
+
+namespace BattleBomb.Core.Progression
+{
+    /// <summary>
+    /// One player's money (D43) — per player like the XP ledger, because drops are free-grab:
+    /// your loot, your income. It only ever enters through selling and leaves through the
+    /// shopkeeper and the upgrade sink; nothing else touches it.
+    /// </summary>
+    public readonly struct Wallet
+    {
+        public readonly int Balance;
+
+        public Wallet(int balance)
+        {
+            Balance = Math.Max(0, balance);
+        }
+
+        public static Wallet Empty => default;
+
+        public bool CanAfford(int price) => price >= 0 && price <= Balance;
+
+        public Wallet Earned(int amount) => new Wallet(Balance + Math.Max(0, amount));
+
+        /// <summary>Spending clamps at zero — callers gate on <see cref="CanAfford"/> first, and
+        /// a race that slipped past never mints negative money.</summary>
+        public Wallet Spent(int amount) => new Wallet(Balance - Math.Max(0, amount));
+    }
+}

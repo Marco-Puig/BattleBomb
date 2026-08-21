@@ -1,8 +1,12 @@
 # HANDOFF — M7: chapters, the story-free half
 
-**Status — designed, 2026-08-20. Not started.** Directed by Michael in the M7 design session
-(five sections approved). Decisions D48–D52 locked. Builds on M6's close (`c99e8f5`, EditMode
-476/476, PlayMode 5/5).
+**Status — the machine is complete, 2026-08-21. Awaiting Michael's pass.** Directed by Michael in
+the M7 design session (five sections approved). Decisions D48–D52 locked. **EditMode 582/582,
+PlayMode 13/13**, up from M6's close (`c99e8f5`, 476 and 5).
+
+Thirteen commits, `fd68210` through `cb4193d`. The story-free half is built and proven against the
+graybox fixture; **authored chapters are what remains, and they wait on the story.** Michael's
+checklist is below — his pass is the last gate.
 
 **What this milestone deliberately is not:** the story. Michael and his collaborator are still
 pinpointing the goal that pulls the player through the game — the princesses-and-crystals
@@ -285,6 +289,179 @@ load), the wipe → chest funnel, and joining at character select.
 
 ---
 
+## Build log
+
+Every task landed with both gates green and one verified commit. Three tasks grew a second
+commit (`78b`, `81b`, `82b`) where a review found something worth its own entry in the history.
+
+| Task | Commit | What landed |
+|---|---|---|
+| 73 | `fd68210` | The chest's focus machine extracted into `ChestNavigation` — M6's close-out debt, paid before M7 added to the screen |
+| 74 | `00e53cf` | `Sack` split out of `Inventory` so the couch shares one bag and one wallet (D51); `SharedStash` owns them |
+| 75 | `10b149a` | The Core chapter model: chapters, stages, arenas, waves, tiers, `EncounterInputs`, `StageRun`, the progress gate, the picker |
+| 76 | `ef59563` | The save (D52): a versioned model in Core, `ISaveStore` behind the Platform seam, migration forward and refusal of the future |
+| 77 | `44b95a6` | Authoring assets, the four scene markers, the stage-scene whitelist test, and the graybox `Fixture Chapter` |
+| 78 | `85da4e5` | The stage runner: streaming, waves, the clamp as the gate, the airlock, the wipe |
+| 78b | `adc63b6` | `LoadedStage` extracted; five bugs a live-driving review found, including two players' worth of teleports |
+| 80 | `a7343dc` | The front door — title, character select with couch join, chapter select, and the session that crosses the scene change |
+| 81 | `e8b9e28` | Autosave at D52's five moments, the results screen, and the guard that will not overwrite a save it could not read |
+| 81b | `6088c67` | The room you wake up in — a wipe or resume now lands *at* the checkpoint, not in the fight past it |
+| 82 | `fda4a1b` | The M7 tripwire (D45) and the dev-only tier overlay (D50) |
+| 79 | `30babb8` | Tiers applied: `EncounterInputs` reaches the loot roll and the spawner; four scene orphans deleted |
+| 82b | `cb4193d` | The second player the suite never had — the two-player regression the milestone most needed |
+
+**Gates at close: EditMode 582/582, PlayMode 13/13.** Up from 476 and 5 at M6's close.
+
+Note the order: **79 was executed last, out of sequence.** It was skipped by mistake during the
+long 78/78b review cycle and only noticed when Task 82's implementer went to break the encounter
+wiring for a tripwire test and found there was nothing to break. Until it landed, difficulty tiers
+changed only enemy health and damage — Hard and Nightmare dropped exactly what Normal dropped, and
+stage two's authored level stamp, loot progress and climate reached nothing.
+
+---
+
+## What the reviews found, and why it matters
+
+Every task was reviewed twice — once for spec compliance, once for quality — by agents that drove
+the running game rather than only reading the diff. **Every task passed both gates before review.
+Most of them still had defects.** The pattern is worth recording, because it is the same one M6's
+close-out noted and it has now repeated with more evidence:
+
+- **An inventory event fired twice** on every change (74). Invisible, because every listener was an
+  idempotent redraw — and a trap for the first sound effect or analytics counter to subscribe.
+- **A stray kill restarted a wave's timer** (75). A wipe racing an in-flight death would silently
+  re-lengthen the next spawn.
+- **Fourteen gear stats were saved by array position** (76) with only three covered by a test. A
+  reorder would have passed the whole suite while transposing every saved item's stats.
+- **A checkbox showed the opposite of what the game would do** (77). Ticking "shopkeeper" silently
+  forced "checkpoint", and the inspector kept displaying the untruth — to the person who will
+  hand-author every real chapter.
+- **The gate never opened** (78). `ApplyBounds` was never called on the transition the run makes by
+  itself, so a cleared arena was an inescapable box.
+- **A player standing still was flung 15 units** across an arena the instant their partner walked
+  into a room (78b), and **a downed body slid out of a doorway on its own**.
+- **Enemies spawned into the calm room you had just respawned in** (81b) — a direct violation of
+  D49, which exists in Michael's own words.
+- **A refused save would have been overwritten** by an empty one at the next checkpoint (81),
+  losing a player's game permanently and silently.
+
+None of these were caught by a test. All were caught by looking. That is now the third milestone in
+a row where that has been true, and it is why D45's suites keep growing rather than being trimmed.
+
+---
+
+## Michael's pass — the checklist
+
+Play from the **Frontend** scene. Keyboard is Player 1; a gamepad joins as Player 2 at character
+select by pressing Light.
+
+**Two controllers if you can.** Solo works, but several of the interesting checks are about what
+happens to your partner.
+
+1. **The front door.** Title → Start → pick a character → chapter select shows *Fixture Chapter*
+   and `[ Normal ]`, with Hard and Nightmare dimmed. Launch.
+2. **The first fight.** Grunts arrive from both edges. You cannot leave the arena until they are
+   dead; the moment the last one drops, you can walk right.
+3. **The checkpoint room.** A chest and a training dummy. Open the chest, close it. Walk on.
+4. **The airlock — this is the milestone's headline.** Clear arena 2, walk into the end room
+   (chest, shopkeeper, dummy), then keep walking right past it. **No loading screen, no hitch** —
+   stage 2's floor is simply there. The floor changes colour at the doorway; that is deliberate,
+   marking a new area. Say if you saw a stutter, a pop, or geometry appearing late.
+5. **Leave your partner behind on purpose.** Have Player 2 stand at the far left of an arena while
+   Player 1 walks into the chest room. Player 2 should **stay exactly where they are**. Two
+   versions of this used to fling them across the whole arena instantly; both are fixed and
+   pinned by tests, but you are the one who will notice if it still looks wrong.
+6. **Die on purpose past a checkpoint.** You should stand back up **in the chest room**, with
+   everything you picked up, and **nothing spawning** — that is the "chance to upgrade and equip
+   and go again" you asked for. Walking back out starts the fight fresh.
+7. **The downed-partner drag.** If your partner goes down and you push on alone, their body gets
+   pulled forward one arena at a time — instantly, about an arena's width, no walk. **The rule is
+   deliberate**: a body outside the play area is unreachable and forces a full wipe. But the
+   *motion* reads as a glitch. **Your call** whether to smooth it (interpolate it, or reposition it
+   deliberately so it can carry a visual tell) or leave it.
+8. **Tiers.** Hard stays dimmed until you finish the fixture chapter on Normal. Finish it — you get
+   a results screen — then launch Hard. Enemies are tougher **and drops should skew better**; open
+   settings → *tier overlay* to see the numbers the player never sees.
+9. **Save and resume.** Settings → *Return to chapter select*, then Continue from the title. You
+   should land back where you were with your sack and wallet intact.
+10. **Anything that looks wrong.** Geometry popping, a player stuck on a gate, a chest that will
+    not open, a screen you cannot leave.
+
+### Three decisions that are yours, not bugs
+
+- **The roster is not authored.** Character select offers one option, "Default". D46 locked the
+  roster as Fire/Ice/Earth/Air and the four *element* assets exist, but no character assets do. The
+  question: are the four characters identical tuning with a different element each — in which case
+  creating them is near-trivial — or do they differ in movement, health, or kit? The first is
+  wiring; the second is design, and nobody should invent it for you.
+- **Casters and Brutes no longer spawn anywhere.** The old test scene's hand-authored spawn list
+  fielded all four enemy archetypes; the fixture chapter fields only Grunt and Ranged. Correct for
+  a wiring rig, but you lose feel-testing on two archetypes — including the Brute, whose whole
+  identity is being uninterruptible. Add them to a fixture wave, or wait for real chapters.
+- **Two ground materials at the stage boundary.** The seam lands cleanly at the doorway and reads
+  as "next area". Whether stages should look *continuous* or *distinct* is an art call.
+
+---
+
+## Close-out notes — what felt wrong to build
+
+1. **The plan was wrong in more places than it was right about the hard parts.** Thirteen distinct
+   defects in the plan's own code were found and corrected during execution — a constructor that
+   contradicted its own test, a re-join loop that silently dropped Player 2, buttons specified with
+   clicks disabled, code placed in an assembly that could not compile it, and the gate that never
+   opened. Writing a plan with complete code made execution fast and made *review* the real gate;
+   it did not make the plan right. A future milestone should expect the same ratio.
+
+2. **The milestone's safety net was single-player until the last commit.** The PlayMode suite
+   existed to catch regressions, and the two most severe bugs the milestone shipped were both
+   two-player interaction bugs that it structurally could not see. This is a co-op game; the suites
+   should have had a partner in them from the start. `82b` fixed it, and the fix cost ~30 lines,
+   which is the uncomfortable part.
+
+3. **`StageRunner` is 739 lines and did not shrink when it was split.** Extracting `LoadedStage`
+   bought a clean ownership story and killed two whole classes of bug, but the runner still holds
+   streaming, wave spawning, region tests, clamp computation, prop placement and lifecycle. The
+   deliberate decision was to keep wave spawning, the position predicates and `ApplyBounds`
+   together because they tell one story — "the clamp is the gate". Watch it.
+
+4. **The chest close is the one autosave moment never verified by playing.** Once the airlock clamp
+   moves forward the chest is behind an unreachable wall, so it was verified by construction: a
+   one-line handler into the same `SaveNow` as the other four, all of which were exercised.
+
+5. **`EncounterInputs.Default` is a deliberate footgun.** A driver with no runner falls back to
+   level stamp 1 and loot progress 2 — the M6 values — so the bare Gameplay scene still works for
+   the older smoke suite. A future path that forgets to set the encounter therefore produces a
+   *plausible* game rather than an obviously broken one. It now warns once, mirroring `Bounds`.
+
+6. **Three small things accepted rather than churned:** `ResultsScreen.Repaint` re-runs a
+   `FindAnyObjectByType` every step while its reference is null; `StageRun.StandUpAtCheckpoint`'s
+   doc says "exactly" about a state that is not bit-for-bit identical; and `GameSession.Store` has
+   a public setter nothing currently misuses.
+
+---
+
+## Standing watches, inherited into M8
+
+- **Heavy stays on watch** (D26) — unchanged since M3.
+- **The reaction pairs** for Fire/Ice/Earth/Air remain Michael's and his collaborator's. The table
+  is still empty and runtime-unexercised; the smoke suites are where the first authored pair gets
+  verified.
+- **Earth and Air infusions are provisional wielder passives** (D46 as amended).
+- **The DEBUG grant row dies with real content** — it survives M7 because the fixture is not
+  content.
+- **The playable roster is unauthored** — see Michael's decisions above.
+- **A solo player can be labelled "P2".** `PlayerId` comes from `PlayerInput.playerIndex`, which is
+  allocated across the session, and the Frontend scene's two `PlayerInput` objects claim indices
+  first. Two consecutive sessions gave the single active player index 1 then 0, so the health bar
+  and HUD read "P2" then "P1". The smoke suites cannot see it — they replace the device source by
+  design (rule 3). Worth fixing before anything ships with a name on screen.
+- **The LittleBigPlanet-style chapter map** is a view over `StageSelection`, waiting on the art
+  phase. Nothing in the schema changes when it arrives.
+- **Offered, not actioned** (carried from M6): leap lift add-with-cap; magic damage as a
+  percentage; pointer support on the chest's dropdown rows.
+
+---
+
 ## Explicitly out of scope
 
 Real chapters, bosses, and narrative; the map's art; mid-stage join (Player 2 joins at
@@ -293,7 +470,7 @@ character select or not at all); online save reconciliation; the endless generat
 
 ---
 
-## Standing watches, inherited from M6
+## Standing watches, inherited from M6 *(superseded — see "inherited into M8" above)*
 
 - **Heavy stays on watch** (D26).
 - **The reaction pairs** for Fire/Ice/Earth/Air remain Michael's and his collaborator's; the

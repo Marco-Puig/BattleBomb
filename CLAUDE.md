@@ -78,10 +78,25 @@ manual steps. Useful calls:
 - `console` — read editor and player logs (`level: error` to filter).
 - `capture_game_view` / `capture_scene_view` — see the result of a change. Note that a
   ScreenSpaceOverlay canvas is invisible to these; UI must render in camera space to be checked.
+- **`run_tests` output overflows.** A full EditMode run is ~134,000 characters and gets spilled to
+  a file rather than returned. Read the summary with `head -c 400 "<path>"` and failures with
+  `grep -B3 -A8 '"Status": "Failed"' "<path>"`. Pass a `filter` while iterating.
+- **`set_transform` silently no-ops on `scale`** — it returns success and changes nothing on disk.
+  More generally: **after any scene or asset write, verify by reading back**, never by trusting the
+  return value. Two MCP calls in M7 silently did nothing.
+
+**The scenes, since M7 (D48):** `Frontend` is first in the build and is where play starts.
+`Gameplay` is *the machine* — sim rig, players, camera, UI — and never reboots; stage geometry
+scenes under `Scenes/Stages/` load additively into it and unload behind the player. Opening
+`Gameplay` alone still works: with no session, the stage runner launches the fixture chapter.
 
 **Verify with `run_tests` before claiming anything works.** EditMode is green or the change is not
 done. **PlayMode is the second gate since D45** — it boots the real scene and walks the loop, and
 it exists because M4 and M5 each shipped a bug a green EditMode suite could not see.
+
+**This is a co-op game — test it with two players.** M7's most severe bugs were both two-player
+interaction defects (one player's transition teleporting the other), and the PlayMode suite could
+not see them because every test ran with one player. It has a partner in it now; keep it that way.
 
 **Live verification protocol (Michael's rule):** for slow-paced checks — positions, registrations,
 settled states — drive the editor yourself with synthetic input and `eval` sampling. For anything
@@ -103,8 +118,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M5** | Abilities and elements | **complete** |
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
 | **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
-| M7 | Chapters — story-free half designed (D48–D52, `docs/HANDOFF-M7.md`); authored chapters wait on story | **next** |
-| M8 | **Vertical slice** — the real target | |
+| **M7** | Chapters — the machine (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door | **machine complete**; authored chapters wait on story |
+| M8 | **Vertical slice** — the real target | **next** |
 
 Build order and completion criteria: `docs/GAME_DESIGN.md` §10.
 

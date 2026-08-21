@@ -448,7 +448,7 @@ Dependency-ordered. Each milestone is verifiable before the next begins.
 | **M4** | Gear and stats | Item generation, equipment, stat aggregation — all Core, all tested. |
 | **M5** | Abilities and elements | Ability framework, per-character variants, environment climate modifiers. |
 | **M6** | Loot loop | The chest, the economy, deepen-or-gamble, elites. The chase is legible and satisfying. |
-| **M7** | Chapters | The story-free half first (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door — proven on a graybox fixture. Authored chapters follow when the story lands. |
+| **M7** | Chapters | **Machine complete.** Stages streamed through checkpoint airlocks, the save, tiers, the front door (D48–D52), proven on a graybox fixture. Authored chapters follow when the story lands. |
 | **M8** | **Vertical slice** | One chapter, two characters, one boss, full loop, co-op, polished. |
 | **M9+** | Scale | More chapters and characters, endless mode, then PvP. |
 

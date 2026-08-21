@@ -36,8 +36,16 @@ namespace BattleBomb.Core.Saves
 
         // ── Capture ──────────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// The whole machine's state as one file. <paramref name="carried"/> is the previous
+        /// save's roster: D51 gives the couch one shared save, so a character who did not play
+        /// this session has no live state to capture and would otherwise be written out of
+        /// existence by whoever did play. Present characters are captured first and win; the
+        /// rest ride through byte-identical.
+        /// </summary>
         public static SaveGame Capture(
-            Sack sack, in Wallet wallet, IReadOnlyList<CharacterState> characters, StoryProgress progress)
+            Sack sack, in Wallet wallet, IReadOnlyList<CharacterState> characters, StoryProgress progress,
+            IReadOnlyList<CharacterSave> carried = null)
         {
             var stacks = new List<ItemStackSave>(sack.Items.Count);
             for (int i = 0; i < sack.Items.Count; i++)
@@ -51,9 +59,34 @@ namespace BattleBomb.Core.Saves
                 roster.Add(CaptureCharacter(characters[i]));
             }
 
+            if (carried != null)
+            {
+                // Whoever stayed home this session keeps their place (D51's shared roster).
+                for (int i = 0; i < carried.Count; i++)
+                {
+                    if (carried[i] != null && !HasElement(roster, carried[i].ElementId))
+                    {
+                        roster.Add(carried[i]);
+                    }
+                }
+            }
+
             return new SaveGame(
                 SaveCodec.CurrentVersion, wallet.Balance, sack.AutoEquip, sack.AutoSell,
                 stacks.ToArray(), roster.ToArray(), CaptureProgress(progress));
+        }
+
+        private static bool HasElement(List<CharacterSave> roster, int elementId)
+        {
+            for (int i = 0; i < roster.Count; i++)
+            {
+                if (roster[i].ElementId == elementId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static CharacterSave CaptureCharacter(in CharacterState state)

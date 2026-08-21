@@ -198,10 +198,18 @@ namespace BattleBomb.UI.Chest
         private const float DebugGrantQuality = 2.2f;
 
         /// <summary>Back to the front door with the session intact, so chapter select is where
-        /// the player lands rather than the title (D51). Task 81 saves here first.</summary>
+        /// the player lands rather than the title (D51). It saves on the way out (D52): leaving
+        /// deliberately is the one exit that must never cost the run, and the scene load below is
+        /// the point of no return for every actor this reads state from.</summary>
         private void ReturnToChapters()
         {
             Close();
+            Gameplay.Session.SaveService saves = FindAnyObjectByType<Gameplay.Session.SaveService>();
+            if (saves != null)
+            {
+                saves.SaveNow();
+            }
+
             UnityEngine.SceneManagement.SceneManager.LoadScene(
                 "Frontend", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }

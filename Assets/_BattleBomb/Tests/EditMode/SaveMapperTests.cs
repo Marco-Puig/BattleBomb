@@ -210,5 +210,28 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(restored.CoreStats.MagicDamage, Is.EqualTo(13f));
             Assert.That(restored.CoreStats.MagicRange, Is.EqualTo(14f));
         }
+
+        [Test]
+        public void A_character_absent_this_session_is_carried_through_the_save_untouched()
+        {
+            var sack = new Sack();
+            CharacterState fire = Fire(sack);
+            SaveGame first = SaveMapper.Capture(sack, Wallet.Empty, new[] { fire }, new StoryProgress());
+
+            // Next session: only Ice plays. Fire's save must ride along.
+            var ice = new CharacterState(new ElementId(2), XpLedger.Fresh, new Inventory(sack));
+            SaveGame second = SaveMapper.Capture(
+                sack, Wallet.Empty, new[] { ice }, new StoryProgress(), carried: first.Characters);
+
+            Assert.That(second.Characters.Length, Is.EqualTo(2));
+            Assert.That(second.Characters[0].ElementId, Is.EqualTo(2), "Present characters first.");
+            Assert.That(second.Characters[1].ElementId, Is.EqualTo(1));
+            Assert.That(second.Characters[1].Level, Is.EqualTo(14), "Fire is exactly as it was left.");
+
+            // Fire plays again: the live state wins over the carried copy.
+            SaveGame third = SaveMapper.Capture(
+                sack, Wallet.Empty, new[] { fire, ice }, new StoryProgress(), carried: second.Characters);
+            Assert.That(third.Characters.Length, Is.EqualTo(2), "No duplicate for a character who is present.");
+        }
     }
 }

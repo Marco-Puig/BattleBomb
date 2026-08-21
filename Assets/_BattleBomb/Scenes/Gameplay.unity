@@ -259,6 +259,7 @@ GameObject:
   - component: {fileID: 463551039}
   - component: {fileID: 463551040}
   - component: {fileID: 463551041}
+  - component: {fileID: 463551042}
   m_Layer: 0
   m_Name: Simulation
   m_TagString: Untagged
@@ -366,6 +367,21 @@ MonoBehaviour:
   - {fileID: 3062397464175731020}
   - {fileID: 1227676801}
   _driver: {fileID: 463551038}
+  _stash: {fileID: 463551040}
+--- !u!114 &463551042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 463551036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54ae78d6d3e26f04fabe6c747754a8c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Session.SaveService
+  _driver: {fileID: 463551038}
+  _runner: {fileID: 1062282533}
   _stash: {fileID: 463551040}
 --- !u!1 &868317172
 GameObject:
@@ -840,6 +856,7 @@ GameObject:
   - component: {fileID: 1951115146}
   - component: {fileID: 1951115145}
   - component: {fileID: 1951115147}
+  - component: {fileID: 1951115148}
   m_Layer: 0
   m_Name: Chest UI
   m_TagString: Untagged
@@ -888,6 +905,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Chest.SettingsMenu
   _driver: {fileID: 0}
+--- !u!114 &1951115148
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951115144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d77f8aa2e265e6d408b50cd0ccf3be8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Frontend.ResultsScreen
+  _driver: {fileID: 463551038}
+  _runner: {fileID: 1062282533}
 --- !u!1001 &3062397464175731019
 PrefabInstance:
   m_ObjectHideFlags: 0

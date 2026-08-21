@@ -1,8 +1,59 @@
 # HANDOFF — M6: the loot loop
 
-**Status — designed, 2026-08-20.** Directed by Michael in the M6 design session (visual
-companion mockups for the chest screen; five sections approved). Decisions D42–D45 locked;
-build not yet started.
+**Status — tasks 61–70 built, 2026-08-21. Task 71 (Michael's mega pass) is the open gate.**
+Directed by Michael in the M6 design session (visual companion mockups for the chest screen;
+five sections approved). Decisions D42–D45 locked. EditMode 475/475, PlayMode 2/2.
+
+---
+
+## Build log
+
+| Task | Commit | What landed |
+|---|---|---|
+| 61 | `7d71555` | M5's debts: item structs regrouped (`ItemIdentity`/`RestorePayload`/`ActivePayload`/`ItemInvestment`, the last carrying D43's lock), `CharacterActor.Step` given named phases, construction moved to `OnEnable` |
+| 62 | `0c54bff` | `Wallet` and `PriceBook` — sell, shop premium, and the doubling upgrade curve, with the paper table pinned as law |
+| 63 | `5b6fa1e` | Sack rules: the 200-slot cap, stacks as one slot, five-of-a-kind ceiling, absolute locks, opt-in auto-sell, and the refusal with no overflow valve |
+| 64 | `076db4e` | Deepen or gamble: the +8% upgrade and the 2% combine, with 20,000 simulated gambles pinning the jackpot rate |
+| 65 | `99f47d5` | Elites: the rare spawn roll, the two-way toughening, and the guaranteed drop |
+| 66 | `ccc6220` | Chests and shopkeepers as world objects, the per-mode pause, `PlayerInventory` as a request surface with a changed event, elites spawning, the checkpoint corner |
+| 66b | `784da02` | Two bugs live verification caught (below) |
+| 67 | `7a64521` | The chest screen: Item Sack and Hero tabs, driven by the command stream |
+| 68 | `c253a83` | The shop rack, the global settings menu, `Pause` as a system button, and the death of the debug panel |
+| 69 | `9688c76` | Drop under-glow and bounce, elite armor tinting, the refused-grab red X |
+| 70 | `a8c8ad8` | D45's PlayMode smoke suite, verified against a deliberate break |
+
+## Bugs live verification caught (that the tests could not)
+
+Both found by driving the editor rather than by a red test, which is the whole argument D45 was
+locked on:
+
+1. **An elite was rolling a Vial of Health to wear.** D22 promises an elite drops what it wears
+   and advertises it visibly; a potion makes that a lie. The carried roll is forced into an armor
+   slot now.
+2. **Drop quality was pinned to the bottom third of the ladder.** Story progress was a hardcoded
+   `1`, so nothing above Rusty could ever fall and the loop was literally unjudgeable. It became
+   a scene dial like the climate (M7's chapters take it over), and elite drops now spread Torn
+   through Legendary.
+
+## Deviations from the plan, deliberate and recorded
+
+- **The chest screen is navigated by `PlayerCommand`, not an EventSystem** — planning decision 1
+  said UGUI + `MultiplayerEventSystem`. Driving the menu from the command stream is smaller,
+  keeps rule 3 exact (devices become commands in exactly one place), needs no extra machinery for
+  two players on two screen halves, and lets the smoke suite press buttons the same way a
+  controller does. Cost: no mouse support, which a gamepad-first couch game does not need yet.
+- **Legacy `UnityEngine.UI.Text`, not TextMeshPro.** TMP's essential resources are not imported,
+  and importing a pile of font assets for UI that gets redrawn at the art pass buys nothing.
+- **The canvas renders in camera space, not overlay.** An overlay canvas is composited outside
+  the camera and is invisible to every screenshot the editor can take — which would have made
+  this screen unverifiable by anything except a human at the monitor.
+- **`Pause` is a new command button.** D17's five-verb budget is about what one thumb does
+  mid-fight; a menu button is not a combat verb. The vocabulary acceptance test now separates the
+  two lists rather than being loosened, so the five stay guarded exactly as before.
+- **The debug grant survived the debug panel's death**, as a labelled DEBUG row in the settings
+  menu. Combining needs two identical items at the same rank and random drops almost never
+  oblige — without it, D44's gamble is untestable by hand, which is exactly how M5's reaction
+  table ended up shipping unexercised.
 
 ---
 
@@ -130,10 +181,36 @@ sell/equip flourish on the chest screen.
 The one-fixture loop test. Treat it as the milestone's second gate: it must fail when task 66's
 wiring is deliberately broken, or it is not a tripwire.
 
-### 71 — Michael's mega pass
-Checklist covers: the full loop solo, the couch split with both players browsing/testing
-simultaneously, cap punishment, auto-sell, locks, combining (watch the 2% land at least once via
-a debug-forced promotion), elite hunt, shopkeeper round trip.
+### 71 — Michael's mega pass *(the open gate)*
+
+Controls the pass needs: **Escape / Start** opens settings. At a chest or shopkeeper the screen
+is driven with the **stick** to move, **Light** to select, **Heavy** to go back — and Heavy with
+nothing left to back out of closes the screen. Open settings first and fire the **DEBUG** row: it
+hands both players two of every starter item, 5,000 coin, and enough XP to have points to spend.
+
+1. **The chest opens where it should, and only there.** Walk to the checkpoint corner (far left)
+   and press Light at the chest. Press Light out in the open — nothing should happen.
+2. **Solo pauses, couch does not.** With one player the world stops while the screen is open.
+   With two, the partner keeps fighting and the browsing player stands still taking no orders.
+3. **The comparison reads at a glance.** Select a weapon: does the vs-worn arrow tell you
+   whether it is an upgrade without reading numbers?
+4. **Deepen something.** Spend a point on a stat; watch the price double for the next one.
+5. **Gamble something.** Combine two identical items — the reroll comes back fresh. The 2%
+   promotion is rare on purpose; do not expect to see it by hand.
+6. **The cap punishes.** Fill a sack (the DEBUG row a few times), then walk over a drop: a red X
+   over your head and the count flashed, and the drop stays on the ground.
+7. **Auto-sell rescues it.** Turn auto-sell on in settings, grab again — the worst unlocked piece
+   is sold to make room. Lock your keeper first and confirm it is spared.
+8. **Hunt an elite.** They are about one spawn in twelve, wear a plate tinted the colour of what
+   they will drop, and take roughly two and a half times the punishment. Kill one: it drops
+   exactly the piece it was wearing.
+9. **Read the floor.** Do the drop glows scale the way you wanted — barely there at the bottom,
+   a light source at the top?
+10. **The shopkeeper round trip.** Sell junk, buy something off the rack, leave and come back to
+    see the rack rerolled.
+
+Fast-motion items (the grab animation's snap, the drop bounce) are yours to judge in real time,
+per your standing rule — nothing here was slow-motion sampled.
 
 ### 72 — Fixes and close-out
 Mega-pass fixes, close-out notes in this file, progress tables, memory.

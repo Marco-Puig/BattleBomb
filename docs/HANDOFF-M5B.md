@@ -1,9 +1,11 @@
 # HANDOFF — M5B: the elements get their own twists
 
-**Status — in build, 2026-08-20.** Directed by Michael with his collaborator, in a fork of the
+**Status — complete, 2026-08-20.** Directed by Michael with his collaborator, in a fork of the
 M6 planning session. Decisions D46 (roster + signature casts, resolving O11) and D47 (2D
-billboards) locked. This block lands **before** the M6 build; tasks are lettered 60A–60D so
-M6's tasks 61–72 (`HANDOFF-M6.md`) keep their numbers.
+billboards) locked. Tasks are lettered 60A–60D so M6's tasks 61–72 (`HANDOFF-M6.md`) keep
+their numbers. **60E passed 2026-08-20: Michael ran the five-point fast-motion checklist —
+each signature cast, the visible chill, the wall stun, the launch, and the enemy Ice caster
+slowing him back — and approved with "All good", no fixes needed.** 419/419 green at close.
 
 ---
 

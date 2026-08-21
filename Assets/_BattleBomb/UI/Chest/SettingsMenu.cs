@@ -121,7 +121,11 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectBags();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            const int rows = 5;
+#else
             const int rows = 4;
+#endif
             _cursor = (_cursor - (move.y > 0f ? 1 : -1) + rows) % rows;
         }
 
@@ -134,6 +138,19 @@ namespace BattleBomb.UI.Chest
                 ReturnToChapters();
                 return;
             }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (_cursor == OverlayRow)
+            {
+                Debug.TierOverlay overlay = Overlay;
+                if (overlay != null)
+                {
+                    overlay.Visible = !overlay.Visible;
+                }
+
+                return;
+            }
+#endif
 
             CollectBags();
             if (_bags.Count == 0)
@@ -196,6 +213,20 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>Mid-ladder, so a feel judgement is never about an absurd item.</summary>
         private const float DebugGrantQuality = 2.2f;
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        /// <summary>The tier overlay's row, last because it only exists here (D50): the numbers
+        /// it draws are the ones the player is deliberately never shown, so the row that reveals
+        /// them compiles out of a release along with the overlay itself.</summary>
+        private const int OverlayRow = 4;
+
+        private Debug.TierOverlay _overlay;
+
+        /// <summary>Found on demand and kept, because the menu repaints every step while it is
+        /// open and a scene-wide search per step is a search per step.</summary>
+        private Debug.TierOverlay Overlay =>
+            _overlay != null ? _overlay : _overlay = FindAnyObjectByType<Debug.TierOverlay>();
+#endif
 
         /// <summary>Back to the front door with the session intact, so chapter select is where
         /// the player lands rather than the title (D51). It saves on the way out (D52): leaving
@@ -316,6 +347,14 @@ namespace BattleBomb.UI.Chest
             int returnRow = debugRow + 1;
             string returnLine = $"  {(returnRow == _cursor ? ">" : " ")} Return to chapter select";
             _text.Append('\n').Append(returnRow == _cursor ? UiBuild.Tint(returnLine, UiBuild.Focus) : returnLine);
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            Debug.TierOverlay overlay = Overlay;
+            string mark = overlay != null && overlay.Visible ? "x" : " ";
+            string overlayLine = $"  {(OverlayRow == _cursor ? ">" : " ")} [{mark}] [ DEBUG ] tier overlay";
+            _text.Append('\n')
+                .Append(OverlayRow == _cursor ? UiBuild.Tint(overlayLine, UiBuild.Coin) : overlayLine);
+#endif
 
             _text.Append("\n\nStick: move   Light: toggle   Pause or Heavy: close");
             _body.text = _text.ToString();

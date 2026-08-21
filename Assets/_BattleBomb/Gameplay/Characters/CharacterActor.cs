@@ -608,6 +608,14 @@ namespace BattleBomb.Gameplay.Characters
             transform.position = _spawnPosition;
         }
 
+        /// <summary>
+        /// Tests and debug only: this player goes down now, as if a hit had finished them. The
+        /// attempt flow (D25) takes it from here, so the wipe path a smoke suite walks is the
+        /// same one a real death walks — a real wipe would need a fight, and the tripwire (D45)
+        /// deliberately runs with spawns off so a stray grunt can never be the reason it is red.
+        /// </summary>
+        internal void DebugDown() => _condition = _condition.Drained(_condition.Health.Max + 1f);
+
         /// <summary>A partner's shove (D21): replaces velocity, never touches health.</summary>
         internal void ApplyImpulse(Vector3 velocity)
         {

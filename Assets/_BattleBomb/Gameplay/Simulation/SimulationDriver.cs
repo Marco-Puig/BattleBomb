@@ -268,6 +268,21 @@ namespace BattleBomb.Gameplay.Simulation
             _pickups.Add(DropPickup.Spawn(position, item));
         }
 
+        /// <summary>
+        /// Tests and debug only: everyone down at once, so the wipe path (D49) can be walked
+        /// deterministically. A real wipe needs a fight, and the chapter tripwire (D45) runs with
+        /// spawns off on purpose — an encounter underneath it would stagger the player mid-press
+        /// and make a stray grunt and a genuine break look like the same red.
+        /// </summary>
+        public void DebugDownPlayers()
+        {
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                actors[i].DebugDown();
+            }
+        }
+
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;

@@ -11,5 +11,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/_BattleBomb/Scenes/Gameplay.unity
     guid: ace3d04bda5bc3f4da0ca4b7065a2344
+  - enabled: 1
+    path: Assets/_BattleBomb/Scenes/Stages/FixtureStage1.unity
+    guid: 439d19b6d05a55f449daef720dcbd88f
+  - enabled: 1
+    path: Assets/_BattleBomb/Scenes/Stages/FixtureStage2.unity
+    guid: db363a8de4c273e4898cb870e42f746e
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: f0b1875b2e5801f488954ff2f8dfc938, type: 3}

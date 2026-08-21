@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ab09d15963562944c9d49092c581c013, type: 3}
+  m_Name: FixtureStage1
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.StageDefinition
+  _id: fixture-1
+  _displayName: Fixture Stage 1
+  _geometryScene: FixtureStage1
+  _enemies:
+  - {fileID: 11400000, guid: c1638c1fcd785b84389d572beaa2683c, type: 2}
+  - {fileID: 11400000, guid: 42f0acd82b4120a42af2e8fd833404b5, type: 2}
+  _arenas:
+  - Waves:
+    - EnemyIndex: 0
+      Count: 3
+      DelaySteps: 30
+      WaitsForPreviousWave: 0
+    - EnemyIndex: 0
+      Count: 4
+      DelaySteps: 120
+      WaitsForPreviousWave: 1
+    Ending: 1
+  - Waves:
+    - EnemyIndex: 0
+      Count: 4
+      DelaySteps: 30
+      WaitsForPreviousWave: 0
+    - EnemyIndex: 1
+      Count: 5
+      DelaySteps: 90
+      WaitsForPreviousWave: 1
+    Ending: 2
+  _levelStamp: 1
+  _lootProgress: 2
+  _climate: []

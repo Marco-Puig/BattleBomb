@@ -23,6 +23,12 @@ namespace BattleBomb.Gameplay.Combat
         private readonly List<GameObject> _brood = new List<GameObject>();
         private int _serial;
 
+        /// <summary>
+        /// Clears the arena: every enemy still standing goes, and the variation seed starts over.
+        /// Called by the attempt reset (task 35) and by the stage runner at a launch and at every
+        /// airlock hand-over, so the D28 seed is an offset into one stage rather than a counter
+        /// that climbs for as long as the machine has been running.
+        /// </summary>
         internal void ResetBrood()
         {
             for (int i = 0; i < _brood.Count; i++)
@@ -34,6 +40,7 @@ namespace BattleBomb.Gameplay.Combat
             }
 
             _brood.Clear();
+            _serial = 0;
         }
 
         /// <summary>
@@ -54,6 +61,16 @@ namespace BattleBomb.Gameplay.Combat
             {
                 Debug.LogError($"{name}: no enemy prefab assigned — nothing can spawn.", this);
                 return 0;
+            }
+
+            // The dead are already gone from the world; drop them from the list too, or a
+            // chapter's worth of waves leaves it holding hundreds of nulls to walk on a reset.
+            for (int i = _brood.Count - 1; i >= 0; i--)
+            {
+                if (_brood[i] == null)
+                {
+                    _brood.RemoveAt(i);
+                }
             }
 
             int spawned = 0;

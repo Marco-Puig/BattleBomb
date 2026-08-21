@@ -13,15 +13,19 @@ namespace BattleBomb.UI.Debug
     /// whether the promise is being kept, and no other surface in the game reports it.
     /// </summary>
     /// <remarks>
-    /// The whole type is inside <c>#if DEVELOPMENT_BUILD || UNITY_EDITOR</c>, not merely the
-    /// drawing: a release build must not carry a component that could be switched on, because a
-    /// number that exists somewhere in a shipped binary is a number that leaks eventually.
+    /// The class <em>declaration</em> is outside <c>#if DEVELOPMENT_BUILD || UNITY_EDITOR</c> and
+    /// its entire body is inside it, so a release build ships this as an empty stub: no fields, no
+    /// <c>OnGUI</c>, nothing to switch on and nothing to read. The stub is what keeps the Gameplay
+    /// scene's serialised reference to this component resolvable; the numbers still cannot leak,
+    /// because the only thing that can reveal them — <c>SettingsMenu</c>'s overlay row, and the
+    /// field and lookup behind it — compiles out behind the same guard.
     /// <para>
-    /// The effective row is computed here from <see cref="EncounterInputs.From"/> — the same pure
-    /// function the machine is meant to apply — rather than read back off the driver, because the
-    /// driver does not yet consume it (plan task 79 is unbuilt: the level stamp and loot progress
-    /// it rolls with are still the M6 constants). So this reads as "what the tier and the stage
-    /// say the encounter should be", and the day the driver applies it, this needs no change.
+    /// The effective row is read back off <see cref="SimulationDriver.Encounter"/> rather than
+    /// recomputed here from <see cref="EncounterInputs.From"/>. Both print the same numbers today,
+    /// and that is exactly why the driver is the one to ask: a tool whose whole job is checking
+    /// that the tier's promise is being kept has to report the encounter the machine is actually
+    /// rolling against, not a second copy of the same sum — which would agree with itself even on
+    /// the day nothing reached the driver at all.
     /// </para>
     /// </remarks>
     [DisallowMultipleComponent]
@@ -78,9 +82,6 @@ namespace BattleBomb.UI.Debug
             // Before a launch there is no stage, so there is no encounter to report — saying
             // "level 1" there would be a number nobody chose.
             bool running = run != null;
-            EncounterInputs effective = running
-                ? EncounterInputs.From(tier, run.Spec)
-                : EncounterInputs.Default;
 
             // Bottom-left, not top-left, because CommandDebugOverlay already owns the top-left
             // corner and the health bars own the top-middle. Drawn over the tier row, the one
@@ -100,11 +101,20 @@ namespace BattleBomb.UI.Debug
 
             Row(2, $"Stage {_runner.StageIndex + 1} '{run.Spec.Id}'  arena {run.ArenaIndex + 1}"
                 + $"/{run.Spec.ArenaCount}  phase {run.Phase}");
+            Row(5, $"Alive {run.Alive}  checkpoint arena {run.CheckpointArena}"
+                + $"  airlock {(run.IsAirlock ? "yes" : "no")}");
+
+            if (_driver == null)
+            {
+                Row(3, "No SimulationDriver, so what the machine is actually rolling against "
+                    + "cannot be read.");
+                return;
+            }
+
+            EncounterInputs effective = _driver.Encounter;
             Row(3, $"Effective: level stamp {effective.LevelStamp}"
                 + $"  loot progress {effective.LootProgress:0.##} x {effective.LootDifficulty:0.##}");
             Row(4, $"Enemies: HP x{effective.HealthMultiplier:0.##}  DMG x{effective.DamageMultiplier:0.##}");
-            Row(5, $"Alive {run.Alive}  checkpoint arena {run.CheckpointArena}"
-                + $"  airlock {(run.IsAirlock ? "yes" : "no")}");
         }
 
         private void Row(int index, string text) =>

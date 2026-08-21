@@ -61,6 +61,19 @@ namespace BattleBomb.Tests.PlayMode
         /// is stopped and the step deadline can never arrive.</summary>
         private const int PausedFrameCeiling = 1500;
 
+        /// <summary>
+        /// How far a player who was given no orders at all may be found from where they were
+        /// left. Loose enough to absorb the crowding nudge (task 37) two bodies give each other
+        /// in passing, and still more than an order of magnitude under either teleport it exists
+        /// to catch — both of which moved a player twelve units or more in a single step.
+        /// </summary>
+        private const float StoodStillTolerance = 0.5f;
+
+        /// <summary>How far across the depth band player one steps to get out of their partner's
+        /// lane. Comfortably wider than two personal radii and comfortably inside the band's
+        /// three units, so the walk past never crowds and never hits the depth clamp.</summary>
+        private const float LaneOffset = 2f;
+
         /// <summary>The starter knife — something real to carry through a wipe.</summary>
         private const int KnifeDefinitionId = 7;
 
@@ -81,6 +94,11 @@ namespace BattleBomb.Tests.PlayMode
         private PlayerInventory _bag;
         private ScriptedCommandSource _input;
 
+        /// <summary>Player two, on the cases that join one; null on the rest. Given a source of
+        /// its own but never a command — its whole job is to stand somewhere and stay there.</summary>
+        private CharacterActor _partner;
+        private ScriptedCommandSource _partnerInput;
+
         [UnitySetUp]
         public IEnumerator OpenTheFrontDoor()
         {
@@ -89,6 +107,8 @@ namespace BattleBomb.Tests.PlayMode
             _player = null;
             _bag = null;
             _input = null;
+            _partner = null;
+            _partnerInput = null;
 
             GameSession stale = GameSession.Find();
             if (stale != null)
@@ -114,6 +134,11 @@ namespace BattleBomb.Tests.PlayMode
             if (_input != null)
             {
                 _input.Release();
+            }
+
+            if (_partnerInput != null)
+            {
+                _partnerInput.Release();
             }
 
             GameSession session = GameSession.Find();
@@ -276,18 +301,152 @@ namespace BattleBomb.Tests.PlayMode
                 "The wipe put the player somewhere other than the room's respawn point.");
         }
 
+        // ── The couch ────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// The first of M7's two shipped co-op bugs, made permanent. A player standing still in
+        /// the arena was flung to the checkpoint room's edge — about fifteen units, the whole
+        /// width of the arena plus the doorway — in a single simulation step, the instant their
+        /// partner walked into the room without them.
+        /// </summary>
+        /// <remarks>
+        /// The cause is worth stating in full, because the shape of it will come back. The
+        /// checkpoint transition fires on <em>any</em> player reaching the room (it has to: a
+        /// couch where one player must wait at the door for the other is a couch that deadlocks),
+        /// and the version that shipped also raised the clamp's lower bound to the room's edge
+        /// when it fired. <c>ArenaBounds.ClampHorizontal</c> is a <c>Mathf.Clamp</c> applied to
+        /// every character every step, so raising the floor under someone does not walk them
+        /// anywhere — it puts them there, in one step, at no speed. Measured before the fix:
+        /// −7.5 to 8.0.
+        /// <para>
+        /// This is exactly the class of bug D45 exists for. Every rule involved is correct on
+        /// paper and the whole EditMode suite is green through it; the break is two correct
+        /// pieces of wiring meeting, and it takes a second body in the world to see at all —
+        /// which is why nothing in this gate saw it until now.
+        /// </para>
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator A_partner_left_in_the_arena_is_not_flung_when_the_other_reaches_the_room()
+        {
+            yield return LaunchFromTheFrontDoor(expectContinue: false, players: 2);
+            yield return Until(() => _runner.Phase == StagePhase.GateOpen, "the first arena's gate never opened");
+
+            // Player two is given no orders for the rest of this test. Everything below is
+            // player one walking away from them.
+            yield return StepOutOfTheirLane();
+
+            CheckpointRoomMarker room = RoomAfter(0);
+            Vector3 stayed = _partner.Position;
+            Assert.That(stayed.x, Is.LessThan(room.MinX - 1f),
+                "Player two has to still be back in the arena for this to mean anything — the "
+                + $"room starts at x={room.MinX:F2} and they are at x={stayed.x:F2}.");
+
+            yield return WalkToX(room.EntryX + 0.5f, "the first checkpoint room");
+            yield return Until(() => _runner.Run.CheckpointArena == 0, "the checkpoint was never reached");
+            yield return Steps(30);
+
+            float moved = Vector3.Distance(stayed, _partner.Position);
+            Assert.That(moved, Is.LessThan(StoodStillTolerance),
+                $"Player two was standing still in the arena and moved {moved:F2} units "
+                + $"(x {stayed.x:F2} → {_partner.Position.x:F2}) because player one walked into "
+                + "the checkpoint room. Reaching a checkpoint must leave the cleared arena open "
+                + "behind the players: the clamp is applied every step, so raising its floor to "
+                + "the room's edge teleports whoever is behind it rather than walking them (D48).");
+        }
+
+        /// <summary>
+        /// The second of the two, and the reason <c>AllPlayersPastX</c> counts the downed. A body
+        /// on the floor of the checkpoint room slid out of it on its own — 11.6 to 14.0, through
+        /// the doorway and into the arena — the moment the surviving partner walked out, because
+        /// the check that closes the room behind them counted only players still standing.
+        /// </summary>
+        /// <remarks>
+        /// The room is held open by the clamp's floor for as long as anyone is still in it (D49),
+        /// and a body left behind is the case that needs that most: it cannot walk itself out, so
+        /// closing the room on the living drags it through the door at clamp speed, which is to
+        /// say instantly. Its partner then has to fight their way back to a corpse the room
+        /// spat out.
+        /// <para>
+        /// The room only becomes "the room behind" on a wipe or a resume — walking forward
+        /// through a checkpoint does not open it — so this case has to come through the wipe to
+        /// exist at all. That is also the state a real one happens in: someone goes down, the
+        /// other keeps going.
+        /// </para>
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator A_downed_partner_is_not_dragged_out_of_the_room_when_the_other_leaves()
+        {
+            yield return LaunchFromTheFrontDoor(expectContinue: false, players: 2);
+            yield return ClearInto(theRoomAfterArena: 0);
+
+            // The wipe, which is what puts the room behind them and stands them both up in it.
+            _driver.DebugDownPlayers();
+            yield return Until(
+                () => !_player.Condition.IsDown && !_partner.Condition.IsDown,
+                "the wipe never stood both players back up");
+            Assert.That(_runner.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "The wipe did not come back standing in the checkpoint room (D49).");
+
+            // Both stood up side by side in the room, and player one has to get past their
+            // partner to leave it. Going round rather than through keeps the crowding nudge out
+            // of a measurement that is about a body nobody touched.
+            yield return StepOutOfTheirLane();
+            yield return WalkToX(_partner.Position.x + 2f, "past their partner");
+
+            // Now player two alone goes down. One player still standing means no second wipe:
+            // the body simply lies there while its partner walks off.
+            _driver.DebugDownPlayer(_partner.PlayerId.Value);
+            yield return Steps(15);
+            Assert.That(_partner.Condition.IsDown, Is.True,
+                "Player two would not stay down, so there is no body to leave behind.");
+
+            ArenaMarker second = Arena(1);
+            Vector3 body = _partner.Position;
+            Assert.That(body.x, Is.LessThan(second.MinX - 1f),
+                "The body has to be inside the room for this to mean anything — the arena past "
+                + $"it starts at x={second.MinX:F2} and the body is at x={body.x:F2}.");
+
+            yield return WalkToX(second.MinX + 1f, "the second arena");
+            yield return Until(() => _runner.Run.ArenaIndex == 1, "the second arena never began");
+            yield return Steps(30);
+
+            float slid = Vector3.Distance(body, _partner.Position);
+            Assert.That(slid, Is.LessThan(StoodStillTolerance),
+                $"A downed player slid {slid:F2} units out of the checkpoint room on their own "
+                + $"(x {body.x:F2} → {_partner.Position.x:F2}) because their partner walked into "
+                + "the next arena. The room stays inside the clamp until every player has left "
+                + "it, downed included — a body cannot walk itself out, so closing the room on "
+                + "the living is what drags it through the doorway (D49).");
+        }
+
         // ── Continue ─────────────────────────────────────────────────────────────────
 
         /// <summary>
         /// A save on disk offers Continue, and Continue resumes where the save says — the stage,
-        /// its geometry, and the couch's one shared wallet (D51/D52). Resuming into the wrong
-        /// stage is the failure that costs a player their evening rather than their attempt.
+        /// its geometry, the checkpoint room inside it, and the couch's one shared wallet
+        /// (D51/D52). Resuming into the wrong stage is the failure that costs a player their
+        /// evening rather than their attempt.
         /// </summary>
+        /// <remarks>
+        /// The resume lands <em>at a checkpoint</em> rather than at the stage's plain spawn,
+        /// because D49 makes a resume and a wipe the same boundary and the bug behind
+        /// <see cref="A_wipe_stands_the_players_up_in_the_room_with_nothing_spawning"/> was
+        /// reported as hitting "a wipe or a resume" identically: a run that came back
+        /// <see cref="StagePhase.Fighting"/> in the arena past the room spawns its waves while
+        /// the players are still standing in it, and the clamp holding the room open for them
+        /// holds those enemies in it too. Only the wipe half of that was pinned; this is the
+        /// other half, and it is the literal repro from the report.
+        /// </remarks>
         [UnityTest]
         public IEnumerator Continue_resumes_the_stage_and_the_wallet_the_save_names()
         {
+            // The last stage's only checkpoint room is the one after its final arena — the
+            // fixture authors no other, and a room the stage has no marker for would be a
+            // resume point nobody could stand in.
+            const int ResumeCheckpointArena = 2;
+
             var progress = new StoryProgress();
-            progress.SetResume("fixture", 1, -1);
+            progress.SetResume("fixture", 1, ResumeCheckpointArena);
             SaveGame seeded = SaveMapper.Capture(
                 new Sack(), new Wallet(77), new CharacterState[0], progress);
             _store.Write(SaveName, SaveCodec.Encode(seeded));
@@ -300,6 +459,20 @@ namespace BattleBomb.Tests.PlayMode
                 "The resumed stage's geometry is not the one that streamed in.");
             Assert.That(_bag.Wallet.Balance, Is.EqualTo(77),
                 "The saved wallet never came back into the machine (D51).");
+
+            Assert.That(_runner.Run.CheckpointArena, Is.EqualTo(ResumeCheckpointArena),
+                "Continue did not resume at the checkpoint the save names (D49).");
+            Assert.That(_runner.Run.ArenaIndex, Is.EqualTo(ResumeCheckpointArena),
+                "A resume comes back at the arena its checkpoint room follows (D49).");
+            Assert.That(_runner.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "A resume comes back standing in the checkpoint room, not fighting in the arena "
+                + "past it (D49).");
+            Assert.That(_runner.Run.Alive, Is.Zero,
+                "Enemies are alive in the room the players just resumed into (D49).");
+
+            CheckpointRoomMarker room = RoomAfter(ResumeCheckpointArena);
+            Assert.That(Vector3.Distance(_player.Position, room.RespawnPosition), Is.LessThan(2f),
+                "The resume put the player somewhere other than the room's respawn point.");
         }
 
         // ── The lifecycle two ────────────────────────────────────────────────────────
@@ -440,7 +613,16 @@ namespace BattleBomb.Tests.PlayMode
         /// is proven by the M6 suite and by every walk below, and what is under test here is the
         /// front door's own logic and the hand-off it makes to the machine.
         /// </summary>
-        private IEnumerator LaunchFromTheFrontDoor(bool expectContinue)
+        /// <param name="players">
+        /// How many sit on the couch (D51). Two joins through the front door rather than by
+        /// waking the machine's second player object by hand, because joining is the only path
+        /// that makes the machine two-player everywhere at once: it is what fills the session's
+        /// second character slot, which is what stops <see cref="SessionBinder"/> deactivating
+        /// that object, which is what puts a second <see cref="CharacterActor"/> in the driver
+        /// and a second body in front of every gate. Reaching past it would leave the parts that
+        /// count players disagreeing with the parts that hold them.
+        /// </param>
+        private IEnumerator LaunchFromTheFrontDoor(bool expectContinue, int players = 1)
         {
             FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
             Assert.That(flow.State.TitleOptions, Is.EqualTo(expectContinue ? 2 : 1),
@@ -451,9 +633,27 @@ namespace BattleBomb.Tests.PlayMode
             flow.State.Confirm(0);
             Assert.That(flow.State.Screen, Is.EqualTo(FrontendScreen.Characters),
                 "Choosing on the title did not reach character select.");
+
+            // Slot two joins with a press at character select, Castle Crashers style (D51), and
+            // it has to join before slot one is readied: readying the last slot that is present
+            // moves the screen on, and a join arriving after that would land on a screen with no
+            // join in it. With a one-character roster both slots hold the same face, which is
+            // fine — what these cases are about is two bodies, not two portraits.
+            for (int slot = 1; slot < players; slot++)
+            {
+                flow.State.Confirm(slot);
+                Assert.That(flow.State.IsJoined(slot), Is.True,
+                    $"A press on device {slot + 1} did not join slot {slot + 1} to the couch (D51).");
+            }
+
             flow.State.Confirm(0);
+            for (int slot = 1; slot < players; slot++)
+            {
+                flow.State.Confirm(slot);
+            }
+
             Assert.That(flow.State.Screen, Is.EqualTo(FrontendScreen.Chapters),
-                "Readying the only player did not reach chapter select.");
+                $"Readying all {players} player(s) did not reach chapter select.");
             Assert.That(flow.Selection.CanLaunch, Is.True,
                 "The fixture chapter on the first tier must be launchable, or nothing can be played.");
             flow.State.Launch(flow.Selection.CanLaunch);
@@ -481,7 +681,10 @@ namespace BattleBomb.Tests.PlayMode
             yield return UntilFrames(() => _runner.IsStageLoaded, "the stage's geometry never streamed in");
 
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
-            Assert.That(actors.Count, Is.GreaterThan(0), "No players registered with the driver.");
+            Assert.That(actors.Count, Is.EqualTo(players),
+                $"{players} player(s) launched from the front door but the machine holds "
+                + $"{actors.Count} (D51). A slot nobody sits in must not wake, and a slot "
+                + "somebody does sit in must.");
             _player = actors[0];
             _bag = _player.GetComponent<PlayerInventory>();
             Assert.That(_bag, Is.Not.Null, "Player one has no inventory.");
@@ -492,11 +695,30 @@ namespace BattleBomb.Tests.PlayMode
                 device.enabled = false;
             }
 
-            _driver.Players.Unregister(_player.PlayerId);
-            _input = _player.gameObject.AddComponent<ScriptedCommandSource>();
-            _input.Bind(_player.PlayerId.Value);
-            _driver.Players.Register(_input);
+            _input = Drive(_player);
+            if (players > 1)
+            {
+                _partner = actors[1];
+                _partnerInput = Drive(_partner);
+                Assert.That(_partner.PlayerId.Value, Is.Not.EqualTo(_player.PlayerId.Value),
+                    "Both players answer to the same id, so the couch is one player twice over.");
+            }
+
             yield return null;
+        }
+
+        /// <summary>
+        /// Takes one player's device out of the loop and binds a scripted source in its place —
+        /// the same <c>IPlayerCommandSource</c> the device implements (rule 3), so every walk
+        /// below goes through the real command pipe rather than around it.
+        /// </summary>
+        private ScriptedCommandSource Drive(CharacterActor actor)
+        {
+            _driver.Players.Unregister(actor.PlayerId);
+            var source = actor.gameObject.AddComponent<ScriptedCommandSource>();
+            source.Bind(actor.PlayerId.Value);
+            _driver.Players.Register(source);
+            return source;
         }
 
         /// <summary>Waits out an arena, then walks into the checkpoint room past it.</summary>
@@ -551,6 +773,18 @@ namespace BattleBomb.Tests.PlayMode
             Assert.Fail($"The current stage scene has no {typeof(T).Name} matching.");
             return null;
         }
+
+        /// <summary>
+        /// Walks player one across the depth band, out of the lane their partner is standing in.
+        /// Two bodies inside <c>BodySeparation.PersonalRadius</c> of each other nudge apart every
+        /// step (task 37), and a nudge is real movement — small, but the two cases above measure
+        /// a partner who was told to stand still, and the only honest way to read "they did not
+        /// move" is for nothing to have touched them. So player one goes round, not through.
+        /// </summary>
+        private IEnumerator StepOutOfTheirLane() =>
+            WalkTo(
+                new Vector3(_player.Position.x, _player.Position.y, _partner.Position.z + LaneOffset),
+                "out of their partner's lane");
 
         /// <summary>One deliberate press, held long enough for the simulation to sample it.</summary>
         private IEnumerator Press(CommandButtons button)

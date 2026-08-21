@@ -105,10 +105,46 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>tier × stage, set by the stage runner (D50). Every loot roll, level stamp,
         /// and climate lookup reads this; nothing on the scene competes with it.</summary>
         private EncounterInputs _encounter = EncounterInputs.Default;
+        private bool _encounterSet;
+        private bool _warnedMissingEncounter;
 
-        public EncounterInputs Encounter => _encounter;
+        /// <summary>
+        /// The tier × stage row every roll in this machine prices against (D50). Falls back to
+        /// <see cref="EncounterInputs.Default"/> before a stage has set one, and says so once.
+        /// </summary>
+        /// <remarks>
+        /// The same guard <see cref="Bounds"/> carries, and it is here for the sharper version of
+        /// the same reason. A missing arena is at least visible — the players are penned into
+        /// somebody else's ten units. A missing encounter is not: the default is a perfectly
+        /// plausible level-1 row, so a path that forgot to call <see cref="SetEncounter"/> would
+        /// hand back a game that merely rolls the wrong numbers, which is the harder kind of bug
+        /// to find. The warning is what makes it the obvious kind.
+        /// </remarks>
+        public EncounterInputs Encounter
+        {
+            get
+            {
+                if (_encounterSet)
+                {
+                    return _encounter;
+                }
 
-        internal void SetEncounter(in EncounterInputs encounter) => _encounter = encounter;
+                if (!_warnedMissingEncounter)
+                {
+                    _warnedMissingEncounter = true;
+                    Debug.LogWarning(
+                        $"{name}: no stage has set an encounter yet — using EncounterInputs.Default.", this);
+                }
+
+                return EncounterInputs.Default;
+            }
+        }
+
+        internal void SetEncounter(in EncounterInputs encounter)
+        {
+            _encounter = encounter;
+            _encounterSet = true;
+        }
 
         /// <summary>D41's pair table. Empty through M5 — the pairs wait on the roster (O11).</summary>
         private ReactionTable _reactions = ReactionTable.Empty;
@@ -172,7 +208,7 @@ namespace BattleBomb.Gameplay.Simulation
             var rng = new DeterministicRandom(
                 (uint)(Frame * 2654435761u + 17u) + (uint)(_debugRollCounter * 2246822519u));
             var context = new GenerationContext(
-                    qualityScore, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
+                    qualityScore, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                     _elements.Ids)
                 .WithSignature(definitionId, QualityRank.Nothing);
             ItemGenerator.Roll(rng, context, out ItemInstance item);
@@ -195,8 +231,8 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _spawnRng = _spawnRng.NextFloat(out float spread);
-            float quality = (DropRoll.SpreadMin + spread) * _encounter.LootProgress
-                * _encounter.LootDifficulty * _eliteRules.QualityBonus;
+            float quality = (DropRoll.SpreadMin + spread) * Encounter.LootProgress
+                * Encounter.LootDifficulty * _eliteRules.QualityBonus;
 
             // It drops what it *wears* (D22), so the roll is forced into an armor slot — a
             // consumable would make the visible-armor promise a lie.
@@ -205,7 +241,7 @@ namespace BattleBomb.Gameplay.Simulation
                 EliteArmorSlots.Length - 1, (int)(slotDraw * EliteArmorSlots.Length))];
 
             var context = new GenerationContext(
-                    quality, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
+                    quality, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                     _elements.Ids)
                 .WithForcedSlot(slot);
             _spawnRng = ItemGenerator.Roll(_spawnRng, context, out carried);
@@ -220,7 +256,7 @@ namespace BattleBomb.Gameplay.Simulation
             Inventory inventory, int firstIndex, int secondIndex, out CombineResult result)
         {
             var context = new GenerationContext(
-                0f, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                0f, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
             _lootRng = inventory.TryCombine(_lootRng, firstIndex, secondIndex, context, out result);
         }
 
@@ -236,8 +272,8 @@ namespace BattleBomb.Gameplay.Simulation
             {
                 _lootRng = _lootRng.NextFloat(out float spread);
                 var context = new GenerationContext(
-                    (DropRoll.SpreadMin + spread) * _encounter.LootProgress * _encounter.LootDifficulty,
-                    _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                    (DropRoll.SpreadMin + spread) * Encounter.LootProgress * Encounter.LootDifficulty,
+                    Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
                 _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance rolled);
                 if (!rolled.IsEmpty)
                 {
@@ -274,6 +310,29 @@ namespace BattleBomb.Gameplay.Simulation
             {
                 actors[i].DebugDown();
             }
+        }
+
+        /// <summary>
+        /// Debug and tests only: one named player goes down while the rest keep playing. Not the
+        /// same event as <see cref="DebugDownPlayers"/> at all — everyone down is a wipe, and one
+        /// down is a body on the floor with a partner still standing over it, which is the state
+        /// half of co-op's rules are about (D49's room, the revive, the XP a downed player does
+        /// not earn). The smoke suite (D45) needs to reach it deterministically, and a real one
+        /// takes a fight the tripwire deliberately runs without.
+        /// </summary>
+        public void DebugDownPlayer(int playerIdValue)
+        {
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                if (actors[i].PlayerId.Value == playerIdValue)
+                {
+                    actors[i].DebugDown();
+                    return;
+                }
+            }
+
+            Debug.LogWarning($"{name}: no player {playerIdValue} to put down.", this);
         }
 
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
@@ -390,7 +449,7 @@ namespace BattleBomb.Gameplay.Simulation
         public ElementCatalog Elements => _elements;
 
         /// <summary>This area's climate (D41): it scales elemental damage from every side.</summary>
-        public ElementalMultipliers Climate => _encounter.Climate;
+        public ElementalMultipliers Climate => Encounter.Climate;
 
         /// <summary>
         /// An element's authored colour, for Presentation to tint with (D38). A new element brings
@@ -817,12 +876,12 @@ namespace BattleBomb.Gameplay.Simulation
                 else
                 {
                     _lootRng = DropRoll.Roll(
-                        _lootRng, spec.Rank, _encounter.LootProgress, _encounter.LootDifficulty, 1f,
+                        _lootRng, spec.Rank, Encounter.LootProgress, Encounter.LootDifficulty, 1f,
                         false, LootEliteBonus, out DropDecision drop);
                     if (drop.Dropped)
                     {
                         var context = new GenerationContext(
-                            drop.Quality, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
+                            drop.Quality, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                             _elements.Ids);
                         _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
                         if (!item.IsEmpty)
@@ -1108,7 +1167,7 @@ namespace BattleBomb.Gameplay.Simulation
 
                 HitResult hit = HitApplication.Apply(
                     cast, caster.Position, caster.Facing, caster.StrikeMomentum,
-                    element, gear, TargetKind.Enemy, target.Position, defence, _encounter.Climate);
+                    element, gear, TargetKind.Enemy, target.Position, defence, Encounter.Climate);
                 float knockback = caster.Sheet.KnockbackMultiplier;
                 if (!Mathf.Approximately(knockback, 1f))
                 {
@@ -1170,7 +1229,7 @@ namespace BattleBomb.Gameplay.Simulation
                 ElementalDefence defence = enemy != null ? enemy.Defence : ElementalDefence.None;
                 HitResult hit = HitApplication.Apply(
                     burst, wearer.Position, wearer.Facing, Vector3.zero,
-                    active.ActiveElement, 1f, TargetKind.Enemy, target.Position, defence, _encounter.Climate);
+                    active.ActiveElement, 1f, TargetKind.Enemy, target.Position, defence, Encounter.Climate);
 
                 if (enemy != null)
                 {
@@ -1208,7 +1267,7 @@ namespace BattleBomb.Gameplay.Simulation
             HitResult hit = HitApplication.Apply(
                 attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                 ElementId.None, gear, TargetKind.Enemy, targetPosition,
-                defence, _encounter.Climate);
+                defence, Encounter.Climate);
 
             float knockback = attacker.Sheet.KnockbackMultiplier;
             return Mathf.Approximately(knockback, 1f)
@@ -1291,7 +1350,7 @@ namespace BattleBomb.Gameplay.Simulation
                 HitResult hit = HitApplication.Apply(
                     attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                     attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
-                    victim.Defence, _encounter.Climate);
+                    victim.Defence, Encounter.Climate);
                 float landed = victim.ApplyEnemyHit(hit);
                 victim.ApplyStun(attack.StunSteps);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
@@ -1397,7 +1456,7 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     CharacterActor victim = players[hit];
                     float damage = DamageCalculator.Resolve(
-                        p.Damage, p.Element, victim.Defence, _encounter.Climate, 1f);
+                        p.Damage, p.Element, victim.Defence, Encounter.Climate, 1f);
                     Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
                     direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
                     float landed = victim.ApplyEnemyHit(new HitResult(
@@ -1467,7 +1526,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is EnemyActor enemy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, enemy.Defence, _encounter.Climate, gear);
+                    p.Damage, p.Element, enemy.Defence, Encounter.Climate, gear);
                 enemy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {
@@ -1496,7 +1555,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is TrainingDummy dummy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, ElementalDefence.None, _encounter.Climate, gear);
+                    p.Damage, p.Element, ElementalDefence.None, Encounter.Climate, gear);
                 dummy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {

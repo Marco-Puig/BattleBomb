@@ -76,9 +76,7 @@ namespace BattleBomb.Gameplay.Data
         public int Id => _id;
 
         public ItemSpec ToRuntime() => new ItemSpec(
-            _id,
-            _displayName,
-            _slot,
+            new ItemIdentity(_id, _displayName, _slot, _weaponClass, _petClass),
             new GearContribution(
                 weaponDamage: _weaponDamage,
                 swingSpeedBonus: _swingSpeedBonus,
@@ -93,14 +91,12 @@ namespace BattleBomb.Gameplay.Data
                 knockbackBonus: _knockbackBonus,
                 magicDamage: _magicDamage,
                 magicRange: _magicRange),
-            _weaponClass,
-            _petClass,
             _shotSpeed,
-            _healFraction,
-            _restores,
-            _activeWeaponDamageShare,
-            _activeElement != null ? _activeElement.Id : Core.Combat.ElementId.None,
-            _activeRadius,
-            _activeCooldownSteps);
+            new RestorePayload(_restores, _healFraction),
+            new ActivePayload(
+                _activeWeaponDamageShare,
+                _activeElement != null ? _activeElement.Id : Core.Combat.ElementId.None,
+                _activeRadius,
+                _activeCooldownSteps));
     }
 }

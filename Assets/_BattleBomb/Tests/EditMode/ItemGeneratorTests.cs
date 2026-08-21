@@ -16,14 +16,14 @@ namespace BattleBomb.Tests.EditMode
     {
         private static readonly ItemSpec[] Catalog =
         {
-            new ItemSpec(1, "Leather Helmet", ItemSlot.Helmet, new GearContribution(defence: 0.08f, weight: 4f)),
-            new ItemSpec(2, "Leather Chestplate", ItemSlot.Chest, new GearContribution(defence: 0.12f, weight: 6f)),
-            new ItemSpec(3, "Leather Boots", ItemSlot.Boots, new GearContribution(defence: 0.06f, weight: 3f)),
-            new ItemSpec(4, "Hunting Knife", ItemSlot.Weapon, new GearContribution(weaponDamage: 40f), WeaponClass.Sword),
-            new ItemSpec(5, "Hunting Bow", ItemSlot.Weapon, new GearContribution(weaponDamage: 28f), WeaponClass.Bow, shotSpeed: 14f),
-            new ItemSpec(6, "Health", ItemSlot.Consumable, GearContribution.Zero, consumableHealFraction: 0.35f),
-            new ItemSpec(7, "Lucky Charm", ItemSlot.Equipment, new GearContribution(critChance: 0.03f)),
-            new ItemSpec(8, "Terrier", ItemSlot.Pet, new GearContribution(maxHealthBonus: 15f), petClass: PetClass.StatBoost),
+            new ItemSpec(new ItemIdentity(1, "Leather Helmet", ItemSlot.Helmet), new GearContribution(defence: 0.08f, weight: 4f)),
+            new ItemSpec(new ItemIdentity(2, "Leather Chestplate", ItemSlot.Chest), new GearContribution(defence: 0.12f, weight: 6f)),
+            new ItemSpec(new ItemIdentity(3, "Leather Boots", ItemSlot.Boots), new GearContribution(defence: 0.06f, weight: 3f)),
+            new ItemSpec(new ItemIdentity(4, "Hunting Knife", ItemSlot.Weapon, WeaponClass.Sword), new GearContribution(weaponDamage: 40f)),
+            new ItemSpec(new ItemIdentity(5, "Hunting Bow", ItemSlot.Weapon, WeaponClass.Bow), new GearContribution(weaponDamage: 28f), shotSpeed: 14f),
+            new ItemSpec(new ItemIdentity(6, "Health", ItemSlot.Consumable), GearContribution.Zero, consumable: new RestorePayload(RestoreKind.Health, 0.35f)),
+            new ItemSpec(new ItemIdentity(7, "Lucky Charm", ItemSlot.Equipment), new GearContribution(critChance: 0.03f)),
+            new ItemSpec(new ItemIdentity(8, "Terrier", ItemSlot.Pet, petClass: PetClass.StatBoost), new GearContribution(maxHealthBonus: 15f)),
         };
 
         /// <summary>Two synthetic elements (D38) — the generator never learns their names.</summary>

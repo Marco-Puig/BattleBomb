@@ -16,20 +16,14 @@ namespace BattleBomb.Tests.EditMode
         private static readonly ElementId Fire = new ElementId(1);
 
         private static ItemInstance Stone(float share = 0.75f, int cooldown = 900) => new ItemInstance(
-            definitionId: 13, displayName: "Ember Stone", slot: ItemSlot.Equipment,
-            weaponClass: WeaponClass.None, petClass: PetClass.None, quality: QualityRank.Shiny,
-            coreStats: new GearContribution(maxManaBonus: 10f), affixes: new AffixRoll[0],
-            requiredLevel: 1, upgradeCapacity: 0, upgradesSpent: 0, shotSpeed: 0f,
-            consumableHealFraction: 0f, restores: RestoreKind.Health,
-            activeWeaponDamageShare: share, activeElement: Fire, activeRadius: 2.8f,
-            activeCooldownSteps: cooldown);
+            new ItemIdentity(13, "Ember Stone", ItemSlot.Equipment),
+            QualityRank.Shiny, new GearContribution(maxManaBonus: 10f), new AffixRoll[0],
+            requiredLevel: 1, active: new ActivePayload(share, Fire, 2.8f, cooldown));
 
         private static ItemInstance Potion(RestoreKind restores) => new ItemInstance(
-            definitionId: restores == RestoreKind.Mana ? 12 : 9,
-            displayName: "Vial", slot: ItemSlot.Consumable,
-            weaponClass: WeaponClass.None, petClass: PetClass.None, quality: QualityRank.Rusty,
-            coreStats: default, affixes: new AffixRoll[0], requiredLevel: 1, upgradeCapacity: 0,
-            upgradesSpent: 0, shotSpeed: 0f, consumableHealFraction: 0.35f, restores: restores);
+            new ItemIdentity(restores == RestoreKind.Mana ? 12 : 9, "Vial", ItemSlot.Consumable),
+            QualityRank.Rusty, default, new AffixRoll[0], requiredLevel: 1,
+            consumable: new RestorePayload(restores, 0.35f));
 
         private static Inventory Wearing(in ItemInstance equipment)
         {
@@ -104,9 +98,9 @@ namespace BattleBomb.Tests.EditMode
         public void The_ladder_scales_how_big_the_moment_is()
         {
             var spec = new ItemSpec(
-                13, "Ember Stone", ItemSlot.Equipment, new GearContribution(maxManaBonus: 10f),
-                activeWeaponDamageShare: 0.75f, activeElement: Fire, activeRadius: 2.8f,
-                activeCooldownSteps: 900);
+                new ItemIdentity(13, "Ember Stone", ItemSlot.Equipment),
+                new GearContribution(maxManaBonus: 10f),
+                active: new ActivePayload(0.75f, Fire, 2.8f, 900));
             var catalog = new[] { spec };
             var elements = new[] { Fire };
 

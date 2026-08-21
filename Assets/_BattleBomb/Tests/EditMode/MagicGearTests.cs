@@ -24,10 +24,9 @@ namespace BattleBomb.Tests.EditMode
             StatSheet.Build(BaseStats.Zero, Tuning, gear, resistances);
 
         private static ItemInstance Weapon(params AffixRoll[] affixes) => new ItemInstance(
-            definitionId: 1, displayName: "Blade", slot: ItemSlot.Weapon,
-            weaponClass: WeaponClass.Sword, petClass: PetClass.None, quality: QualityRank.Shiny,
-            coreStats: new GearContribution(weaponDamage: 12f), affixes: affixes,
-            requiredLevel: 1, upgradeCapacity: 0);
+            new ItemIdentity(1, "Blade", ItemSlot.Weapon, WeaponClass.Sword),
+            QualityRank.Shiny, new GearContribution(weaponDamage: 12f), affixes,
+            requiredLevel: 1);
 
         /// <summary>Equipping through the real inventory path — Loadout.Swap is internal.</summary>
         private static Loadout Wearing(in ItemInstance item)
@@ -173,11 +172,10 @@ namespace BattleBomb.Tests.EditMode
         public void Armor_still_never_carries_an_infusion()
         {
             Loadout loadout = Wearing(new ItemInstance(
-                definitionId: 2, displayName: "Plate", slot: ItemSlot.Chest,
-                weaponClass: WeaponClass.None, petClass: PetClass.None, quality: QualityRank.Shiny,
-                coreStats: new GearContribution(defence: 0.1f),
-                affixes: new[] { new AffixRoll(AffixId.WeaponInfusion, 0.5f, First) },
-                requiredLevel: 1, upgradeCapacity: 0));
+                new ItemIdentity(2, "Plate", ItemSlot.Chest),
+                QualityRank.Shiny, new GearContribution(defence: 0.1f),
+                new[] { new AffixRoll(AffixId.WeaponInfusion, 0.5f, First) },
+                requiredLevel: 1));
 
             Assert.That(loadout.TryGetInfusion(out _, out _), Is.False,
                 "Only the weapon slot infuses, even if an affix somehow landed elsewhere.");

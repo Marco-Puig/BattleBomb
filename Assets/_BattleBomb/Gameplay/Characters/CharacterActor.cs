@@ -172,22 +172,48 @@ namespace BattleBomb.Gameplay.Characters
             int frame, in PlayerCommand command, in ArenaBounds bounds, float dt,
             int reviveTarget, bool lootInReach)
         {
-            float reviveFraction = 0f;
-            bool grabbedLoot = false;
             _previous = _state;
 
             // Staggered or downed, the player's intent goes nowhere — the body still obeys
             // physics (knockback, gravity), it just takes no orders (task 29).
             PlayerCommand effective = _condition.InControl ? command : PlayerCommand.Idle(frame);
-
             bool frozen = _combat.HitstopSteps > 0;
+
+            // The named phases below are the step's contract, in load-bearing order (task 61):
+            // contextual Light resolves revive before grab before swing; the machine always runs
+            // so hitstop counts down; a cast's lift lands after BeginAttack so it is the last
+            // word on velocity; hit windows resolve only after the body has moved.
+            int completedRevive = PhaseRevive(ref effective, frozen, reviveTarget, out float reviveFraction);
+            bool grabbedLoot = PhaseLootGrab(ref effective, frozen, lootInReach, completedRevive);
+            PhaseQuickUse(effective, frozen);
+            CombatStepResult combat = PhaseCombatMachine(effective);
+            if (frozen)
+            {
+                // Hitstop freezes the whole character — the machine above only counted it down.
+                return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
+            }
+
+            PhaseVitals(dt);
+            PhaseCastAndAttack(effective, combat);
+            PhaseMovement(effective, bounds, dt);
+            PhaseHitWindows(combat);
+
+            transform.position = _state.Position;
+            return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
+        }
+
+        /// <summary>
+        /// Contextual Light's first claim (D17/D25): beside a downed partner the press channels
+        /// instead of swinging, and only from combat-Ready — a swing or charge in flight keeps
+        /// its buttons. While the channel runs, attack presses never reach the machine; each
+        /// press earns by its heartbeat timing, and accuracy prices the revive (D31).
+        /// </summary>
+        private int PhaseRevive(ref PlayerCommand effective, bool frozen, int reviveTarget, out float reviveFraction)
+        {
+            reviveFraction = 0f;
             int completedRevive = -1;
             if (!frozen)
             {
-                // Contextual Light (D17/D25): beside a downed partner the press channels instead
-                // of swinging, and only from combat-Ready — a swing or charge in flight keeps its
-                // buttons. While the channel runs, attack presses never reach the machine; each
-                // press earns by its heartbeat timing, and accuracy prices the revive (D31).
                 bool mayChannel = _condition.InControl && _combat.Phase == AttackPhase.Ready;
                 _revive = ReviveChannel.Next(
                     _revive,
@@ -212,41 +238,63 @@ namespace BattleBomb.Gameplay.Characters
                 effective = WithoutAttacks(effective);
             }
 
-            // The deliberate grab (D30): Light beside a drop takes it instead of swinging, but
-            // never while a revive channel holds the press — the partner outranks the loot.
-            if (!frozen && lootInReach && !_revive.IsActive && completedRevive < 0
-                && _condition.InControl && _combat.Phase == AttackPhase.Ready
-                && (effective.Pressed & CommandButtons.Light) != 0)
+            return completedRevive;
+        }
+
+        /// <summary>
+        /// The deliberate grab (D30): Light beside a drop takes it instead of swinging, but
+        /// never while a revive channel holds the press — the partner outranks the loot.
+        /// </summary>
+        private bool PhaseLootGrab(ref PlayerCommand effective, bool frozen, bool lootInReach, int completedRevive)
+        {
+            if (frozen || !lootInReach || _revive.IsActive || completedRevive >= 0
+                || !_condition.InControl || _combat.Phase != AttackPhase.Ready
+                || (effective.Pressed & CommandButtons.Light) == 0)
             {
-                grabbedLoot = true;
-                effective = WithoutLight(effective);
+                return false;
             }
 
-            // The quick-use press (D37): drinks whatever the slot holds. `effective` is already
-            // idle without control, so the downed and staggered never quaff.
-            if (!frozen && _bag != null && (effective.Pressed & CommandButtons.Equipment) != 0)
-            {
-                QuickUseResult quick = _bag.Inventory.UseQuickSlot(_quickUseCooldownSteps);
-                if (quick.Used && quick.RestoreFraction > 0f)
-                {
-                    if (quick.Restores == RestoreKind.Mana)
-                    {
-                        _mana = _mana.Restored(quick.RestoreFraction * _sheet.MaxMana);
-                    }
-                    else
-                    {
-                        _condition = _condition.Healed(quick.RestoreFraction * _sheet.MaxHealth);
-                    }
-                }
+            effective = WithoutLight(effective);
+            return true;
+        }
 
-                if (quick.FiredActive && _driver != null)
+        /// <summary>
+        /// The quick-use press (D37): drinks whatever the slot holds. `effective` is already
+        /// idle without control, so the downed and staggered never quaff.
+        /// </summary>
+        private void PhaseQuickUse(in PlayerCommand effective, bool frozen)
+        {
+            if (frozen || _bag == null || (effective.Pressed & CommandButtons.Equipment) == 0)
+            {
+                return;
+            }
+
+            QuickUseResult quick = _bag.Inventory.UseQuickSlot(_quickUseCooldownSteps);
+            if (quick.Used && quick.RestoreFraction > 0f)
+            {
+                if (quick.Restores == RestoreKind.Mana)
                 {
-                    _driver.ResolveEquipmentActive(this, quick);
+                    _mana = _mana.Restored(quick.RestoreFraction * _sheet.MaxMana);
+                }
+                else
+                {
+                    _condition = _condition.Healed(quick.RestoreFraction * _sheet.MaxHealth);
                 }
             }
 
-            // The leap is once per airborne (D39): touching ground restores it, so it can never
-            // become an infinite mana-priced climb.
+            if (quick.FiredActive && _driver != null)
+            {
+                _driver.ResolveEquipmentActive(this, quick);
+            }
+        }
+
+        /// <summary>
+        /// The combat machine always runs — during hitstop it only counts the freeze down. The
+        /// leap restores on ground contact first (D39): once per airborne, never an infinite
+        /// mana-priced climb.
+        /// </summary>
+        private CombatStepResult PhaseCombatMachine(in PlayerCommand effective)
+        {
             if (_state.IsGrounded)
             {
                 _leapAvailable = true;
@@ -256,19 +304,28 @@ namespace BattleBomb.Gameplay.Characters
             CombatStepResult combat = CombatMachine.Step(
                 _combat, effective, _activeKit, magic, _state.IsGrounded);
             _combat = combat.State;
-            if (frozen)
-            {
-                // Hitstop freezes the whole character — the machine above only counted it down.
-                return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
-            }
+            return combat;
+        }
 
+        /// <summary>Grace, stagger, mana regen, and the quick slot's cooldown all tick here.</summary>
+        private void PhaseVitals(float dt)
+        {
             _condition = _condition.Step();
             _mana = _mana.Step(_sheet.ManaRegen, dt);
             if (_bag != null)
             {
                 _bag.Inventory.Step();
             }
+        }
 
+        /// <summary>
+        /// Casts spend and attacks begin. The lift lands *after* BeginAttack, never before:
+        /// starting an attack in the air zeroes vertical speed so the swing hangs (M2's aerial
+        /// rule), and a lunge snap zeroes velocity outright — either would eat the climb the
+        /// leap exists to give (the M5 close-out's one bug).
+        /// </summary>
+        private void PhaseCastAndAttack(in PlayerCommand effective, in CombatStepResult combat)
+        {
             if (combat.CastStarted)
             {
                 // The machine confirmed it was affordable; the pool is ours to spend (D39).
@@ -284,14 +341,15 @@ namespace BattleBomb.Gameplay.Characters
                 BeginAttack(effective, combat.Attack);
             }
 
-            // The lift lands *after* BeginAttack, never before. Starting an attack in the air
-            // zeroes vertical speed so the swing hangs (M2's aerial rule), and a lunge snap zeroes
-            // velocity outright — either would eat the climb the leap exists to give.
             if (combat.CastStarted && combat.LiftSpeed > 0f)
             {
                 _state = WithLift(_state, combat.LiftSpeed);
             }
+        }
 
+        /// <summary>The motor step, shaped by the combat phase: free, rooted to a lunge, or swinging.</summary>
+        private void PhaseMovement(in PlayerCommand effective, in ArenaBounds bounds, float dt)
+        {
             AttackPhase phase = _combat.Phase;
             MovementTuning stepTuning = SlowedByStatuses(_activeTuning);
             if (phase == AttackPhase.Ready)
@@ -321,39 +379,42 @@ namespace BattleBomb.Gameplay.Characters
                 _state = CharacterMotor.Step(_state, CombatMove(effective, phase), tuning, bounds, dt);
                 StepAirLunge(bounds);
             }
+        }
 
-            if (combat.HitWindowOpened && _driver != null)
+        /// <summary>An opened hit window resolves through the driver: cast, arrow, or swing.</summary>
+        private void PhaseHitWindows(in CombatStepResult combat)
+        {
+            if (!combat.HitWindowOpened || _driver == null)
             {
-                if (combat.Cast != MagicCastKind.None)
+                return;
+            }
+
+            if (combat.Cast != MagicCastKind.None)
+            {
+                MagicCast spell = _activeMagic.For(combat.Cast);
+                if (spell.Delivery == CastDelivery.Projectile)
                 {
-                    MagicCast spell = _activeMagic.For(combat.Cast);
-                    if (spell.Delivery == CastDelivery.Projectile)
-                    {
-                        // D46: a projectile cast looses a bolt down the lane instead of testing
-                        // a shape — Ice's trade for its range.
-                        _driver.SpawnCastBolt(this, combat.Attack, spell.ProjectileSpeed);
-                    }
-                    else
-                    {
-                        // A cast resolves through the same geometry a swing does — the line in
-                        // front, the aura's circle around — but priced as magic, not as a weapon.
-                        _driver.ResolveCast(this, combat.Attack, combat.Cast);
-                    }
-                }
-                else if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
-                {
-                    // The bow's identity (D34/§2.2): a chain Light looses an arrow instead of a
-                    // melee window; Heavy and the aerials keep their swings even with a bow worn.
-                    _driver.SpawnPlayerShot(this, combat.Attack);
+                    // D46: a projectile cast looses a bolt down the lane instead of testing
+                    // a shape — Ice's trade for its range.
+                    _driver.SpawnCastBolt(this, combat.Attack, spell.ProjectileSpeed);
                 }
                 else
                 {
-                    _driver.ResolveHits(this, combat.Attack);
+                    // A cast resolves through the same geometry a swing does — the line in
+                    // front, the aura's circle around — but priced as magic, not as a weapon.
+                    _driver.ResolveCast(this, combat.Attack, combat.Cast);
                 }
             }
-
-            transform.position = _state.Position;
-            return new ActorStepResult(completedRevive, reviveFraction, grabbedLoot);
+            else if (_weaponClass == WeaponClass.Bow && IsChainLight(combat.Attack))
+            {
+                // The bow's identity (D34/§2.2): a chain Light looses an arrow instead of a
+                // melee window; Heavy and the aerials keep their swings even with a bow worn.
+                _driver.SpawnPlayerShot(this, combat.Attack);
+            }
+            else
+            {
+                _driver.ResolveHits(this, combat.Attack);
+            }
         }
 
         internal void ApplyHitstop(int steps) => _combat = _combat.WithHitstop(steps);
@@ -708,8 +769,11 @@ namespace BattleBomb.Gameplay.Characters
             tuning.CoyoteSteps,
             tuning.JumpBufferSteps);
 
-        private void Awake()
+        private void OnEnable()
         {
+            // Built in OnEnable, not Awake, so a domain reload mid-play rebuilds everything —
+            // Awake does not re-run after a recompile, and the nulled kit was the M5 close-out's
+            // wrong-turn debugging trap. SimulationDriver made the same move for the same reason.
             _source = GetComponent<IPlayerCommandSource>();
             _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
             _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
@@ -734,10 +798,7 @@ namespace BattleBomb.Gameplay.Characters
             _quickUseCooldownSteps = _definition != null ? _definition.QuickUseCooldownSteps : 180;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
-        }
 
-        private void OnEnable()
-        {
             if (!_spawnCaptured)
             {
                 _spawnPosition = transform.position;

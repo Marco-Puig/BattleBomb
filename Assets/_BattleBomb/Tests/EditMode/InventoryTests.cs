@@ -20,17 +20,15 @@ namespace BattleBomb.Tests.EditMode
             int id, ItemSlot slot, QualityRank quality = QualityRank.Rusty, int requiredLevel = 1)
         {
             return new ItemInstance(
-                id, ItemNaming.Compose(quality, "Test Piece"), slot, WeaponClass.None, PetClass.None,
+                new ItemIdentity(id, ItemNaming.Compose(quality, "Test Piece"), slot),
                 quality, new GearContribution(defence: 0.05f), Array.Empty<AffixRoll>(),
-                requiredLevel, upgradeCapacity: 2);
+                requiredLevel, new ItemInvestment(capacity: 2));
         }
 
         private static ItemInstance Potion(QualityRank quality = QualityRank.Rusty, float heal = 0.35f) => new ItemInstance(
-            PotionId, ItemNaming.Compose(quality, ItemSlot.Consumable, "Health"), ItemSlot.Consumable,
-            WeaponClass.None, PetClass.None,
+            new ItemIdentity(PotionId, ItemNaming.Compose(quality, ItemSlot.Consumable, "Health"), ItemSlot.Consumable),
             quality, GearContribution.Zero, Array.Empty<AffixRoll>(),
-            requiredLevel: 1, upgradeCapacity: 0, upgradesSpent: 0,
-            shotSpeed: 0f, consumableHealFraction: heal);
+            requiredLevel: 1, consumable: new RestorePayload(RestoreKind.Health, heal));
 
         [Test]
         public void Consumables_stack_and_gear_lists_separately()

@@ -68,26 +68,17 @@ namespace BattleBomb.Core.Items
                 : 0f;
 
             item = new ItemInstance(
-                spec.Id,
-                ItemNaming.Compose(rank, spec.Slot, spec.Name),
-                spec.Slot,
-                spec.WeaponClass,
-                spec.PetClass,
+                spec.Identity.Named(ItemNaming.Compose(rank, spec.Slot, spec.Name)),
                 rank,
                 core,
                 affixes,
                 requiredLevel: Mathf.Max(1, context.ProgressLevel),
-                upgradeCapacity: row.UpgradeCapacity,
-                upgradesSpent: 0,
+                new ItemInvestment(row.UpgradeCapacity),
                 shotSpeed: spec.ShotSpeed,
-                consumableHealFraction: heal,
-                restores: spec.Restores,
+                consumable: new RestorePayload(spec.Restores, heal),
                 // An active's damage is a share of the wearer's weapon damage (D19/D37), so the
                 // ladder scales how big the moment is without ever letting it outgrow the build.
-                activeWeaponDamageShare: spec.ActiveWeaponDamageShare * row.StatBudget,
-                activeElement: spec.ActiveElement,
-                activeRadius: spec.ActiveRadius,
-                activeCooldownSteps: spec.ActiveCooldownSteps);
+                active: spec.Active.Scaled(row.StatBudget));
             return next;
         }
 

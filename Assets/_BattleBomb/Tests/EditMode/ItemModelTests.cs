@@ -112,20 +112,16 @@ namespace BattleBomb.Tests.EditMode
         public void An_instance_totals_core_stats_plus_affixes()
         {
             var item = new ItemInstance(
-                definitionId: 7,
-                displayName: "Shiny Hunting Knife",
-                slot: ItemSlot.Weapon,
-                weaponClass: WeaponClass.Sword,
-                petClass: PetClass.None,
-                quality: QualityRank.Shiny,
-                coreStats: new GearContribution(weaponDamage: 40f),
-                affixes: new[]
+                new ItemIdentity(7, "Shiny Hunting Knife", ItemSlot.Weapon, WeaponClass.Sword),
+                QualityRank.Shiny,
+                new GearContribution(weaponDamage: 40f),
+                new[]
                 {
                     new AffixRoll(AffixId.CritChance, 0.1f),
                     new AffixRoll(AffixId.MaxHealth, 20f),
                 },
                 requiredLevel: 5,
-                upgradeCapacity: 3);
+                new ItemInvestment(capacity: 3));
 
             GearContribution total = item.TotalContribution();
             Assert.That(total.WeaponDamage, Is.EqualTo(40f));
@@ -138,9 +134,9 @@ namespace BattleBomb.Tests.EditMode
         public void An_instance_normalizes_bad_inputs()
         {
             var item = new ItemInstance(
-                1, null, ItemSlot.Chest, WeaponClass.None, PetClass.None,
+                new ItemIdentity(1, null, ItemSlot.Chest),
                 QualityRank.Torn, GearContribution.Zero, null,
-                requiredLevel: 0, upgradeCapacity: -2);
+                requiredLevel: 0, new ItemInvestment(capacity: -2));
 
             Assert.That(item.Affixes, Is.Not.Null.And.Empty);
             Assert.That(item.DisplayName, Is.Empty);

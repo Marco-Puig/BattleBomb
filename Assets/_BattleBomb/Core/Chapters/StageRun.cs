@@ -32,11 +32,15 @@ namespace BattleBomb.Core.Chapters
         private int _stepsSinceClear;
         private bool _previousWaveCleared = true;
 
+        /// <summary>
+        /// A fresh stage starts at its first arena; one resumed at a saved checkpoint stands up
+        /// in that room, because D49 makes a resume and a wipe the same boundary.
+        /// </summary>
         public StageRun(in StageSpec spec, int resumeCheckpointArena = -1)
         {
             _spec = spec;
             CheckpointArena = Mathf.Clamp(resumeCheckpointArena, -1, spec.ArenaCount - 1);
-            BeginArena(CheckpointArena + 1);
+            StandUpAtCheckpoint();
         }
 
         public StageSpec Spec => _spec;
@@ -167,30 +171,48 @@ namespace BattleBomb.Core.Chapters
             BeginArena(_arena + 1);
         }
 
-        /// <summary>D49: back to the arena after the last checkpoint, waves fresh, loot kept
-        /// (it was never ours to touch). Returns the checkpoint arena to respawn at, or -1 for
-        /// the stage's own spawn.</summary>
+        /// <summary>D49: back to the last checkpoint room, waves fresh, loot kept (it was never
+        /// ours to touch). Returns the checkpoint arena to respawn at, or -1 for the stage's own
+        /// spawn.</summary>
         public int ResetToCheckpoint()
         {
-            if (CheckpointArena + 1 >= _spec.ArenaCount)
+            StandUpAtCheckpoint();
+            return CheckpointArena;
+        }
+
+        /// <summary>
+        /// Where a lost attempt — or a resumed save, which D49 makes the same boundary — comes
+        /// back: standing <em>in</em> the last checkpoint room, not in the fight past it. D49's
+        /// wipe is meant to be "a chance to try to upgrade and equip stuff to go again", and D42
+        /// only opens the chest inside such a room, so a run that came up
+        /// <see cref="StagePhase.Fighting"/> in the arena ahead spent that chance before the
+        /// players stood up: its waves spawn while they are still in the room, and the clamp that
+        /// holds the room open for them holds those enemies in it too.
+        /// <para>
+        /// So the run lands at <see cref="StagePhase.AtCheckpoint"/> on the arena the room
+        /// follows, exactly as <see cref="ReachCheckpoint"/> leaves it, and the fight starts when
+        /// <see cref="EnterNextArena"/> says they walked out — the same crossing the ordinary path
+        /// uses, rather than a second one. With no room behind them there is nothing to stand up
+        /// in and the stage restarts at its first arena, fighting.
+        /// </para>
+        /// </summary>
+        private void StandUpAtCheckpoint()
+        {
+            if (CheckpointArena < 0)
             {
-                // Already past the last fight (a wipe to a burn in the airlock room): nothing
-                // to rewind, the room is where they stand back up.
-                return CheckpointArena;
+                BeginArena(0);
+                return;
             }
 
-            BeginArena(CheckpointArena + 1);
-            return CheckpointArena;
+            _arena = CheckpointArena;
+            ClearArenaProgress();
+            Phase = StagePhase.AtCheckpoint;
         }
 
         private void BeginArena(int index)
         {
             _arena = Mathf.Clamp(index, 0, Mathf.Max(0, _spec.ArenaCount));
-            _nextWave = 0;
-            _alive = 0;
-            _stepsInArena = 0;
-            _stepsSinceClear = 0;
-            _previousWaveCleared = true;
+            ClearArenaProgress();
             Phase = _arena >= _spec.ArenaCount ? StagePhase.Complete : StagePhase.Fighting;
 
             if (Phase == StagePhase.Fighting && _spec.Arenas[_arena].WaveCount == 0)
@@ -198,6 +220,15 @@ namespace BattleBomb.Core.Chapters
                 // An empty arena is a corridor: nothing to fight, the way is already open.
                 Phase = StagePhase.GateOpen;
             }
+        }
+
+        private void ClearArenaProgress()
+        {
+            _nextWave = 0;
+            _alive = 0;
+            _stepsInArena = 0;
+            _stepsSinceClear = 0;
+            _previousWaveCleared = true;
         }
 
         private void MarkCleared()

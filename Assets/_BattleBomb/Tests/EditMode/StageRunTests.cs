@@ -177,7 +177,7 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void A_wipe_rewinds_to_the_arena_after_the_last_checkpoint_with_fresh_waves()
+        public void A_wipe_stands_the_players_up_in_the_checkpoint_room_not_in_the_fight_past_it()
         {
             var run = new StageRun(TwoArenas());
             ClearArena(run);
@@ -190,16 +190,55 @@ namespace BattleBomb.Tests.EditMode
             int respawnAt = run.ResetToCheckpoint();
 
             Assert.That(respawnAt, Is.EqualTo(0), "Respawn in the room after arena zero (D49).");
-            Assert.That(run.ArenaIndex, Is.EqualTo(1));
-            Assert.That(run.Phase, Is.EqualTo(StagePhase.Fighting));
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "D49 gives a wipe a chance to upgrade and re-equip, and D42 only opens the chest "
+                + "inside the room — so the run comes back in the room, not in the next fight.");
+            Assert.That(run.ArenaIndex, Is.EqualTo(0),
+                "In a room, the arena is the one it follows — exactly as reaching it leaves things.");
             Assert.That(run.Alive, Is.Zero);
+
+            run.EnterNextArena();
+
+            Assert.That(run.ArenaIndex, Is.EqualTo(1), "Walking out is what starts the refight.");
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.Fighting));
             run.Step();
             Assert.That(run.TryNextWave(out WaveSpec wave), Is.True, "The arena's waves start over.");
             Assert.That(wave.Count, Is.EqualTo(1));
         }
 
         [Test]
-        public void A_wipe_before_any_checkpoint_restarts_the_stage()
+        public void After_a_wipe_no_wave_is_due_until_the_players_leave_the_room()
+        {
+            var run = new StageRun(TwoArenas());
+            ClearArena(run);
+            run.ReachCheckpoint();
+            run.EnterNextArena();
+            run.Step();
+            run.TryNextWave(out _);
+            run.OnEnemiesSpawned(1);
+
+            run.ResetToCheckpoint();
+
+            for (int i = 0; i < 600; i++)
+            {
+                run.Step();
+                Assert.That(run.TryNextWave(out _), Is.False,
+                    "Nothing spawns while they stand in the room (D49): the arena clamp still "
+                    + "holds the room, so a wave due here would walk in after them.");
+            }
+
+            Assert.That(run.Alive, Is.Zero, "Standing in a room is not a fight.");
+
+            run.EnterNextArena();
+            run.Step();
+
+            Assert.That(run.TryNextWave(out WaveSpec wave), Is.True,
+                "Out of the room and into the arena: now the fight starts.");
+            Assert.That(wave.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void A_wipe_before_any_checkpoint_restarts_the_stage_and_fights_from_its_spawn()
         {
             var run = new StageRun(TwoArenas());
             run.Step();
@@ -210,16 +249,62 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(respawnAt, Is.EqualTo(-1), "No room reached: the stage's own spawn.");
             Assert.That(run.ArenaIndex, Is.Zero);
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.Fighting),
+                "There is no room to stand up in, so the first arena simply starts over.");
+            Assert.That(run.Alive, Is.Zero);
+            run.Step();
+            Assert.That(run.TryNextWave(out WaveSpec wave), Is.True);
+            Assert.That(wave.Count, Is.EqualTo(2), "From the top of the arena.");
         }
 
         [Test]
-        public void Resuming_at_a_saved_checkpoint_starts_in_the_arena_after_it()
+        public void Resuming_at_a_saved_checkpoint_stands_up_in_that_room_by_the_same_rule_as_a_wipe()
         {
             var run = new StageRun(TwoArenas(), resumeCheckpointArena: 0);
 
-            Assert.That(run.ArenaIndex, Is.EqualTo(1));
             Assert.That(run.CheckpointArena, Is.EqualTo(0));
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "D49: quitting mid-stage resumes from the same point by the same rule, and that "
+                + "point is the room — with the chest in it (D42) — not the fight past it.");
+            Assert.That(run.ArenaIndex, Is.EqualTo(0));
+            run.Step();
+            Assert.That(run.TryNextWave(out _), Is.False, "Nothing is coming while they are in the room.");
+
+            run.EnterNextArena();
+
+            Assert.That(run.ArenaIndex, Is.EqualTo(1));
             Assert.That(run.Phase, Is.EqualTo(StagePhase.Fighting));
+        }
+
+        [Test]
+        public void Resuming_at_the_last_checkpoint_stands_up_in_the_airlock_not_past_the_stage()
+        {
+            var run = new StageRun(TwoArenas(), resumeCheckpointArena: 1);
+
+            Assert.That(run.IsAirlock, Is.True,
+                "The final room is a saveable checkpoint like any other; coming back to it must "
+                + "leave the stage still there to walk out of.");
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint));
+
+            run.EnterNextArena();
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.Complete));
+        }
+
+        [Test]
+        public void A_wipe_in_the_airlock_room_leaves_the_players_standing_in_it()
+        {
+            var run = new StageRun(TwoArenas());
+            ClearArena(run);
+            run.ReachCheckpoint();
+            run.EnterNextArena();
+            Clear(run, 1);
+            run.ReachCheckpoint();
+            Assert.That(run.IsAirlock, Is.True);
+
+            int respawnAt = run.ResetToCheckpoint();
+
+            Assert.That(respawnAt, Is.EqualTo(1), "The room they were already in.");
+            Assert.That(run.IsAirlock, Is.True, "Nothing to rewind past the last fight.");
         }
 
         private static void Clear(StageRun run, int count)

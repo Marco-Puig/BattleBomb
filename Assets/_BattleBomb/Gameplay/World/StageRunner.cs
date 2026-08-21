@@ -241,9 +241,9 @@ namespace BattleBomb.Gameplay.World
         {
             _current.SpawnProps(_chestPrefab, _dummyPrefab, _shopkeeperPrefab);
 
-            // A resume starts the run in the arena *after* the room it stands the players up in
-            // (D49's respawn rule doubles as the resume rule), so that room is behind the clamp
-            // from the very first step. It stays open until they walk out of it.
+            // A resume stands the players up in the room it saved at, and the run comes up
+            // AtCheckpoint there (D49's respawn rule doubles as the resume rule). The room is
+            // theirs until every one of them has walked into the arena past it.
             _roomBehind = _current.RoomAfter(_current.Run.CheckpointArena);
 
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
@@ -347,7 +347,10 @@ namespace BattleBomb.Gameplay.World
         {
             StageRun run = _current.Run;
 
-            if (_roomBehind != null)
+            // Not before the run has left the room: standing in it, ArenaIndex is the arena the
+            // room *follows*, and everyone in the room is trivially past that arena's floor — so
+            // asking there would release the room on the first check, while they are still in it.
+            if (_roomBehind != null && run.ArenaIndex > _roomBehind.AfterArena)
             {
                 ArenaMarker here = _current.Arena(run.ArenaIndex);
 

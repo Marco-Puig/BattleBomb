@@ -19,8 +19,8 @@ namespace BattleBomb.Core.Chapters
     /// <summary>
     /// Flow through one stage (D48): arena by arena, wave by wave, checkpoint by checkpoint.
     /// Advanced by the driver's step and told about spawns and deaths; it decides when the
-    /// gate opens and where a wipe goes back to (D49). The scene shows what this decided and
-    /// never decides anything itself (rule 2).
+    /// gate opens and where a wipe goes back to (D49, narrowed by D53). The scene shows what this
+    /// decided and never decides anything itself (rule 2).
     /// </summary>
     public sealed class StageRun
     {
@@ -49,7 +49,9 @@ namespace BattleBomb.Core.Chapters
 
         public int ArenaIndex => _arena;
 
-        /// <summary>The last checkpoint room reached, by the arena it follows; -1 before any.</summary>
+        /// <summary>The last checkpoint room <em>banked</em>, by the arena it follows; -1 before
+        /// any. D53 makes reaching a room and banking it two things: this is the room a wipe goes
+        /// back to, which is the last one the couch walked into whole.</summary>
         public int CheckpointArena { get; private set; }
 
         public int Alive => _alive;
@@ -141,15 +143,33 @@ namespace BattleBomb.Core.Chapters
             }
         }
 
-        /// <summary>The players are in the checkpoint room the open gate led to.</summary>
-        public void ReachCheckpoint()
+        /// <summary>
+        /// The players are in the checkpoint room the open gate led to. <paramref name="couchIsWhole"/>
+        /// says whether every player is on their feet; Core cannot see players, so the driver has
+        /// to tell it (rule 1).
+        /// <para>
+        /// D53 splits what used to be one action into two. <em>Entering</em> always works — the
+        /// phase advances, so the chest opens and the airlock streams the stage behind it — because
+        /// refusing that would make a stage impossible to leave once a partner died in it.
+        /// <em>Banking</em> is the half a body on the floor costs: the room becomes the wipe point
+        /// only when the couch is whole. That one condition is also the whole of D53's "a wipe
+        /// returns to the last room where everyone was alive" — if a room only banks while nobody
+        /// is down, <see cref="CheckpointArena"/> already <em>is</em> the last whole one, and a
+        /// second field tracking it would be a second source of the same truth.
+        /// </para>
+        /// </summary>
+        public void ReachCheckpoint(bool couchIsWhole)
         {
             if (Phase != StagePhase.GateOpen || !NextIsCheckpoint)
             {
                 return;
             }
 
-            CheckpointArena = _arena;
+            if (couchIsWhole)
+            {
+                CheckpointArena = _arena;
+            }
+
             Phase = StagePhase.AtCheckpoint;
         }
 

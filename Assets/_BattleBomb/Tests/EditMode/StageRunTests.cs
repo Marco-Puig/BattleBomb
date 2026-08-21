@@ -6,7 +6,8 @@ namespace BattleBomb.Tests.EditMode
 {
     /// <summary>
     /// D48's flow: arenas clear, gates open, checkpoints are reached, a wipe goes back to the
-    /// last one. Pure state; the scene only shows what this decided.
+    /// last one the couch was whole in (D49, narrowed by D53). Pure state; the scene only shows
+    /// what this decided.
     /// </summary>
     public sealed class StageRunTests
     {
@@ -128,7 +129,7 @@ namespace BattleBomb.Tests.EditMode
             ClearArena(run);
             Assert.That(run.CheckpointArena, Is.EqualTo(-1));
 
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint));
             Assert.That(run.CheckpointArena, Is.EqualTo(0));
 
@@ -160,7 +161,7 @@ namespace BattleBomb.Tests.EditMode
         {
             var run = new StageRun(TwoArenas());
             ClearArena(run);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             run.EnterNextArena();
             run.Step();
             run.TryNextWave(out _);
@@ -169,7 +170,7 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(run.Phase, Is.EqualTo(StagePhase.GateOpen));
             Assert.That(run.IsFinalArena, Is.True);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             Assert.That(run.IsAirlock, Is.True, "At the last checkpoint, the next stage streams in.");
 
             run.EnterNextArena();
@@ -181,7 +182,7 @@ namespace BattleBomb.Tests.EditMode
         {
             var run = new StageRun(TwoArenas());
             ClearArena(run);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             run.EnterNextArena();
             run.Step();
             run.TryNextWave(out _);
@@ -211,7 +212,7 @@ namespace BattleBomb.Tests.EditMode
         {
             var run = new StageRun(TwoArenas());
             ClearArena(run);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             run.EnterNextArena();
             run.Step();
             run.TryNextWave(out _);
@@ -295,16 +296,83 @@ namespace BattleBomb.Tests.EditMode
         {
             var run = new StageRun(TwoArenas());
             ClearArena(run);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             run.EnterNextArena();
             Clear(run, 1);
-            run.ReachCheckpoint();
+            run.ReachCheckpoint(couchIsWhole: true);
             Assert.That(run.IsAirlock, Is.True);
 
             int respawnAt = run.ResetToCheckpoint();
 
             Assert.That(respawnAt, Is.EqualTo(1), "The room they were already in.");
             Assert.That(run.IsAirlock, Is.True, "Nothing to rewind past the last fight.");
+        }
+
+        // ── D53: the partner you leave behind ────────────────────────────────────────
+
+        /// <summary>
+        /// D53's first half. Walking into a checkpoint room with a partner on the floor still
+        /// works — the phase advances, so the chest opens and the airlock streams the stage behind
+        /// it — because refusing the whole thing would make a stage impossible to leave once
+        /// somebody died in it. What the body costs is the banking, and only the banking.
+        /// </summary>
+        [Test]
+        public void A_room_reached_with_a_partner_down_opens_but_banks_nothing()
+        {
+            var run = new StageRun(TwoArenas());
+            ClearArena(run);
+            Assert.That(run.CheckpointArena, Is.EqualTo(-1));
+
+            run.ReachCheckpoint(couchIsWhole: false);
+
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "The room must still open (D53): the chest is in it and the stage behind it "
+                + "streams in from it, so a room that refused to open would strand the survivor "
+                + "in the stage their partner died in.");
+            Assert.That(run.CheckpointArena, Is.EqualTo(-1),
+                "A room reached with somebody on the floor is not the wipe point (D53).");
+
+            run.EnterNextArena();
+            Assert.That(run.ArenaIndex, Is.EqualTo(1),
+                "Pressing on alone is allowed — it is the banking that stops, not the walking.");
+        }
+
+        /// <summary>
+        /// D53's second half, and the reason it needs no bookkeeping of its own: a room banks only
+        /// while the couch is whole, so the banked room already <em>is</em> the last one everyone
+        /// was alive in. A wipe after pressing on alone rewinds past the room the survivor walked
+        /// into by themselves.
+        /// </summary>
+        [Test]
+        public void A_wipe_after_pressing_on_alone_goes_back_to_the_last_whole_room()
+        {
+            var run = new StageRun(TwoArenas());
+
+            // The first room, walked into together.
+            ClearArena(run);
+            run.ReachCheckpoint(couchIsWhole: true);
+            Assert.That(run.CheckpointArena, Is.EqualTo(0));
+
+            // Then a partner goes down in the second arena and the survivor presses on into the
+            // room past it — which on this spec is the stage's airlock.
+            run.EnterNextArena();
+            Clear(run, 1);
+            run.ReachCheckpoint(couchIsWhole: false);
+
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint));
+            Assert.That(run.IsAirlock, Is.True,
+                "The last room still streams the next stage in — the airlock is not a reward.");
+            Assert.That(run.CheckpointArena, Is.EqualTo(0),
+                "The room they walked into alone must not have moved the wipe point (D53).");
+
+            int respawnAt = run.ResetToCheckpoint();
+
+            Assert.That(respawnAt, Is.EqualTo(0),
+                "A wipe goes back to the last room the couch was whole in — the room before the "
+                + "one they were standing in when they lost (D53).");
+            Assert.That(run.ArenaIndex, Is.EqualTo(0));
+            Assert.That(run.Phase, Is.EqualTo(StagePhase.AtCheckpoint),
+                "And it comes back standing in that room, exactly as any other wipe does (D49).");
         }
 
         private static void Clear(StageRun run, int count)

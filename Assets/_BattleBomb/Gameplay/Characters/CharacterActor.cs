@@ -203,7 +203,7 @@ namespace BattleBomb.Gameplay.Characters
 
             PhaseVitals(dt);
             PhaseCastAndAttack(effective, combat);
-            PhaseMovement(effective, bounds, dt);
+            PhaseMovement(effective, ClampFor(bounds), dt);
             PhaseHitWindows(combat);
 
             transform.position = _state.Position;
@@ -374,6 +374,44 @@ namespace BattleBomb.Gameplay.Characters
             {
                 _state = WithLift(_state, combat.LiftSpeed);
             }
+        }
+
+        /// <summary>
+        /// The clamp this body actually obeys. D53: a downed player is exempt from the arena's
+        /// horizontal clamp, so the body stays exactly where it fell rather than being dragged an
+        /// arena forward the moment their partner advances. The clamp is the gate (D48) and it is
+        /// a <c>Mathf.Clamp</c> applied to every body every step, so moving its floor never walks
+        /// anyone anywhere — it puts them there, instantly, at no speed, and that is what the
+        /// abandoned partner looked like.
+        /// <para>
+        /// The exemption widens rather than removes: the bounds are stretched just far enough to
+        /// contain the body where it already lies, so the arena's floor can neither pull it forward
+        /// nor push it further out than it already is. The depth band and the ground plane are
+        /// untouched — a body still obeys gravity and still lies inside the playable depth.
+        /// </para>
+        /// <para>
+        /// This answers the clamp, and only the clamp. It is a bound on position, so anything that
+        /// hands the body velocity moves it right through the widened box, which then re-centres on
+        /// the new position — a partner's swing did exactly that until <see cref="ApplyImpulse"/>
+        /// learned to refuse. The two halves are only correct together, and neither is worth much
+        /// alone.
+        /// </para>
+        /// <para>
+        /// Reviving is unchanged (D25/D31), so there is a real window to walk back while the arena
+        /// is still open; it closes when the survivor crosses into the next arena and the clamp
+        /// moves past the body.
+        /// </para>
+        /// </summary>
+        private ArenaBounds ClampFor(in ArenaBounds bounds)
+        {
+            if (!_condition.IsDown)
+            {
+                return bounds;
+            }
+
+            float x = _state.Position.x;
+            return new ArenaBounds(
+                Mathf.Min(bounds.MinX, x), Mathf.Max(bounds.MaxX, x), bounds.GroundY);
         }
 
         /// <summary>The motor step, shaped by the combat phase: free, rooted to a lunge, or swinging.</summary>
@@ -616,9 +654,42 @@ namespace BattleBomb.Gameplay.Characters
         /// </summary>
         internal void DebugDown() => _condition = _condition.Drained(_condition.Health.Max + 1f);
 
-        /// <summary>A partner's shove (D21): replaces velocity, never touches health.</summary>
+        /// <summary>
+        /// A partner's shove (D21): replaces velocity, never touches health — and never reaches a
+        /// body on the floor (D53).
+        /// <para>
+        /// The guard lives here rather than at the driver's two partner branches because it is a
+        /// property of the body, not of any one thing that swings at it: a downed player is
+        /// immovable, and the next caller to find them cannot forget that. Guarding the call sites
+        /// instead would rebuild the exact shape of the bug — the enemy path was checked and the
+        /// partner path was not — and guarding <c>CollectCandidates</c> would make a downed partner
+        /// untargetable outright, which silently forecloses any friendly effect that has to find
+        /// them and swallows the contact event with it. The swing still lands and still announces
+        /// itself; it simply moves nothing.
+        /// </para>
+        /// <para>
+        /// <see cref="ClampFor"/> alone did not cover this, which is the whole reason the guard
+        /// exists: the exemption bounds a body's <em>position</em>, so anything handing it velocity
+        /// travels straight through the widened box, and the box re-centres on wherever the body
+        /// ended up. Measured before this guard: one Heavy moved a corpse 0.81 units, and enough
+        /// swings in one direction walk it forward — abandoning a partner made free again, a swing
+        /// at a time.
+        /// </para>
+        /// <para>
+        /// <see cref="PlayerCondition.IsDown"/> and not <see cref="PlayerCondition.IsInvulnerable"/>:
+        /// grace is a standing player's i-frames and a partner may still shove them, which is D21's
+        /// business and none of D53's. The enemy path never arrives here while down anyway —
+        /// <see cref="ApplyEnemyHit"/> swallows a hit whole while invulnerable, and down is
+        /// invulnerable.
+        /// </para>
+        /// </summary>
         internal void ApplyImpulse(Vector3 velocity)
         {
+            if (_condition.IsDown)
+            {
+                return;
+            }
+
             bool launched = velocity.y > 0.01f;
             _state = new MotorState(
                 _state.Position,
@@ -645,7 +716,7 @@ namespace BattleBomb.Gameplay.Characters
                 return;
             }
 
-            Vector3 position = bounds.ClampHorizontal(_state.Position + push);
+            Vector3 position = ClampFor(bounds).ClampHorizontal(_state.Position + push);
             _state = new MotorState(
                 position, _state.Velocity, _state.Facing, _state.IsGrounded,
                 _state.StepsSinceGrounded, _state.JumpBufferedFor);

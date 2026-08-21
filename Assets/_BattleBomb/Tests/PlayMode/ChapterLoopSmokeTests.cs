@@ -69,6 +69,15 @@ namespace BattleBomb.Tests.PlayMode
         /// </summary>
         private const float StoodStillTolerance = 0.5f;
 
+        /// <summary>How far player one stops short of a downed partner to swing at them. Inside
+        /// Heavy's authored reach so the swing lands, and wider than two <c>PersonalRadius</c> so
+        /// the crowding nudge (task 37) never touches the body a case is measuring.</summary>
+        private const float SwingDistance = 1.4f;
+
+        /// <summary>DefaultKit's Heavy reach, named here so a case that must land a swing can say
+        /// out loud what it depends on rather than guessing at a distance.</summary>
+        private const float HeavyReach = 2f;
+
         /// <summary>How far across the depth band player one steps to get out of their partner's
         /// lane. Comfortably wider than two personal radii and comfortably inside the band's
         /// three units, so the walk past never crowds and never hits the depth clamp.</summary>
@@ -355,17 +364,20 @@ namespace BattleBomb.Tests.PlayMode
         }
 
         /// <summary>
-        /// The second of the two, and the reason <c>AllPlayersPastX</c> counts the downed. A body
-        /// on the floor of the checkpoint room slid out of it on its own — 11.6 to 14.0, through
-        /// the doorway and into the arena — the moment the surviving partner walked out, because
-        /// the check that closes the room behind them counted only players still standing.
+        /// The second of M7's two shipped co-op bugs. A body on the floor of the checkpoint room
+        /// slid out of it on its own — 11.6 to 14.0, through the doorway and into the arena — the
+        /// moment the surviving partner walked out, because the check that closes the room behind
+        /// them counted only players still standing.
         /// </summary>
         /// <remarks>
-        /// The room is held open by the clamp's floor for as long as anyone is still in it (D49),
-        /// and a body left behind is the case that needs that most: it cannot walk itself out, so
-        /// closing the room on the living drags it through the door at clamp speed, which is to
-        /// say instantly. Its partner then has to fight their way back to a corpse the room
-        /// spat out.
+        /// The assertion is unchanged and D53 changed why it holds, which is worth stating because
+        /// the two readings look identical from here. The fix at the time was to hold the room
+        /// inside the clamp until every player had left it, downed included, so that closing it on
+        /// the living could not drag the body through the doorway. D53 exempts a downed body from
+        /// the horizontal clamp outright, so nothing can drag it anywhere and the room no longer
+        /// needs to wait for it — <c>_roomBehind</c> counts the living again, the room closes
+        /// behind the survivor, and the body lies there through it. Were the exemption ever lost,
+        /// this case would go red exactly as it did the first time.
         /// <para>
         /// The room only becomes "the room behind" on a wipe or a resume — walking forward
         /// through a checkpoint does not open it — so this case has to come through the wipe to
@@ -414,9 +426,176 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(slid, Is.LessThan(StoodStillTolerance),
                 $"A downed player slid {slid:F2} units out of the checkpoint room on their own "
                 + $"(x {body.x:F2} → {_partner.Position.x:F2}) because their partner walked into "
-                + "the next arena. The room stays inside the clamp until every player has left "
-                + "it, downed included — a body cannot walk itself out, so closing the room on "
-                + "the living is what drags it through the doorway (D49).");
+                + "the next arena. A downed body is exempt from the arena clamp (D53), so nothing "
+                + "the survivor does by walking away can move it — and before that exemption "
+                + "existed, closing the room on the living is what dragged it through the "
+                + "doorway (D49).");
+        }
+
+        /// <summary>
+        /// The hole the first pass at D53 left, and the reason it needed a test of its own: the
+        /// clamp exemption pins a body against the arena's floor moving, and answers nothing that
+        /// hands the body velocity. A partner's swing did exactly that — <c>CollectCandidates</c>
+        /// adds every other player unconditionally, and the partner branch shoved whatever it
+        /// found, so a Heavy into a corpse set it moving at the attack's full 9 m/s while it
+        /// stayed down. Enough swings in one direction walk a body forward, which is abandoning
+        /// your partner made free again, one swing at a time.
+        /// </summary>
+        /// <remarks>
+        /// Nothing in either suite swung at a downed body before this, which is exactly why the
+        /// first pass shipped green: every D53 case measured a body nobody touched. So this one
+        /// touches it deliberately, and asserts on both halves — that the swing genuinely landed
+        /// (through <see cref="SimulationDriver.HitLanded"/>, so a reach change can never turn
+        /// this into a test that passes by missing) and that the body did not move anyway.
+        /// <para>
+        /// Heavy, not Light: beside a downed partner, Light is the revive channel (D17/D25), so it
+        /// is the one button that cannot express this. Heavy also carries the biggest knockback in
+        /// the kit, which is what makes the failure unmissable — 9 m/s against a tolerance of half
+        /// a unit. The walk stops a comfortable unit and a half away: inside Heavy's reach of 2,
+        /// and outside the twice-<c>PersonalRadius</c> crowding nudge, so the only thing that
+        /// could move the body is the swing itself.
+        /// </para>
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator A_downed_partner_is_not_shoved_by_their_partners_swing()
+        {
+            yield return LaunchFromTheFrontDoor(expectContinue: false, players: 2);
+            yield return Until(() => _runner.Phase == StagePhase.GateOpen, "the first arena's gate never opened");
+
+            _driver.DebugDownPlayer(_partner.PlayerId.Value);
+            yield return Steps(15);
+            Assert.That(_partner.Condition.IsDown, Is.True,
+                "Player two would not stay down, so there is no body to swing at.");
+
+            // Up to the body from the left, and into its lane — a swing is a shape in depth as
+            // well as in x, and the couch spawns a lane apart, so a walk that only closed the x
+            // gap would swing behind the body and prove nothing.
+            Vector3 stand = _partner.Position;
+            stand.x -= SwingDistance;
+            yield return WalkTo(stand, "swinging range of their downed partner");
+            yield return Steps(30);
+
+            float gap = Vector3.Distance(_partner.Position, _player.Position);
+            Assert.That(gap, Is.LessThan(HeavyReach),
+                $"The swing has to be able to reach the body: it is {gap:F2} units away and Heavy "
+                + $"reaches {HeavyReach:F2}.");
+
+            int shovesAtTheBody = 0;
+            System.Action<HitEvent> count = e =>
+            {
+                if (e.IsPartner && ReferenceEquals(e.Target, _partner))
+                {
+                    shovesAtTheBody++;
+                }
+            };
+
+            _driver.HitLanded += count;
+            Vector3 body = _partner.Position;
+            for (int swing = 0; swing < 3; swing++)
+            {
+                yield return Press(CommandButtons.Heavy);
+                yield return Steps(45);
+            }
+
+            _driver.HitLanded -= count;
+
+            Assert.That(shovesAtTheBody, Is.GreaterThan(0),
+                "No swing ever connected with the downed partner, so this case proves nothing. "
+                + "The walk stopped somewhere Heavy cannot reach, or Heavy stopped resolving "
+                + "against partners at all.");
+
+            float moved = Vector3.Distance(body, _partner.Position);
+            Assert.That(moved, Is.LessThan(StoodStillTolerance),
+                $"A downed player was shoved {moved:F2} units by their partner's swing "
+                + $"(x {body.x:F2} -> {_partner.Position.x:F2}) across {shovesAtTheBody} landed "
+                + "hits. A body on the floor takes neither damage nor knockback (D21/D53): the "
+                + "clamp exemption only stops the arena moving a body, so anything that hands it "
+                + "velocity walks it forward one swing at a time and D53 is undone.");
+        }
+
+        /// <summary>
+        /// The one Michael called out after playing the machine, made permanent (D53). A downed
+        /// partner was dragged forward one arena at a time — instantly, about an arena's width,
+        /// with no walk — as the survivor advanced, because the clamp that is the gate was applied
+        /// to every body including the ones on the floor.
+        /// </summary>
+        /// <remarks>
+        /// Same mechanism as the two cases above, pointing the other way: those are about the
+        /// clamp reaching <em>back</em> for somebody, this is about it sweeping <em>forward</em>
+        /// over a body that should be left where it fell. It walks the whole of D53 in one pass,
+        /// because the parts only mean anything together — the body stays put, the room the
+        /// survivor walks into alone opens but banks nothing, nobody is stood back up by reaching
+        /// it, and the wipe goes back past it. A run where the body stayed put but the room still
+        /// banked would look fixed and would still have made abandoning a partner free, which is
+        /// the half of the report that is not about the visual glitch.
+        /// </remarks>
+        [UnityTest]
+        public IEnumerator A_downed_partner_is_left_where_they_fell_when_the_survivor_advances()
+        {
+            yield return LaunchFromTheFrontDoor(expectContinue: false, players: 2);
+            yield return Until(() => _runner.Phase == StagePhase.GateOpen, "the first arena's gate never opened");
+
+            // Player two is given no orders for the rest of this test; player one walks away from
+            // them. Going round rather than through keeps the crowding nudge out of a measurement
+            // that is about a body nobody touched.
+            yield return StepOutOfTheirLane();
+
+            // Down where they stand, in the first arena. One player still up means no wipe: the
+            // body simply lies there while its partner presses on.
+            _driver.DebugDownPlayer(_partner.PlayerId.Value);
+            yield return Steps(15);
+            Assert.That(_partner.Condition.IsDown, Is.True,
+                "Player two would not stay down, so there is no body to leave behind.");
+
+            ArenaMarker second = Arena(1);
+            Vector3 body = _partner.Position;
+            Assert.That(body.x, Is.LessThan(second.MinX - 1f),
+                "The body has to be behind the arena ahead for this to mean anything — that "
+                + $"arena starts at x={second.MinX:F2} and the body is at x={body.x:F2}.");
+
+            // Into the checkpoint room alone. It opens — the chest is in it and the stage behind
+            // it streams from it — and it banks nothing.
+            CheckpointRoomMarker room = RoomAfter(0);
+            yield return WalkToX(room.EntryX + 0.5f, "the first checkpoint room");
+            yield return Until(() => _runner.Phase == StagePhase.AtCheckpoint,
+                "the checkpoint room never opened for the surviving player");
+            Assert.That(_runner.Run.CheckpointArena, Is.EqualTo(-1),
+                "The room banked itself with a partner on the floor, so a wipe would come back "
+                + "here rather than to the last room the couch was whole in (D53).");
+            Assert.That(_partner.Condition.IsDown, Is.True,
+                "Reaching a checkpoint room stood the downed partner back up. D53 chose the harsh "
+                + "reading over that one: press on alone and they are out of the run until a wipe.");
+
+            // And out into the next arena, which is the crossing that moves the clamp past the
+            // body — and, before D53, took the body with it.
+            yield return WalkToX(second.MinX + 1f, "the second arena");
+            yield return Until(() => _runner.Run.ArenaIndex == 1, "the second arena never began");
+            yield return Steps(30);
+
+            float dragged = Vector3.Distance(body, _partner.Position);
+            Assert.That(dragged, Is.LessThan(StoodStillTolerance),
+                $"A downed player was dragged {dragged:F2} units forward "
+                + $"(x {body.x:F2} → {_partner.Position.x:F2}) because their partner advanced an "
+                + "arena. The arena clamp is a Mathf.Clamp applied to every body every step, so "
+                + "moving its floor does not walk a body anywhere — it puts it there. A downed "
+                + "player is exempt from it and stays exactly where they fell (D53).");
+
+            // The wipe, which is the only thing that gets the partner back. It goes to the room
+            // the run banked — none — and not to the one the survivor walked into alone, so both
+            // of them stand up back at the stage's own spawn, behind that room.
+            _driver.DebugDownPlayers();
+            yield return Until(
+                () => !_player.Condition.IsDown && !_partner.Condition.IsDown,
+                "the wipe never stood both players back up");
+
+            Assert.That(_runner.Run.ArenaIndex, Is.Zero,
+                "The wipe came back past the first arena, so the room the survivor walked into "
+                + "alone became the wipe point after all (D53).");
+            Assert.That(_player.Position.x, Is.LessThan(room.EntryX),
+                "The wipe stood the players up in the room they never banked. The run rewound "
+                + $"behind it (the room starts at x={room.EntryX:F2}), and a respawn home that "
+                + "moved with the walk-in would leave them somewhere the run does not think they "
+                + "are (D53).");
         }
 
         // ── Continue ─────────────────────────────────────────────────────────────────

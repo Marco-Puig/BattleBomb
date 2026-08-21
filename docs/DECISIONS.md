@@ -1128,6 +1128,41 @@ Settled in the M7 design session (2026-08-20), the engineering shape of D51.
 
 ---
 
+## D53 — A downed partner is left where they fell, and the run stops banking · **Locked** *(amends D49, refines D25/D31)*
+
+Directed by Michael after playing M7's machine (2026-08-21): *"if your teammate dies and you
+continue on, they should not be dragged but you should be punished, you cannot collect any more
+checkpoints and if you wipe you get sent to the last checkpoint where both teammates were alive."*
+
+**The problem it replaces.** The arena clamp applied to every body, so a downed partner was yanked
+forward one arena at a time — instantly, about an arena's width, with no walk. The *rule* was
+defensible (a body outside the play area is unreachable and forces a full wipe) but it read as a
+glitch, and it quietly made abandoning your partner free.
+
+- **A downed player is exempt from the horizontal clamp.** The body stays exactly where it fell.
+  Reviving is still D31's mash — walk to them and press Light — so there is a real window while the
+  arena is still open, and it closes when the survivor crosses into the next arena.
+- **While anyone is down, checkpoints stop banking.** Walking into a checkpoint room still *works*
+  — the phase advances, the chest opens, the airlock streams the next stage — but the room does
+  **not** become the wipe point. Entering and banking were one action; they are two now, because
+  refusing the whole thing would make a stage impossible to leave after a partner died in it.
+- **A wipe therefore returns to the last room where everyone was alive**, which needs no separate
+  bookkeeping: if a room only banks when the couch is whole, the banked room is by definition the
+  last whole one.
+- **Reaching a checkpoint room does not revive anyone** (Michael's explicit choice over the gentler
+  reading). Press on alone and your partner is out of the run until you wipe — which is what makes
+  pressing on a decision rather than a shortcut.
+
+**Why the harsh reading:** the gentler one — stand them up at the room but do not bank it — keeps
+the couch whole and costs the survivor only a rollback. Michael chose the version where abandoning
+a partner actually abandons them. The pressure is to go back and revive, not to run ahead.
+
+**Consequence:** solo play is unaffected (one player down is a wipe, D25). `StageRun` learns whether
+the couch is whole when a room is reached; the clamp learns to skip the downed. `_roomBehind` can
+go back to counting only living players, since a body no longer needs protecting from the clamp.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

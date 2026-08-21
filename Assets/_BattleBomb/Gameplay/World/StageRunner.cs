@@ -103,7 +103,16 @@ namespace BattleBomb.Gameplay.World
         /// <summary>The checkpoint room the players were last stood up in (D49), whether by a
         /// wipe or by resuming there. It stays inside the clamp until they have walked out:
         /// clamping players out of the room they are standing in does not walk them anywhere,
-        /// it teleports them.</summary>
+        /// it teleports them.
+        /// <para>
+        /// It counts the living only. It used to count the downed as well, so that a body lying in
+        /// the room was not dragged through the doorway when the survivor walked out — under D53
+        /// the body is exempt from the clamp outright, so that reason is gone, and keeping it would
+        /// mean one corpse held a room open for the rest of the stage. What is left is the reason
+        /// it was built for: after a wipe the players stand up <em>in</em> this room, and the arena
+        /// ahead's floor would otherwise take them straight back out of it.
+        /// </para>
+        /// </summary>
         private CheckpointRoomMarker _roomBehind;
 
         private bool _warnedBrokenSpawn;
@@ -140,8 +149,17 @@ namespace BattleBomb.Gameplay.World
         /// die with it.</summary>
         public Scene StageScene => _current != null ? _current.Scene : default;
 
-        /// <summary>Raised when the players reach a checkpoint room: stage index and the arena it
-        /// follows. Intended for the save service to autosave on (D52, task 81).</summary>
+        /// <summary>Raised when the players reach a checkpoint room: stage index, and the arena
+        /// the run's <em>banked</em> checkpoint follows. Intended for the save service to autosave
+        /// on (D52, task 81).
+        /// <para>
+        /// The two are the same room whenever the couch is whole. They part under D53: walking in
+        /// with a partner down still autosaves — a crash must keep costing exactly what a wipe
+        /// costs, and the loot picked up on the way here is the point — but it records the room a
+        /// wipe would go back to, which is not this one. A resume and a wipe stay the same
+        /// boundary (D49) because they read the same number.
+        /// </para>
+        /// </summary>
         public event Action<int, int> CheckpointReached;
 
         /// <summary>Raised when a stage is left behind through its airlock.</summary>
@@ -355,10 +373,11 @@ namespace BattleBomb.Gameplay.World
             {
                 ArenaMarker here = _current.Arena(run.ArenaIndex);
 
-                // Every player, downed included. A body left behind in the room is exactly the
-                // case that most needs the room to stay inside the clamp — closing it on the
-                // living would drag the downed one through the doorway.
-                if (here != null && AllPlayersPastX(here.MinX))
+                // The living only (D53). A body left behind keeps its own position now — the
+                // clamp cannot touch it — so it has no need of the room and no claim on it. Were
+                // it still counted, a partner who went down in a checkpoint room would pin the
+                // clamp's floor there for as long as the stage lasted.
+                if (here != null && AllLivingPlayersPastX(here.MinX))
                 {
                     _roomBehind = null;
                     ApplyBounds();
@@ -373,10 +392,21 @@ namespace BattleBomb.Gameplay.World
                         CheckpointRoomMarker room = _current.RoomAfter(run.ArenaIndex);
                         if (room != null && AnyLivingPlayerPastX(room.EntryX))
                         {
-                            run.ReachCheckpoint();
-                            SetHome(room.RespawnPosition);
+                            // D53: walking in always works — the phase advances, the chest opens,
+                            // the airlock streams the stage behind it — but with a partner on the
+                            // floor the room does not become the wipe point. So the respawn home
+                            // does not move either: the run rewinds to the room it banked, and
+                            // standing the players up anywhere else would put them somewhere the
+                            // run does not think they are.
+                            bool whole = CouchIsWhole();
+                            run.ReachCheckpoint(whole);
+                            if (whole)
+                            {
+                                SetHome(room.RespawnPosition);
+                            }
+
                             ApplyBounds();
-                            CheckpointReached?.Invoke(_current.StageIndex, run.ArenaIndex);
+                            CheckpointReached?.Invoke(_current.StageIndex, run.CheckpointArena);
                         }
                     }
                     else if (!run.IsFinalArena)
@@ -581,19 +611,17 @@ namespace BattleBomb.Gameplay.World
             return any;
         }
 
-        /// <summary>Standing and downed alike — used only where a body left behind should count
-        /// as still being there, because it is.</summary>
-        private bool AllPlayersPastX(float x)
+        /// <summary>
+        /// Whether the couch is whole (D53): every player who is here is on their feet. Solo, it
+        /// is the one player, and one player down is a wipe (D25), so this only ever decides
+        /// anything with a partner on the couch.
+        /// </summary>
+        private bool CouchIsWhole()
         {
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
-            if (actors.Count == 0)
-            {
-                return false;
-            }
-
             for (int i = 0; i < actors.Count; i++)
             {
-                if (actors[i].Position.x < x)
+                if (actors[i].Condition.IsDown)
                 {
                     return false;
                 }

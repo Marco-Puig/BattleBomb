@@ -197,7 +197,7 @@ namespace BattleBomb.Gameplay.Items
             // Mid-ladder on purpose: a Godly grant would make every feel judgement about an
             // absurd item rather than about the mechanic being judged.
             ItemInstance rolled = _driver.RollDebugItem(definitionId, DebugGrantQuality);
-            if (!rolled.IsEmpty && bag.Take(rolled))
+            if (!rolled.IsEmpty && bag.Take(rolled).Equipped)
             {
                 actor.RefreshStats();
             }

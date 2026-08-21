@@ -102,17 +102,17 @@ namespace BattleBomb.Tests.EditMode
         {
             var inventory = new Inventory { AutoEquip = true };
 
-            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Rusty), 10), Is.True,
+            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Rusty), 10).Equipped, Is.True,
                 "an empty slot fills");
-            Assert.That(inventory.Add(Gear(2, ItemSlot.Helmet, QualityRank.Torn), 10), Is.False,
+            Assert.That(inventory.Add(Gear(2, ItemSlot.Helmet, QualityRank.Torn), 10).Equipped, Is.False,
                 "a downgrade stays in the bag");
             Assert.That(inventory.Loadout.Helmet.DefinitionId, Is.EqualTo(1));
 
-            Assert.That(inventory.Add(Gear(3, ItemSlot.Helmet, QualityRank.Shiny), 10), Is.True,
+            Assert.That(inventory.Add(Gear(3, ItemSlot.Helmet, QualityRank.Shiny), 10).Equipped, Is.True,
                 "a strictly better rank replaces");
             Assert.That(inventory.Loadout.Helmet.DefinitionId, Is.EqualTo(3));
 
-            Assert.That(inventory.Add(Gear(4, ItemSlot.Helmet, QualityRank.Godly, requiredLevel: 40), 10),
+            Assert.That(inventory.Add(Gear(4, ItemSlot.Helmet, QualityRank.Godly, requiredLevel: 40), 10).Equipped,
                 Is.False, "over-level gear never auto-equips");
             Assert.That(inventory.Loadout.Helmet.DefinitionId, Is.EqualTo(3));
         }
@@ -122,7 +122,7 @@ namespace BattleBomb.Tests.EditMode
         {
             var inventory = new Inventory();
 
-            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Godly), 99), Is.False);
+            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Godly), 99).Equipped, Is.False);
             Assert.That(inventory.Loadout.Helmet.IsEmpty, Is.True, "D30: inventory by default");
         }
 

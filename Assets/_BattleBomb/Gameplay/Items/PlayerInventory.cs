@@ -27,12 +27,16 @@ namespace BattleBomb.Gameplay.Items
 
         private Inventory _inventory;
         private XpLedger _ledger;
+        private Wallet _wallet;
 
         public Inventory Inventory => _inventory ?? (_inventory = new Inventory());
 
         public XpLedger Ledger => _ledger;
 
         public int Level => _ledger.Level;
+
+        /// <summary>This player's money (D43) — theirs alone, like the loot that made it.</summary>
+        public Wallet Wallet => _wallet;
 
         public XpCurve Curve => new XpCurve(
             _xpBase, _xpExponent, _prestigeCostMultiplier, _maxLevel, _pointsPerLevel);
@@ -50,8 +54,32 @@ namespace BattleBomb.Gameplay.Items
             }
         }
 
-        /// <summary>A grabbed drop lands here (D30). Returns whether it auto-equipped.</summary>
-        public bool Take(in ItemInstance item) => Inventory.Add(item, Level);
+        /// <summary>
+        /// A grabbed drop lands here (D30). The sack may refuse it outright (D43), and auto-sell
+        /// may have paid for the room — either way the caller learns which from the result.
+        /// </summary>
+        public AddResult Take(in ItemInstance item)
+        {
+            AddResult result = Inventory.Add(item, Level);
+            if (result.CoinsEarned > 0)
+            {
+                _wallet = _wallet.Earned(result.CoinsEarned);
+            }
+
+            return result;
+        }
+
+        /// <summary>Sells one bagged stack outright, banking what it fetched (D43).</summary>
+        public int Sell(int bagIndex)
+        {
+            int coins = Inventory.Sell(bagIndex);
+            if (coins > 0)
+            {
+                _wallet = _wallet.Earned(coins);
+            }
+
+            return coins;
+        }
 
         /// <summary>A kill's reward (task 48): every living player earns the full amount.</summary>
         public void Earn(float xp) => _ledger = _ledger.Earn(xp, Curve);

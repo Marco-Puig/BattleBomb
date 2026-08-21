@@ -109,6 +109,14 @@ namespace BattleBomb.Gameplay.Simulation
         private ReactionTable _reactions = ReactionTable.Empty;
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
+
+        /// <summary>Steps a refused grab stays worth showing — long enough to read, short
+        /// enough to feel like a rebuke (D43).</summary>
+        private const int RefusalFlashSteps = 90;
+
+        /// <summary>Per player, steps left on the "sack full" refusal (D43).</summary>
+        private readonly Dictionary<int, int> _refusedGrabs = new Dictionary<int, int>();
+        private readonly List<int> _refusalScratch = new List<int>();
         private readonly List<Vector3> _bodyPositions = new List<Vector3>();
         private readonly List<Vector3> _bodyVelocities = new List<Vector3>();
         private readonly List<Vector3> _bodyPushes = new List<Vector3>();
@@ -148,6 +156,11 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;
+
+        /// <summary>True while this player's last grab is still being refused (D43), for the
+        /// red X and the cap flash to draw.</summary>
+        public bool WasGrabRefused(int playerIdValue) =>
+            _refusedGrabs.TryGetValue(playerIdValue, out int steps) && steps > 0;
 
         /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
         public IReadOnlyList<DropPickup> Pickups => _pickups;
@@ -308,16 +321,26 @@ namespace BattleBomb.Gameplay.Simulation
                 if (result.GrabbedLoot && grabTarget >= 0 && grabTarget < _pickups.Count
                     && _pickups[grabTarget] != null)
                 {
-                    int id = actor.PlayerId.Value;
-                    _grabCounts[id] = GrabCountFor(id) + 1;
                     PlayerInventory bag = actor.GetComponent<PlayerInventory>();
-                    if (bag != null && bag.Take(_pickups[grabTarget].Item))
+                    AddResult taken = bag != null ? bag.Take(_pickups[grabTarget].Item) : AddResult.Refused;
+                    if (taken.Equipped)
                     {
                         actor.RefreshStats();
                     }
 
-                    Destroy(_pickups[grabTarget].gameObject);
-                    _pickups.RemoveAt(grabTarget);
+                    if (taken.Taken)
+                    {
+                        int id = actor.PlayerId.Value;
+                        _grabCounts[id] = GrabCountFor(id) + 1;
+                        Destroy(_pickups[grabTarget].gameObject);
+                        _pickups.RemoveAt(grabTarget);
+                    }
+                    else
+                    {
+                        // A full sack has no overflow valve (D43): the drop stays where it lies
+                        // and the refusal becomes presentation's red X.
+                        _refusedGrabs[actor.PlayerId.Value] = RefusalFlashSteps;
+                    }
                 }
             }
         }
@@ -571,6 +594,23 @@ namespace BattleBomb.Gameplay.Simulation
                     _pickups.RemoveAt(i);
                 }
             }
+
+            if (_refusedGrabs.Count > 0)
+            {
+                _refusalScratch.Clear();
+                foreach (KeyValuePair<int, int> entry in _refusedGrabs)
+                {
+                    if (entry.Value > 0)
+                    {
+                        _refusalScratch.Add(entry.Key);
+                    }
+                }
+
+                for (int i = 0; i < _refusalScratch.Count; i++)
+                {
+                    _refusedGrabs[_refusalScratch[i]] -= 1;
+                }
+            }
         }
 
         /// <summary>
@@ -626,6 +666,7 @@ namespace BattleBomb.Gameplay.Simulation
 
             _pickups.Clear();
             _grabCounts.Clear();
+            _refusedGrabs.Clear();
             AttemptReset?.Invoke();
         }
 

@@ -36,7 +36,21 @@ namespace BattleBomb.Core.Items
         /// <summary>D30: off by default — grabbed loot lands in the bag unless the player opts in.</summary>
         public bool AutoEquip { get; set; }
 
+        /// <summary>D43: off by default — at the cap, a pickup sells the worst unlocked piece.</summary>
+        public bool AutoSell { get; set; }
+
+        /// <summary>The carry limits (D43). Authored per game, not per player.</summary>
+        public SackRules Rules { get; set; } = SackRules.Default;
+
+        /// <summary>The rulebook every coin flows through — auto-sell needs it to pay out.</summary>
+        public PriceBook Prices { get; set; } = PriceBook.Default;
+
         public IReadOnlyList<ItemStack> Items => _items;
+
+        /// <summary>Slots in use: one per stack, however deep the stack is (D43).</summary>
+        public int SlotsUsed => _items.Count;
+
+        public bool IsFull => _items.Count >= Rules.Capacity;
 
         public QuickSlotKind QuickKind => _quickKind;
         public int QuickConsumableId => _quickConsumableId;
@@ -44,48 +58,161 @@ namespace BattleBomb.Core.Items
         public int QuickCooldownRemaining => _quickCooldown;
 
         /// <summary>
-        /// Takes an item into the bag; consumables stack by definition. With auto-equip on, gear
-        /// equips itself only when its slot is empty or its quality rank strictly beats the worn
-        /// piece's, and the level lock still applies (planning decision 7). Returns whether the
-        /// item ended up worn.
+        /// Takes an item into the bag (D43). Consumables stack by definition and quality up to
+        /// the stack limit — a sixth identical potion has nowhere to go and the pickup refuses.
+        /// A full sack refuses too, unless auto-sell is on and something unlocked can be sold to
+        /// make room. With auto-equip on, gear equips itself only when its slot is empty or its
+        /// quality rank strictly beats the worn piece's, and the level lock still applies.
         /// </summary>
-        public bool Add(in ItemInstance item, int currentLevel)
+        public AddResult Add(in ItemInstance item, int currentLevel)
         {
             if (item.IsEmpty)
             {
-                return false;
+                return AddResult.Refused;
             }
 
             if (item.IsConsumable)
             {
                 // Stacks split by quality: a Vial and an Elixir heal differently and never merge.
-                for (int i = 0; i < _items.Count; i++)
+                int stack = FindStackFor(item);
+                if (stack >= 0)
                 {
-                    if (_items[i].Item.IsConsumable
-                        && _items[i].Item.DefinitionId == item.DefinitionId
-                        && _items[i].Item.Quality == item.Quality)
+                    if (_items[stack].Count >= Rules.StackLimit)
                     {
-                        _items[i] = new ItemStack(_items[i].Item, _items[i].Count + 1);
-                        return false;
+                        // Five of one potion is the ceiling — drink some before hauling more.
+                        return AddResult.Refused;
                     }
-                }
 
-                _items.Add(new ItemStack(item, 1));
-                return false;
+                    _items[stack] = new ItemStack(_items[stack].Item, _items[stack].Count + 1);
+                    return new AddResult(true, false, 0);
+                }
+            }
+
+            int coins = MakeRoom();
+            if (IsFull)
+            {
+                return AddResult.Refused;
             }
 
             _items.Add(new ItemStack(item, 1));
 
-            if (AutoEquip && item.RequiredLevel <= currentLevel)
+            if (!item.IsConsumable && AutoEquip && item.RequiredLevel <= currentLevel)
             {
                 ItemInstance worn = Loadout.Worn(item.Slot);
-                if (worn.IsEmpty || item.Quality > worn.Quality)
+                if ((worn.IsEmpty || item.Quality > worn.Quality)
+                    && TryEquip(_items.Count - 1, currentLevel))
                 {
-                    return TryEquip(_items.Count - 1, currentLevel);
+                    return new AddResult(true, true, coins);
                 }
             }
 
-            return false;
+            return new AddResult(true, false, coins);
+        }
+
+        /// <summary>
+        /// Sells the stack at this index outright, returning what the shopkeeper (or the
+        /// auto-sell setting) pays — the whole stack, priced per unit. A locked item refuses:
+        /// the lock is absolute until the player releases it (D43).
+        /// </summary>
+        public int Sell(int bagIndex)
+        {
+            if (bagIndex < 0 || bagIndex >= _items.Count || _items[bagIndex].Item.Locked)
+            {
+                return 0;
+            }
+
+            ItemStack stack = _items[bagIndex];
+            _items.RemoveAt(bagIndex);
+            if (stack.Item.IsConsumable && _quickKind == QuickSlotKind.Consumable
+                && _quickConsumableId == stack.Item.DefinitionId
+                && FindConsumableStack(_quickConsumableId) < 0)
+            {
+                ClearQuickSlot();
+            }
+
+            return Prices.SellPrice(stack.Item) * stack.Count;
+        }
+
+        /// <summary>Locks or releases the stack at this index — the auto-sell guard (D43).</summary>
+        public bool SetLock(int bagIndex, bool locked)
+        {
+            if (bagIndex < 0 || bagIndex >= _items.Count)
+            {
+                return false;
+            }
+
+            ItemStack stack = _items[bagIndex];
+            _items[bagIndex] = new ItemStack(stack.Item.WithLock(locked), stack.Count);
+            return true;
+        }
+
+        /// <summary>
+        /// Auto-sell's target: the worst unlocked stack in the bag, gear before consumables so a
+        /// stack of potions is never spent to shelter one more helmet. Lowest quality wins,
+        /// earliest slot breaks the tie — deterministic, like every other loot decision.
+        /// </summary>
+        public int FindAutoSellTarget()
+        {
+            int best = -1;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                ItemInstance candidate = _items[i].Item;
+                if (candidate.Locked)
+                {
+                    continue;
+                }
+
+                if (best < 0)
+                {
+                    best = i;
+                    continue;
+                }
+
+                ItemInstance incumbent = _items[best].Item;
+                if (incumbent.IsConsumable != candidate.IsConsumable)
+                {
+                    if (incumbent.IsConsumable)
+                    {
+                        best = i;
+                    }
+
+                    continue;
+                }
+
+                if (candidate.Quality < incumbent.Quality)
+                {
+                    best = i;
+                }
+            }
+
+            return best;
+        }
+
+        /// <summary>Sells the worst unlocked stack when the sack is full and the setting is on.</summary>
+        private int MakeRoom()
+        {
+            if (!IsFull || !AutoSell)
+            {
+                return 0;
+            }
+
+            int target = FindAutoSellTarget();
+            return target < 0 ? 0 : Sell(target);
+        }
+
+        private int FindStackFor(in ItemInstance item)
+        {
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (_items[i].Item.IsConsumable
+                    && _items[i].Item.DefinitionId == item.DefinitionId
+                    && _items[i].Item.Quality == item.Quality)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
         }
 
         /// <summary>
@@ -121,10 +248,17 @@ namespace BattleBomb.Core.Items
             return true;
         }
 
-        public bool Unequip(ItemSlot slot, int equipmentIndex = 0)
+        public bool Unequip(ItemSlot slot, int equipmentIndex = 0) => Unequip(slot, equipmentIndex, false);
+
+        /// <summary>
+        /// Takes a worn piece off into the bag. A full sack refuses — there is nowhere to put it
+        /// (D43) — except when <paramref name="forced"/>, the prestige re-lock (D36) returning
+        /// gear the reset level can no longer carry: overflowing the sack beats losing the gear.
+        /// </summary>
+        private bool Unequip(ItemSlot slot, int equipmentIndex, bool forced)
         {
             ItemInstance worn = Loadout.Worn(slot, equipmentIndex);
-            if (worn.IsEmpty)
+            if (worn.IsEmpty || (IsFull && !forced))
             {
                 return false;
             }
@@ -169,7 +303,7 @@ namespace BattleBomb.Core.Items
                 return false;
             }
 
-            return Unequip(slot, equipmentIndex);
+            return Unequip(slot, equipmentIndex, forced: true);
         }
 
         public bool AssignQuickConsumable(int definitionId)

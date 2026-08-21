@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
-using BattleBomb.Gameplay.Combat;
 using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Simulation;
@@ -32,13 +32,17 @@ namespace BattleBomb.Tests.PlayMode
         /// this works in a player too and needs no editor-only API.</summary>
         private const string SceneName = "Gameplay";
 
-        /// <summary>Long enough for any single link to resolve; short enough to fail fast.</summary>
-        private const int PatienceFrames = 600;
+        /// <summary>Simulation steps any single link may take: fifteen seconds of game time.</summary>
+        private const int PatienceSteps = 900;
+
+        /// <summary>A hard ceiling on render frames so a stalled simulation cannot hang the run.</summary>
+        private const int FrameCeiling = 20000;
 
         /// <summary>The starter knife — something wearable, so the equip link has a subject.</summary>
         private const int KnifeDefinitionId = 7;
 
         private SimulationDriver _driver;
+        private StageRunner _runner;
         private CharacterActor _player;
         private PlayerInventory _bag;
         private ScriptedCommandSource _input;
@@ -75,21 +79,20 @@ namespace BattleBomb.Tests.PlayMode
 
             // A quiet arena. This suite is a wiring tripwire, not a fight: an encounter running
             // underneath it would stagger the player mid-press and turn a real failure and a
-            // stray grunt into the same red. Combat has its own coverage in EditMode, and the
-            // feel of the fight is Michael's pass.
-            foreach (EnemySpawner spawner in
-                Object.FindObjectsByType<EnemySpawner>(FindObjectsInactive.Include))
-            {
-                spawner.enabled = false;
-            }
-
+            // stray grunt into the same red. With spawns off, the stage run still announces
+            // its waves and counts them cleared, so the gate opens on schedule (D48) and the
+            // chest in the room beyond it is reachable.
+            _runner = Object.FindAnyObjectByType<StageRunner>();
+            Assert.That(_runner, Is.Not.Null, "The gameplay scene has no StageRunner.");
+            _runner.SpawnsEnabled = false;
             foreach (EnemyActor enemy in
                 Object.FindObjectsByType<EnemyActor>(FindObjectsInactive.Include))
             {
                 Object.Destroy(enemy.gameObject);
             }
 
-            yield return null;
+            yield return Until(() => _runner.IsStageLoaded, "the fixture stage never streamed in");
+            yield return Until(() => _runner.Phase == StagePhase.GateOpen, "the first arena's gate never opened");
         }
 
         [UnityTearDown]
@@ -237,18 +240,32 @@ namespace BattleBomb.Tests.PlayMode
 
         // ── Helpers ──────────────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// The nearest chest, not the first one the engine happens to list. A stage carries one
+        /// per checkpoint room now (D48), and only the one in the room past this arena's gate is
+        /// inside the clamp — walking at any other is a walk into a wall.
+        /// </summary>
         private WorldInteractable FindChest()
         {
+            WorldInteractable nearest = null;
+            float best = float.MaxValue;
             foreach (WorldInteractable candidate in
                 Object.FindObjectsByType<WorldInteractable>(FindObjectsInactive.Exclude))
             {
-                if (candidate.Kind == InteractionKind.Chest)
+                if (candidate.Kind != InteractionKind.Chest)
                 {
-                    return candidate;
+                    continue;
+                }
+
+                float distance = Mathf.Abs(candidate.Position.x - _player.Position.x);
+                if (distance < best)
+                {
+                    best = distance;
+                    nearest = candidate;
                 }
             }
 
-            return null;
+            return nearest;
         }
 
         private int FindWearable()
@@ -296,13 +313,24 @@ namespace BattleBomb.Tests.PlayMode
             yield return SimulationFrames(2);
         }
 
-        /// <summary>Waits until the simulation has advanced this many fixed steps.</summary>
+        /// <summary>
+        /// Waits until the simulation has advanced this many fixed steps.
+        ///
+        /// A global menu stops the world (D42), and it stops the step clock with it — the Pause
+        /// route out of the chest opens exactly such a menu. Waiting for steps that are never
+        /// coming is what turns a five-second check into a three-minute one, so a paused driver
+        /// ends the wait. The command that caused the pause was already sampled to cause it.
+        /// </summary>
         private IEnumerator SimulationFrames(int steps)
         {
             int target = _driver.Frame + steps;
-            for (int guard = 0; guard < PatienceFrames && _driver.Frame < target; guard++)
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < target; guard++)
             {
                 yield return null;
+                if (_driver.PausedForScreen)
+                {
+                    yield break;
+                }
             }
         }
 
@@ -313,7 +341,8 @@ namespace BattleBomb.Tests.PlayMode
         /// </summary>
         private IEnumerator WalkTo(Vector3 target, string what)
         {
-            for (int frame = 0; frame < PatienceFrames; frame++)
+            int deadline = _driver.Frame + PatienceSteps;
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < deadline; guard++)
             {
                 Vector3 to = target - _player.Position;
                 to.y = 0f;
@@ -330,23 +359,29 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             _input.Release();
-            Assert.Fail($"The player never reached {what} — walked for {PatienceFrames} frames "
+            Assert.Fail($"The player never reached {what} — walked for {PatienceSteps} steps "
                 + $"and stopped {Vector3.Distance(target, _player.Position):F2} away.");
         }
 
         private IEnumerator Until(System.Func<bool> condition, string failure)
         {
-            for (int frame = 0; frame < PatienceFrames; frame++)
+            int deadline = _driver.Frame + PatienceSteps;
+            for (int guard = 0; guard < FrameCeiling; guard++)
             {
                 if (condition())
                 {
                     yield break;
                 }
 
+                if (_driver.Frame >= deadline)
+                {
+                    break;
+                }
+
                 yield return null;
             }
 
-            Assert.Fail(failure + $" (waited {PatienceFrames} frames).");
+            Assert.Fail(failure + $" (waited {PatienceSteps} steps).");
         }
     }
 }

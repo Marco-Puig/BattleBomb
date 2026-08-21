@@ -520,6 +520,26 @@ namespace BattleBomb.Gameplay.Characters
         internal void ApplyRevive(float healthFraction) =>
             _condition = _condition.Revived(healthFraction, _reviveGraceSteps);
 
+        /// <summary>Where the next attempt reset puts this player (D49): the stage's spawn, then
+        /// each checkpoint room as it is reached.</summary>
+        internal void SetSpawnPoint(Vector3 position)
+        {
+            _spawnPosition = position;
+            _spawnCaptured = true;
+        }
+
+        /// <summary>Stands the player somewhere new, at rest, with nothing carried over — a
+        /// stage launch or a resume, never a teleport mid-fight.</summary>
+        internal void PlaceAt(Vector3 position)
+        {
+            _state = MotorState.AtRest(position);
+            _previous = _state;
+            _lungePerStep = Vector3.zero;
+            _lungeStepsLeft = 0;
+            _attackRooted = false;
+            transform.position = position;
+        }
+
         /// <summary>
         /// The attempt-over sandbox reset (task 35): back to the spawn point, full health, clean
         /// combat state. A placeholder by design — the run lifecycle is mode-owned (D4, M7).

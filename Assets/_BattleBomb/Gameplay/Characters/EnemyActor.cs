@@ -91,14 +91,16 @@ namespace BattleBomb.Gameplay.Characters
         /// </summary>
         internal void Configure(
             EnemyDefinition definition, int seed = 0,
-            bool isElite = false, in ItemInstance carriedDrop = default)
+            bool isElite = false, in ItemInstance carriedDrop = default,
+            float healthMultiplier = 1f, float damageMultiplier = 1f)
         {
             _definition = definition;
-            _spec = definition.ToRuntime();
+            _spec = EnemyScaling.Scale(definition.ToRuntime(), healthMultiplier, damageMultiplier);
             _isElite = isElite;
             _carriedDrop = carriedDrop;
             if (isElite)
             {
+                // The tier toughens first, then the elite toughens that (D22 on top of D50).
                 _spec = EliteSpec.Promote(_spec, EliteRules.Default);
             }
 

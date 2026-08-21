@@ -19,7 +19,6 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         /// </summary>
         private static readonly string[] AllowedRootObjects =
         {
-            "Ground",
             "Directional Light",
             "Global Volume",
             "Simulation",
@@ -29,8 +28,8 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             "Debug Overlay",
             "Enemies",   // M3 (HANDOFF-M3 task 33): the spawner and its brood live under one root
             "Cast Tells", // M5 (task 57): the cast VFX pool — one host, not one per player
-            "Checkpoint", // M6 (task 66, D42): the chest, the shopkeeper, and a dummy to test on
             "Chest UI",   // M6 (task 67): the host that builds a chest screen per open player
+            "Stage",   // M7 (task 78, D48): the runner that streams stage scenes into the machine
         };
 
         private Scene _scene;
@@ -110,24 +109,6 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             Assert.That(t.position.z, Is.LessThanOrEqualTo(-8f),
                 "The camera sits back on -Z looking into the depth band.");
             Assert.That(t.forward.z, Is.GreaterThan(0f), "The camera must face +Z.");
-        }
-
-        [Test]
-        public void Ground_covers_the_play_area_and_the_whole_depth_band()
-        {
-            GameObject ground = _scene.GetRootGameObjects().FirstOrDefault(o => o.name == "Ground");
-            Assert.That(ground, Is.Not.Null, "No object named 'Ground' at the scene root.");
-
-            Renderer renderer = ground.GetComponentInChildren<Renderer>();
-            Assert.That(renderer, Is.Not.Null, "'Ground' has no renderer, so there is nothing to stand on.");
-
-            Bounds bounds = renderer.bounds;
-            Assert.That(bounds.size.x, Is.GreaterThanOrEqualTo(16f),
-                $"Ground is {bounds.size.x:0.#} units wide; the camera frames about 16.");
-            Assert.That(bounds.size.z, Is.GreaterThanOrEqualTo(6f),
-                $"Ground is {bounds.size.z:0.#} units deep; the depth band is 6 and never changes (§2.1).");
-            Assert.That(Mathf.Abs(bounds.center.y), Is.LessThan(0.5f),
-                "The ground surface sits at y = 0 — the motor treats that as the ground plane.");
         }
 
         [Test]

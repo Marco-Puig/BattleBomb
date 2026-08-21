@@ -413,10 +413,21 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Bolts in flight, for Presentation to draw. Simulated inside the fixed step.</summary>
         public IReadOnlyList<ProjectileState> Projectiles => _projectiles;
 
+        private ArenaBounds _bounds = ArenaBounds.Default;
+        private bool _boundsSet;
+
+        /// <summary>The arena characters are clamped to. Set by the stage runner per arena and
+        /// per gate (D48): widening it is how a gate opens. Falls back to the serialized volume
+        /// for a bare scene, then to <see cref="ArenaBounds.Default"/>.</summary>
         public ArenaBounds Bounds
         {
             get
             {
+                if (_boundsSet)
+                {
+                    return _bounds;
+                }
+
                 if (_arena != null)
                 {
                     return _arena.ToRuntime();
@@ -425,11 +436,17 @@ namespace BattleBomb.Gameplay.Simulation
                 if (!_warnedMissingArena)
                 {
                     _warnedMissingArena = true;
-                    Debug.LogWarning($"{name}: no ArenaVolume assigned — using ArenaBounds.Default.", this);
+                    Debug.LogWarning($"{name}: no arena set — using ArenaBounds.Default.", this);
                 }
 
                 return ArenaBounds.Default;
             }
+        }
+
+        internal void SetArena(in ArenaBounds bounds)
+        {
+            _bounds = bounds;
+            _boundsSet = true;
         }
 
         /// <summary>Commands sampled for the most recent step, keyed by <see cref="PlayerId.Value"/>.</summary>

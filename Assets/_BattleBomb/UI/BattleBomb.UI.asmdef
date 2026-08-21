@@ -3,7 +3,11 @@
     "rootNamespace": "BattleBomb.UI",
     "references": [
         "BattleBomb.Core",
-        "BattleBomb.Gameplay"
+        "BattleBomb.Gameplay",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem",
+        "Unity.InputSystem.ForUI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

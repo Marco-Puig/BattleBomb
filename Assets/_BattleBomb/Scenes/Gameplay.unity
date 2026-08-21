@@ -1183,6 +1183,51 @@ MonoBehaviour:
   _distancePerUnitSpread: 0.8
   _focusHeight: 1.4
   _edgeInset: 4
+--- !u!1 &1951115144
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1951115146}
+  - component: {fileID: 1951115145}
+  m_Layer: 0
+  m_Name: Chest UI
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1951115145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951115144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04cbb8a3ce36c6498a0d8f98e8183ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Chest.ChestScreenHost
+  _driver: {fileID: 0}
+--- !u!4 &1951115146
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951115144}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &3062397464175731019
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1258,3 +1303,4 @@ SceneRoots:
   - {fileID: 869505449}
   - {fileID: 868317174}
   - {fileID: 976303422}
+  - {fileID: 1951115146}

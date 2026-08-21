@@ -253,9 +253,26 @@ namespace BattleBomb.Gameplay.Simulation
         /// listens, builds its half of the display, and never reaches into the simulation.</summary>
         public event Action<int, InteractionKind, bool> ScreenChanged;
 
+        /// <summary>
+        /// Raised on frames where a solo pause stopped the simulation but commands were still
+        /// sampled. Open screens tick their navigation from this, so a paused menu still moves.
+        /// </summary>
+        public event Action MenuStepped;
+
         /// <summary>The screen this player has open, if any (D42).</summary>
         public bool TryGetOpenScreen(int playerIdValue, out InteractionKind kind) =>
             _openScreens.TryGetValue(playerIdValue, out kind);
+
+        /// <summary>
+        /// This player's sampled command for the current step. The chest screen navigates from
+        /// this rather than from an EventSystem, so the menu obeys rule 3 like everything else:
+        /// devices become commands exactly once, in one place, and two controllers driving two
+        /// screen halves needs no extra machinery at all.
+        /// </summary>
+        public PlayerCommand CommandFor(int playerIdValue) =>
+            _commands.TryGetValue(playerIdValue, out PlayerCommand command)
+                ? command
+                : PlayerCommand.Idle(Frame);
 
         public bool AnyScreenOpen => _openScreens.Count > 0;
 
@@ -407,6 +424,10 @@ namespace BattleBomb.Gameplay.Simulation
             {
                 // Solo at a chest: the world stops (D42). The accumulator is deliberately not
                 // fed, so no time banks up to be spent in a burst the moment the screen closes.
+                // Commands are still sampled every frame — the menu is driven by them, and a
+                // paused world with frozen input would be a menu nobody could use.
+                SampleCommands(Frame);
+                MenuStepped?.Invoke();
                 return;
             }
 

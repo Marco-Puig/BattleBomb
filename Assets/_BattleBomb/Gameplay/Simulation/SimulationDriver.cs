@@ -253,6 +253,21 @@ namespace BattleBomb.Gameplay.Simulation
             }
         }
 
+        /// <summary>
+        /// Debug and tests only: puts a drop on the ground without a kill behind it. The smoke
+        /// suite (D45) needs a drop to exist deterministically — a real kill only drops on a
+        /// chance roll, and a tripwire that fires at random is not a tripwire.
+        /// </summary>
+        public void SpawnDebugDrop(Vector3 position, in ItemInstance item)
+        {
+            if (item.IsEmpty)
+            {
+                return;
+            }
+
+            _pickups.Add(DropPickup.Spawn(position, item));
+        }
+
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
         public int GrabCountFor(int playerIdValue) =>
             _grabCounts.TryGetValue(playerIdValue, out int count) ? count : 0;

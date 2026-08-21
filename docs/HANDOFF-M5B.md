@@ -35,8 +35,10 @@ All dials. 60 steps = 1 s.
 | **Air — gust** | Reach 2.4 | 12 | 20 | Launch speed 11 — the same pop as the L-L-H launcher |
 
 - Aura and leap: unchanged from D39, still carrying the element's status.
-- Earth and Air author **no status** for now (D46) — the definition's empty-status slot is
-  already legal. Naming one later is editing an asset.
+- Earth and Air author **no status** (D46) — instead their infusions are wielder passives
+  (Michael, mid-pass): Earth **+10% crit chance** and Air **+25% knockback**, both at a
+  perfect roll, scaled by the infusion's magnitude. Provisional numbers on provisional
+  identities.
 - Chill and enemy slows are two-way (D40): an Ice caster region slows players.
 
 ---
@@ -80,7 +82,11 @@ bolts applying status on hit, slows honored by player and enemy movement, stun-o
 author Ice, Earth, Air assets and re-point Fire; characters compose the new kit. Recompile +
 EditMode green.
 
-### 60D — Michael's pass and close-out
+### 60D — Infusion passives *(directed by Michael mid-pass)*
+`ElementSpec` carries the wielder passive (crit chance, knockback); the actor appends it to the
+gear pile as one more contribution, scaled by the roll; Earth and Air assets author the numbers.
+
+### 60E — Michael's pass and close-out
 Fast-motion checklist (his rule — no slow-motion sampling): each cast's feel, the chill
 visibly slowing, the wall's stun landing, the gust launching into a juggle, an enemy Ice
 caster slowing him back. Fixes, close-out notes here, progress tables, memory. M6 starts in
@@ -92,5 +98,6 @@ the original session after this.
 
 - The reaction pairs for Fire/Ice/Earth/Air are **open design** (D46) — a short session with
   Michael and his collaborator; the smoke suite (D45) is the natural verification home.
-- Earth and Air statuses are unauthored dials.
+- Earth and Air statuses are unauthored; their infusion identities (crit, knockback) are
+  explicitly provisional — Michael and his collaborator will revisit.
 - Heavy stays on watch (D26).

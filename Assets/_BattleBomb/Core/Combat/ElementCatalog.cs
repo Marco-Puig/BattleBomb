@@ -18,13 +18,25 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public readonly MagicCast SignatureCast;
 
+        /// <summary>
+        /// Crit chance a weapon infused with this element grants its wielder, at a perfect roll —
+        /// Earth's Castle Crashers skull (D46 as amended). Scaled by the infusion's magnitude.
+        /// </summary>
+        public readonly float InfusionCritChance;
+
+        /// <summary>Knockback bonus the infusion grants its wielder — Air's (D46 as amended).</summary>
+        public readonly float InfusionKnockback;
+
         public ElementSpec(ElementId id, string name, in StatusSpec status = default,
-            in MagicCast signatureCast = default)
+            in MagicCast signatureCast = default, float infusionCritChance = 0f,
+            float infusionKnockback = 0f)
         {
             Id = id;
             Name = string.IsNullOrEmpty(name) ? id.ToString() : name;
             Status = status;
             SignatureCast = signatureCast;
+            InfusionCritChance = infusionCritChance > 0f ? infusionCritChance : 0f;
+            InfusionKnockback = infusionKnockback > 0f ? infusionKnockback : 0f;
         }
     }
 

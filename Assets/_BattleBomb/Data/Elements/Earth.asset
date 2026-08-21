@@ -20,6 +20,8 @@ MonoBehaviour:
   _statusTickSteps: 30
   _statusDamageShare: 0.5
   _statusMoveScale: 1
+  _infusionCritChance: 0.1
+  _infusionKnockback: 0
   _hasSignature: 1
   _signature:
     _startupSteps: 14

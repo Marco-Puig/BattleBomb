@@ -620,6 +620,17 @@ namespace BattleBomb.Gameplay.Characters
                 allocations = _bag.Ledger.Allocations;
             }
 
+            // An infused weapon's wielder passive (D46 as amended): Earth's skull crits, Air's
+            // knockback — one more contribution in the pile, scaled by the roll like every affix.
+            if (!_infusion.IsNone && _driver != null
+                && _driver.Elements.TryGet(_infusion, out ElementSpec infused)
+                && (infused.InfusionCritChance > 0f || infused.InfusionKnockback > 0f))
+            {
+                _gearScratch.Add(new GearContribution(
+                    critChance: infused.InfusionCritChance * _infusionScale,
+                    knockbackBonus: infused.InfusionKnockback * _infusionScale));
+            }
+
             _sheet = StatSheet.Build(allocations, _statTuning, _gearScratch, _resistScratch);
             _damageScale = _statTuning.UnarmedDamage > 0f
                 ? _sheet.WeaponDamage / _statTuning.UnarmedDamage

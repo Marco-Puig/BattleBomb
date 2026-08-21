@@ -179,12 +179,14 @@ behaviour, its signature cast, and its visual identity. **The roster is Fire, Ic
 |---|---|---|
 | **Fire** | Mid-range ground line ahead | **Burn** — damage over time |
 | **Ice** | Long-range, low-damage bolt in the caster's lane | **Chill** — slowed for a few seconds |
-| **Earth** | Short-range rock wall — decent damage, stuns on hit | *unauthored dial* |
-| **Air** | Mid-range gust that launches enemies for a combo | *unauthored dial* |
+| **Earth** | Short-range rock wall — decent damage, stuns on hit | No mark — infusion grants the wielder crit chance (provisional) |
+| **Air** | Mid-range gust that launches enemies for a combo | No mark — infusion grants the wielder knockback (provisional) |
 
 Statuses are priced from the hit that applied them, so gear scaling flows into them
-automatically. Earth's stun and Air's launch belong to the hit, not to a mark. Ice's bolt is
-long but lane-bound — free depth crossing stays the bow's identity (§2.2).
+automatically. Earth's stun and Air's launch belong to the hit, not to a mark; their infusions
+are **wielder passives** (D46 as amended) — Earth's crit chance is the Castle Crashers skull,
+Air's is knockback, both scaled by the infusion's roll. Ice's bolt is long but lane-bound —
+free depth crossing stays the bow's identity (§2.2).
 
 **Two element sources per player (D19):** the weapon's infusion applies its status automatically on
 hit (the Dungeon Defenders half), and the character casts their own element on Magic (the Castle

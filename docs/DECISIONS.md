@@ -960,8 +960,8 @@ of splash damage" differing only in status, and now each element's press cast is
 |---|---|---|
 | **Fire** | The current line — mid-range ground splash ahead | **Burn** — damage over time (unchanged) |
 | **Ice** | A long-range projectile, low damage | **Chill** (working name) — slowed for a few seconds on contact |
-| **Earth** | A short-range rock wall that erupts and quickly falls — decent damage, **stuns** on hit | *unauthored — an open dial, not a gap* |
-| **Air** | A mid-range gust that **launches** enemies skyward to start a combo | *unauthored — an open dial, not a gap* |
+| **Earth** | A short-range rock wall that erupts and quickly falls — decent damage, **stuns** on hit | No mark; the infusion grants the wielder **crit chance** (provisional, see amendment) |
+| **Air** | A mid-range gust that **launches** enemies skyward to start a combo | No mark; the infusion grants the wielder **knockback** (provisional, see amendment) |
 
 - **The signature cast belongs to the element, not the character** — every Fire character shares
   the line (the Castle Crashers model, and it keeps "a new element is one authored asset", D38:
@@ -980,6 +980,12 @@ of splash damage" differing only in status, and now each element's press cast is
 - **D41's chain-stun anchor loses its owners** — soak + shock were Water and Electric, both now
   gone from the roster, and Earth stuns directly. The reaction table still ships empty; picking
   this roster's pairs is its own short session with Michael and his collaborator.
+- **Amended (Michael, 2026-08-20, during the M5B pass):** until their statuses are designed,
+  Earth and Air express their infusions as **wielder passives** — an Earth-infused weapon adds
+  crit chance (the Castle Crashers skull), an Air-infused weapon adds knockback, both scaled by
+  the infusion's rolled magnitude like every affix. Explicitly provisional: "we will think more
+  thoroughly of these effects later." Fire and Ice infusions mark the target; Earth and Air
+  empower the wielder — the same asymmetry Castle Crashers' own weapons carry.
 
 ---
 

@@ -78,7 +78,10 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(earth.SignatureCast.Attack.Damage, Is.EqualTo(30f));
             Assert.That(earth.SignatureCast.Attack.StunSteps, Is.EqualTo(45));
             Assert.That(earth.SignatureCast.ManaCost, Is.EqualTo(25));
-            Assert.That(earth.Status.IsIdle, Is.True, "Earth marks nothing yet — an open dial (D46).");
+            Assert.That(earth.Status.IsIdle, Is.True, "Earth marks nothing — its infusion empowers.");
+            Assert.That(earth.InfusionCritChance, Is.EqualTo(0.10f).Within(1e-4f),
+                "The Castle Crashers skull (D46 as amended), at a perfect roll.");
+            Assert.That(earth.InfusionKnockback, Is.EqualTo(0f));
         }
 
         [Test]
@@ -91,7 +94,21 @@ namespace BattleBomb.Tests.EditMode
                 "The same pop the L-L-H launcher throws.");
             Assert.That(air.SignatureCast.Attack.ReachX, Is.EqualTo(2.4f));
             Assert.That(air.SignatureCast.Attack.StunSteps, Is.EqualTo(0));
-            Assert.That(air.Status.IsIdle, Is.True, "Air marks nothing yet — an open dial (D46).");
+            Assert.That(air.Status.IsIdle, Is.True, "Air marks nothing — its infusion empowers.");
+            Assert.That(air.InfusionKnockback, Is.EqualTo(0.25f).Within(1e-4f),
+                "An Air-infused weapon shoves harder (D46 as amended), at a perfect roll.");
+            Assert.That(air.InfusionCritChance, Is.EqualTo(0f));
+        }
+
+        [Test]
+        public void Fire_and_ice_mark_instead_of_empowering()
+        {
+            ElementSpec fire = Load("Fire");
+            ElementSpec ice = Load("Ice");
+
+            Assert.That(fire.InfusionCritChance + fire.InfusionKnockback, Is.EqualTo(0f));
+            Assert.That(ice.InfusionCritChance + ice.InfusionKnockback, Is.EqualTo(0f),
+                "The asymmetry is deliberate: Fire and Ice mark the target, Earth and Air empower the wielder.");
         }
 
         [Test]
@@ -112,3 +129,4 @@ namespace BattleBomb.Tests.EditMode
         }
     }
 }
+

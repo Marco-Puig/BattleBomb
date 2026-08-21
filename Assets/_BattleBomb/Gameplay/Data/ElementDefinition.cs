@@ -37,6 +37,13 @@ namespace BattleBomb.Gameplay.Data
         [Tooltip("Movement multiplier while marked (D46) — 1 leaves movement alone; Chill authors 0.55.")]
         [SerializeField] private float _statusMoveScale = 1f;
 
+        [Header("Infusion passive (D46 as amended) — what the infused weapon grants its wielder")]
+        [Tooltip("Crit chance at a perfect roll — Earth's Castle Crashers skull. 0 for elements that mark instead.")]
+        [SerializeField] private float _infusionCritChance;
+
+        [Tooltip("Knockback bonus at a perfect roll — Air's. 0 for elements that mark instead.")]
+        [SerializeField] private float _infusionKnockback;
+
         [Header("Signature cast (D46) — the press every character of this element shares")]
         [Tooltip("Off means no signature: characters keep whatever their own press cast authors.")]
         [SerializeField] private bool _hasSignature;
@@ -59,7 +66,8 @@ namespace BattleBomb.Gameplay.Data
 
         public Color Color => _color;
 
-        public ElementSpec ToRuntime() => new ElementSpec(Id, DisplayName, ToStatus(), ToSignature());
+        public ElementSpec ToRuntime() => new ElementSpec(
+            Id, DisplayName, ToStatus(), ToSignature(), _infusionCritChance, _infusionKnockback);
 
         private StatusSpec ToStatus() => string.IsNullOrEmpty(_statusName)
             ? default

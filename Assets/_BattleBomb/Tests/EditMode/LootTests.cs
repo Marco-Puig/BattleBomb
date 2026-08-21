@@ -114,7 +114,9 @@ namespace BattleBomb.Tests.EditMode
         {
             DeterministicRandom rng = FindNonDroppingState(new DeterministicRandom(11u), 0);
 
-            DropRoll.Roll(rng, 0, 5f, 5f, 5f, true, 5f, out DropDecision decision);
+            // An ordinary kill: elites are guaranteed drops now (D22), so only a normal enemy
+            // can demonstrate the empty-handed case at all.
+            DropRoll.Roll(rng, 0, 5f, 5f, 5f, false, 5f, out DropDecision decision);
 
             Assert.That(decision.Dropped, Is.False, "the setup must find a non-dropping state");
             Assert.That(decision.Quality, Is.Zero);

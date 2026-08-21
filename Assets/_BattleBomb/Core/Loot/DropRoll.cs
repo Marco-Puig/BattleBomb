@@ -49,7 +49,9 @@ namespace BattleBomb.Core.Loot
             DeterministicRandom next = rng.NextFloat(out float whether);
             next = next.NextFloat(out float spread);
 
-            bool dropped = whether < Chance(rank);
+            // An elite always drops (D22): it visibly wears the reward, so the fight would be
+            // lying if the kill produced nothing.
+            bool dropped = isElite || whether < Chance(rank);
             float quality = (SpreadMin + spread)
                 * Mathf.Max(0f, progress)
                 * Mathf.Max(0f, difficulty)

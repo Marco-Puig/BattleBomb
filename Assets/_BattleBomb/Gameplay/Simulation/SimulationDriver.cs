@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
 using BattleBomb.Core.Items;
@@ -35,9 +36,6 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Steps a single frame may run before time is dropped, so a hitch cannot spiral.")]
         [SerializeField] private int _maxStepsPerFrame = SimulationClock.DefaultMaxStepsPerFrame;
 
-        [Tooltip("The arena characters are clamped to. Leave empty to fall back to ArenaBounds.Default.")]
-        [SerializeField] private ArenaVolume _arena;
-
         [Tooltip("Seed for the loot rolls (D23). Gameplay owns the seed; Core owns the maths.")]
         [SerializeField] private int _lootSeed = 1;
 
@@ -48,11 +46,6 @@ namespace BattleBomb.Gameplay.Simulation
             "again, so an elite appearing never shifts what an ordinary kill would have dropped.")]
         [SerializeField] private int _spawnSeed = 3;
 
-        [Tooltip("D23's story-progress multiplier on drop quality. Chapters own this from M7; " +
-            "a scene value until then, exactly as the climate is. At 1 the whole ladder above " +
-            "Rusty is unreachable, which makes the loot loop impossible to judge.")]
-        [SerializeField] private float _lootProgress = 2f;
-
         [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
         [SerializeField] private QualityLadder _qualityLadder;
 
@@ -61,10 +54,6 @@ namespace BattleBomb.Gameplay.Simulation
 
         [Tooltip("Every element in play (D38). A new element is a new asset here — never code.")]
         [SerializeField] private ElementDefinition[] _elementCatalog;
-
-        [Tooltip("This area's elemental climate (§4, D41) — it multiplies elemental damage from " +
-            "every side, yours and theirs alike. Chapters own this from M7; a scene value until then.")]
-        [SerializeField] private ElementMultiplierSpec[] _climateRows = new ElementMultiplierSpec[0];
 
         private const float ProjectileRadius = 0.6f;
         private const float ProjectileKnockback = 4f;
@@ -87,9 +76,6 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>D23's bonus on a *boss* signature roll. Elites carry their own (EliteRules).</summary>
         private const float LootEliteBonus = 1.5f;
 
-        /// <summary>The D36 level stamp's source — a constant until M7 builds real progress.</summary>
-        private const int StoryProgressLevel = 1;
-
         /// <summary>A cast leaves the element's full mark; a weapon infusion is a rolled share of it.</summary>
         private const float CastSourceScale = 1f;
 
@@ -104,7 +90,6 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<ProjectileState> _projectiles = new List<ProjectileState>();
 
         private SimulationClock _clock;
-        private bool _warnedMissingArena;
         private AttemptCountdown _attempt;
         private DeterministicRandom _lootRng;
         private DeterministicRandom _combatRng;
@@ -116,7 +101,14 @@ namespace BattleBomb.Gameplay.Simulation
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
         private ElementCatalog _elements = ElementCatalog.Empty;
-        private ElementalMultipliers _climate = ElementalMultipliers.Neutral;
+
+        /// <summary>tier × stage, set by the stage runner (D50). Every loot roll, level stamp,
+        /// and climate lookup reads this; nothing on the scene competes with it.</summary>
+        private EncounterInputs _encounter = EncounterInputs.Default;
+
+        public EncounterInputs Encounter => _encounter;
+
+        internal void SetEncounter(in EncounterInputs encounter) => _encounter = encounter;
 
         /// <summary>D41's pair table. Empty through M5 — the pairs wait on the roster (O11).</summary>
         private ReactionTable _reactions = ReactionTable.Empty;
@@ -180,7 +172,7 @@ namespace BattleBomb.Gameplay.Simulation
             var rng = new DeterministicRandom(
                 (uint)(Frame * 2654435761u + 17u) + (uint)(_debugRollCounter * 2246822519u));
             var context = new GenerationContext(
-                    qualityScore, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                    qualityScore, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                     _elements.Ids)
                 .WithSignature(definitionId, QualityRank.Nothing);
             ItemGenerator.Roll(rng, context, out ItemInstance item);
@@ -203,7 +195,8 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _spawnRng = _spawnRng.NextFloat(out float spread);
-            float quality = (DropRoll.SpreadMin + spread) * _lootProgress * _eliteRules.QualityBonus;
+            float quality = (DropRoll.SpreadMin + spread) * _encounter.LootProgress
+                * _encounter.LootDifficulty * _eliteRules.QualityBonus;
 
             // It drops what it *wears* (D22), so the roll is forced into an armor slot — a
             // consumable would make the visible-armor promise a lie.
@@ -212,7 +205,7 @@ namespace BattleBomb.Gameplay.Simulation
                 EliteArmorSlots.Length - 1, (int)(slotDraw * EliteArmorSlots.Length))];
 
             var context = new GenerationContext(
-                    quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                    quality, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                     _elements.Ids)
                 .WithForcedSlot(slot);
             _spawnRng = ItemGenerator.Roll(_spawnRng, context, out carried);
@@ -227,7 +220,7 @@ namespace BattleBomb.Gameplay.Simulation
             Inventory inventory, int firstIndex, int secondIndex, out CombineResult result)
         {
             var context = new GenerationContext(
-                0f, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                0f, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
             _lootRng = inventory.TryCombine(_lootRng, firstIndex, secondIndex, context, out result);
         }
 
@@ -243,8 +236,8 @@ namespace BattleBomb.Gameplay.Simulation
             {
                 _lootRng = _lootRng.NextFloat(out float spread);
                 var context = new GenerationContext(
-                    (DropRoll.SpreadMin + spread) * _lootProgress, StoryProgressLevel,
-                    _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                    (DropRoll.SpreadMin + spread) * _encounter.LootProgress * _encounter.LootDifficulty,
+                    _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
                 _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance rolled);
                 if (!rolled.IsEmpty)
                 {
@@ -397,7 +390,7 @@ namespace BattleBomb.Gameplay.Simulation
         public ElementCatalog Elements => _elements;
 
         /// <summary>This area's climate (D41): it scales elemental damage from every side.</summary>
-        public ElementalMultipliers Climate => _climate;
+        public ElementalMultipliers Climate => _encounter.Climate;
 
         /// <summary>
         /// An element's authored colour, for Presentation to tint with (D38). A new element brings
@@ -436,10 +429,11 @@ namespace BattleBomb.Gameplay.Simulation
 
         private ArenaBounds _bounds = ArenaBounds.Default;
         private bool _boundsSet;
+        private bool _warnedMissingBounds;
 
         /// <summary>The arena characters are clamped to. Set by the stage runner per arena and
-        /// per gate (D48): widening it is how a gate opens. Falls back to the serialized volume
-        /// for a bare scene, then to <see cref="ArenaBounds.Default"/>.</summary>
+        /// per gate (D48): widening it is how a gate opens. Falls back to
+        /// <see cref="ArenaBounds.Default"/> before any stage has set one.</summary>
         public ArenaBounds Bounds
         {
             get
@@ -449,15 +443,10 @@ namespace BattleBomb.Gameplay.Simulation
                     return _bounds;
                 }
 
-                if (_arena != null)
+                if (!_warnedMissingBounds)
                 {
-                    return _arena.ToRuntime();
-                }
-
-                if (!_warnedMissingArena)
-                {
-                    _warnedMissingArena = true;
-                    Debug.LogWarning($"{name}: no arena set — using ArenaBounds.Default.", this);
+                    _warnedMissingBounds = true;
+                    Debug.LogWarning($"{name}: no stage has set an arena yet — using ArenaBounds.Default.", this);
                 }
 
                 return ArenaBounds.Default;
@@ -507,7 +496,6 @@ namespace BattleBomb.Gameplay.Simulation
             _qualityTable = _qualityLadder != null ? _qualityLadder.ToTable() : QualityTable.Default;
             _dropWeights = _qualityLadder != null ? _qualityLadder.ToWeights() : DropWeights.Default;
             _elements = ElementDefinition.ToCatalog(_elementCatalog);
-            _climate = ElementMultiplierSpec.ToTable(_climateRows);
         }
 
         private void Update()
@@ -829,12 +817,12 @@ namespace BattleBomb.Gameplay.Simulation
                 else
                 {
                     _lootRng = DropRoll.Roll(
-                        _lootRng, spec.Rank, _lootProgress, 1f, 1f, false, LootEliteBonus,
-                        out DropDecision drop);
+                        _lootRng, spec.Rank, _encounter.LootProgress, _encounter.LootDifficulty, 1f,
+                        false, LootEliteBonus, out DropDecision drop);
                     if (drop.Dropped)
                     {
                         var context = new GenerationContext(
-                            drop.Quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                            drop.Quality, _encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights,
                             _elements.Ids);
                         _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
                         if (!item.IsEmpty)
@@ -1120,7 +1108,7 @@ namespace BattleBomb.Gameplay.Simulation
 
                 HitResult hit = HitApplication.Apply(
                     cast, caster.Position, caster.Facing, caster.StrikeMomentum,
-                    element, gear, TargetKind.Enemy, target.Position, defence, _climate);
+                    element, gear, TargetKind.Enemy, target.Position, defence, _encounter.Climate);
                 float knockback = caster.Sheet.KnockbackMultiplier;
                 if (!Mathf.Approximately(knockback, 1f))
                 {
@@ -1182,7 +1170,7 @@ namespace BattleBomb.Gameplay.Simulation
                 ElementalDefence defence = enemy != null ? enemy.Defence : ElementalDefence.None;
                 HitResult hit = HitApplication.Apply(
                     burst, wearer.Position, wearer.Facing, Vector3.zero,
-                    active.ActiveElement, 1f, TargetKind.Enemy, target.Position, defence, _climate);
+                    active.ActiveElement, 1f, TargetKind.Enemy, target.Position, defence, _encounter.Climate);
 
                 if (enemy != null)
                 {
@@ -1220,7 +1208,7 @@ namespace BattleBomb.Gameplay.Simulation
             HitResult hit = HitApplication.Apply(
                 attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                 ElementId.None, gear, TargetKind.Enemy, targetPosition,
-                defence, _climate);
+                defence, _encounter.Climate);
 
             float knockback = attacker.Sheet.KnockbackMultiplier;
             return Mathf.Approximately(knockback, 1f)
@@ -1303,7 +1291,7 @@ namespace BattleBomb.Gameplay.Simulation
                 HitResult hit = HitApplication.Apply(
                     attack, attacker.Position, attacker.Facing, attacker.StrikeMomentum,
                     attacker.Spec.Tuning.Element, 1f, TargetKind.Enemy, victim.Position,
-                    victim.Defence, _climate);
+                    victim.Defence, _encounter.Climate);
                 float landed = victim.ApplyEnemyHit(hit);
                 victim.ApplyStun(attack.StunSteps);
                 attackerHitstop = Mathf.Max(attackerHitstop, hit.HitstopSteps);
@@ -1409,7 +1397,7 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     CharacterActor victim = players[hit];
                     float damage = DamageCalculator.Resolve(
-                        p.Damage, p.Element, victim.Defence, _climate, 1f);
+                        p.Damage, p.Element, victim.Defence, _encounter.Climate, 1f);
                     Vector3 direction = new Vector3(p.Velocity.x, 0f, p.Velocity.z);
                     direction = direction.sqrMagnitude > 1e-6f ? direction.normalized : Vector3.right;
                     float landed = victim.ApplyEnemyHit(new HitResult(
@@ -1479,7 +1467,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is EnemyActor enemy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, enemy.Defence, _climate, gear);
+                    p.Damage, p.Element, enemy.Defence, _encounter.Climate, gear);
                 enemy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {
@@ -1508,7 +1496,7 @@ namespace BattleBomb.Gameplay.Simulation
             if (owner is TrainingDummy dummy)
             {
                 float damage = DamageCalculator.Resolve(
-                    p.Damage, p.Element, ElementalDefence.None, _climate, gear);
+                    p.Damage, p.Element, ElementalDefence.None, _encounter.Climate, gear);
                 dummy.ApplyHit(new HitResult(damage, impulse, PlayerShotHitstop));
                 if (shooter != null)
                 {

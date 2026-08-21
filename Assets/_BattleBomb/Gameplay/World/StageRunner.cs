@@ -265,6 +265,7 @@ namespace BattleBomb.Gameplay.World
                 actors[i].ResetForAttempt();
             }
 
+            _driver.SetEncounter(EncounterInputs.From(_tier, _current.Run.Spec));
             ApplyBounds();
         }
 
@@ -662,6 +663,7 @@ namespace BattleBomb.Gameplay.World
 
             _current.SpawnProps(_chestPrefab, _dummyPrefab, _shopkeeperPrefab);
             SetHomeToStageSpawn();
+            _driver.SetEncounter(EncounterInputs.From(_tier, _current.Run.Spec));
             ApplyBounds();
             previous.Unload();
         }

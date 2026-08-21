@@ -256,7 +256,6 @@ GameObject:
   m_Component:
   - component: {fileID: 463551037}
   - component: {fileID: 463551038}
-  - component: {fileID: 463551039}
   - component: {fileID: 463551040}
   - component: {fileID: 463551041}
   - component: {fileID: 463551042}
@@ -296,11 +295,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Simulation.SimulationDriver
   _stepsPerSecond: 60
   _maxStepsPerFrame: 5
-  _arena: {fileID: 463551039}
   _lootSeed: 1
   _combatSeed: 2
   _spawnSeed: 3
-  _lootProgress: 2
   _qualityLadder: {fileID: 11400000, guid: 6ab29cad430027a45a2d63cf32bc463c, type: 2}
   _itemCatalog:
   - {fileID: 11400000, guid: c53abab63488b2a4299c77d54278ead3, type: 2}
@@ -321,24 +318,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 730f40ea4b55f0a419466713887f71dc, type: 2}
   - {fileID: 11400000, guid: f415c5a4300d7aa468c4507a9f849015, type: 2}
   - {fileID: 11400000, guid: 7228903af5813e9498a58c5534aecf32, type: 2}
-  _climateRows:
-  - _element: {fileID: 11400000, guid: c4e227b8d9270d14086365c05b1fda4f, type: 2}
-    _multiplier: 1.25
---- !u!114 &463551039
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 463551036}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 69ab9ef94338a0c4e8082ced9071076a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.World.ArenaVolume
-  _minX: -10
-  _maxX: 10
-  _groundY: 0
 --- !u!114 &463551040
 MonoBehaviour:
   m_ObjectHideFlags: 0

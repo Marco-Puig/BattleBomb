@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Progression;
@@ -62,6 +63,9 @@ namespace BattleBomb.Tests.PlayMode
 
         /// <summary>The starter knife — something real to carry through a wipe.</summary>
         private const int KnifeDefinitionId = 7;
+
+        /// <summary>Data/Elements/Fire.asset's authored id — stage two's climate row names it.</summary>
+        private const int FireElementId = 1;
 
         private const string SaveName = "smoke";
         private const string FrontendScene = "Frontend";
@@ -210,14 +214,17 @@ namespace BattleBomb.Tests.PlayMode
                 "the finished stage never unloaded, so two stages' geometry are in the world at once");
 
             // The stage the run is now on is the one the chapter asset names, with its own
-            // numbers. Nothing consumes these at runtime yet (the plan's task 79 is unbuilt), so
-            // this pins that the *data* survives the hand-over — the day the driver reads them,
-            // it will be reading these.
+            // numbers, and the airlock hand-over has set the driver's encounter to match — this
+            // reads driver.Encounter directly rather than re-deriving what the wiring was
+            // supposed to produce, which is the only thing that actually proves FinishStage
+            // called SetEncounter and not just OnStageReady (task 79).
             StageSpec stage = _runner.Run.Spec;
             Assert.That(stage.Id, Is.EqualTo("fixture-2"), "The hand-over kept the old stage's spec.");
-            EncounterInputs effective = EncounterInputs.From(_runner.Tier, stage);
+            EncounterInputs effective = _driver.Encounter;
             Assert.That(effective.LevelStamp, Is.EqualTo(6), "Stage two's level stamp on Normal (D50).");
             Assert.That(effective.LootProgress, Is.EqualTo(3f), "Stage two's loot progress (D23/D50).");
+            Assert.That(effective.Climate.For(new ElementId(FireElementId)), Is.EqualTo(1.25f).Within(0.001f),
+                "Stage two's Fire climate multiplier (D41/D50) — the hand-over, not just the first adoption, must set it.");
 
             // The wipe (D49). Walk away from the spawn first so the reset has somewhere to move
             // the player back from, then take everyone down at once.

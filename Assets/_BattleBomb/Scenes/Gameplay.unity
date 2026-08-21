@@ -258,6 +258,7 @@ GameObject:
   - component: {fileID: 463551038}
   - component: {fileID: 463551039}
   - component: {fileID: 463551040}
+  - component: {fileID: 463551041}
   m_Layer: 0
   m_Name: Simulation
   m_TagString: Untagged
@@ -349,6 +350,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0167b606c28a884ab59e491a91b1934, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Items.SharedStash
+--- !u!114 &463551041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 463551036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7492e7d07f9ee846bbf1ddc41d6bdbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Session.SessionBinder
+  _players:
+  - {fileID: 3062397464175731020}
+  - {fileID: 1227676801}
+  _driver: {fileID: 463551038}
+  _stash: {fileID: 463551040}
 --- !u!1 &868317172
 GameObject:
   m_ObjectHideFlags: 0
@@ -572,6 +590,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
+--- !u!114 &1227676801 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3065311605573934768, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
+  m_PrefabInstance: {fileID: 1227676800}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b71a7486b8988741b33c4c83e202b71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Characters.CharacterActor
 --- !u!1 &1619851940
 GameObject:
   m_ObjectHideFlags: 0
@@ -920,6 +949,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
+--- !u!114 &3062397464175731020 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3065311605573934768, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
+  m_PrefabInstance: {fileID: 3062397464175731019}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b71a7486b8988741b33c4c83e202b71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Characters.CharacterActor
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

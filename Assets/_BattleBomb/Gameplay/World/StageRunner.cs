@@ -740,8 +740,19 @@ namespace BattleBomb.Gameplay.World
             {
                 // A launch OnDisable abandoned before its scene landed. Resume it where D49 says
                 // a lost attempt resumes: the last checkpoint room reached, or the stage's own
-                // spawn when there was none.
+                // spawn when there was none. This outranks the session: an interrupted run in
+                // this scene is further along than the request that started it.
                 Launch(_chapter, _resumeStageIndex, _tierIndex, _resumeCheckpointArena);
+                return;
+            }
+
+            // Three sources, in order of how much they know. A run already under way (above); the
+            // front door's request, which is what a real boot arrives with (D51, task 80); and the
+            // authored fallback, which is what pressing Play in this scene with no session gets.
+            Session.GameSession session = Session.GameSession.Find();
+            if (session != null && session.Chapter != null)
+            {
+                Launch(session.Chapter, session.StageIndex, session.TierIndex, session.ResumeCheckpointArena);
             }
             else if (_defaultChapter != null)
             {

@@ -121,12 +121,20 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectBags();
-            const int rows = 3;
+            const int rows = 4;
             _cursor = (_cursor - (move.y > 0f ? 1 : -1) + rows) % rows;
         }
 
         private void Toggle()
         {
+            // Ahead of the bag check: leaving the run is the one row that has nothing to do with
+            // an inventory, and a machine with no bags is exactly when you most want a way out.
+            if (_cursor == 3)
+            {
+                ReturnToChapters();
+                return;
+            }
+
             CollectBags();
             if (_bags.Count == 0)
             {
@@ -188,6 +196,15 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>Mid-ladder, so a feel judgement is never about an absurd item.</summary>
         private const float DebugGrantQuality = 2.2f;
+
+        /// <summary>Back to the front door with the session intact, so chapter select is where
+        /// the player lands rather than the title (D51). Task 81 saves here first.</summary>
+        private void ReturnToChapters()
+        {
+            Close();
+            UnityEngine.SceneManagement.SceneManager.LoadScene(
+                "Frontend", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
 
         private void CollectBags()
         {
@@ -287,6 +304,10 @@ namespace BattleBomb.UI.Chest
             int debugRow = 2;
             string debugLine = $"  {(debugRow == _cursor ? ">" : " ")} [ DEBUG ] grant test loot, coin and XP";
             _text.Append(debugRow == _cursor ? UiBuild.Tint(debugLine, UiBuild.Coin) : debugLine);
+
+            int returnRow = debugRow + 1;
+            string returnLine = $"  {(returnRow == _cursor ? ">" : " ")} Return to chapter select";
+            _text.Append('\n').Append(returnRow == _cursor ? UiBuild.Tint(returnLine, UiBuild.Focus) : returnLine);
 
             _text.Append("\n\nStick: move   Light: toggle   Pause or Heavy: close");
             _body.text = _text.ToString();

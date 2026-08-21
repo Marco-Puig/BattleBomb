@@ -20,8 +20,14 @@ namespace BattleBomb.Gameplay.Players
     [RequireComponent(typeof(PlayerInput))]
     public sealed class InputSystemCommandSource : MonoBehaviour, IPlayerCommandSource
     {
-        [Tooltip("Driver this player registers with. Leave empty to find the one in the scene on Awake.")]
+        [Tooltip("Driver this player registers with. Leave empty to find the driver in the scene, " +
+                 "or the command sampler when there is no simulation (the front door).")]
         [SerializeField] private SimulationDriver _driver;
+
+        /// <summary>What this source is actually registered with. Usually the driver, but the
+        /// front door has no simulation and still has two devices, so anything that owns a
+        /// <see cref="PlayerRegistry"/> will do (task 80).</summary>
+        private IPlayerRegistryHost _host;
 
         private readonly List<(InputAction action, CommandButtons button)> _buttons =
             new List<(InputAction, CommandButtons)>();
@@ -72,28 +78,34 @@ namespace BattleBomb.Gameplay.Players
 
         private void OnEnable()
         {
-            if (_driver == null)
+            _host = _driver != null ? _driver : FindHost();
+            if (_host == null)
             {
-                _driver = FindAnyObjectByType<SimulationDriver>();
-            }
-
-            if (_driver == null)
-            {
-                Debug.LogError($"{name}: no SimulationDriver in the scene — commands will never be sampled.", this);
+                Debug.LogError($"{name}: nothing to register with — commands will never be sampled.", this);
                 return;
             }
 
-            _driver.Players.Register(this);
+            _host.Players.Register(this);
         }
 
         private void OnDisable()
         {
-            if (_driver != null)
+            // Unregistered through the host it registered with, not the one in the scene now:
+            // a scene change can swap the host out from under a source that outlives it.
+            _host?.Players.Unregister(PlayerId);
+            _host = null;
+            _previouslyHeld = CommandButtons.None;
+        }
+
+        private static IPlayerRegistryHost FindHost()
+        {
+            SimulationDriver driver = FindAnyObjectByType<SimulationDriver>();
+            if (driver != null)
             {
-                _driver.Players.Unregister(PlayerId);
+                return driver;
             }
 
-            _previouslyHeld = CommandButtons.None;
+            return FindAnyObjectByType<CommandSampler>();
         }
 
         private void AddButton(InputActionAsset actions, string actionName, CommandButtons button)

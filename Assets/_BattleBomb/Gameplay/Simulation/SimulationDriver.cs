@@ -27,7 +27,7 @@ namespace BattleBomb.Gameplay.Simulation
     /// Not a singleton (§9). A scene has one, and things that need it hold a reference.
     /// </remarks>
     [DisallowMultipleComponent]
-    public sealed class SimulationDriver : MonoBehaviour
+    public sealed class SimulationDriver : MonoBehaviour, IPlayerRegistryHost
     {
         [Tooltip("Simulation steps per second. Changing this changes game feel — it is a design value, not a perf dial.")]
         [SerializeField] private int _stepsPerSecond = SimulationClock.DefaultStepsPerSecond;
@@ -405,6 +405,12 @@ namespace BattleBomb.Gameplay.Simulation
         }
 
         public PlayerRegistry Players => _players;
+
+        /// <summary>The authored catalog as runtime specs — what a save restores items
+        /// against (D52). Read-only: the driver builds it from the authored assets, and a
+        /// loaded item that named a spec nobody authored has to fail loudly, not quietly
+        /// extend the catalog.</summary>
+        public IReadOnlyList<ItemSpec> ItemSpecs => _itemSpecs;
 
         public CharacterRegistry Characters { get; } = new CharacterRegistry();
 

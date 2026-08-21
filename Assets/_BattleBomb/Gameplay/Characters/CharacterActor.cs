@@ -520,6 +520,51 @@ namespace BattleBomb.Gameplay.Characters
         internal void ApplyRevive(float healthFraction) =>
             _condition = _condition.Revived(healthFraction, _reviveGraceSteps);
 
+        /// <summary>
+        /// Who this player is, decided at character select (D51). Before enable it is simply
+        /// stored, so the binder can run ahead of everything else and let <c>OnEnable</c> build
+        /// from it; after, the kit, stats, and pools rebuild from the new definition on the spot.
+        /// </summary>
+        internal void SetDefinition(CharacterDefinition definition)
+        {
+            _definition = definition;
+            if (!isActiveAndEnabled || _driver == null)
+            {
+                return;
+            }
+
+            ApplyDefinition();
+            _activeKit = _kit;
+            _activeMagic = _magic;
+            _activeTuning = _tuning;
+            _mana = ManaPool.Full(_statTuning.BaseMaxMana);
+            _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
+            RefreshStats();
+        }
+
+        /// <summary>Everything read straight off the definition. Split out of <c>OnEnable</c> so
+        /// a character chosen at the front door can be applied without re-running the rest of
+        /// enable — registration, the bag subscription, the captured spawn point.</summary>
+        private void ApplyDefinition()
+        {
+            _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
+            _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
+            _statTuning = _definition != null ? _definition.ToStatTuning() : StatTuning.Default;
+            _magic = _definition != null ? _definition.MagicKitToRuntime() : default;
+            _element = _definition != null ? _definition.Element : ElementId.None;
+            _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
+            _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
+            _reviveRequiredProgress = _definition != null ? _definition.ReviveRequiredProgress : 10f;
+            _reviveBeatSteps = _definition != null ? _definition.ReviveBeatSteps : 45;
+            _reviveRushSteps = _definition != null ? _definition.ReviveRushSteps : 15;
+            _revivePumpDecaySteps = _definition != null ? _definition.RevivePumpDecaySteps : 60;
+            _reviveMinHealthFraction = _definition != null ? _definition.ReviveMinHealthFraction : 0.25f;
+            _reviveMaxHealthFraction = _definition != null ? _definition.ReviveMaxHealthFraction : 0.65f;
+            _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;
+            _reviveGraceSteps = _definition != null ? _definition.ReviveGraceSteps : 60;
+            _quickUseCooldownSteps = _definition != null ? _definition.QuickUseCooldownSteps : 180;
+        }
+
         /// <summary>Where the next attempt reset puts this player (D49): the stage's spawn, then
         /// each checkpoint room as it is reached.</summary>
         internal void SetSpawnPoint(Vector3 position)
@@ -824,27 +869,12 @@ namespace BattleBomb.Gameplay.Characters
             // Awake does not re-run after a recompile, and the nulled kit was the M5 close-out's
             // wrong-turn debugging trap. SimulationDriver made the same move for the same reason.
             _source = GetComponent<IPlayerCommandSource>();
-            _tuning = _definition != null ? _definition.ToRuntime() : MovementTuning.Default;
-            _kit = _definition != null ? _definition.CombatKitToRuntime() : CombatKit.Default;
-            _statTuning = _definition != null ? _definition.ToStatTuning() : StatTuning.Default;
-            _magic = _definition != null ? _definition.MagicKitToRuntime() : default;
-            _element = _definition != null ? _definition.Element : ElementId.None;
+            ApplyDefinition();
             _activeKit = _kit;
             _activeMagic = _magic;
             _activeTuning = _tuning;
             _mana = ManaPool.Full(_statTuning.BaseMaxMana);
             _condition = PlayerCondition.Fresh(_definition != null ? _definition.MaxHealth : 100f);
-            _hitStaggerSteps = _definition != null ? _definition.HitStaggerSteps : 15;
-            _hitGraceSteps = _definition != null ? _definition.HitGraceSteps : 30;
-            _reviveRequiredProgress = _definition != null ? _definition.ReviveRequiredProgress : 10f;
-            _reviveBeatSteps = _definition != null ? _definition.ReviveBeatSteps : 45;
-            _reviveRushSteps = _definition != null ? _definition.ReviveRushSteps : 15;
-            _revivePumpDecaySteps = _definition != null ? _definition.RevivePumpDecaySteps : 60;
-            _reviveMinHealthFraction = _definition != null ? _definition.ReviveMinHealthFraction : 0.25f;
-            _reviveMaxHealthFraction = _definition != null ? _definition.ReviveMaxHealthFraction : 0.65f;
-            _reviveRange = _definition != null ? _definition.ReviveRange : 1.8f;
-            _reviveGraceSteps = _definition != null ? _definition.ReviveGraceSteps : 60;
-            _quickUseCooldownSteps = _definition != null ? _definition.QuickUseCooldownSteps : 180;
             _state = MotorState.AtRest(transform.position);
             _previous = _state;
 

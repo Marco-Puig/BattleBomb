@@ -25,6 +25,13 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         /// <summary>GUID of the URP template's input actions asset, which must no longer be referenced.</summary>
         public const string TemplateControlsGuid = "052faaac586de48259a63d0c4782560b";
 
+        /// <summary>The URP template's starter scene. Deleted in M7 (task 80), when the front door
+        /// took index 0 in build settings and the game stopped booting into a template.</summary>
+        public const string TemplateScenePath = "Assets/Scenes/SampleScene.unity";
+
+        /// <summary>GUID of that scene, which must no longer be referenced anywhere.</summary>
+        public const string TemplateSceneGuid = "99c9720ab356a0642a771bea13969a05";
+
         /// <summary>
         /// Opens a scene for inspection, reusing it if the editor already has it open so a test run
         /// never closes something the user was working in.

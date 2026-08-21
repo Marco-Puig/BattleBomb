@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.UI.Items;
@@ -67,6 +68,8 @@ namespace BattleBomb.UI.Combat
             _style.fontSize = Mathf.Max(8, _fontSize);
 
             IReadOnlyList<CharacterActor> players = _driver.Characters.Ordered;
+            DrawCapRefusals(players);
+
             for (int i = 0; i < pickups.Count; i++)
             {
                 if (pickups[i] == null || !AnyoneOver(players, pickups[i].Position))
@@ -99,6 +102,46 @@ namespace BattleBomb.UI.Combat
 
                 DrawLine(new Rect(x, y, 240f, lineHeight),
                     "Light to grab", new Color(0.65f, 0.65f, 0.65f));
+            }
+        }
+
+        /// <summary>
+        /// The refused grab (D43), Michael's way round: no running counter cluttering the card,
+        /// just a red X over the drop and the full count flashed once — punishing on purpose, so
+        /// it is learned the first time and never allowed to happen again.
+        /// </summary>
+        private void DrawCapRefusals(IReadOnlyList<CharacterActor> players)
+        {
+            for (int i = 0; i < players.Count; i++)
+            {
+                int id = players[i].PlayerId.Value;
+                if (!_driver.WasGrabRefused(id))
+                {
+                    continue;
+                }
+
+                Vector3 screen = _camera.WorldToScreenPoint(players[i].Position + Vector3.up * 1.6f);
+                if (screen.z <= 0f)
+                {
+                    continue;
+                }
+
+                var refused = new Color(0.92f, 0.24f, 0.22f);
+                int previous = _style.fontSize;
+
+                _style.fontSize = Mathf.Max(20, _fontSize * 3);
+                DrawLine(new Rect(screen.x - 60f, Screen.height - screen.y - 40f, 120f, 44f),
+                    "✕", refused);
+
+                _style.fontSize = Mathf.Max(10, _fontSize + 2);
+                PlayerInventory bag = players[i].GetComponent<PlayerInventory>();
+                if (bag != null)
+                {
+                    DrawLine(new Rect(screen.x - 80f, Screen.height - screen.y + 6f, 160f, 22f),
+                        $"{bag.Inventory.SlotsUsed}/{bag.Inventory.Rules.Capacity}", refused);
+                }
+
+                _style.fontSize = previous;
             }
         }
 

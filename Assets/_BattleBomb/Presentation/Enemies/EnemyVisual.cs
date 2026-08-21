@@ -1,6 +1,7 @@
 using BattleBomb.Core.Enemies;
 using BattleBomb.Core.Movement;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
 
@@ -38,6 +39,11 @@ namespace BattleBomb.Presentation.Enemies
         private float _heightOffset = 1f;
         private Color _restColor = Color.white;
         private Color _tellColor = Color.white;
+
+        /// <summary>The elite's visible plate (D22) — created lazily, only for the rare spawn.</summary>
+        private GameObject _armor;
+        private Renderer _armorRenderer;
+        private MaterialPropertyBlock _armorBlock;
         private float _windupSwell;
         private float _flashUntil;
 
@@ -134,6 +140,43 @@ namespace BattleBomb.Presentation.Enemies
 
             _block.SetColor(BaseColor, color);
             _renderer.SetPropertyBlock(_block);
+            UpdateEliteArmor();
+        }
+
+        /// <summary>
+        /// D22's promise made visible: an elite wears armor tinted the quality colour of the
+        /// piece it is carrying, so a player reads the reward off the body before committing to
+        /// the fight. Built once, on the first frame the enemy is known to be an elite.
+        /// </summary>
+        private void UpdateEliteArmor()
+        {
+            if (!_enemy.IsElite)
+            {
+                return;
+            }
+
+            if (_armor == null)
+            {
+                _armor = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                _armor.name = "Elite Armor";
+                Destroy(_armor.GetComponent<Collider>());
+                _armor.transform.SetParent(transform, false);
+                _armor.transform.localScale = new Vector3(1.25f, 0.55f, 1.25f);
+                _armor.transform.localPosition = new Vector3(0f, 0.15f, 0f);
+                _armorRenderer = _armor.GetComponent<Renderer>();
+                _armorBlock = new MaterialPropertyBlock();
+            }
+
+            Color plate = _enemy.CarriedDrop.IsEmpty
+                ? Color.gray
+                : QualityColors.For(_enemy.CarriedDrop.Quality);
+            if (_enemy.IsDepleted)
+            {
+                plate = DepletedColor;
+            }
+
+            _armorBlock.SetColor(BaseColor, plate);
+            _armorRenderer.SetPropertyBlock(_armorBlock);
         }
 
         private void ApplySilhouette(EnemyArchetype archetype)

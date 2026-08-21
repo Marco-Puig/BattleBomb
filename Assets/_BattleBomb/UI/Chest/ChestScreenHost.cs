@@ -29,6 +29,14 @@ namespace BattleBomb.UI.Chest
 
         internal void RequestClose(int playerId) => _driver?.CloseScreen(playerId);
 
+        /// <summary>The shopkeeper's rack for one visit (D43) — the driver owns the generator.</summary>
+        internal void RollStock(List<Core.Items.ItemInstance> stock, int count) =>
+            _driver?.RollShopStock(stock, count);
+
+        /// <summary>One purchase. The bag checks the money and the room; the UI only asks.</summary>
+        internal bool Buy(PlayerInventory bag, in Core.Items.ItemInstance item, int price) =>
+            bag != null && bag.RequestBuy(item, price);
+
         private void OnEnable()
         {
             if (_driver == null)

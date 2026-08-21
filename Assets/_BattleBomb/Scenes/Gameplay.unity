@@ -842,7 +842,6 @@ GameObject:
   - component: {fileID: 1619851944}
   - component: {fileID: 1619851945}
   - component: {fileID: 1619851946}
-  - component: {fileID: 1619851947}
   m_Layer: 0
   m_Name: Debug Overlay
   m_TagString: Untagged
@@ -941,19 +940,6 @@ MonoBehaviour:
   _driver: {fileID: 463551038}
   _camera: {fileID: 1778134441}
   _fontSize: 14
---- !u!114 &1619851947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1619851940}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bf9a19b7b8201404aaea91c4bf1bf6e9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Items.InventoryDebugPanel
-  _driver: {fileID: 0}
 --- !u!1 &1632419326
 GameObject:
   m_ObjectHideFlags: 0
@@ -1193,6 +1179,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1951115146}
   - component: {fileID: 1951115145}
+  - component: {fileID: 1951115147}
   m_Layer: 0
   m_Name: Chest UI
   m_TagString: Untagged
@@ -1228,6 +1215,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1951115147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951115144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b86c240dadcae5743865f13ba753c280, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Chest.SettingsMenu
+  _driver: {fileID: 0}
 --- !u!1001 &3062397464175731019
 PrefabInstance:
   m_ObjectHideFlags: 0

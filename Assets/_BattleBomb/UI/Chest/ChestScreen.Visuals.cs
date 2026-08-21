@@ -197,7 +197,15 @@ namespace BattleBomb.UI.Chest
             int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_cursor, 0, _visible.Count - 1)] : -1;
             BuildActions(bagIndex);
             RefreshActions();
-            _detail.text = bagIndex >= 0 ? DetailFor(items[bagIndex].Item) : "Nothing here.";
+
+            if (_focus == ChestFocus.Stock && _stockCursor < _stock.Count)
+            {
+                _detail.text = DetailFor(_stock[_stockCursor]);
+            }
+            else
+            {
+                _detail.text = bagIndex >= 0 ? DetailFor(items[bagIndex].Item) : "Nothing here.";
+            }
         }
 
         private void RefreshActions()
@@ -212,6 +220,24 @@ namespace BattleBomb.UI.Chest
                 if (i % 3 == 2)
                 {
                     _text.Append('\n');
+                }
+            }
+
+            if (_stock.Count > 0)
+            {
+                _text.Append("\nFOR SALE  ");
+                for (int i = 0; i < _stock.Count; i++)
+                {
+                    int price = _bag.Inventory.Prices.BuyPrice(_stock[i]);
+                    string label = $" {_stock[i].DisplayName} {price} ";
+                    if (i == _stockCursor)
+                    {
+                        label = $"[{_stock[i].DisplayName} {price}]";
+                    }
+
+                    _text.Append(_focus == ChestFocus.Stock && i == _stockCursor
+                        ? UiBuild.Tint(label, UiBuild.Focus)
+                        : UiBuild.Tint(label, QualityColors.For(_stock[i].Quality)));
                 }
             }
 

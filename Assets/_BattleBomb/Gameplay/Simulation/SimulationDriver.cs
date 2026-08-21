@@ -109,6 +109,9 @@ namespace BattleBomb.Gameplay.Simulation
         private DeterministicRandom _lootRng;
         private DeterministicRandom _combatRng;
         private DeterministicRandom _spawnRng;
+
+        /// <summary>Debug rolls within one frame must differ, or a grant hands out clones.</summary>
+        private int _debugRollCounter;
         private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
@@ -171,9 +174,11 @@ namespace BattleBomb.Gameplay.Simulation
         /// hand over. It draws from its own stream so testing a weapon never shifts the loot the
         /// fight would have dropped. Dies with the debug panel when M6 builds the real UI.
         /// </summary>
-        internal ItemInstance RollDebugItem(int definitionId, float qualityScore)
+        public ItemInstance RollDebugItem(int definitionId, float qualityScore)
         {
-            var rng = new DeterministicRandom((uint)(Frame * 2654435761u + 17u));
+            _debugRollCounter++;
+            var rng = new DeterministicRandom(
+                (uint)(Frame * 2654435761u + 17u) + (uint)(_debugRollCounter * 2246822519u));
             var context = new GenerationContext(
                     qualityScore, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
                     _elements.Ids)
@@ -224,6 +229,28 @@ namespace BattleBomb.Gameplay.Simulation
             var context = new GenerationContext(
                 0f, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
             _lootRng = inventory.TryCombine(_lootRng, firstIndex, secondIndex, context, out result);
+        }
+
+        /// <summary>
+        /// The shopkeeper's rack (D43): a handful of generator-rolled pieces at current progress
+        /// quality, plus the potions always in stock. Rolled fresh per visit from the loot
+        /// stream, which is exactly what makes a shop worth walking back to.
+        /// </summary>
+        public void RollShopStock(List<ItemInstance> stock, int count)
+        {
+            stock.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                _lootRng = _lootRng.NextFloat(out float spread);
+                var context = new GenerationContext(
+                    (DropRoll.SpreadMin + spread) * _lootProgress, StoryProgressLevel,
+                    _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance rolled);
+                if (!rolled.IsEmpty)
+                {
+                    stock.Add(rolled);
+                }
+            }
         }
 
         /// <summary>Drops this player has grabbed (D23) — the HUD's proof the loop works.</summary>
@@ -282,7 +309,19 @@ namespace BattleBomb.Gameplay.Simulation
         /// the player at the chest simply stands there taking no orders.
         /// </summary>
         public bool PausedForScreen =>
-            Characters.Ordered.Count <= 1 && _openScreens.Count > 0;
+            _menuPauseHolders > 0 || (Characters.Ordered.Count <= 1 && _openScreens.Count > 0);
+
+        private int _menuPauseHolders;
+
+        /// <summary>
+        /// A global menu (the settings screen) stops the world for everyone, unlike a chest,
+        /// which only stops it when there is nobody left to keep playing. Held as a count so two
+        /// overlapping menus cannot un-pause each other.
+        /// </summary>
+        public void HoldMenuPause(bool held)
+        {
+            _menuPauseHolders = Mathf.Max(0, _menuPauseHolders + (held ? 1 : -1));
+        }
 
         /// <summary>Opens a screen for this player. The UI draws it; the simulation only records
         /// that their hands are busy.</summary>

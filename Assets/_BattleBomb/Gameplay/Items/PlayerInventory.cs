@@ -312,8 +312,9 @@ namespace BattleBomb.Gameplay.Items
             Changed?.Invoke();
         }
 
-        /// <summary>Debug and shop entry point: money in, without a sale behind it.</summary>
-        internal void GrantCoins(int amount)
+        /// <summary>Debug entry point: money in, without a sale behind it. Dies with the debug
+        /// grant when real content arrives.</summary>
+        public void GrantCoins(int amount)
         {
             if (amount <= 0)
             {
@@ -327,7 +328,7 @@ namespace BattleBomb.Gameplay.Items
         /// <summary>Buying from the shopkeeper (D43): the price leaves the wallet, the item
         /// lands in the sack — and a sack that refuses it refunds nothing, so the check comes
         /// first.</summary>
-        internal bool TryBuy(in ItemInstance item, int price)
+        public bool RequestBuy(in ItemInstance item, int price)
         {
             if (item.IsEmpty || price < 0 || !_wallet.CanAfford(price) || Inventory.IsFull)
             {

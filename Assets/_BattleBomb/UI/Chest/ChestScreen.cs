@@ -24,6 +24,9 @@ namespace BattleBomb.UI.Chest
         Filters = 1,
         Grid = 2,
         Actions = 3,
+
+        /// <summary>The shopkeeper's rack, on the shop screen only (D43).</summary>
+        Stock = 4,
     }
 
     /// <summary>
@@ -40,6 +43,9 @@ namespace BattleBomb.UI.Chest
         private const int GridColumnsWide = 8;
         private const int GridColumnsSplit = 4;
         private const int GridRows = 5;
+
+        /// <summary>Pieces the shopkeeper offers per visit (D43's "3–4 rolled gear pieces").</summary>
+        private const int ShopStockCount = 4;
 
         /// <summary>Frames a held stick waits before it starts repeating, and between repeats.</summary>
         private const float RepeatDelay = 0.32f;
@@ -78,6 +84,10 @@ namespace BattleBomb.UI.Chest
         private readonly List<UpgradeTarget> _upgradeTargets = new List<UpgradeTarget>();
         private readonly List<string> _actions = new List<string>();
 
+        /// <summary>The shopkeeper's rack for this visit (D43) — empty at a chest.</summary>
+        private readonly List<ItemInstance> _stock = new List<ItemInstance>();
+        private int _stockCursor;
+
         private Text _header;
         private Text _tabStrip;
         private Text _filterStrip;
@@ -102,6 +112,12 @@ namespace BattleBomb.UI.Chest
             _playerId = playerId;
             _kind = kind;
             _split = split;
+            if (kind == InteractionKind.Shopkeeper)
+            {
+                // Rolled once per visit, so coming back later is worth doing (D43).
+                Host?.RollStock(_stock, ShopStockCount);
+            }
+
             Build();
             Refresh();
         }
@@ -236,6 +252,23 @@ namespace BattleBomb.UI.Chest
                     {
                         _focus = ChestFocus.Grid;
                     }
+                    else if (dy < 0 && _stock.Count > 0)
+                    {
+                        _focus = ChestFocus.Stock;
+                        _stockCursor = 0;
+                    }
+
+                    break;
+
+                case ChestFocus.Stock:
+                    if (dx != 0)
+                    {
+                        _stockCursor = Mathf.Clamp(_stockCursor + dx, 0, _stock.Count - 1);
+                    }
+                    else if (dy > 0)
+                    {
+                        _focus = ChestFocus.Actions;
+                    }
 
                     break;
             }
@@ -340,6 +373,9 @@ namespace BattleBomb.UI.Chest
                 case ChestFocus.Actions:
                     RunAction();
                     break;
+                case ChestFocus.Stock:
+                    RunBuy();
+                    break;
             }
 
             Refresh();
@@ -408,6 +444,33 @@ namespace BattleBomb.UI.Chest
 
             _cursor = Mathf.Clamp(_cursor, 0, Mathf.Max(0, _bag.Inventory.Items.Count - 1));
             _focus = ChestFocus.Grid;
+        }
+
+        /// <summary>Buying from the rack (D43): the money leaves, the piece joins the sack, and
+        /// the slot on the rack empties so the same item cannot be bought twice.</summary>
+        private void RunBuy()
+        {
+            if (_stockCursor < 0 || _stockCursor >= _stock.Count)
+            {
+                return;
+            }
+
+            ItemInstance item = _stock[_stockCursor];
+            int price = _bag.Inventory.Prices.BuyPrice(item);
+            if (!Host.Buy(_bag, item, price))
+            {
+                Flash(_bag.Inventory.IsFull ? "The sack is full." : $"Not enough coin ({price}).");
+                return;
+            }
+
+            _stock.RemoveAt(_stockCursor);
+            _stockCursor = Mathf.Clamp(_stockCursor, 0, Mathf.Max(0, _stock.Count - 1));
+            if (_stock.Count == 0)
+            {
+                _focus = ChestFocus.Grid;
+            }
+
+            Flash($"Bought for {price}.");
         }
 
         private void RunCombine(int bagIndex)

@@ -67,6 +67,7 @@ namespace BattleBomb.Gameplay.Players
             AddButton(actions, PlayerActions.Magic, CommandButtons.Magic);
             AddButton(actions, PlayerActions.Equipment, CommandButtons.Equipment);
             AddButton(actions, PlayerActions.Jump, CommandButtons.Jump);
+            AddButton(actions, PlayerActions.Pause, CommandButtons.Pause);
         }
 
         private void OnEnable()

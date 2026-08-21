@@ -17,6 +17,10 @@ namespace BattleBomb.Tests.EditMode.Acceptance
     /// </summary>
     public sealed class CommandVocabularyAcceptanceTests
     {
+        /// <summary>
+        /// The five combat verbs, and the whole of D17's budget: this is what one thumb operates
+        /// mid-fight, and it is the list pillar 1 protects. Adding to it is a design decision.
+        /// </summary>
         private static readonly string[] Buttons =
         {
             "Light",      // basic melee combo; performs Interact in context
@@ -25,6 +29,18 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             "Equipment",  // the equipped active item (§5)
             "Jump",       // universal (§2.4)
         };
+
+        /// <summary>
+        /// System buttons, deliberately outside the five. They open menus, never act in the
+        /// fight, and are never on the mobile thumb surface — so they do not spend D17's budget.
+        /// They still travel as commands, because rule 3 has no exceptions.
+        /// </summary>
+        private static readonly string[] SystemButtons =
+        {
+            "Pause",      // opens the settings menu (M6)
+        };
+
+        private static string[] AllButtons => Buttons.Concat(SystemButtons).ToArray();
 
         /// <summary>Every non-composite binding the asset must carry, as (path, action).</summary>
         private static readonly (string Path, string Action)[] RequiredBindings =
@@ -39,6 +55,8 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             ("<Gamepad>/rightShoulder", "Equipment"),
             ("<Keyboard>/space", "Jump"),
             ("<Gamepad>/buttonSouth", "Jump"),
+            ("<Keyboard>/escape", "Pause"),
+            ("<Gamepad>/start", "Pause"),
             ("<Gamepad>/leftStick", "Move"),
         };
 
@@ -46,11 +64,12 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         public void The_button_enum_holds_exactly_the_designed_verbs()
         {
             string[] actual = Enum.GetNames(typeof(CommandButtons)).OrderBy(n => n).ToArray();
-            string[] expected = Buttons.Concat(new[] { "None" }).OrderBy(n => n).ToArray();
+            string[] expected = AllButtons.Concat(new[] { "None" }).OrderBy(n => n).ToArray();
 
             Assert.That(actual, Is.EqualTo(expected),
-                "CommandButtons must match the ability slot table (§3). Extra verbs are input complexity " +
-                "the design does not have (pillar 1); missing ones cannot be pressed at all.");
+                "CommandButtons must match the ability slot table (§3) plus the system buttons. " +
+                "Extra combat verbs are input complexity the design does not have (pillar 1); " +
+                "missing ones cannot be pressed at all.");
         }
 
         [Test]
@@ -78,11 +97,11 @@ namespace BattleBomb.Tests.EditMode.Acceptance
                 .Where(f => f.IsLiteral && f.FieldType == typeof(string))
                 .ToDictionary(f => f.Name, f => (string)f.GetRawConstantValue());
 
-            string[] expected = Buttons.Concat(new[] { "Move", "Map" }).OrderBy(n => n).ToArray();
+            string[] expected = AllButtons.Concat(new[] { "Move", "Map" }).OrderBy(n => n).ToArray();
             Assert.That(constants.Keys.OrderBy(n => n).ToArray(), Is.EqualTo(expected),
                 "PlayerActions must name exactly the actions the asset has.");
 
-            foreach (string button in Buttons.Concat(new[] { "Move" }))
+            foreach (string button in AllButtons.Concat(new[] { "Move" }))
             {
                 Assert.That(constants[button], Is.EqualTo(button),
                     "An action constant whose value differs from its name is a trap for the next reader.");
@@ -95,7 +114,7 @@ namespace BattleBomb.Tests.EditMode.Acceptance
             InputActionMap map = GameplayMap();
 
             string[] actual = map.actions.Select(a => a.name).OrderBy(n => n).ToArray();
-            string[] expected = Buttons.Concat(new[] { "Move" }).OrderBy(n => n).ToArray();
+            string[] expected = AllButtons.Concat(new[] { "Move" }).OrderBy(n => n).ToArray();
 
             Assert.That(actual, Is.EqualTo(expected));
         }

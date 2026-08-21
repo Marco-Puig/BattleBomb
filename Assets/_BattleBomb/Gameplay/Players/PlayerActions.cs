@@ -15,5 +15,8 @@ namespace BattleBomb.Gameplay.Players
         public const string Magic = "Magic";
         public const string Equipment = "Equipment";
         public const string Jump = "Jump";
+
+        /// <summary>Opens the settings menu (M6) — a system button, not a combat verb.</summary>
+        public const string Pause = "Pause";
     }
 }

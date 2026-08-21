@@ -17,5 +17,13 @@ namespace BattleBomb.Core.Players
         Magic     = 1 << 2,
         Equipment = 1 << 3,
         Jump      = 1 << 4,
+
+        /// <summary>
+        /// Opens the settings menu (M6). Not a combat verb — D17's five-button budget is about
+        /// what the thumb does mid-fight, and every console game has a Start button besides.
+        /// It rides the command stream anyway, because rule 3 has no exceptions: devices become
+        /// commands in exactly one place.
+        /// </summary>
+        Pause     = 1 << 5,
     }
 }

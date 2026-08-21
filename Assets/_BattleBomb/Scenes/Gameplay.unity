@@ -297,6 +297,7 @@ MonoBehaviour:
   _lootSeed: 1
   _combatSeed: 2
   _spawnSeed: 3
+  _lootProgress: 2
   _qualityLadder: {fileID: 11400000, guid: 6ab29cad430027a45a2d63cf32bc463c, type: 2}
   _itemCatalog:
   - {fileID: 11400000, guid: c53abab63488b2a4299c77d54278ead3, type: 2}

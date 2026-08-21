@@ -48,6 +48,11 @@ namespace BattleBomb.Gameplay.Simulation
             "again, so an elite appearing never shifts what an ordinary kill would have dropped.")]
         [SerializeField] private int _spawnSeed = 3;
 
+        [Tooltip("D23's story-progress multiplier on drop quality. Chapters own this from M7; " +
+            "a scene value until then, exactly as the climate is. At 1 the whole ladder above " +
+            "Rusty is unreachable, which makes the loot loop impossible to judge.")]
+        [SerializeField] private float _lootProgress = 2f;
+
         [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
         [SerializeField] private QualityLadder _qualityLadder;
 
@@ -115,6 +120,14 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>D22's elite modifier, on Core's paper numbers until a chapter authors them.</summary>
         private readonly EliteRules _eliteRules = EliteRules.Default;
+
+        /// <summary>What an elite can visibly wear, and therefore what it can drop (D22).</summary>
+        private static readonly ItemSlot[] EliteArmorSlots =
+        {
+            ItemSlot.Helmet,
+            ItemSlot.Chest,
+            ItemSlot.Boots,
+        };
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
 
@@ -185,9 +198,18 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _spawnRng = _spawnRng.NextFloat(out float spread);
-            float quality = (DropRoll.SpreadMin + spread) * _eliteRules.QualityBonus;
+            float quality = (DropRoll.SpreadMin + spread) * _lootProgress * _eliteRules.QualityBonus;
+
+            // It drops what it *wears* (D22), so the roll is forced into an armor slot — a
+            // consumable would make the visible-armor promise a lie.
+            _spawnRng = _spawnRng.NextFloat(out float slotDraw);
+            ItemSlot slot = EliteArmorSlots[Mathf.Min(
+                EliteArmorSlots.Length - 1, (int)(slotDraw * EliteArmorSlots.Length))];
+
             var context = new GenerationContext(
-                quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+                    quality, StoryProgressLevel, _itemSpecs, _qualityTable, _dropWeights,
+                    _elements.Ids)
+                .WithForcedSlot(slot);
             _spawnRng = ItemGenerator.Roll(_spawnRng, context, out carried);
             return true;
         }
@@ -694,7 +716,8 @@ namespace BattleBomb.Gameplay.Simulation
                 else
                 {
                     _lootRng = DropRoll.Roll(
-                        _lootRng, spec.Rank, 1f, 1f, 1f, false, LootEliteBonus, out DropDecision drop);
+                        _lootRng, spec.Rank, _lootProgress, 1f, 1f, false, LootEliteBonus,
+                        out DropDecision drop);
                     if (drop.Dropped)
                     {
                         var context = new GenerationContext(

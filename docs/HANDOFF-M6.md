@@ -1,8 +1,15 @@
 # HANDOFF — M6: the loot loop
 
-**Status — tasks 61–70 built, 2026-08-21. Task 71 (Michael's mega pass) is the open gate.**
-Directed by Michael in the M6 design session (visual companion mockups for the chest screen;
-five sections approved). Decisions D42–D45 locked. EditMode 475/475, PlayMode 2/2.
+**Status — complete, 2026-08-21.** Directed by Michael in the M6 design session (visual companion
+mockups for the chest screen; five sections approved). Decisions D42–D45 locked. **EditMode
+476/476, PlayMode 5/5.**
+
+Michael's pass found one real defect and asked for three changes; all four landed before close.
+His verdict on the second pass: *"It all seems to be working correctly."*
+
+The empty reaction table (D41/D46) and the unauthored Earth and Air statuses are **content gaps
+Michael and his collaborator own**, not unfinished systems — the same standing they had at M5B's
+close.
 
 ---
 
@@ -21,6 +28,27 @@ five sections approved). Decisions D42–D45 locked. EditMode 475/475, PlayMode 
 | 68 | `c253a83` | The shop rack, the global settings menu, `Pause` as a system button, and the death of the debug panel |
 | 69 | `9688c76` | Drop under-glow and bounce, elite armor tinting, the refused-grab red X |
 | 70 | `a8c8ad8` | D45's PlayMode smoke suite, verified against a deliberate break |
+| 71a | `0f9e585` | The chest screen you could not leave — the open-press leak, Escape, and the ✕ |
+| 71b | `ce412ca` | The item dropdown, upgrading in the right panel, sell values halved |
+| 72 | *(this)* | Close-out |
+
+## What Michael's pass found
+
+He approved eight of the ten checks outright. The rest:
+
+- **"Chest opens correctly, but no clear way to close it"** — and it was a real defect, not a
+  missing label. The Light press that opened the chest was leaking into the screen on the same
+  step and diving the cursor into the action row, so Heavy was faithfully backing him out of a
+  level he never chose. Input is now swallowed until every menu button has been released once.
+  Escape/Start leaves from anywhere, and a ✕ in the corner is a real clickable button with an
+  EventSystem behind it, so a pointer or a tap has a route out (D5's mobile viability).
+- **The dropdown.** Selecting an item raises a menu under its own cell instead of a strip along
+  the bottom, listing only rows the item can use.
+- **Upgrading moved to the right panel**, where each stat shows its before and after and the
+  cursor stays put so points can be spent in a row.
+- **Sell values cut by half.** Applied to income alone: halving the sinks alongside it would
+  have shrunk every number and changed nothing, because the grind is the ratio between them.
+  `PriceBook.SellReturn` is the dial.
 
 ## Bugs live verification caught (that the tests could not)
 
@@ -34,6 +62,46 @@ locked on:
    `1`, so nothing above Rusty could ever fall and the loop was literally unjudgeable. It became
    a scene dial like the climate (M7's chapters take it over), and elite drops now spread Torn
    through Legendary.
+
+## Close-out notes — what felt wrong to build
+
+Written for whoever picks up M7, in the M3/M4/M5 tradition of recording the friction rather than
+just the result.
+
+1. **The smoke suite earned its keep on its first day, twice.** It caught the chest-close bug the
+   moment it was written — and more importantly it caught the *cause* rather than the symptom.
+   The obvious fix was "add a close button"; the test failing specifically on `heavy` is what
+   exposed the press leak underneath. Every link the suite does *not* cover is a link where that
+   would not have happened, which is the argument for widening it as M7 adds flow.
+
+2. **Everything the tests could not see, a human or a screenshot found.** Three defects this
+   milestone — the elite wearing a potion, the whole ladder pinned below Rusty, the screen with
+   no exit — and not one was findable by unit tests, because none of them was a logic error.
+   Two came from driving the editor and looking; one came from Michael playing. Budget for
+   looking, not just for asserting.
+
+3. **`ChestScreen` is at the size where it wants splitting.** It is two files and about 700 lines
+   holding navigation, a focus state machine, actions, and drawing. The focus enum has grown to
+   six states and the transitions between them are implicit in two switch statements. M7's shop
+   and any real settings work will add more. Give it a proper state object before that, not
+   after — this is the same warning task 50 gave the driver and task 61 gave the actor, and both
+   times paying late cost a bug.
+
+4. **Placeholder UI is now load-bearing.** The chest screen is the first UI a player would call a
+   feature rather than a debug overlay, and it is built in code with legacy `Text` and no art.
+   That was right for M6 and it will be wrong soon: the art pass (D47) has to replace it, and
+   nothing about the current layout is authored where an artist could reach it.
+
+5. **The economy has one dial and no data behind it.** `SellReturn` at 0.5 came from a single
+   play session's feel. There is no telemetry, no simulated career, and no answer to "how long
+   should a Godly piece take". Before M8 that question wants a spreadsheet, not another pass.
+
+6. **The item dropdown has no pointer support, but the ✕ does.** Adding the EventSystem for the
+   close button opened a door: half the screen is now clickable-shaped without being clickable.
+   Either finish it (rows become buttons) or accept it, but the current state will read as broken
+   to anyone who tries to click a menu row.
+
+---
 
 ## Deviations from the plan, deliberate and recorded
 
@@ -217,13 +285,22 @@ Mega-pass fixes, close-out notes in this file, progress tables, memory.
 
 ---
 
-## Standing watches
+## Standing watches, inherited into M7
 
 - **Heavy stays on watch** (D26) — unchanged.
 - **O11 resolved as D46** (Fire/Ice/Earth/Air, signature casts) and built as M5B before this
   milestone (`HANDOFF-M5B.md`). The reaction *pairs* for the roster remain open design.
 - **The reaction table is still empty and runtime-unexercised** — when the pairs are authored,
-  treat the first one as unverified code (M5 close-out note 4). The new smoke suite is the
+  treat the first one as unverified code (M5 close-out note 4). The smoke suite is now the
   natural home for that verification.
+- **Earth and Air infusions are provisional wielder passives** (crit, knockback) until their
+  statuses are designed (D46 as amended).
+- **Three constants are M7's to take over from the scene**: `_lootProgress` (D23's story-progress
+  multiplier, currently a driver field defaulting to 2), `StoryProgressLevel` (D36's level stamp,
+  still a hardcoded 1 so everything is equippable), and the climate rows M5 left at scene level.
+  Chapters own all three.
+- **The DEBUG grant row in settings dies with real content** — it exists because combining needs
+  two identical items and drops never oblige.
 - **Offered, not actioned (Michael's call):** leap lift add-with-cap instead of replace; magic
-  damage percentage instead of flat.
+  damage percentage instead of flat; finishing pointer support so dropdown rows are clickable
+  like the ✕ already is.

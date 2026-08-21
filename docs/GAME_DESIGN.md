@@ -302,7 +302,9 @@ Sack** (quality-coloured thumbnail grid with a category filter; the selected ite
 vs-worn deltas, and actions alongside) and **Hero** (stat allocation and the worn loadout).
 
 **Money enters only by selling** (D43): one per-player currency, prices scaling with quality ×
-required level so income scales forever. It leaves through shopkeeper stock and **upgrading**
+required level so income scales forever, and the player receives **half** an item's value —
+income is tuned against unchanged sinks, never by shrinking both. It leaves through shopkeeper
+stock and **upgrading**
 (D44): capacity points deepen any stat an item already has, the cost doubling per point.
 Duplicates offer the gamble instead — **combining** two identical same-rank items into one fresh
 reroll with a 2% shot at the next rank, spent points dying with the inputs. Worn, sold, or
@@ -405,7 +407,7 @@ Dependency-ordered. Each milestone is verifiable before the next begins.
 | **M3** | Enemies | Basic AI, telegraphed attacks, elemental resistance, death and rewards. |
 | **M4** | Gear and stats | Item generation, equipment, stat aggregation — all Core, all tested. |
 | **M5** | Abilities and elements | Ability framework, per-character variants, environment climate modifiers. |
-| **M6** | Loot loop | Drops, inventory, comparison UI. The chase is legible and satisfying. |
+| **M6** | Loot loop | The chest, the economy, deepen-or-gamble, elites. The chase is legible and satisfying. |
 | **M7** | Chapters | Chapter flow, save/progression, difficulty tiers. |
 | **M8** | **Vertical slice** | One chapter, two characters, one boss, full loop, co-op, polished. |
 | **M9+** | Scale | More chapters and characters, endless mode, then PvP. |

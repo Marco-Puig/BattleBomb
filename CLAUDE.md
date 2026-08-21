@@ -73,11 +73,15 @@ manual steps. Useful calls:
 
 - `recompile` / `recompile_status` — after editing scripts.
 - `run_tests` with `mode: EditMode` — the primary verification gate.
+- `run_tests` with `mode: PlayMode` and `async_tests: true` — the wiring tripwire (D45). It
+  **must** be async: entering play mode domain-reloads and drops a synchronous request.
 - `console` — read editor and player logs (`level: error` to filter).
-- `capture_game_view` / `capture_scene_view` — see the result of a change.
+- `capture_game_view` / `capture_scene_view` — see the result of a change. Note that a
+  ScreenSpaceOverlay canvas is invisible to these; UI must render in camera space to be checked.
 
 **Verify with `run_tests` before claiming anything works.** EditMode is green or the change is not
-done. PlayMode tests are deferred until scenes stabilise (D7).
+done. **PlayMode is the second gate since D45** — it boots the real scene and walks the loop, and
+it exists because M4 and M5 each shipped a bug a green EditMode suite could not see.
 
 **Live verification protocol (Michael's rule):** for slow-paced checks — positions, registrations,
 settled states — drive the editor yourself with synthetic input and `eval` sampling. For anything
@@ -98,8 +102,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M4** | Gear and stats | **complete** |
 | **M5** | Abilities and elements | **complete** |
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
-| **M6** | Loot loop — D42–D45, tasks 61–72 | **in build** |
-| M7 | Chapters *(first point story input is needed)* | |
+| **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
+| M7 | Chapters *(first point story input is needed)* | **next** |
 | M8 | **Vertical slice** — the real target | |
 
 Build order and completion criteria: `docs/GAME_DESIGN.md` §10.
@@ -117,5 +121,6 @@ placeholder lore to fill the gap; it will only be thrown away.
 - [ ] Does presentation own state the simulation should own?
 - [ ] Is anything hardcoded to one player, or to story mode?
 - [ ] Is new Core logic covered by an EditMode test?
+- [ ] Does new Gameplay *wiring* have a PlayMode check, or a reason it does not need one?
 - [ ] Would this still work with a second player, and with Steamworks absent?
-- [ ] Is `run_tests` green?
+- [ ] Is `run_tests` green — both modes?

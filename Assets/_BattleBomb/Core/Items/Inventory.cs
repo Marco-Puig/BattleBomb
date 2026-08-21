@@ -470,6 +470,15 @@ namespace BattleBomb.Core.Items
             _quickEquipmentIndex = 0;
         }
 
+        /// <summary>A load (D52) putting the quick slot back exactly as it was saved.</summary>
+        public void RestoreQuickSlot(QuickSlotKind kind, int consumableId, int equipmentIndex)
+        {
+            _quickKind = kind;
+            _quickConsumableId = consumableId;
+            _quickEquipmentIndex = equipmentIndex;
+            _quickCooldown = 0;
+        }
+
         /// <summary>
         /// The quick-use press (D37). A slotted potion restores its pool and starts the cooldown;
         /// an exhausted stack clears the slot; a worn equipment piece with an active fires it on

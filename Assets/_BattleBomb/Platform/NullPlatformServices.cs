@@ -10,6 +10,7 @@ namespace BattleBomb.Platform
     public sealed class NullPlatformServices : IPlatformServices, IAchievements, IPlayerIdentity, ILeaderboards
     {
         private readonly HashSet<string> _unlocked = new HashSet<string>();
+        private ISaveStore _saves;
 
         public bool IsAvailable => false;
 
@@ -18,6 +19,11 @@ namespace BattleBomb.Platform
         public IPlayerIdentity Identity => this;
 
         public ILeaderboards Leaderboards => this;
+
+        /// <summary>Local files under the persistent data path — the default with no platform,
+        /// and what every platform falls back to until its cloud store exists.</summary>
+        public ISaveStore Saves => _saves ?? (_saves = new FileSaveStore(
+            System.IO.Path.Combine(UnityEngine.Application.persistentDataPath, "saves")));
 
         public bool Initialise() => false;
 

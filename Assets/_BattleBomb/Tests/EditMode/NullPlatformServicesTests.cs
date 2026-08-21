@@ -43,5 +43,14 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(submitted, Is.False, "Callers must be told it failed, not left waiting.");
             Assert.That(fetched, Is.Not.Null.And.Empty);
         }
+
+        [Test]
+        public void Saves_are_local_files_when_no_platform_is_present()
+        {
+            var services = new NullPlatformServices();
+
+            Assert.That(services.Saves, Is.InstanceOf<FileSaveStore>(),
+                "With Steamworks absent the game must still remember (D52).");
+        }
     }
 }

@@ -16,6 +16,9 @@ namespace BattleBomb.Platform
 
         ILeaderboards Leaderboards { get; }
 
+        /// <summary>Where saves go (D52). Local files when no platform is present.</summary>
+        ISaveStore Saves { get; }
+
         /// <summary>Brings the back end up. Returns false if it is unavailable; that is not an error.</summary>
         bool Initialise();
 

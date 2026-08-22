@@ -72,7 +72,7 @@ public abstract class PlayerControllerMain :MonoBehaviour
     {
         m_Anim.Play("Jump");
 
-        m_rigidbody.velocity = new Vector2(0, 0);
+        m_rigidbody.linearVelocity = new Vector2(0, 0);
 
         m_rigidbody.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
 

@@ -34,7 +34,7 @@ public class GroundSensor : MonoBehaviour {
                 m_root.Is_DownJump_GroundCheck = false;
             }
 
-            if (m_root.m_rigidbody.velocity.y <= 0)
+            if (m_root.m_rigidbody.linearVelocity.y <= 0)
             {
 
                 m_root.isGrounded = true;

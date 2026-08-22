@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 373b9351851802d4fa368f8b3fea0f8d, type: 3}
+  m_Name: QualityLadder
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.QualityLadder
+  _rows:
+  - MinScore: 0
+    StatBudget: 0.5
+    AffixMin: 0
+    AffixMax: 0
+    UpgradeCapacity: 0
+  - MinScore: 0.7
+    StatBudget: 0.7
+    AffixMin: 0
+    AffixMax: 0
+    UpgradeCapacity: 1
+  - MinScore: 0.95
+    StatBudget: 0.85
+    AffixMin: 0
+    AffixMax: 1
+    UpgradeCapacity: 1
+  - MinScore: 1.2
+    StatBudget: 1
+    AffixMin: 1
+    AffixMax: 1
+    UpgradeCapacity: 2
+  - MinScore: 1.6
+    StatBudget: 1.2
+    AffixMin: 1
+    AffixMax: 2
+    UpgradeCapacity: 3
+  - MinScore: 2.1
+    StatBudget: 1.45
+    AffixMin: 2
+    AffixMax: 2
+    UpgradeCapacity: 4
+  - MinScore: 2.8
+    StatBudget: 1.75
+    AffixMin: 2
+    AffixMax: 3
+    UpgradeCapacity: 5
+  - MinScore: 3.7
+    StatBudget: 2.1
+    AffixMin: 3
+    AffixMax: 3
+    UpgradeCapacity: 6
+  - MinScore: 5
+    StatBudget: 2.5
+    AffixMin: 3
+    AffixMax: 4
+    UpgradeCapacity: 8
+  _helmetWeight: 11
+  _chestWeight: 11
+  _bootsWeight: 11
+  _weaponWeight: 15
+  _petWeight: 2
+  _equipmentWeight: 8
+  _consumableWeight: 30

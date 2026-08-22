@@ -1,0 +1,22 @@
+{
+    "name": "BattleBomb.Editor",
+    "rootNamespace": "BattleBomb.Editor",
+    "references": [
+        "BattleBomb.Core",
+        "BattleBomb.Platform",
+        "BattleBomb.Gameplay",
+        "BattleBomb.Presentation",
+        "BattleBomb.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

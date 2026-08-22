@@ -1,0 +1,26 @@
+{
+    "name": "BattleBomb.Tests.PlayMode",
+    "rootNamespace": "BattleBomb.Tests.PlayMode",
+    "references": [
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner",
+        "BattleBomb.Core",
+        "BattleBomb.Platform",
+        "BattleBomb.Gameplay",
+        "BattleBomb.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

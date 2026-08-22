@@ -1,0 +1,161 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67146d6c28557944a824b057636a162a, type: 3}
+  m_Name: DefaultKit
+  m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.Data.CombatKitDefinition
+  _chain:
+  - _light:
+      _startupSteps: 5
+      _activeSteps: 4
+      _recoverySteps: 8
+      _damage: 5
+      _reachX: 1.6
+      _depthTolerance: 1
+      _lungeDistance: 1.2
+      _maxTargets: 2
+      _knockbackSpeed: 5
+      _launchSpeed: 0
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
+      _resolvesOnLanding: 0
+    _hasEnder: 0
+    _ender:
+      _startupSteps: 5
+      _activeSteps: 4
+      _recoverySteps: 8
+      _damage: 5
+      _reachX: 1.6
+      _depthTolerance: 1
+      _lungeDistance: 1.2
+      _maxTargets: 2
+      _knockbackSpeed: 5
+      _launchSpeed: 0
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
+      _resolvesOnLanding: 0
+  - _light:
+      _startupSteps: 4
+      _activeSteps: 4
+      _recoverySteps: 9
+      _damage: 6
+      _reachX: 1.6
+      _depthTolerance: 1
+      _lungeDistance: 1.2
+      _maxTargets: 2
+      _knockbackSpeed: 5
+      _launchSpeed: 0
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
+      _resolvesOnLanding: 0
+    _hasEnder: 0
+    _ender:
+      _startupSteps: 5
+      _activeSteps: 4
+      _recoverySteps: 8
+      _damage: 5
+      _reachX: 1.6
+      _depthTolerance: 1
+      _lungeDistance: 1.2
+      _maxTargets: 2
+      _knockbackSpeed: 5
+      _launchSpeed: 0
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
+      _resolvesOnLanding: 0
+  - _light:
+      _startupSteps: 6
+      _activeSteps: 4
+      _recoverySteps: 14
+      _damage: 8
+      _reachX: 1.7
+      _depthTolerance: 1
+      _lungeDistance: 1.4
+      _maxTargets: 2
+      _knockbackSpeed: 9
+      _launchSpeed: 0
+      _hitstopSteps: 2
+      _moveSpeedScale: 1
+      _resolvesOnLanding: 0
+    _hasEnder: 1
+    _ender:
+      _startupSteps: 8
+      _activeSteps: 4
+      _recoverySteps: 16
+      _damage: 8
+      _reachX: 1.6
+      _depthTolerance: 1
+      _lungeDistance: 1.2
+      _maxTargets: 2
+      _knockbackSpeed: 3
+      _launchSpeed: 9
+      _hitstopSteps: 3
+      _moveSpeedScale: 0.8
+      _resolvesOnLanding: 0
+  _heavy:
+    _startupSteps: 12
+    _activeSteps: 6
+    _recoverySteps: 16
+    _damage: 12
+    _reachX: 2
+    _depthTolerance: 1.1
+    _lungeDistance: 2
+    _maxTargets: 4
+    _knockbackSpeed: 9
+    _launchSpeed: 0
+    _hitstopSteps: 3
+    _moveSpeedScale: 0.8
+    _resolvesOnLanding: 0
+  _chargedHeavy:
+    _startupSteps: 6
+    _activeSteps: 6
+    _recoverySteps: 20
+    _damage: 26
+    _reachX: 2.2
+    _depthTolerance: 1.1
+    _lungeDistance: 2.4
+    _maxTargets: 1
+    _knockbackSpeed: 12
+    _launchSpeed: 0
+    _hitstopSteps: 4
+    _moveSpeedScale: 0.8
+    _resolvesOnLanding: 0
+  _chargeThresholdSteps: 30
+  _aerialLight:
+    _startupSteps: 4
+    _activeSteps: 3
+    _recoverySteps: 8
+    _damage: 4
+    _reachX: 1.6
+    _depthTolerance: 1
+    _lungeDistance: 1.2
+    _maxTargets: 2
+    _knockbackSpeed: 5.5
+    _launchSpeed: 5
+    _hitstopSteps: 2
+    _moveSpeedScale: 1
+    _resolvesOnLanding: 0
+  _aerialHeavy:
+    _startupSteps: 4
+    _activeSteps: 2
+    _recoverySteps: 12
+    _damage: 14
+    _reachX: 2.2
+    _depthTolerance: 1.1
+    _lungeDistance: 0
+    _maxTargets: 4
+    _knockbackSpeed: 10
+    _launchSpeed: 0
+    _hitstopSteps: 5
+    _moveSpeedScale: 0.3
+    _resolvesOnLanding: 1
+  _comboWindowSteps: 12
+  _inputBufferSteps: 12

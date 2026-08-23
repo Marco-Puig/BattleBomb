@@ -79,20 +79,39 @@ namespace BattleBomb.UI.Chest
         /// <summary>The shopkeeper's rack for this visit (D43) — empty at a chest.</summary>
         private readonly List<ItemInstance> _stock = new List<ItemInstance>();
 
-        private Text _header;
-        private Text _tabStrip;
-        private Text _filterStrip;
-        private Text _detail;
-        private Text _actionStrip;
+        private Text _sackTitle;
+        private Text _coin;
+        private Text _sackMeterText;
+        private Image _sackMeter;
+        private Text _tabSack;
+        private Text _tabHero;
+        private Text _sortText;
+        private Text _shopStrip;
         private Text _hint;
-        private RectTransform _gridRoot;
-        private readonly List<Image> _cells = new List<Image>();
-        private readonly List<Text> _cellLabels = new List<Text>();
-        private RectTransform _heroRoot;
-        private Text _heroLeft;
-        private Text _heroRight;
+        private readonly List<Image> _filterChips = new List<Image>();
+        private readonly List<Text> _filterLabels = new List<Text>();
 
-        private int Columns => _split ? GridColumnsSplit : GridColumnsWide;
+        private RectTransform _gridRoot;
+        private readonly List<ItemCell> _cells = new List<ItemCell>();
+        private float _cellSize = 96f;
+        private float _cellStride = 104f;
+        private float _gridLeft;
+
+        private ComparePanel _compare;
+        private ActionPopover _popover;
+        private readonly List<string> _popLabels = new List<string>();
+        private readonly List<int> _popPrices = new List<int>();
+
+        private RectTransform _heroRoot;
+        private HeroPanel _heroPanel;
+
+        /// <summary>
+        /// Eight, always. The sack panel is half the display solo and the player's whole half in
+        /// local co-op — the same width either way (UI Pass 01's "two halves, never resized"), so
+        /// there is nothing to reflow. <see cref="GridColumnsSplit"/> is the narrow-aspect and
+        /// mobile fallback, which no layout reaches yet.
+        /// </summary>
+        private int Columns => GridColumnsWide;
 
         private ChestLayout Layout() => new ChestLayout(
             _visible.Count, Columns, FilterNames.Length, _menu.Count, _upgradeTargets.Count, _stock.Count);

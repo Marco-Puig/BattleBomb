@@ -839,6 +839,11 @@ MonoBehaviour:
   _distancePerUnitSpread: 0.8
   _focusHeight: 1.4
   _edgeInset: 4
+  _frameOnScreens: 1
+  _screenFill: 0.72
+  _screenPanelFraction: 0.46
+  _screenPanelOnLeft: 1
+  _screenSubjectY: 0.02
 --- !u!1 &1951115144
 GameObject:
   m_ObjectHideFlags: 0
@@ -871,6 +876,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: BattleBomb.UI::BattleBomb.UI.Chest.ChestScreenHost
   _driver: {fileID: 0}
+  _displayFont: {fileID: 12800000, guid: 5b27b5c174a92694ba149285bb3d04ab, type: 3}
+  _uiFont: {fileID: 12800000, guid: 97765431fe4f3f24bb5fcbd0df876c1b, type: 3}
+  _monoFont: {fileID: 12800000, guid: 63678e76bc9aaf8438b49cc3d86829c2, type: 3}
 --- !u!4 &1951115146
 Transform:
   m_ObjectHideFlags: 0

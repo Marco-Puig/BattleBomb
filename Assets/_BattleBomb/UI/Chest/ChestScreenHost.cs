@@ -25,6 +25,16 @@ namespace BattleBomb.UI.Chest
         [Tooltip("Driver whose screens this follows. Leave empty to find the one in the scene.")]
         [SerializeField] private SimulationDriver _driver;
 
+        [Header("Fonts (UI Pass 01)")]
+        [Tooltip("Passion One — headings and numbers. Any left empty falls back to the built-in font.")]
+        [SerializeField] private Font _displayFont;
+
+        [Tooltip("Archivo — body copy and labels.")]
+        [SerializeField] private Font _uiFont;
+
+        [Tooltip("Space Mono — small caps labels and placeholder plates.")]
+        [SerializeField] private Font _monoFont;
+
         private readonly Dictionary<int, ChestScreen> _screens = new Dictionary<int, ChestScreen>();
         private readonly List<int> _scratch = new List<int>();
         private Canvas _canvas;
@@ -39,8 +49,17 @@ namespace BattleBomb.UI.Chest
         internal bool Buy(PlayerInventory bag, in Core.Items.ItemInstance item, int price) =>
             bag != null && bag.RequestBuy(item, price);
 
+        /// <summary>
+        /// The item's face, or null when it has none authored yet — which is the common case, and
+        /// what the sack's placeholder plate is for. Keyed by definition id because that is the
+        /// only handle on an item that survives a save.
+        /// </summary>
+        internal Sprite IconFor(int definitionId) => _driver?.ItemIcons?.For(definitionId);
+
         private void OnEnable()
         {
+            UiBuild.UseFonts(_displayFont, _uiFont, _monoFont);
+
             if (_driver == null)
             {
                 _driver = FindAnyObjectByType<SimulationDriver>();
@@ -164,7 +183,13 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
+            // One player on this display — solo, or online co-op where the partner has their own
+            // screen — means the sack takes the left half and the camera pushes the hero into the
+            // right. Two players sharing a display means the camera belongs to both, so the screen
+            // takes that player's half and tabs instead. CameraRig reads the same condition off
+            // the driver rather than being told: UI does not reach into Presentation.
             bool split = actors.Count > 1;
+
             var go = new GameObject($"Chest Screen P{playerId + 1}", typeof(RectTransform));
             go.transform.SetParent(_canvas.transform, false);
             var screen = go.AddComponent<ChestScreen>();

@@ -178,6 +178,10 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<WorldInteractable> _interactables = new List<WorldInteractable>();
 
         /// <summary>Which screen each player has open right now, by player id (D42).</summary>
+        /// <summary>What each open screen was opened on, for presentation to frame.</summary>
+        private readonly Dictionary<int, WorldInteractable> _openSources =
+            new Dictionary<int, WorldInteractable>();
+
         private readonly Dictionary<int, InteractionKind> _openScreens =
             new Dictionary<int, InteractionKind>();
         private readonly List<int> _screenScratch = new List<int>();
@@ -262,6 +266,17 @@ namespace BattleBomb.Gameplay.Simulation
             var context = new GenerationContext(
                 0f, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
             _lootRng = inventory.TryCombine(_lootRng, firstIndex, secondIndex, context, out result);
+        }
+
+        /// <summary>
+        /// The same gamble, taken to the end of the pile. One context and one stream for the whole
+        /// run, so a bulk press replays exactly like the presses it stands in for.
+        /// </summary>
+        internal void RunCombineAll(Inventory inventory, int anchorIndex, out CombineRun run)
+        {
+            var context = new GenerationContext(
+                0f, Encounter.LevelStamp, _itemSpecs, _qualityTable, _dropWeights, _elements.Ids);
+            _lootRng = inventory.CombineAll(_lootRng, anchorIndex, context, out run);
         }
 
         /// <summary>
@@ -411,11 +426,33 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Opens a screen for this player. The UI draws it; the simulation only records
         /// that their hands are busy.</summary>
-        public void OpenScreen(int playerIdValue, InteractionKind kind)
+        public void OpenScreen(int playerIdValue, InteractionKind kind) =>
+            OpenScreen(playerIdValue, kind, null);
+
+        /// <summary>
+        /// As above, naming the thing that was opened. Presentation needs it to know what to point
+        /// the camera at — a shopkeeper's screen frames the shopkeeper, not the player — and the
+        /// UI assembly cannot hand it over, so it is recorded here and observed (rule 2).
+        /// </summary>
+        public void OpenScreen(int playerIdValue, InteractionKind kind, WorldInteractable source)
         {
             _openScreens[playerIdValue] = kind;
+            if (source != null)
+            {
+                _openSources[playerIdValue] = source;
+            }
+            else
+            {
+                _openSources.Remove(playerIdValue);
+            }
+
             ScreenChanged?.Invoke(playerIdValue, kind, true);
         }
+
+        /// <summary>What this player has open, when it came from something in the world. False
+        /// for a screen opened without one, which is every test and debug route.</summary>
+        public bool TryGetOpenInteractable(int playerIdValue, out WorldInteractable interactable) =>
+            _openSources.TryGetValue(playerIdValue, out interactable) && interactable != null;
 
         /// <summary>Closes it again — the UI's back button, or walking away from the chest.</summary>
         public void CloseScreen(int playerIdValue)
@@ -426,6 +463,7 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             _openScreens.Remove(playerIdValue);
+            _openSources.Remove(playerIdValue);
             ScreenChanged?.Invoke(playerIdValue, kind, false);
         }
 
@@ -655,7 +693,8 @@ namespace BattleBomb.Gameplay.Simulation
 
                 if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count)
                 {
-                    OpenScreen(playerId, _interactables[interactable].Kind);
+                    OpenScreen(
+                        playerId, _interactables[interactable].Kind, _interactables[interactable]);
                 }
                 if (result.RevivedPartner >= 0 && result.RevivedPartner < actors.Count)
                 {

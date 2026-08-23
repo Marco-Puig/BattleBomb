@@ -177,6 +177,24 @@ namespace BattleBomb.Gameplay.Items
             return coins;
         }
 
+        /// <summary>"Clear the junk": sells every unlocked, non-consumable stack below the given
+        /// rank in one pass, banking the total.</summary>
+        public JunkSale RequestSellJunk(QualityRank below)
+        {
+            JunkSale sale = Inventory.SellJunk(below);
+            if (sale.Coins > 0)
+            {
+                Stash.Earn(sale.Coins);
+                Stash.NotifyChanged();
+            }
+
+            return sale;
+        }
+
+        /// <summary>What <see cref="RequestSellJunk"/> would sell, so the confirmation screen
+        /// does not have to reach through both the loadout and Core to ask.</summary>
+        public JunkSale PreviewJunk(QualityRank below) => Inventory.PreviewJunk(below);
+
         public bool RequestLock(int bagIndex, bool locked)
         {
             if (!Inventory.SetLock(bagIndex, locked))
@@ -261,6 +279,25 @@ namespace BattleBomb.Gameplay.Items
 
             _driver.RunCombine(Inventory, firstIndex, secondIndex, out result);
             if (!result.Combined)
+            {
+                return false;
+            }
+
+            Stash.NotifyChanged();
+            return true;
+        }
+
+        /// <summary>The same gamble, taken to the end of the pile in one press (D44).</summary>
+        public bool RequestCombineAll(int anchorIndex, out CombineRun run)
+        {
+            run = default;
+            if (_driver == null)
+            {
+                return false;
+            }
+
+            _driver.RunCombineAll(Inventory, anchorIndex, out run);
+            if (run.IsEmpty)
             {
                 return false;
             }

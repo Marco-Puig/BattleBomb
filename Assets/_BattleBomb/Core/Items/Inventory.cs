@@ -162,6 +162,61 @@ namespace BattleBomb.Core.Items
             return Prices.SellPrice(stack.Item) * stack.Count;
         }
 
+        /// <summary>
+        /// What "clear the junk" would sell, without selling it: every unlocked, non-consumable
+        /// stack below <paramref name="below"/> — a potion stack is not "a piece" here, mirroring
+        /// <see cref="FindAutoSellTarget"/> preferring gear over consumables. Worn gear is never
+        /// in this count; it lives in the loadout, not the bag. Read-only, so the confirmation
+        /// screen can show the number before the player commits to it.
+        /// </summary>
+        public JunkSale PreviewJunk(QualityRank below)
+        {
+            int stacks = 0;
+            int pieces = 0;
+            int coins = 0;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                ItemStack stack = _items[i];
+                if (stack.Item.Locked || stack.Item.IsConsumable || stack.Item.Quality >= below)
+                {
+                    continue;
+                }
+
+                stacks++;
+                pieces += stack.Count;
+                coins += Prices.SellPrice(stack.Item) * stack.Count;
+            }
+
+            return new JunkSale(stacks, pieces, coins);
+        }
+
+        /// <summary>
+        /// Sells everything <see cref="PreviewJunk"/> would report, for the same total. Walks the
+        /// bag backwards and calls <see cref="Sell"/> for each qualifying index rather than
+        /// removing entries directly, so the quick slot's own clearing logic never drifts from
+        /// the one-at-a-time sell path.
+        /// </summary>
+        public JunkSale SellJunk(QualityRank below)
+        {
+            int stacks = 0;
+            int pieces = 0;
+            int coins = 0;
+            for (int i = _items.Count - 1; i >= 0; i--)
+            {
+                ItemStack stack = _items[i];
+                if (stack.Item.Locked || stack.Item.IsConsumable || stack.Item.Quality >= below)
+                {
+                    continue;
+                }
+
+                stacks++;
+                pieces += stack.Count;
+                coins += Sell(i);
+            }
+
+            return new JunkSale(stacks, pieces, coins);
+        }
+
         /// <summary>Locks or releases the stack at this index — the auto-sell guard (D43).</summary>
         public bool SetLock(int bagIndex, bool locked)
         {
@@ -262,6 +317,88 @@ namespace BattleBomb.Core.Items
             RemoveOne(high);
             RemoveOne(low);
             _items.Add(new ItemStack(result.Item, 1));
+            return next;
+        }
+
+        /// <summary>
+        /// D44's gamble taken to the end of the pile: the piece at <paramref name="anchorIndex"/>
+        /// and every unlocked duplicate of it are ground down two at a time until fewer than two
+        /// of it remain. What the run holds on to is the anchor's <em>identity</em> — its
+        /// definition and its rank — never its index, because every combine removes two stacks and
+        /// shifts everything after them.
+        /// <para>
+        /// Only that captured identity is ground. A promotion comes back a rank higher, so it
+        /// leaves the pool the moment it lands and is never fed back in: the rank up is the payoff
+        /// D44 is paying, and cascading it would make one press's outcome unpredictable.
+        /// </para>
+        /// </summary>
+        public DeterministicRandom CombineAll(
+            in DeterministicRandom rng,
+            int anchorIndex,
+            in GenerationContext context,
+            out CombineRun run)
+        {
+            run = default;
+            DeterministicRandom next = rng;
+            if (anchorIndex < 0 || anchorIndex >= _items.Count)
+            {
+                return next;
+            }
+
+            // The captured value carries the definition and the rank, and CanCombine against it is
+            // the same rule the single combine and the chest grid already ask.
+            ItemInstance anchor = _items[anchorIndex].Item;
+            if (anchor.IsEmpty || anchor.IsConsumable || anchor.Locked)
+            {
+                return next;
+            }
+
+            int combines = 0;
+            int promotions = 0;
+
+            // A guard, not a rule: gear sits one per stack and every pass removes two of them for
+            // at most one back, so the pool always shrinks and this cap should be unreachable.
+            int cap = _items.Count;
+            while (combines < cap)
+            {
+                int first = -1;
+                int second = -1;
+                for (int i = 0; i < _items.Count; i++)
+                {
+                    if (!ItemCombine.CanCombine(anchor, _items[i].Item))
+                    {
+                        continue;
+                    }
+
+                    if (first < 0)
+                    {
+                        first = i;
+                        continue;
+                    }
+
+                    second = i;
+                    break;
+                }
+
+                if (second < 0)
+                {
+                    break;
+                }
+
+                next = TryCombine(next, first, second, context, out CombineResult result);
+                if (!result.Combined)
+                {
+                    break;
+                }
+
+                combines++;
+                if (result.Promoted)
+                {
+                    promotions++;
+                }
+            }
+
+            run = new CombineRun(combines, promotions);
             return next;
         }
 

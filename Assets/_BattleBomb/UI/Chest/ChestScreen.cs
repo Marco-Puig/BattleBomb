@@ -19,6 +19,7 @@ namespace BattleBomb.UI.Chest
         Combine = 3,
         Sell = 4,
         Lock = 5,
+        Unequip = 6,
     }
 
     /// <summary>
@@ -38,6 +39,14 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>Pieces the shopkeeper offers per visit (D43's "3–4 rolled gear pieces").</summary>
         private const int ShopStockCount = 4;
+
+        /// <summary>
+        /// The highest rung the junk sweep's threshold may be pushed to, so the sweep can clear
+        /// everything below Clean and no further. The design draws the stepper without a confirm
+        /// step, and one press that could sell a Legendary is a different feature from one that
+        /// clears trash. Raising this is a single edit if Michael wants a longer reach.
+        /// </summary>
+        private const int JunkRankCeiling = (int)QualityRank.Clean;
 
         /// <summary>Frames a held stick waits before it starts repeating, and between repeats.</summary>
         private const float RepeatDelay = 0.32f;
@@ -86,7 +95,6 @@ namespace BattleBomb.UI.Chest
         private Text _tabSack;
         private Text _tabHero;
         private Text _sortText;
-        private Text _shopStrip;
         private Text _hint;
         private readonly List<Image> _filterChips = new List<Image>();
         private readonly List<Text> _filterLabels = new List<Text>();
@@ -113,8 +121,30 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         private int Columns => GridColumnsWide;
 
+        /// <summary>Standing at the shopkeeper rather than a chest: the counter has two sides
+        /// and the junk sweep is on the panel.</summary>
+        private bool IsShop => _kind == InteractionKind.Shopkeeper;
+
+        /// <summary>Showing the rack rather than the sack.</summary>
+        private bool Buying => IsShop && _nav.Mode == ShopMode.Buy;
+
+        /// <summary>The hero panel is drawn beside the sack, so the cursor can walk into it.
+        /// Solo at a chest: split puts it behind a tab, and a shopkeeper has no hero half.</summary>
+        private bool HeroBeside => !_split && !IsShop;
+
+        /// <summary>The worn slot under the loadout cursor.</summary>
+        private HeroPanel.Slot WornSlot =>
+            HeroPanel.Order[Mathf.Clamp(_nav.LoadoutCursor, 0, HeroPanel.Order.Length - 1)];
+
+        private ItemInstance WornItem =>
+            _bag.Inventory.Loadout.Worn(WornSlot.Which, WornSlot.EquipmentIndex);
+
+        /// <summary>The rank the sweep currently sells below.</summary>
+        private QualityRank JunkThreshold => (QualityRank)_nav.JunkRank;
+
         private ChestLayout Layout() => new ChestLayout(
-            _visible.Count, Columns, FilterNames.Length, _menu.Count, _upgradeTargets.Count, _stock.Count);
+            _visible.Count, Columns, FilterNames.Length, _menu.Count, _upgradeTargets.Count,
+            _stock.Count, IsShop, JunkRankCeiling, HeroBeside);
 
         internal void Bind(
             PlayerInventory bag, Gameplay.Characters.CharacterActor sheetSource,
@@ -129,6 +159,8 @@ namespace BattleBomb.UI.Chest
             {
                 // Rolled once per visit, so coming back later is worth doing (D43).
                 Host?.RollStock(_stock, ShopStockCount);
+                CollectVisible();
+                _nav.SetMode(ShopMode.Buy, Layout());
             }
 
             Build();
@@ -167,6 +199,28 @@ namespace BattleBomb.UI.Chest
                 // through focus levels first. Getting out must never be a puzzle.
                 Host?.RequestClose(_playerId);
                 return;
+            }
+
+            if (command.WasPressed(CommandButtons.Magic))
+            {
+                // Mid-combine this is the bulk verb; otherwise, at a shop, it flips the counter.
+                // Heavy was the obvious button for "combine all" and is the one thing it cannot
+                // be: Heavy is how a combine is abandoned, and M6's one real defect was a screen
+                // with no way out (Michael suggested Heavy, 2026-08-23).
+                if (_nav.PendingCombine >= 0)
+                {
+                    RunCombineAll();
+                    Refresh();
+                    return;
+                }
+
+                if (IsShop)
+                {
+                    CollectVisible();
+                    _nav.SwitchMode(Layout());
+                    Refresh();
+                    return;
+                }
             }
 
             if (command.WasPressed(CommandButtons.Light))
@@ -280,7 +334,12 @@ namespace BattleBomb.UI.Chest
             {
                 case ChestOutcome.AllocateStat:
                     StatId[] stats = { StatId.Strength, StatId.Hp, StatId.Mana, StatId.Speed };
-                    Flash(_bag.RequestAllocate(stats[_nav.Cursor]) ? "Point spent." : "No points to spend.");
+                    Flash(_bag.RequestAllocate(stats[_nav.StatCursor])
+                        ? "Point spent." : "No points to spend.");
+                    break;
+
+                case ChestOutcome.MenuOpened:
+                    _nav.SetOnWorn(false);
                     break;
 
                 case ChestOutcome.RunMenuAction:
@@ -294,13 +353,54 @@ namespace BattleBomb.UI.Chest
                 case ChestOutcome.RunBuy:
                     RunBuy();
                     break;
+
+                case ChestOutcome.RunSellJunk:
+                    RunSellJunk();
+                    break;
+
+                case ChestOutcome.OpenWornMenu:
+                    if (WornItem.IsEmpty)
+                    {
+                        Flash("Nothing in that slot.");
+                        break;
+                    }
+
+                    _nav.SetOnWorn(true);
+                    BuildWornMenu(WornItem);
+                    _nav.OpenWornMenu();
+                    break;
             }
 
             Refresh();
         }
 
+        /// <summary>
+        /// The sweep: every unlocked piece below the threshold, sold in one press. Consumables are
+        /// spared — a stack of potions is not junk, which is the same call auto-sell makes when it
+        /// picks what to give up — and worn gear was never in the sack to begin with.
+        /// </summary>
+        private void RunSellJunk()
+        {
+            JunkSale sale = _bag.RequestSellJunk(JunkThreshold);
+            if (sale.IsEmpty)
+            {
+                Flash($"Nothing below {JunkThreshold}.");
+                return;
+            }
+
+            CollectVisible();
+            _nav.ClampCursor(_visible.Count);
+            Flash($"Cleared {sale.Pieces} for {sale.Coins}.");
+        }
+
         private void RunMenuAction()
         {
+            if (_nav.OnWorn)
+            {
+                RunWornAction();
+                return;
+            }
+
             CollectVisible();
             if (_visible.Count == 0 || _nav.Action >= _menu.Count)
             {
@@ -347,6 +447,54 @@ namespace BattleBomb.UI.Chest
             _nav.FinishMenuAction(_visible.Count);
         }
 
+        /// <summary>
+        /// The verbs a worn piece offers. Deepening is the one that matters: gear could only be
+        /// upgraded out of the bag before, so improving something you were wearing meant taking it
+        /// off, upgrading it and putting it back on (Michael, 2026-08-23).
+        /// </summary>
+        private void BuildWornMenu(in ItemInstance worn)
+        {
+            _menu.Clear();
+            if (ItemUpgrade.CanUpgrade(worn))
+            {
+                _menu.Add(ItemAction.Upgrade);
+            }
+
+            _menu.Add(ItemAction.Unequip);
+            _menu.Add(ItemAction.Lock);
+            _nav.ClampAction(_menu.Count);
+        }
+
+        private void RunWornAction()
+        {
+            ItemInstance worn = WornItem;
+            if (worn.IsEmpty || _nav.Action >= _menu.Count)
+            {
+                return;
+            }
+
+            HeroPanel.Slot slot = WornSlot;
+            switch (_menu[_nav.Action])
+            {
+                case ItemAction.Upgrade:
+                    ItemUpgrade.Targets(worn, _upgradeTargets);
+                    _nav.OpenUpgrade();
+                    return;
+
+                case ItemAction.Unequip:
+                    Flash(_bag.RequestUnequip(slot.Which, slot.EquipmentIndex)
+                        ? "Taken off." : "The sack is full.");
+                    break;
+
+                default:
+                    _bag.RequestLockWorn(slot.Which, slot.EquipmentIndex, !worn.Locked);
+                    Flash(worn.Locked ? "Released." : "Locked.");
+                    break;
+            }
+
+            _nav.FinishMenuAction(_visible.Count);
+        }
+
         /// <summary>Buying from the rack (D43): the money leaves, the piece joins the sack, and
         /// the slot on the rack empties so the same item cannot be bought twice.</summary>
         private void RunBuy()
@@ -368,6 +516,37 @@ namespace BattleBomb.UI.Chest
             _nav.FinishBuy(_stock.Count);
 
             Flash($"Bought for {price}.");
+        }
+
+        /// <summary>
+        /// Grinds the whole pile in one press. An unpromoted reroll comes back at the same rank
+        /// and rejoins the pile, so a stack of four is three combines ending in one piece rather
+        /// than two ending in two — the run keeps going until fewer than two of that exact
+        /// definition and rank are left. A promotion leaves the pile and is never re-gambled.
+        /// </summary>
+        private void RunCombineAll()
+        {
+            int anchor = _nav.PendingCombine;
+            if (anchor < 0)
+            {
+                return;
+            }
+
+            // Released before the bag moves, exactly as a single combine does: combining raises
+            // Changed, and OnBagChanged reads a still-pending index as a sack that shifted.
+            _nav.CancelCombine();
+
+            if (!_bag.RequestCombineAll(anchor, out CombineRun run))
+            {
+                RecollectOnto(anchor);
+                Flash("Nothing left to combine.");
+                return;
+            }
+
+            RecollectOnto(_bag.Inventory.Items.Count - 1);
+            Flash(run.Promotions > 0
+                ? $"Combined {run.Combines} — {run.Promotions} UPGRADED!"
+                : $"Combined {run.Combines}.");
         }
 
         private void RunCombine(int bagIndex)
@@ -428,8 +607,19 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         private void RunUpgrade()
         {
+            if (_nav.UpgradeCursor >= _upgradeTargets.Count)
+            {
+                return;
+            }
+
+            if (_nav.OnWorn)
+            {
+                RunUpgradeWorn();
+                return;
+            }
+
             CollectVisible();
-            if (_visible.Count == 0 || _nav.UpgradeCursor >= _upgradeTargets.Count)
+            if (_visible.Count == 0)
             {
                 return;
             }
@@ -442,6 +632,32 @@ namespace BattleBomb.UI.Chest
                 Flash($"Deepened for {price}.");
                 ItemUpgrade.Targets(_bag.Inventory.Items[bagIndex].Item, _upgradeTargets);
                 _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(_bag.Inventory.Items[bagIndex].Item));
+                return;
+            }
+
+            Flash(_bag.Wallet.CanAfford(price)
+                ? "The capacity is spent."
+                : $"Not enough coin ({price}).");
+        }
+
+        /// <summary>The same spend, against the piece the player is wearing.</summary>
+        private void RunUpgradeWorn()
+        {
+            ItemInstance worn = WornItem;
+            if (worn.IsEmpty)
+            {
+                return;
+            }
+
+            HeroPanel.Slot slot = WornSlot;
+            int price = _bag.Inventory.Prices.UpgradeCost(worn);
+
+            if (_bag.RequestUpgradeWorn(slot.Which, slot.EquipmentIndex, _upgradeTargets[_nav.UpgradeCursor]))
+            {
+                Flash($"Deepened for {price}.");
+                ItemInstance next = WornItem;
+                ItemUpgrade.Targets(next, _upgradeTargets);
+                _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(next));
                 return;
             }
 

@@ -21,7 +21,7 @@ namespace BattleBomb.UI.Chest
         private const float SlotSize = 92f;
         private const float SlotGap = 20f;
 
-        private readonly struct Slot
+        internal readonly struct Slot
         {
             internal readonly ItemSlot Which;
             internal readonly int EquipmentIndex;
@@ -48,10 +48,31 @@ namespace BattleBomb.UI.Chest
             new Slot(ItemSlot.Equipment, 0), new Slot(ItemSlot.Equipment, 1),
         };
 
+        /// <summary>
+        /// Every worn slot in the order the cells are filled, which is the order
+        /// <see cref="ChestNavigation.LoadoutCursor"/> indexes them by. Built from the three
+        /// column arrays rather than written out again, so the cursor and the cells cannot drift
+        /// apart — a mismatch here would deepen a piece the player was not pointing at.
+        /// </summary>
+        internal static readonly Slot[] Order = BuildOrder();
+
+        private static Slot[] BuildOrder()
+        {
+            var all = new Slot[Left.Length + Right.Length + Worn.Length];
+            Left.CopyTo(all, 0);
+            Right.CopyTo(all, Left.Length);
+            Worn.CopyTo(all, Left.Length + Right.Length);
+            return all;
+        }
+
         private static readonly string[] LeftLabels = { "HELMET", "CHEST", "BOOTS" };
         private static readonly string[] RightLabels = { "WEAPON", "PET" };
         private static readonly string[] WornLabels = { "EQUIP 1", "EQUIP 2" };
         private static readonly string[] StatNames = { "Strength", "HP", "Mana", "Speed" };
+
+        private int _loadoutCursor = -1;
+        private RectTransform _doll;
+        private ActionPopover _popover;
 
         private readonly RectTransform _root;
         private readonly Text _title;
@@ -129,6 +150,7 @@ namespace BattleBomb.UI.Chest
 
             // ── The doll ──
             RectTransform doll = UiBuild.Rect("Doll", pad);
+            _doll = doll;
             doll.anchorMin = new Vector2(0f, 0f);
             doll.anchorMax = new Vector2(1f, 1f);
             doll.offsetMin = new Vector2(0f, 250f);
@@ -147,6 +169,10 @@ namespace BattleBomb.UI.Chest
             Centre(_placeholder.rectTransform, 0.5f, 0.56f, 290f, 400f);
             _placeholderText = UiBuild.Label("PlaceholderText", _placeholder.rectTransform,
                 "HERO SPRITE\n2D BILLBOARD", 11, UiBuild.Muted, TextAnchor.MiddleCenter, UiBuild.Mono);
+
+            // The verb list for a worn piece floats over this half, not the sack's, so it needs
+            // its own popover anchored in the doll's space.
+            _popover = new ActionPopover(doll, 6);
 
             _quick = new ItemCell(doll, "Quick");
             _quickLabel = UiBuild.Legible(UiBuild.Label("QuickLabel", doll, "QUICK-USE", 9, UiBuild.Bone,
@@ -220,6 +246,31 @@ namespace BattleBomb.UI.Chest
             UiBuild.Stretch(_hints.rectTransform);
         }
 
+        /// <summary>The verb list that floats over a worn slot.</summary>
+        internal ActionPopover Popover => _popover;
+
+        internal float SlotPixels => SlotSize;
+
+        internal float DollWidth => _doll != null && _doll.rect.width > 1f ? _doll.rect.width : 420f;
+
+        /// <summary>
+        /// Where a worn cell sits in the doll's own space. The right-hand column is anchored to
+        /// the right edge, so its <see cref="RectTransform.anchoredPosition"/> alone is a negative
+        /// offset rather than a position — the anchor has to be folded back in or the popover
+        /// lands off the panel.
+        /// </summary>
+        internal Vector2 SlotAnchor(int index)
+        {
+            if (index < 0 || index >= _cells.Count)
+            {
+                return Vector2.zero;
+            }
+
+            RectTransform rect = _cells[index].Root;
+            return new Vector2(
+                rect.anchorMin.x * DollWidth + rect.anchoredPosition.x, rect.anchoredPosition.y);
+        }
+
         private void BuildColumn(
             RectTransform parent, Slot[] slots, string[] labels, float anchorX, float offsetX)
         {
@@ -286,8 +337,10 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         internal void Set(
             PlayerInventory bag, in StatSheet sheet, int cursor, bool statsFocused,
-            bool framed, ChestScreenHost host)
+            bool framed, ChestScreenHost host, int loadoutCursor = -1)
         {
+            _loadoutCursor = loadoutCursor;
+
             if (bag == null)
             {
                 return;
@@ -335,7 +388,7 @@ namespace BattleBomb.UI.Chest
             SetTotal(4, "Speed", "×" + sheet.NetMoveSpeedMultiplier.ToString("F2"));
             SetTotal(5, "Mana", sheet.MaxMana.ToString("F0"));
 
-            _hints.text = "Stick: move    Light: spend / equip    Heavy: unequip    Esc: leave";
+            _hints.text = "Stick: move    Light: open the slot    Heavy: back    Esc: leave";
         }
 
         private void FillColumn(PlayerInventory bag, Slot[] slots, ChestScreenHost host, ref int index)
@@ -346,12 +399,14 @@ namespace BattleBomb.UI.Chest
                 if (item.IsEmpty)
                 {
                     _cells[index].SetEmpty();
+                    _cells[index].SetCursor(index == _loadoutCursor);
                     continue;
                 }
 
                 _cells[index].Set(
                     item, 1, host != null ? host.IconFor(item.DefinitionId) : null,
-                    focused: false, worn: false, pendingCombine: false, cellSize: SlotSize);
+                    focused: index == _loadoutCursor, worn: false, pendingCombine: false,
+                    cellSize: SlotSize);
             }
         }
 

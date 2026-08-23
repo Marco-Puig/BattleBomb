@@ -44,11 +44,21 @@ namespace BattleBomb.UI.Chest
             seamRect.pivot = new Vector2(1f, 0.5f);
             seamRect.sizeDelta = new Vector2(5f, 0f);
 
+            // At a shopkeeper the mode tabs take a band off the top, exactly as the design has
+            // them: above the header rather than beside the filters, which are Sell mode's own
+            // row and would have to move aside for them.
+            float shopBand = IsShop ? ShopTabBand : 0f;
+
             RectTransform pad = UiBuild.Rect("Pad", _sackRoot);
             pad.anchorMin = Vector2.zero;
             pad.anchorMax = Vector2.one;
             pad.offsetMin = new Vector2(30f, 26f);
-            pad.offsetMax = new Vector2(-27f, -26f);
+            pad.offsetMax = new Vector2(-27f, -(26f + shopBand));
+
+            if (IsShop)
+            {
+                BuildModeTabs();
+            }
 
             BuildSackHead(pad);
             BuildFilterRow(pad);
@@ -57,13 +67,34 @@ namespace BattleBomb.UI.Chest
             RectTransform gridArea = UiBuild.Rect("GridArea", pad);
             gridArea.anchorMin = new Vector2(0f, 0f);
             gridArea.anchorMax = new Vector2(1f, 1f);
-            gridArea.offsetMin = new Vector2(0f, 300f);
+            gridArea.offsetMin = new Vector2(0f, IsShop ? ShopBodyBottom : 300f);
             gridArea.offsetMax = new Vector2(0f, -128f);
 
             _gridRoot = UiBuild.Rect("Grid", gridArea);
             UiBuild.Stretch(_gridRoot);
             BuildGrid();
             _popover = new ActionPopover(gridArea, 6);
+
+            // The rack occupies the same band as the grid and the two are never both up: Buy
+            // shows four priced rows, Sell shows the sack.
+            if (IsShop)
+            {
+                _rackRoot = UiBuild.Rect("Rack", gridArea);
+                UiBuild.Stretch(_rackRoot);
+
+                // Buy draws no filter row, so the rack reaches up into the band the chips would
+                // have taken. Left alone it opens with a strip of empty board under the rule.
+                _rackRoot.offsetMax = new Vector2(0f, HasTabs ? 20f : 62f);
+                for (int i = 0; i < ShopStockCount; i++)
+                {
+                    _rackRows.Add(new RackRow(_rackRoot, $"Roll {i}"));
+                }
+
+                _rackEmpty = UiBuild.Label("Bare", _rackRoot,
+                    "The rack is bare. Come back after the next stage.", 14, UiBuild.Muted,
+                    TextAnchor.UpperLeft, UiBuild.Ui);
+                UiBuild.Pin(_rackEmpty.rectTransform, 4f, 6f, 520f, 24f);
+            }
 
             RectTransform compare = UiBuild.Rect("CompareArea", pad);
             compare.anchorMin = new Vector2(0f, 0f);
@@ -73,23 +104,30 @@ namespace BattleBomb.UI.Chest
             compare.anchoredPosition = new Vector2(0f, 44f);
             _compare = new ComparePanel(compare);
 
-            // The shopkeeper's rack still reads as a strip. Its designed form — explicit BUY and
-            // SELL modes with a row per roll — is the next pass; this keeps the shop working
-            // rather than leaving it with nowhere to draw.
-            _shopStrip = UiBuild.Label("Shop", pad, string.Empty, 12, UiBuild.Bone,
-                TextAnchor.LowerLeft, UiBuild.Ui);
-            RectTransform shop = _shopStrip.rectTransform;
-            shop.anchorMin = new Vector2(0f, 0f);
-            shop.anchorMax = new Vector2(1f, 0f);
-            shop.pivot = new Vector2(0.5f, 0f);
-            shop.sizeDelta = new Vector2(0f, 40f);
-            shop.anchoredPosition = new Vector2(0f, 280f);
+            if (IsShop)
+            {
+                _junkArea = UiBuild.Rect("JunkArea", pad);
+                _junkArea.anchorMin = new Vector2(0f, 0f);
+                _junkArea.anchorMax = new Vector2(1f, 0f);
+                _junkArea.pivot = new Vector2(0.5f, 0f);
+                _junkArea.sizeDelta = new Vector2(0f, JunkBar.Height);
+                _junkArea.anchoredPosition = new Vector2(0f, 288f);
+                _junkBar = new JunkBar(_junkArea);
+            }
 
             _hint = UiBuild.Label("Hint", pad, string.Empty, 12, UiBuild.Muted,
                 TextAnchor.LowerLeft, UiBuild.Ui);
             UiBuild.Stretch(_hint.rectTransform);
 
             // ── Hero ─────────────────────────────────────────────────────────────────
+            // Not at a shopkeeper (Michael, 2026-08-23). The counter is about their rack, not
+            // about the player's doll, so the free half is left to the world and the camera puts
+            // the shopkeeper in it.
+            if (IsShop)
+            {
+                return;
+            }
+
             _heroRoot = UiBuild.Place(
                 UiBuild.Rect("Hero", root), _split ? 0f : 0.5f, 0f, 1f, 1f);
 
@@ -108,7 +146,7 @@ namespace BattleBomb.UI.Chest
         /// <summary>Title, the wallet, and how full the sack is.</summary>
         private void BuildSackHead(RectTransform pad)
         {
-            if (_split)
+            if (HasTabs)
             {
                 _tabSack = BuildTab(pad, "SACK", 0f);
                 _tabHero = BuildTab(pad, "HERO", 132f);
@@ -116,9 +154,16 @@ namespace BattleBomb.UI.Chest
 
             _sackTitle = UiBuild.Label("Title", pad, "ITEM SACK", 38, UiBuild.Bone,
                 TextAnchor.UpperLeft, UiBuild.Display);
-            UiBuild.Pin(_sackTitle.rectTransform, 0f, _split ? 42f : 0f, 420f, 44f);
+            UiBuild.Pin(_sackTitle.rectTransform, 0f, HasTabs ? 42f : 0f, 420f, 44f);
 
-            float headTop = _split ? 46f : 4f;
+            if (IsShop)
+            {
+                _subtitle = UiBuild.Label("Subtitle", pad, string.Empty, 10, UiBuild.Brass,
+                    TextAnchor.LowerLeft, UiBuild.Mono);
+                UiBuild.Pin(_subtitle.rectTransform, 226f, (HasTabs ? 42f : 0f) + 14f, 430f, 26f);
+            }
+
+            float headTop = HasTabs ? 46f : 4f;
 
             Image coinPill = UiBuild.Box("CoinPill", pad, UiBuild.Well);
             RectTransform pill = UiBuild.Pin(coinPill.rectTransform, 0f, headTop, 108f, 30f);
@@ -167,7 +212,25 @@ namespace BattleBomb.UI.Chest
             button.onClick.AddListener(CloseFromPointer);
 
             Image rule = UiBuild.Rule("Rule", pad, 3f, UiBuild.BrassDim);
-            rule.rectTransform.anchoredPosition = new Vector2(0f, _split ? -96f : -54f);
+            rule.rectTransform.anchoredPosition = new Vector2(0f, HasTabs ? -96f : -54f);
+        }
+
+        /// <summary>
+        /// BUY and SELL, drawn as the design's raised tabs. They are a readout, not a control:
+        /// the switch is on its own button, because in split co-op the tab row underneath is
+        /// already carrying sack-versus-hero and cannot also carry this.
+        /// </summary>
+        private void BuildModeTabs()
+        {
+            RectTransform band = UiBuild.Rect("ModeTabs", _sackRoot);
+            band.anchorMin = new Vector2(0f, 1f);
+            band.anchorMax = new Vector2(1f, 1f);
+            band.pivot = new Vector2(0.5f, 1f);
+            band.sizeDelta = new Vector2(-60f, ShopTabBand);
+            band.anchoredPosition = new Vector2(0f, -20f);
+
+            _tabBuy = BuildTab(band, "BUY", 0f);
+            _tabSell = BuildTab(band, "SELL", 132f);
         }
 
         private Text BuildTab(RectTransform pad, string caption, float x)
@@ -181,12 +244,17 @@ namespace BattleBomb.UI.Chest
         /// <summary>The six category chips, and the sort the design puts opposite them.</summary>
         private void BuildFilterRow(RectTransform pad)
         {
-            float top = _split ? 108f : 66f;
+            // Held in one rect so Buy mode, which has no categories to filter, can put the whole
+            // row away in a single call rather than walking the chips.
+            _filterRow = UiBuild.Rect("FilterRow", pad);
+            UiBuild.Stretch(_filterRow);
+
+            float top = HasTabs ? 108f : 66f;
             float x = 0f;
             for (int i = 0; i < FilterNames.Length; i++)
             {
                 float width = 34f + FilterNames[i].Length * 8f;
-                Image chip = UiBuild.Box($"Filter {i}", pad, UiBuild.Well);
+                Image chip = UiBuild.Box($"Filter {i}", _filterRow, UiBuild.Well);
                 UiBuild.Pin(chip.rectTransform, x, top, width, 30f);
                 _filterChips.Add(chip);
                 _filterLabels.Add(UiBuild.Label("Text", chip.rectTransform, FilterNames[i], 12,
@@ -194,7 +262,7 @@ namespace BattleBomb.UI.Chest
                 x += width + 6f;
             }
 
-            Image sortBox = UiBuild.Box("Sort", pad, UiBuild.Well);
+            Image sortBox = UiBuild.Box("Sort", _filterRow, UiBuild.Well);
             RectTransform sort = UiBuild.Pin(sortBox.rectTransform, 0f, top, 150f, 30f);
             sort.anchorMin = new Vector2(1f, 1f);
             sort.anchorMax = new Vector2(1f, 1f);
@@ -207,9 +275,36 @@ namespace BattleBomb.UI.Chest
             _sortText.rectTransform.offsetMax = new Vector2(-10f, 0f);
         }
 
+        /// <summary>The band the BUY / SELL tabs take off the top of the shop panel.</summary>
+        private const float ShopTabBand = 40f;
+
+        /// <summary>Where the body stops at a shop, leaving room for the sweep and the compare
+        /// panel beneath it.</summary>
+        private const float ShopBodyBottom = 388f;
+
         private RectTransform _sackRoot;
         private RectTransform _menuRoot;
         private Text _menuText;
+
+        /// <summary>The sack-versus-hero tab row exists only where there is a hero half to
+        /// reach: local co-op, and never at a shopkeeper.</summary>
+        private bool HasTabs => _split && !IsShop;
+
+        /// <summary>The cursor is in the worn loadout, including while its verb list or its
+        /// upgrade list is open over it.</summary>
+        private bool OnLoadout =>
+            _nav.Focus == ChestFocus.Loadout
+            || (_nav.OnWorn && (_nav.Focus == ChestFocus.Menu || _nav.Focus == ChestFocus.Upgrade));
+
+        private RectTransform _filterRow;
+        private RectTransform _rackRoot;
+        private readonly List<RackRow> _rackRows = new List<RackRow>();
+        private Text _rackEmpty;
+        private RectTransform _junkArea;
+        private JunkBar _junkBar;
+        private Text _tabBuy;
+        private Text _tabSell;
+        private Text _subtitle;
 
         private void BuildGrid()
         {
@@ -278,8 +373,18 @@ namespace BattleBomb.UI.Chest
             CollectVisible();
             Inventory inventory = _bag.Inventory;
 
-            _sackTitle.text = _kind == InteractionKind.Chest ? "ITEM SACK" : "THE RACK";
+            bool buying = Buying;
+            _sackTitle.text = buying ? "THE RACK" : "ITEM SACK";
             _coin.text = _bag.Wallet.Balance.ToString();
+
+            if (IsShop)
+            {
+                _subtitle.text = buying
+                    ? $"THIS VISIT · {_stock.Count} {(_stock.Count == 1 ? "ROLL" : "ROLLS")}"
+                    : "MONEY ENTERS ONLY BY SELLING · YOU RECEIVE HALF OF VALUE";
+                SetTab(_tabBuy, buying);
+                SetTab(_tabSell, !buying);
+            }
 
             int used = inventory.SlotsUsed;
             int capacity = Mathf.Max(1, inventory.Rules.Capacity);
@@ -287,9 +392,10 @@ namespace BattleBomb.UI.Chest
             UiBuild.SetFill(_sackMeter, used / (float)capacity);
 
             // Split shows one half at a time and the tabs say which. Solo shows both at once, so
-            // there is nothing to tab between and the strip is not built at all.
-            bool sack = !_split || _nav.Tab == ChestTab.ItemSack;
-            if (_split)
+            // there is nothing to tab between and the strip is not built at all. A shopkeeper has
+            // no hero half either way, so it never tabs.
+            bool sack = !HasTabs || _nav.Tab == ChestTab.ItemSack;
+            if (HasTabs)
             {
                 _sackRoot.gameObject.SetActive(sack);
                 _heroRoot.gameObject.SetActive(!sack);
@@ -302,15 +408,60 @@ namespace BattleBomb.UI.Chest
                 RefreshSack();
             }
 
-            if (!_split || !sack)
+            if (_heroPanel != null && (!HasTabs || !sack))
             {
                 RefreshHero();
             }
 
-            _hint.text = _flash.Length > 0
-                ? UiBuild.Tint(_flash, UiBuild.Gold)
-                : "Stick: move    Light: actions    Heavy: back    "
-                    + UiBuild.Tint("Esc / Start or ✕: leave the chest", UiBuild.Gold);
+            _hint.text = _flash.Length > 0 ? UiBuild.Tint(_flash, UiBuild.Gold) : HintLine();
+        }
+
+        /// <summary>What Light does depends on where the cursor is, so the footer says so rather
+        /// than naming one verb and being wrong on three of the screen's four blocks.</summary>
+        private string HintLine()
+        {
+            string leave = UiBuild.Tint(
+                IsShop ? "Esc / Start or ✕: leave" : "Esc / Start or ✕: leave the chest", UiBuild.Gold);
+
+            // Mid-combine the screen is one question, so the footer answers only that one.
+            if (_nav.PendingCombine >= 0)
+            {
+                return "Stick: move    Light: combine with this    "
+                    + UiBuild.Tint("Magic: combine the whole pile", UiBuild.Gold)
+                    + "    Heavy: cancel";
+            }
+
+            if (_nav.Focus == ChestFocus.Upgrade)
+            {
+                return "Stick: pick a stat    Light: spend    Heavy: back    " + leave;
+            }
+
+            if (_nav.Focus == ChestFocus.Loadout)
+            {
+                return "Stick: move    Light: upgrade / take off    Heavy: back to the sack    "
+                    + leave;
+            }
+
+            if (_nav.Focus == ChestFocus.Stats)
+            {
+                return "Stick: move    Light: spend a point    Heavy: back    " + leave;
+            }
+
+            if (!IsShop)
+            {
+                // Only advertise the crossing when the cursor is actually free to make it.
+                string across = _nav.Focus == ChestFocus.Grid && HeroBeside
+                    ? UiBuild.Tint("Right: your gear", UiBuild.Gold) + "    "
+                    : string.Empty;
+                return "Stick: move    Light: actions    " + across + "Heavy: back    " + leave;
+            }
+
+            string light = _nav.Focus == ChestFocus.Junk
+                ? "Light: clear the junk"
+                : Buying ? "Light: buy" : "Light: actions";
+
+            return $"Stick: move    {light}    Magic: {(Buying ? "sell side" : "buy side")}"
+                + "    Heavy: back    " + leave;
         }
 
         private void SetTab(Text tab, bool on)
@@ -353,7 +504,7 @@ namespace BattleBomb.UI.Chest
             {
                 return UiBuild.Tint(
                     "COMBINING " + items[pending].Item.DisplayName
-                        + " — pick a duplicate.   Heavy: cancel",
+                        + " — pick a duplicate, or Magic for the whole pile.   Heavy: cancel",
                     UiBuild.Coin);
             }
 
@@ -372,6 +523,36 @@ namespace BattleBomb.UI.Chest
         private void RefreshSack()
         {
             IReadOnlyList<ItemStack> items = _bag.Inventory.Items;
+
+            // Buy replaces the sack outright — the rack rows and a five-row grid do not both fit
+            // the half, which is what makes the counter two modes instead of one screen.
+            bool buying = Buying;
+            if (IsShop)
+            {
+                _rackRoot.gameObject.SetActive(buying);
+                _filterRow.gameObject.SetActive(!buying);
+                _gridRoot.gameObject.SetActive(!buying);
+                RefreshJunk();
+            }
+
+            if (buying)
+            {
+                RefreshRack();
+                _popover.Hide();
+                _menu.Clear();
+
+                if (_nav.StockCursor < _stock.Count)
+                {
+                    SetCompare(_stock[_nav.StockCursor]);
+                }
+                else
+                {
+                    _compare.SetEmpty("The rack is bare.");
+                }
+
+                return;
+            }
+
             RefreshFilters();
 
             float cellSize = LayOutGrid();
@@ -401,15 +582,14 @@ namespace BattleBomb.UI.Chest
             }
 
             int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_nav.Cursor, 0, _visible.Count - 1)] : -1;
-            BuildMenu(bagIndex);
-            RefreshPopover(bagIndex);
-            RefreshShopRow();
-
-            if (_nav.Focus == ChestFocus.Stock && _nav.StockCursor < _stock.Count)
+            if (!_nav.OnWorn)
             {
-                SetCompare(_stock[_nav.StockCursor]);
+                BuildMenu(bagIndex);
             }
-            else if (bagIndex >= 0)
+
+            RefreshPopover(bagIndex);
+
+            if (bagIndex >= 0)
             {
                 SetCompare(items[bagIndex].Item);
             }
@@ -435,6 +615,22 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         private void RefreshPopover(int bagIndex)
         {
+            // A worn piece has its own popover over in the hero panel; this one belongs to the
+            // grid and must get out of the way rather than float over the wrong half.
+            if (OnLoadout)
+            {
+                _popover.Hide();
+                RefreshWornPopover();
+                return;
+            }
+
+            if (_nav.Focus == ChestFocus.Upgrade && bagIndex >= 0)
+            {
+                ShowUpgradeList(
+                    _bag.Inventory.Items[bagIndex].Item, GridAnchor(), _cellSize, GridWidth(), _popover);
+                return;
+            }
+
             if (_nav.Focus != ChestFocus.Menu || bagIndex < 0 || _menu.Count == 0)
             {
                 _popover.Hide();
@@ -451,10 +647,80 @@ namespace BattleBomb.UI.Chest
                 _popPrices.Add(PriceFor(_menu[i], item, bagIndex));
             }
 
+            _popover.Show(item, _popLabels, _popPrices, _nav.Action, GridAnchor(), _cellSize, GridWidth());
+        }
+
+        private Vector2 GridAnchor()
+        {
             int cursor = Mathf.Clamp(_nav.Cursor, 0, Mathf.Max(0, _cells.Count - 1));
-            Vector2 at = _cells.Count > 0 ? _cells[cursor].AnchoredPosition : Vector2.zero;
-            float width = _gridRoot != null ? _gridRoot.rect.width : 900f;
-            _popover.Show(item, _popLabels, _popPrices, _nav.Action, at, _cellSize, width);
+            return _cells.Count > 0 ? _cells[cursor].AnchoredPosition : Vector2.zero;
+        }
+
+        private float GridWidth() => _gridRoot != null ? _gridRoot.rect.width : 900f;
+
+        /// <summary>
+        /// The stat targets a point can go into, drawn as the same floating list the verbs use.
+        /// Until now this focus drew nothing at all — the popover hid the moment "Upgrade" was
+        /// chosen, so the player was moving a cursor down an invisible list and spending coin on
+        /// whatever it happened to be sitting on.
+        /// </summary>
+        private void ShowUpgradeList(
+            in ItemInstance item, Vector2 at, float cellSize, float width, ActionPopover popover)
+        {
+            if (_upgradeTargets.Count == 0)
+            {
+                popover.Hide();
+                return;
+            }
+
+            int price = _bag.Inventory.Prices.UpgradeCost(item);
+            _popLabels.Clear();
+            _popPrices.Clear();
+            for (int i = 0; i < _upgradeTargets.Count; i++)
+            {
+                string name = NameOf(item, _upgradeTargets[i]);
+                float value = ValueOf(item, _upgradeTargets[i]);
+                _popLabels.Add($"{name}  {value:F2}");
+                _popPrices.Add(price);
+            }
+
+            popover.Show(item, _popLabels, _popPrices, _nav.UpgradeCursor, at, cellSize, width);
+        }
+
+        /// <summary>The worn piece's verbs, and its upgrade list, floated over the hero half.</summary>
+        private void RefreshWornPopover()
+        {
+            if (_heroPanel == null)
+            {
+                return;
+            }
+
+            ItemInstance worn = WornItem;
+            if (worn.IsEmpty || !_nav.OnWorn || _nav.Focus == ChestFocus.Loadout)
+            {
+                _heroPanel.Popover.Hide();
+                return;
+            }
+
+            Vector2 at = _heroPanel.SlotAnchor(_nav.LoadoutCursor);
+            if (_nav.Focus == ChestFocus.Upgrade)
+            {
+                ShowUpgradeList(
+                    worn, at, _heroPanel.SlotPixels, _heroPanel.DollWidth, _heroPanel.Popover);
+                return;
+            }
+
+            _popLabels.Clear();
+            _popPrices.Clear();
+            for (int i = 0; i < _menu.Count; i++)
+            {
+                _popLabels.Add(NameFor(_menu[i]));
+                _popPrices.Add(PriceFor(_menu[i], worn, -1));
+            }
+
+            _heroPanel.Popover.Show(
+                worn, _popLabels, _popPrices, _nav.Action, at,
+                _heroPanel.SlotPixels, _heroPanel.DollWidth);
         }
 
         private static string NameFor(ItemAction action)
@@ -466,6 +732,7 @@ namespace BattleBomb.UI.Chest
                 case ItemAction.Upgrade: return "Upgrade";
                 case ItemAction.Combine: return "Combine…";
                 case ItemAction.Sell: return "Sell";
+                case ItemAction.Unequip: return "Take off";
                 default: return "Lock";
             }
         }
@@ -558,28 +825,55 @@ namespace BattleBomb.UI.Chest
             }
         }
 
-        private void RefreshShopRow()
+        /// <summary>
+        /// The rack: one row per roll, priced against the wallet and compared against what the
+        /// player already wears. Rows are laid out from the area's measured width so the price
+        /// column stays pinned to the right edge at either panel size.
+        /// </summary>
+        private void RefreshRack()
         {
-            _text.Clear();
-            if (_stock.Count > 0)
+            Rect area = _rackRoot.rect;
+            float width = area.width < 1f ? 820f : area.width;
+            float available = area.height < 1f ? RackRow.Height * ShopStockCount : area.height;
+
+            _rackEmpty.enabled = _stock.Count == 0;
+
+            // The design's 108px row is the ceiling, not the rule: the rack shrinks to whatever
+            // the band can hold rather than spilling onto the sweep below it.
+            int rows = Mathf.Max(1, _stock.Count);
+            float rowHeight = Mathf.Min(
+                RackRow.Height, (available - (rows - 1) * RackRow.Gap) / rows);
+
+            int balance = _bag.Wallet.Balance;
+            for (int i = 0; i < _rackRows.Count; i++)
             {
-                _text.Append("\nFOR SALE  ");
-                for (int i = 0; i < _stock.Count; i++)
+                if (i >= _stock.Count)
                 {
-                    int price = _bag.Inventory.Prices.BuyPrice(_stock[i]);
-                    string label = $" {_stock[i].DisplayName} {price} ";
-                    if (i == _nav.StockCursor)
-                    {
-                        label = $"[{_stock[i].DisplayName} {price}]";
-                    }
-
-                    _text.Append(_nav.Focus == ChestFocus.Stock && i == _nav.StockCursor
-                        ? UiBuild.Tint(label, UiBuild.Focus)
-                        : UiBuild.Tint(label, QualityColors.For(_stock[i].Quality)));
+                    _rackRows[i].SetActive(false);
+                    continue;
                 }
-            }
 
-            _shopStrip.text = _text.ToString();
+                ItemInstance item = _stock[i];
+                ItemInstance worn = item.IsConsumable
+                    ? default
+                    : _bag.Inventory.Loadout.Worn(item.Slot);
+                int price = _bag.Inventory.Prices.BuyPrice(item);
+
+                _rackRows[i].Place(i * (rowHeight + RackRow.Gap), width, rowHeight);
+                _rackRows[i].Set(
+                    item, worn, Host != null ? Host.IconFor(item.DefinitionId) : null,
+                    price, balance >= price,
+                    _nav.Focus == ChestFocus.Stock && i == _nav.StockCursor);
+            }
+        }
+
+        /// <summary>The sweep and what it would take, previewed before the press that runs it.</summary>
+        private void RefreshJunk()
+        {
+            float width = _junkArea.rect.width;
+            _junkBar.Place(0f, width < 1f ? 820f : width);
+            _junkBar.Set(
+                JunkThreshold, _bag.PreviewJunk(JunkThreshold), _nav.Focus == ChestFocus.Junk);
         }
 
         private static string Abbreviate(in ItemInstance item)
@@ -688,10 +982,11 @@ namespace BattleBomb.UI.Chest
         {
             StatSheet sheet = _sheetSource != null ? _sheetSource.Sheet : default;
             _heroPanel.Set(
-                _bag, sheet, _nav.Cursor,
-                statsFocused: _nav.Tab == ChestTab.Hero && _nav.Focus != ChestFocus.Tabs,
+                _bag, sheet, _nav.StatCursor,
+                statsFocused: _nav.Focus == ChestFocus.Stats,
                 framed: !_split,
-                host: Host);
+                host: Host,
+                loadoutCursor: OnLoadout ? _nav.LoadoutCursor : -1);
         }
     }
 }

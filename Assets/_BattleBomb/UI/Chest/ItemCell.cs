@@ -147,6 +147,16 @@ namespace BattleBomb.UI.Chest
         }
 
         /// <summary>
+        /// Rings an otherwise empty cell. An empty loadout slot still has to say the cursor is on
+        /// it, or walking across a bare doll looks like the stick has stopped working.
+        /// </summary>
+        internal void SetCursor(bool focused)
+        {
+            _focusRing.enabled = focused;
+            _lift.anchoredPosition = focused ? new Vector2(0f, 4f) : Vector2.zero;
+        }
+
+        /// <summary>
         /// One item. <paramref name="icon"/> may be null — most items have no art yet, and that
         /// draws the hatched plate rather than an empty socket.
         /// </summary>

@@ -939,6 +939,27 @@ and there from killing an enemy means nothing."
   the pickup refuses — a red X on the walk-over card and a 200/200 flash, punishing on purpose
   so it is learned once.
 
+**Amended 2026-08-23** — the shopkeeper's counter, from the inventory design session:
+
+- **The counter has two sides, Buy and Sell**, switched by a button rather than a tab. Buy shows
+  the rack as one priced row per roll — the piece, its rank, what it would change about the
+  player against what they wear, and whether they can afford it. Sell is the ordinary sack. They
+  are modes and not one screen because four rack rows and a five-row grid do not both fit the
+  half, and the tab row is already carrying sack-versus-hero in local co-op.
+- **"Clear the junk"**: one press sells every unlocked, non-consumable piece below a rank
+  threshold the player sets on the panel. This is the manual counterpart to auto-sell — auto-sell
+  is reactive, one item at a time, at the cap; this is the player deliberately emptying the
+  bottom of the bag. Locks are absolute here as everywhere, worn gear is not in the sack to
+  begin with, and **consumables are spared**, on the same reasoning that makes auto-sell spend
+  gear before it spends a potion stack.
+- **The threshold stops at Clean.** The sweep has no confirmation step, so its reach is capped
+  where "junk" stops being a fair description; one press must never be able to sell a Legendary.
+- **The shopkeeper's screen has no hero half** (Michael, 2026-08-23). A chest is about the player,
+  so it frames them and puts the doll and the loadout in the free half. A shopkeeper is about the
+  shopkeeper: solo and online the camera zooms onto *them*, the free half is left to the world,
+  and the sack-versus-hero tab row is not built. In local co-op nothing zooms — the display still
+  belongs to both players — and the panel is simply that player's half.
+
 ---
 
 ## D44 — Investment: deepen or gamble · **Locked** *(completes D35's second half)*
@@ -957,6 +978,21 @@ Directed by Michael (2026-08-20). Both flows live on the Item Sack panel, at any
 - **The three fates of a drop** — worn (and deepened), sold (guaranteed progress), or combined
   (the gamble) — are the loot loop. Selling junk funds deepening the keeper; duplicates tempt
   you off the guaranteed path.
+
+**Amended 2026-08-23** (Michael):
+
+- **Worn gear is deepened where it is worn.** The loadout in the hero panel is a place the cursor
+  can go — solo by pushing right off the sack grid, in local co-op through the hero tab — and a
+  worn slot offers Upgrade, Take off and Lock. Taking a piece off, deepening it and putting it
+  back on was never the intent; it was simply the only route the screen offered.
+- **"Combine all"**, on its own button, grinds a whole pile in one press: it keeps pairing
+  duplicates of the anchor's exact definition and rank until fewer than two remain. Because an
+  unpromoted reroll returns at the same rank it rejoins the pile, so a stack of four is three
+  combines ending in one piece, not two ending in two. **A promotion leaves the pile and is never
+  re-gambled** — the rank-up is the payoff, and cascading it would make the outcome unreadable.
+- **The bulk verb is not Heavy**, which was the obvious choice and is the one button it cannot be:
+  Heavy is how a combine in progress is abandoned, and a modal screen with no way out was M6's one
+  real defect. It sits on Magic, named in the footer while the pick is open.
 
 ---
 

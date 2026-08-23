@@ -14,6 +14,17 @@ namespace BattleBomb.Tests.EditMode
             int visible = 12, int columns = 8, int menu = 5, int upgrades = 2, int stock = 0) =>
             new ChestLayout(visible, columns, ChestNavigation.FilterCount, menu, upgrades, stock);
 
+        /// <summary>Solo at a chest: the hero panel is drawn beside the sack, so the cursor can
+        /// walk between them.</summary>
+        private static ChestLayout Solo(int visible = 12) =>
+            new ChestLayout(
+                visible, 8, ChestNavigation.FilterCount, 5, 2, 0, false, 0, heroBeside: true);
+
+        /// <summary>Standing at a shopkeeper: the counter has two sides and the sweep exists.</summary>
+        private static ChestLayout Shop(int visible = 12, int stock = 4, int junkRanks = 4) =>
+            new ChestLayout(
+                visible, 8, ChestNavigation.FilterCount, 5, 2, stock, true, junkRanks);
+
         [Test]
         public void A_fresh_screen_starts_on_the_grid_of_the_item_sack()
         {
@@ -103,20 +114,137 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Off_the_bottom_reaches_the_rack_only_when_it_has_stock()
+        public void Off_the_bottom_of_the_sack_reaches_the_sweep_only_at_a_shop()
+        {
+            var chest = new ChestNavigation();
+            chest.Move(0, -1, Layout(visible: 4, columns: 8));
+            Assert.That(chest.Focus, Is.EqualTo(ChestFocus.Grid), "A chest has nothing under the sack.");
+
+            var shop = new ChestNavigation();
+            shop.Move(0, -1, Shop(visible: 4));
+            Assert.That(shop.Focus, Is.EqualTo(ChestFocus.Junk));
+        }
+
+        [Test]
+        public void The_rack_is_a_vertical_list_that_ends_at_the_sweep()
         {
             var nav = new ChestNavigation();
-            nav.Move(0, -1, Layout(visible: 4, columns: 8, stock: 0));
-            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "No rack: the cursor stays put.");
-
-            nav.Move(0, -1, Layout(visible: 4, columns: 8, stock: 3));
+            nav.SetMode(ShopMode.Buy, Shop(stock: 3));
             Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stock));
             Assert.That(nav.StockCursor, Is.Zero);
 
-            nav.Move(1, 0, Layout(visible: 4, columns: 8, stock: 3));
-            nav.Move(1, 0, Layout(visible: 4, columns: 8, stock: 3));
-            nav.Move(1, 0, Layout(visible: 4, columns: 8, stock: 3));
-            Assert.That(nav.StockCursor, Is.EqualTo(2), "The rack cursor clamps at the last piece.");
+            nav.Move(0, -1, Shop(stock: 3));
+            Assert.That(nav.StockCursor, Is.EqualTo(1));
+            nav.Move(0, -1, Shop(stock: 3));
+            Assert.That(nav.StockCursor, Is.EqualTo(2), "The rack cursor clamps at the last roll.");
+
+            nav.Move(0, -1, Shop(stock: 3));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Junk), "Under the last roll is the sweep.");
+
+            nav.Move(0, 1, Shop(stock: 3));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stock));
+            Assert.That(nav.StockCursor, Is.EqualTo(2), "Back onto the row it left from.");
+        }
+
+        [Test]
+        public void The_sweep_threshold_walks_sideways_and_clamps_to_the_ladder()
+        {
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop(stock: 0));
+            nav.Move(0, -1, Shop(stock: 0));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Junk), "A bare rack drops straight to the sweep.");
+            Assert.That(nav.JunkRank, Is.EqualTo(2), "Rusty, as the design has it.");
+
+            for (int i = 0; i < 5; i++)
+            {
+                nav.Move(1, 0, Shop(junkRanks: 4));
+            }
+
+            Assert.That(nav.JunkRank, Is.EqualTo(4), "The threshold stops at the ceiling.");
+
+            for (int i = 0; i < 8; i++)
+            {
+                nav.Move(-1, 0, Shop(junkRanks: 4));
+            }
+
+            Assert.That(nav.JunkRank, Is.EqualTo(ChestNavigation.MinJunkRank));
+        }
+
+        [Test]
+        public void Confirming_on_the_sweep_asks_the_screen_to_run_it()
+        {
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop(stock: 0));
+            nav.Move(0, -1, Shop(stock: 0));
+
+            Assert.That(nav.Confirm(Shop()), Is.EqualTo(ChestOutcome.RunSellJunk));
+        }
+
+        [Test]
+        public void The_counter_flips_sides_and_a_chest_has_no_counter_to_flip()
+        {
+            var chest = new ChestNavigation();
+            Assert.That(chest.Mode, Is.EqualTo(ShopMode.Sell), "A chest is the sack layout, always.");
+            Assert.That(chest.SwitchMode(Layout()), Is.EqualTo(ChestOutcome.None));
+            Assert.That(chest.Mode, Is.EqualTo(ShopMode.Sell));
+
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stock));
+
+            Assert.That(nav.SwitchMode(Shop()), Is.EqualTo(ChestOutcome.ModeSwitched));
+            Assert.That(nav.Mode, Is.EqualTo(ShopMode.Sell));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "The sack has the cursor now.");
+        }
+
+        [Test]
+        public void A_shopkeeper_has_no_hero_tab_to_reach()
+        {
+            // The counter is about the rack, so the screen never offers the doll (Michael,
+            // 2026-08-23). Reaching it would show a half the shop screen does not build.
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Sell, Shop());
+
+            nav.Move(0, 1, Shop());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Filters), "Above the grid is still the filters.");
+
+            nav.Move(0, 1, Shop());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Filters), "There is no tab row above them.");
+            Assert.That(nav.Tab, Is.EqualTo(ChestTab.ItemSack));
+
+            var chest = new ChestNavigation();
+            chest.Move(0, 1, Layout());
+            chest.Move(0, 1, Layout());
+            Assert.That(
+                chest.Focus, Is.EqualTo(ChestFocus.Tabs),
+                "A chest still has one — it is the shop that drops it, not the screen.");
+        }
+
+        [Test]
+        public void The_top_of_the_rack_stays_on_the_rack()
+        {
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop(stock: 3));
+
+            nav.Move(0, 1, Shop(stock: 3));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stock), "Buy mode has nothing above the rack.");
+            Assert.That(nav.StockCursor, Is.Zero);
+        }
+
+        [Test]
+        public void Heavy_backs_out_of_the_sweep_then_closes_the_shop()
+        {
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop(stock: 0));
+            nav.Move(0, -1, Shop(stock: 0));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Junk));
+
+            Assert.That(nav.Cancel(), Is.EqualTo(ChestOutcome.None));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stock), "The sweep backs out to the rack.");
+
+            Assert.That(
+                nav.Cancel(), Is.EqualTo(ChestOutcome.Close),
+                "Buy mode draws no grid under the rack, so there is no level left to unwind.");
         }
 
         [Test]
@@ -158,7 +286,7 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void The_hero_tab_is_one_short_list_whose_confirm_allocates()
+        public void The_hero_tab_opens_on_the_worn_gear_with_the_stats_under_it()
         {
             var nav = new ChestNavigation();
             nav.Move(0, 1, Layout());
@@ -167,14 +295,106 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(nav.Tab, Is.EqualTo(ChestTab.Hero));
 
             nav.Move(0, -1, Layout());
-            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid));
-            nav.Move(0, -1, Layout());
-            nav.Move(0, -1, Layout());
-            nav.Move(0, -1, Layout());
-            nav.Move(0, -1, Layout());
-            Assert.That(nav.Cursor, Is.EqualTo(ChestNavigation.HeroRows - 1), "Four stats: the list clamps.");
+            Assert.That(
+                nav.Focus, Is.EqualTo(ChestFocus.Loadout),
+                "The hero tab opens on the loadout, which is what a player came here to change.");
 
+            for (int i = 0; i < 4; i++)
+            {
+                nav.Move(0, -1, Layout());
+            }
+
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Stats), "Under the gear are the stats.");
+
+            for (int i = 0; i < 6; i++)
+            {
+                nav.Move(0, -1, Layout());
+            }
+
+            Assert.That(
+                nav.StatCursor, Is.EqualTo(ChestNavigation.HeroRows - 1), "Four stats: the list clamps.");
             Assert.That(nav.Confirm(Layout()), Is.EqualTo(ChestOutcome.AllocateStat));
+
+            Assert.That(nav.Cursor, Is.Zero, "The bag cursor was never the stat cursor.");
+        }
+
+        [Test]
+        public void Solo_walks_sideways_between_the_sack_and_the_worn_gear()
+        {
+            // Before this the hero panel could only be entered through a tab row solo does not
+            // draw, so worn gear could not be deepened at all (Michael, 2026-08-23).
+            var nav = new ChestNavigation();
+            ChestLayout solo = Solo(visible: 12);
+
+            for (int i = 0; i < 7; i++)
+            {
+                nav.Move(1, 0, solo);
+            }
+
+            Assert.That(nav.Cursor, Is.EqualTo(7), "Still inside the row.");
+
+            nav.Move(1, 0, solo);
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Loadout), "Off the right edge is the gear.");
+
+            nav.Move(-1, 0, solo);
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "And left again is the sack.");
+
+            var chest = new ChestNavigation();
+            for (int i = 0; i < 9; i++)
+            {
+                chest.Move(1, 0, Layout());
+            }
+
+            Assert.That(
+                chest.Focus, Is.EqualTo(ChestFocus.Grid),
+                "Behind a tab there is nothing to the right to walk into.");
+        }
+
+        [Test]
+        public void The_loadout_steps_over_the_hole_in_its_short_column()
+        {
+            var nav = new ChestNavigation();
+            ChestLayout solo = Solo();
+            for (int i = 0; i < 8; i++)
+            {
+                nav.Move(1, 0, solo);
+            }
+
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Loadout));
+            Assert.That(nav.LoadoutCursor, Is.Zero, "The helmet.");
+
+            nav.Move(1, 0, solo);
+            Assert.That(nav.LoadoutCursor, Is.EqualTo(3), "Across to the weapon.");
+
+            nav.Move(0, -1, solo);
+            Assert.That(nav.LoadoutCursor, Is.EqualTo(4), "Down to the pet.");
+
+            nav.Move(0, -1, solo);
+            Assert.That(
+                nav.LoadoutCursor, Is.EqualTo(6),
+                "The right column has no third row, so the move steps over it to the equipment.");
+        }
+
+        [Test]
+        public void A_worn_slot_confirms_into_its_own_verb_list_and_backs_out_to_itself()
+        {
+            var nav = new ChestNavigation();
+            ChestLayout solo = Solo();
+            for (int i = 0; i < 8; i++)
+            {
+                nav.Move(1, 0, solo);
+            }
+
+            Assert.That(nav.Confirm(solo), Is.EqualTo(ChestOutcome.OpenWornMenu));
+
+            nav.SetOnWorn(true);
+            nav.OpenWornMenu();
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Menu));
+
+            Assert.That(nav.Cancel(), Is.EqualTo(ChestOutcome.None));
+            Assert.That(
+                nav.Focus, Is.EqualTo(ChestFocus.Loadout),
+                "A worn verb list backs out onto the slot it opened from, not into the sack.");
         }
 
         [Test]
@@ -219,9 +439,12 @@ namespace BattleBomb.Tests.EditMode
             nav.FinishUpgrade(canStillUpgrade: false);
             Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid));
 
-            nav.Move(0, -1, Layout(visible: 4, columns: 8, stock: 1));
-            nav.FinishBuy(stockCount: 0);
-            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "Nothing left to buy.");
+            var shop = new ChestNavigation();
+            shop.SetMode(ShopMode.Buy, Shop(stock: 1));
+            shop.FinishBuy(stockCount: 0);
+            Assert.That(
+                shop.Focus, Is.EqualTo(ChestFocus.Junk),
+                "A bought-out rack leaves the cursor on the only other thing on the panel.");
         }
 
         [Test]

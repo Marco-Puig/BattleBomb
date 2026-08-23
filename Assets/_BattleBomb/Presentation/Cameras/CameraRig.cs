@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BattleBomb.Core.Cameras;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Simulation;
+using BattleBomb.Gameplay.World;
 using UnityEngine;
 
 namespace BattleBomb.Presentation.Cameras
@@ -119,7 +120,7 @@ namespace BattleBomb.Presentation.Cameras
 
         /// <summary>
         /// Whether one player is alone on this display with a screen open — and if so, where the
-        /// camera should sit so their character lands in the half the panel is not covering.
+        /// camera should sit so the screen's subject lands in the half the panel is not covering.
         ///
         /// This is read off the driver rather than pushed in by the UI: rule 2 has presentation
         /// observing simulation state, and the UI assembly cannot see this one anyway. The
@@ -136,13 +137,31 @@ namespace BattleBomb.Presentation.Cameras
                 return false;
             }
 
-            if (!_driver.TryGetOpenScreen(actors[0].PlayerId.Value, out _))
+            int playerId = actors[0].PlayerId.Value;
+            if (!_driver.TryGetOpenScreen(playerId, out InteractionKind kind))
             {
                 return false;
             }
 
-            frame = FrameOnSubject(actors[0].transform, tuning);
+            frame = FrameOnSubject(SubjectOf(playerId, kind, actors[0]), tuning);
             return true;
+        }
+
+        /// <summary>
+        /// Who the open screen is about. A chest is about the player — the panel beside them is
+        /// their sack and their loadout, so they are what the camera holds. A shopkeeper is about
+        /// the shopkeeper: the panel is their rack, and framing the player there would fill the
+        /// free half with the one character the screen never mentions (Michael, 2026-08-23).
+        /// </summary>
+        private Transform SubjectOf(int playerId, InteractionKind kind, CharacterActor player)
+        {
+            if (kind != InteractionKind.Chest
+                && _driver.TryGetOpenInteractable(playerId, out WorldInteractable source))
+            {
+                return source.transform;
+            }
+
+            return player.transform;
         }
 
         /// <summary>

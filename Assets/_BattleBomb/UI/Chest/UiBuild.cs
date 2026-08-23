@@ -60,6 +60,7 @@ namespace BattleBomb.UI.Chest
         private static Sprite _hatch;
         private static Sprite _octagon;
         private static Sprite _hexagon;
+        private static Sprite _disc;
 
         internal static Font Font =>
             _font != null ? _font : (_font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
@@ -162,6 +163,22 @@ namespace BattleBomb.UI.Chest
             new Vector2(0.85f, 1f), new Vector2(0.15f, 1f),
             new Vector2(0f, 0.5f),
         });
+
+        /// <summary>The coin, wherever a price is written. A 32-gon rather than a real circle —
+        /// at the sizes this draws, nothing can tell.</summary>
+        internal static Sprite Disc => Polygon(ref _disc, "UiBuild.Disc", Ring(32));
+
+        private static Vector2[] Ring(int points)
+        {
+            var ring = new Vector2[points];
+            for (int i = 0; i < points; i++)
+            {
+                float angle = i / (float)points * Mathf.PI * 2f;
+                ring[i] = new Vector2(0.5f + 0.5f * Mathf.Cos(angle), 0.5f + 0.5f * Mathf.Sin(angle));
+            }
+
+            return ring;
+        }
 
         /// <summary>
         /// A filled convex polygon as a white sprite, for an <see cref="Image"/> to tint. Sampled

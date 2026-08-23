@@ -34,7 +34,8 @@ namespace BattleBomb.Gameplay.Data
             }
         }
 
-        [Tooltip("Nine rows, Nothing → Godly. Order IS the ladder.")]
+        [Tooltip("Nine rows, Nothing → Mythical. Order IS the ladder. Godly is a later release " +
+            "and has no row yet — adding one means growing QualityTable.RankCount too.")]
         [SerializeField] private Row[] _rows =
         {
             new Row(0f, 0.5f, 0, 0, 0),

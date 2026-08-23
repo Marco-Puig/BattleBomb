@@ -233,5 +233,60 @@ namespace BattleBomb.Tests.EditMode
                 sack, Wallet.Empty, new[] { fire, ice }, new StoryProgress(), carried: second.Characters);
             Assert.That(third.Characters.Length, Is.EqualTo(2), "No duplicate for a character who is present.");
         }
+
+        // ── The ladder migration (v1 → v2) ───────────────────────────────────────────
+
+        /// <summary>
+        /// D33's ladder gained Clean and swapped Rusty with Torn, so every rank a v1 save stored
+        /// as a bare int points at the wrong rung. Without the migration a saved Shiny silently
+        /// becomes a Clean — the player's best weapon demoted by four rungs, with no error.
+        /// </summary>
+        [Test]
+        public void An_older_save_walks_its_ranks_onto_the_new_ladder()
+        {
+            // Old indices: Torn 2, Rusty 3, Shiny 4, Godly 8.
+            var sack = new[]
+            {
+                new ItemStackSave(OldItem(1, oldQuality: 4), 1),   // Shiny
+                new ItemStackSave(OldItem(2, oldQuality: 2), 1),   // Torn
+                new ItemStackSave(OldItem(3, oldQuality: 3), 1),   // Rusty
+                new ItemStackSave(OldItem(4, oldQuality: 8), 1),   // Godly
+            };
+            var characters = new[]
+            {
+                new CharacterSave(
+                    1, 14, 0f, 0, 0, 0, 0, 0, 0,
+                    new[] { new WornSave((int)ItemSlot.Weapon, 0, OldItem(5, oldQuality: 4)) },
+                    0, 0, 0),
+            };
+
+            var v1 = new SaveGame(1, 250, false, false, sack, characters, new StoryProgressSave());
+
+            SaveLoad load = SaveCodec.Decode(SaveCodec.Encode(v1));
+
+            Assert.That(load.Ok, Is.True);
+            Assert.That(load.Save.Version, Is.EqualTo(SaveCodec.CurrentVersion));
+
+            Assert.That((QualityRank)load.Save.Sack[0].Item.Quality, Is.EqualTo(QualityRank.Shiny),
+                "a saved Shiny is still a Shiny, not the Clean that took its old index");
+            Assert.That((QualityRank)load.Save.Sack[1].Item.Quality, Is.EqualTo(QualityRank.Torn));
+            Assert.That((QualityRank)load.Save.Sack[2].Item.Quality, Is.EqualTo(QualityRank.Rusty));
+            Assert.That((QualityRank)load.Save.Sack[3].Item.Quality, Is.EqualTo(QualityRank.Godly));
+
+            Assert.That((QualityRank)load.Save.Characters[0].Worn[0].Item.Quality,
+                Is.EqualTo(QualityRank.Shiny), "worn gear migrates too, not just the sack");
+
+            Assert.That(load.Save.Coins, Is.EqualTo(250), "the migration rewrites ranks and nothing else");
+            Assert.That(load.Save.Sack[0].Item.RequiredLevel, Is.EqualTo(12));
+            Assert.That(load.Save.Sack[0].Item.Affixes.Length, Is.EqualTo(1), "affixes survive the rewrite");
+        }
+
+        private static ItemSave OldItem(int definitionId, int oldQuality) => new ItemSave(
+            definitionId, "Legacy Blade", (int)ItemSlot.Weapon, (int)WeaponClass.Sword, 0, oldQuality,
+            new GearContributionSave(9.5f, 0f, 0f, 0f, 0.04f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f, 0f),
+            new[] { new AffixSave((int)AffixId.WeaponInfusion, 0.6f, 2) },
+            requiredLevel: 12, capacity: 3, spent: 1, locked: false,
+            shotSpeed: 14f, restoreKind: 0, restoreFraction: 0f,
+            activeShare: 0f, activeElement: 0, activeRadius: 0f, activeCooldown: 0);
     }
 }

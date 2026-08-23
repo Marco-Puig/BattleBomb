@@ -69,8 +69,11 @@ namespace BattleBomb.Core.Items
                 return next;
             }
 
+            // The ceiling is the ladder's top rung, not a named rank: ranks reserved for a later
+            // release sit above RankCount and must stay unreachable until the table grows.
             next = next.NextFloat(out float promotionDraw);
-            bool promoted = promotionDraw < PromotionChance && a.Quality < QualityRank.Godly;
+            bool promoted = promotionDraw < PromotionChance
+                && (int)a.Quality < QualityTable.RankCount - 1;
             QualityRank rank = promoted ? a.Quality + 1 : a.Quality;
 
             next = ItemGenerator.Roll(

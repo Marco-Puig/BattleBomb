@@ -31,6 +31,12 @@ namespace BattleBomb.Core.Items
     /// </summary>
     public readonly struct QualityTable
     {
+        /// <summary>
+        /// Rungs the ladder actually has. This is the launch ladder, Nothing through Mythical —
+        /// <see cref="QualityRank.Godly"/> is named one past it on purpose, so it can be released
+        /// by growing this count and adding a row rather than renumbering every saved item.
+        /// Anything that needs "the top rank" should derive it from here, never name a rank.
+        /// </summary>
         public const int RankCount = 9;
 
         private readonly QualityRow[] _rows;

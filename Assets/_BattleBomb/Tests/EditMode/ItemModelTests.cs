@@ -30,9 +30,9 @@ namespace BattleBomb.Tests.EditMode
                 previous = row;
             }
 
-            QualityRow godly = Table.For(QualityRank.Godly);
-            Assert.That(godly.AffixMin, Is.EqualTo(3), "a Godly can come up short");
-            Assert.That(godly.AffixMax, Is.EqualTo(4));
+            QualityRow top = Table.For(QualityRank.Mythical);
+            Assert.That(top.AffixMin, Is.EqualTo(3), "the top rung can come up short");
+            Assert.That(top.AffixMax, Is.EqualTo(4));
         }
 
         [Test]
@@ -41,10 +41,27 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(Table.RankFor(0.4f), Is.EqualTo(QualityRank.Nothing));
             Assert.That(Table.RankFor(-1f), Is.EqualTo(QualityRank.Nothing), "never below the floor");
             Assert.That(Table.RankFor(0.7f), Is.EqualTo(QualityRank.Battlescarred));
-            Assert.That(Table.RankFor(1.19f), Is.EqualTo(QualityRank.Torn));
-            Assert.That(Table.RankFor(1.2f), Is.EqualTo(QualityRank.Rusty));
-            Assert.That(Table.RankFor(5f), Is.EqualTo(QualityRank.Godly));
-            Assert.That(Table.RankFor(99f), Is.EqualTo(QualityRank.Godly), "the ladder tops out");
+            Assert.That(Table.RankFor(1.19f), Is.EqualTo(QualityRank.Rusty));
+            Assert.That(Table.RankFor(1.2f), Is.EqualTo(QualityRank.Torn), "Rusty now sits below Torn");
+            Assert.That(Table.RankFor(5f), Is.EqualTo(QualityRank.Mythical));
+            Assert.That(Table.RankFor(99f), Is.EqualTo(QualityRank.Mythical), "the ladder tops out");
+        }
+
+        /// <summary>
+        /// Godly is named but deliberately outside the launch ladder. Nothing may reach it until
+        /// <see cref="QualityTable.RankCount"/> grows — not a drop, and not a combine promotion.
+        /// </summary>
+        [Test]
+        public void Godly_is_reserved_and_no_score_reaches_it()
+        {
+            Assert.That((int)QualityRank.Godly, Is.EqualTo(QualityTable.RankCount),
+                "Godly sits one rung past the ladder");
+
+            for (float score = 0f; score < 200f; score += 0.13f)
+            {
+                Assert.That(Table.RankFor(score), Is.Not.EqualTo(QualityRank.Godly),
+                    $"score {score} rolled a rank that has not been released");
+            }
         }
 
         [Test]

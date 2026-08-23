@@ -24,8 +24,9 @@ namespace BattleBomb.Core.Items
         {
             switch (rank)
             {
-                case QualityRank.Torn:
-                case QualityRank.Rusty: return "Flask";
+                case QualityRank.Rusty:
+                case QualityRank.Torn: return "Flask";
+                case QualityRank.Clean:
                 case QualityRank.Shiny:
                 case QualityRank.Pristine: return "Bottle";
                 case QualityRank.Legendary: return "Draught";

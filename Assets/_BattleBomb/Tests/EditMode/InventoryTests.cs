@@ -102,10 +102,10 @@ namespace BattleBomb.Tests.EditMode
         {
             var inventory = new Inventory { AutoEquip = true };
 
-            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Rusty), 10).Equipped, Is.True,
+            Assert.That(inventory.Add(Gear(1, ItemSlot.Helmet, QualityRank.Torn), 10).Equipped, Is.True,
                 "an empty slot fills");
-            Assert.That(inventory.Add(Gear(2, ItemSlot.Helmet, QualityRank.Torn), 10).Equipped, Is.False,
-                "a downgrade stays in the bag");
+            Assert.That(inventory.Add(Gear(2, ItemSlot.Helmet, QualityRank.Rusty), 10).Equipped, Is.False,
+                "a downgrade stays in the bag — Rusty sits below Torn");
             Assert.That(inventory.Loadout.Helmet.DefinitionId, Is.EqualTo(1));
 
             Assert.That(inventory.Add(Gear(3, ItemSlot.Helmet, QualityRank.Shiny), 10).Equipped, Is.True,

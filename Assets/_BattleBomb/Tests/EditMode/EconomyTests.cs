@@ -48,9 +48,13 @@ namespace BattleBomb.Tests.EditMode
 
             // Halved after Michael's M6 pass ("cut them all by 50%") — the raw ladder is
             // unchanged, the player's cut of it is not.
-            Assert.That(book.SellPrice(QualityRank.Rusty, 5), Is.EqualTo(14));
-            Assert.That(book.SellPrice(QualityRank.Shiny, 12), Is.EqualTo(36));
-            Assert.That(book.SellPrice(QualityRank.Godly, 60), Is.EqualTo(1306));
+            //
+            // Value doubles per rung, so inserting Clean moved the middle of the ladder: Rusty
+            // dropped a rung and halved, Shiny gained one and doubled. The top is untouched —
+            // Mythical now sits where Godly sat, so the ceiling of the economy did not move.
+            Assert.That(book.SellPrice(QualityRank.Rusty, 5), Is.EqualTo(7));
+            Assert.That(book.SellPrice(QualityRank.Shiny, 12), Is.EqualTo(71));
+            Assert.That(book.SellPrice(QualityRank.Mythical, 60), Is.EqualTo(1306));
         }
 
         [Test]
@@ -112,8 +116,8 @@ namespace BattleBomb.Tests.EditMode
         {
             PriceBook book = PriceBook.Default;
 
-            Assert.That(book.BuyPrice(QualityRank.Rusty, 5), Is.EqualTo(86),
-                "3× the raw sell value (28.8), rounded — selling to buy back is a losing trade.");
+            Assert.That(book.BuyPrice(QualityRank.Rusty, 5), Is.EqualTo(43),
+                "3× the raw sell value (14.4), rounded — selling to buy back is a losing trade.");
         }
 
         // ── The upgrade sink (D44) ───────────────────────────────────────────────────
@@ -122,14 +126,14 @@ namespace BattleBomb.Tests.EditMode
         public void Upgrade_steps_double_and_sum_to_the_share_of_the_item_value()
         {
             PriceBook book = PriceBook.Default;
-            int sell = book.SellPrice(QualityRank.Godly, 60);
+            int sell = book.SellPrice(QualityRank.Mythical, 60);
 
             int[] steps =
             {
-                book.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 0),
-                book.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 1),
-                book.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 2),
-                book.UpgradeCost(QualityRank.Godly, 60, capacity: 4, spent: 3),
+                book.UpgradeCost(QualityRank.Mythical, 60, capacity: 4, spent: 0),
+                book.UpgradeCost(QualityRank.Mythical, 60, capacity: 4, spent: 1),
+                book.UpgradeCost(QualityRank.Mythical, 60, capacity: 4, spent: 2),
+                book.UpgradeCost(QualityRank.Mythical, 60, capacity: 4, spent: 3),
             };
 
             Assert.That(steps, Is.EqualTo(new[] { 348, 696, 1393, 2785 }));
@@ -149,8 +153,8 @@ namespace BattleBomb.Tests.EditMode
             int first = book.UpgradeCost(QualityRank.Shiny, 12, capacity: 2, spent: 0);
             int second = book.UpgradeCost(QualityRank.Shiny, 12, capacity: 2, spent: 1);
 
-            Assert.That(first, Is.EqualTo(47));
-            Assert.That(second, Is.EqualTo(95));
+            Assert.That(first, Is.EqualTo(95));
+            Assert.That(second, Is.EqualTo(189));
         }
 
         [Test]
@@ -171,8 +175,8 @@ namespace BattleBomb.Tests.EditMode
                 QualityRank.Shiny, new GearContribution(weaponDamage: 20f), new AffixRoll[0],
                 requiredLevel: 12, new ItemInvestment(capacity: 2, spent: 1));
 
-            Assert.That(book.SellPrice(item), Is.EqualTo(36));
-            Assert.That(book.UpgradeCost(item), Is.EqualTo(95),
+            Assert.That(book.SellPrice(item), Is.EqualTo(71));
+            Assert.That(book.UpgradeCost(item), Is.EqualTo(189),
                 "The second point's price, because one is already spent.");
         }
     }

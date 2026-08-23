@@ -94,7 +94,7 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
-        public void Godly_weapons_roll_three_or_four_affixes_and_both_happen()
+        public void Top_rank_weapons_roll_three_or_four_affixes_and_both_happen()
         {
             var counts = new HashSet<int>();
             var rng = new DeterministicRandom(9u);
@@ -102,12 +102,13 @@ namespace BattleBomb.Tests.EditMode
             for (int i = 0; i < 300; i++)
             {
                 rng = ItemGenerator.Roll(rng, context, out ItemInstance item);
-                Assert.That(item.Quality, Is.EqualTo(QualityRank.Godly));
+                Assert.That(item.Quality, Is.EqualTo(QualityRank.Mythical),
+                    "Mythical is the launch ladder's top rung; Godly is not released");
                 Assert.That(item.AffixCount, Is.InRange(3, 4));
                 counts.Add(item.AffixCount);
             }
 
-            Assert.That(counts, Does.Contain(3), "a Godly can come up short");
+            Assert.That(counts, Does.Contain(3), "even the top rank can come up short");
             Assert.That(counts, Does.Contain(4));
         }
 
@@ -165,13 +166,14 @@ namespace BattleBomb.Tests.EditMode
         [Test]
         public void Consumables_roll_clean_of_affixes_and_potency_follows_the_container()
         {
-            ItemGenerator.Roll(new DeterministicRandom(17u), Context(99f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance elixir);
+            ItemGenerator.Roll(new DeterministicRandom(17u), Context(99f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance philter);
 
-            Assert.That(elixir.IsConsumable, Is.True);
-            Assert.That(elixir.AffixCount, Is.Zero, "a potion is a potion");
-            Assert.That(elixir.DisplayName, Is.EqualTo("Elixir of Health"));
-            Assert.That(elixir.ConsumableHealFraction, Is.EqualTo(0.875f).Within(1e-4f),
-                "the Godly budget scales the heal");
+            Assert.That(philter.IsConsumable, Is.True);
+            Assert.That(philter.AffixCount, Is.Zero, "a potion is a potion");
+            Assert.That(philter.DisplayName, Is.EqualTo("Philter of Health"),
+                "Mythical's container — Elixir waits on Godly's release");
+            Assert.That(philter.ConsumableHealFraction, Is.EqualTo(0.875f).Within(1e-4f),
+                "the top rung's budget scales the heal");
 
             ItemGenerator.Roll(new DeterministicRandom(17u), Context(0.1f).WithForcedSlot(ItemSlot.Consumable), out ItemInstance vial);
             Assert.That(vial.DisplayName, Is.EqualTo("Vial of Health"));
@@ -226,13 +228,13 @@ namespace BattleBomb.Tests.EditMode
         public void The_budget_grows_core_stats_up_the_ladder()
         {
             GenerationContext trash = Context(0.1f).WithSignature(4, QualityRank.Nothing);
-            GenerationContext godly = Context(99f).WithSignature(4, QualityRank.Nothing);
+            GenerationContext best = Context(99f).WithSignature(4, QualityRank.Nothing);
 
             ItemGenerator.Roll(new DeterministicRandom(2u), trash, out ItemInstance low);
-            ItemGenerator.Roll(new DeterministicRandom(2u), godly, out ItemInstance high);
+            ItemGenerator.Roll(new DeterministicRandom(2u), best, out ItemInstance high);
 
             Assert.That(low.Quality, Is.EqualTo(QualityRank.Nothing));
-            Assert.That(high.Quality, Is.EqualTo(QualityRank.Godly));
+            Assert.That(high.Quality, Is.EqualTo(QualityRank.Mythical));
             Assert.That(high.CoreStats.WeaponDamage, Is.GreaterThan(low.CoreStats.WeaponDamage * 2f),
                 "the same knife, worlds apart");
         }

@@ -700,6 +700,7 @@ Directed by Michael (2026-08-19). The hook's tier and quality axes merge into on
 ladder:
 
 **Nothing < Battlescarred < Torn < Rusty < Shiny < Pristine < Legendary < Mythical < Godly.**
+*(Reordered — see the amendment at the end of this decision. The line above is the original.)*
 
 - Each rank does **three jobs at once**: a stat budget multiplier, an affix count (a rolled range
   capping at **3–4 on Godly** — even a Godly can come up short), and upgrade capacity (D35).
@@ -710,6 +711,29 @@ ladder:
 - **Materials are name flavor, never a hidden axis** — "Shiny Leather Chestplate," "Rusty Steel
   Helmet." Weapons start plain ("Pristine Hunting Bow," "Legendary Hunting Knife"); Destiny-style
   signature names are planned content, boss drops especially.
+- **Amended (Michael, 2026-08-22, adopting the UI Pass 01 ramp).** The ladder is reordered and
+  **Godly is deferred to a later release**. The nine that ship:
+
+  **Nothing < Battlescarred < Rusty < Torn < Clean < Shiny < Pristine < Legendary < Mythical.**
+
+  Three changes: **Rusty and Torn swap**, **Clean is new** at rank 4, and **Godly becomes rank 9,
+  released later** — "an extremely rare 10th tier… not all items will get the Godly tier," and
+  which items may roll it is still open. Godly keeps a name and a colour in the enum but sits one
+  rung past `QualityTable.RankCount`, so no drop rolls it and no combine promotes into it;
+  releasing it means growing that count and authoring one row, never renumbering saved items.
+  **Nothing may name a rank as "the maximum" — derive it from `RankCount`.**
+
+  Consequences, all accepted at the time:
+  - **The ladder's affix ceiling now caps on Mythical**, which inherited rank 8 from Godly. Its
+    row is unchanged, so 3–4 affixes still caps the launch game — the bullet above reads "Godly"
+    only because Godly used to sit there.
+  - **Sell value is `2^rank`, so the middle of the economy moved**: Rusty dropped a rung and
+    halved, Shiny gained one and doubled. The *ceiling* did not move. The paper tables in
+    `HANDOFF-M4.md` and `HANDOFF-M6.md` are stale for the middle ranks.
+  - **Saves migrate** — `SaveCodec.CurrentVersion` 1 → 2 remaps every stored rank. Without it a
+    saved Shiny reads back as a Clean.
+  - Colours live in `Gameplay/Loot/QualityColors.cs` as hex, diffable against the design doc.
+    Godly is `#73e6ff`, the cyan Pristine used to wear.
 
 ---
 

@@ -152,6 +152,13 @@ namespace BattleBomb.Core.Saves
 
         /// <summary>A default-constructed entry — JsonUtility's stand-in for "nothing here".</summary>
         public bool IsEmpty => _definitionId == 0;
+
+        /// <summary>The same item at a different rank — what a ladder migration returns.</summary>
+        public ItemSave WithQuality(int quality) => new ItemSave(
+            _definitionId, _name, _slot, _weaponClass, _petClass, quality,
+            CoreStats, Affixes, _requiredLevel, _capacity, _spent, _locked,
+            _shotSpeed, _restoreKind, _restoreFraction,
+            _activeShare, _activeElement, _activeRadius, _activeCooldown);
     }
 
     /// <summary>
@@ -300,6 +307,12 @@ namespace BattleBomb.Core.Saves
         public int QuickKind => _quickKind;
         public int QuickConsumableId => _quickConsumableId;
         public int QuickEquipmentIndex => _quickEquipmentIndex;
+
+        /// <summary>The same character wearing a rewritten loadout — what a migration returns.</summary>
+        public CharacterSave WithWorn(WornSave[] worn) => new CharacterSave(
+            _elementId, _level, _xpIntoLevel, _unspentPoints,
+            _strength, _hp, _mana, _speed, _prestigeCount,
+            worn, _quickKind, _quickConsumableId, _quickEquipmentIndex);
     }
 
     [Serializable]

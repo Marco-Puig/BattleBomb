@@ -86,9 +86,9 @@ namespace BattleBomb.Gameplay.Loot
             return pickup;
         }
 
-        /// <summary>Where this rank sits on the ladder, 0 at the bottom and 1 at Godly.</summary>
+        /// <summary>Where this rank sits on the ladder, 0 at the bottom and 1 at the top rung.</summary>
         private static float RankFraction(QualityRank rank) =>
-            Mathf.Clamp01((int)rank / (float)QualityRank.Godly);
+            Mathf.Clamp01((int)rank / (float)(QualityTable.RankCount - 1));
 
         private void Update()
         {

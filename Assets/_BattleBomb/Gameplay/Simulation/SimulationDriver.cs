@@ -98,6 +98,10 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Debug rolls within one frame must differ, or a grant hands out clones.</summary>
         private int _debugRollCounter;
         private readonly List<ItemSpec> _itemSpecs = new List<ItemSpec>();
+        private readonly ItemIconLibrary _itemIcons = new ItemIconLibrary();
+
+        /// <summary>Definition id → icon, for the screens. Empty until <c>OnEnable</c> has run.</summary>
+        public ItemIconLibrary ItemIcons => _itemIcons;
         private QualityTable _qualityTable;
         private DropWeights _dropWeights;
         private ElementCatalog _elements = ElementCatalog.Empty;
@@ -551,6 +555,10 @@ namespace BattleBomb.Gameplay.Simulation
                     }
                 }
             }
+
+            // Icons ride alongside the specs rather than inside them: the simulation gets plain
+            // values, presentation looks a face up by definition id.
+            _itemIcons.Rebuild(_itemCatalog);
 
             _qualityTable = _qualityLadder != null ? _qualityLadder.ToTable() : QualityTable.Default;
             _dropWeights = _qualityLadder != null ? _qualityLadder.ToWeights() : DropWeights.Default;

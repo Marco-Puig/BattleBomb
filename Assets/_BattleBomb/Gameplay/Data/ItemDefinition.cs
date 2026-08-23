@@ -25,6 +25,10 @@ namespace BattleBomb.Gameplay.Data
 
         [SerializeField] private PetClass _petClass = PetClass.None;
 
+        [Tooltip("The item's face in the sack and on the doll. Optional — an item with no icon " +
+            "draws the hatched placeholder plate, which is meant to look unfinished.")]
+        [SerializeField] private Sprite _icon;
+
         [Header("Weapon")]
         [SerializeField] private float _weaponDamage;
 
@@ -74,6 +78,13 @@ namespace BattleBomb.Gameplay.Data
         [SerializeField] private int _activeCooldownSteps = 900;
 
         public int Id => _id;
+
+        /// <summary>
+        /// Presentation only, and deliberately absent from <see cref="ToRuntime"/>: Core sees an
+        /// <see cref="ItemSpec"/> of plain values and must never learn what a Sprite is (rule 1).
+        /// The UI resolves an icon by definition id through <see cref="ItemIconLibrary"/>.
+        /// </summary>
+        public Sprite Icon => _icon;
 
         public ItemSpec ToRuntime() => new ItemSpec(
             new ItemIdentity(_id, _displayName, _slot, _weaponClass, _petClass),

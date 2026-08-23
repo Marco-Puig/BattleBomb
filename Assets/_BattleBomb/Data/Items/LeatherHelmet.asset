@@ -17,6 +17,7 @@ MonoBehaviour:
   _slot: 0
   _weaponClass: 0
   _petClass: 0
+  _icon: {fileID: 21300000, guid: d87ab3dd0f8318942b59986a669a524c, type: 3}
   _weaponDamage: 0
   _swingSpeedBonus: 0
   _shotSpeed: 0
@@ -29,4 +30,11 @@ MonoBehaviour:
   _maxManaBonus: 0
   _manaRegen: 0
   _knockbackBonus: 0
+  _magicDamage: 0
+  _magicRange: 0
   _healFraction: 0
+  _restores: 0
+  _activeWeaponDamageShare: 0
+  _activeElement: {fileID: 0}
+  _activeRadius: 2.5
+  _activeCooldownSteps: 900

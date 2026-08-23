@@ -150,8 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: BattleBomb.Gameplay::BattleBomb.Gameplay.World.Markers.CheckpointRoomMarker
   _afterArena: 2
   _halfWidth: 3
-  _chestOffset: {x: -1.5, y: 0, z: 1.5}
-  _shopkeeperOffset: {x: 1.5, y: 0, z: 1.5}
+  _chestOffset: {x: -2.5, y: 0, z: 1.5}
+  _shopkeeperOffset: {x: 2.5, y: 0, z: 1.5}
   _dummyOffset: {x: 0, y: 0, z: -1.5}
   _respawnOffset: {x: 0, y: 0, z: 0}
 --- !u!4 &272297817

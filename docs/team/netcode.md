@@ -42,10 +42,7 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-- **Orchestrator: COMMITTED + D numbers** for the design-session DONE (sent 2026-09-24). Paths:
-  `docs/team/netcode/decisions-draft.md` (new), `docs/team/netcode.md`. Asked: record Dα–Dε; note
-  Steam app at close-out in ROADMAP; collaborator availability on Michael's queue. Do not edit
-  `decisions-draft.md` until COMMITTED.
+Nothing.
 
 ## Current state
 
@@ -54,10 +51,15 @@ Michael, in this session, one decision at a time, recommendation first. Agenda o
 netcode layer + Steam wrapper (Claude recommends, Michael agrees) → how couch and online mix →
 join point → screens online → saves online (who holds guest gear / what guest keeps / leaving) →
 feel → test tooling + Steamworks account timing. Record each answer below as it lands.
-**Session place: all eight decisions answered; draft D entries sent.** Next: present the design to
-Michael in sections for approval (brainstorming skill: architecture → the wire → the guest's machine
-→ joining/leaving → saves → testing), then write `docs/HANDOFF-M8.md`, self-review, Michael reviews,
-then `superpowers:writing-plans`. Then send DONE for readiness.md and go
+**Session place: decisions recorded as D58–D62. Design presentation: §1 (player experience)
+approved; §2 (build order) approved; §3 (testing) approved.** `docs/HANDOFF-M8.md` written and
+self-reviewed (20 planning decisions; tasks 84–112 across stages A–F + close-out). Also corrected
+`options.md` (bandwidth ~2.5 KB/snapshot ~75 KB/s; local transport is TCP). **Michael approved the
+written spec (2026-09-24); DONE sent** (HANDOFF-M8 + options.md + this file — do not touch
+HANDOFF-M8/options.md until COMMITTED). Now: `superpowers:writing-plans` for Plan 1 (tasks 84–94)
+→ `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`
+(needs deep reads: SimulationDriver/CharacterActor/EnemyActor/StageRunner/LoadedStage/SessionBinder,
+the Groundwork plan's final shapes, Tests/PlayMode smoke suites + ScriptedCommandSource). Then send DONE for readiness.md and go
 straight to the options memo (orchestrator: no need to wait for COMMITTED).
 
 Research already done (Context7 + release pages, 2026-09-24): Steamworks.NET 2025.164.1 (Aug 2025,
@@ -77,6 +79,28 @@ is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (
 
 ## Answers and decisions
 
+- 2026-09-24 (orchestrator, COMMITTED 8959474 + 5758b03): drafts recorded verbatim as **D58 (topology
+  + own layer + transport seam), D59 (two players, join at character select + checkpoint rooms, open
+  by default), D60 (nothing pauses online), D61 (online saves), D62 (guest prediction).** D57 =
+  Groundwork's menu layer. ROADMAP §4 M8 / §5.3 / §10 and GAME_DESIGN §7 updated. **Use D58–D62 in
+  HANDOFF-M8 and the plan.**
+- 2026-09-24 (Michael, design presentation §1 "What online co-op will be like"): **approved**,
+  including my three calls — a late joiner appears only once their PC has loaded; the stage exit
+  waits until both PCs have loaded the next stage; ~10 s of silence is a drop, shorter hiccups
+  freeze-and-catch-up.
+- 2026-09-24 (Michael, design §2 "build order"): **approved** — A remote controller → B mirror →
+  C menus and saves (shop rack into the sim) → D joining and leaving → E feel (prediction) → F Steam
+  (app 480, collaborator's first internet game) → close-out (Steamworks app, full chapter from both
+  homes). **Three plans, written one at a time:** Plan 1 = A+B (now, in full), Plan 2 = C+D,
+  Plan 3 = E+F+close-out, each written when the previous is underway.
+- 2026-09-24 (Michael, design §3 "testing"): **approved** — EditMode per piece (two players); the
+  PlayMode tripwire gains a hosted run with a scripted remote guest over loopback, and a
+  record-and-replay test into the replica; both gates green per stage; Multiplayer Play Mode daily
+  with fake lag (normal ≈100 ms RTT; bad ≈200 ms + loss) — ask the orchestrator for QUIET when
+  running two editors; Michael's checklist after B, D, E; collaborator at F and close-out with a
+  zipped build + a one-page "how to run it" sheet (Steam running, `steam_appid.txt` = 480 beside
+  the exe).
+- 2026-09-24 (Michael): **approved the written spec `docs/HANDOFF-M8.md`** — "Approved, write Plan 1".
 - 2026-09-24 (Michael, M8 design session, decision 1): **Topology — host-authoritative.** The host's
   PC runs the one real simulation; the guest sends commands and draws what the host sends; the
   guest's own character is predicted locally. Chosen over lockstep and rollback (options.md §1).

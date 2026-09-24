@@ -77,7 +77,7 @@ needs (a full world snapshot, for rewinding) *plus* everything B needs.
 
 | Option | What it gives | Why it fits or does not |
 |---|---|---|
-| **Our own thin layer** (recommended) | Exactly what A needs: send commands up, snapshots and events down. | Our simulation already owns its clock, its state, its order and its ids. The layer is a message codec, a snapshot writer/reader, a replica mode, and a small input buffer. Bandwidth is trivial: two players and ~20 enemies at ~40 bytes each is under 1 KB a snapshot, ~25 KB/s at 25 Hz, with no compression. |
+| **Our own thin layer** (recommended) | Exactly what A needs: send commands up, snapshots and events down. | Our simulation already owns its clock, its state, its order and its ids. The layer is a message codec, a snapshot writer/reader, a replica mode, and a small input buffer. Bandwidth is modest: two full player states, ~20 enemies and ~20 bolts come to ~2.5 KB a snapshot, ~75 KB/s at 30 Hz with no compression *(corrected in HANDOFF-M8's paper numbers; this memo first said under 1 KB)*. Delta compression is the lever if it is ever needed. |
 | **Netcode for GameObjects 2.11** (Unity) | Connection management, scene sync, `NetworkObject`/`NetworkVariable` replication, RPCs, its own tick (default 30 Hz), `CustomMessagingManager` for raw messages. | Its model is "each object replicates its own fields on NGO's tick". Ours is "one fixed-step driver owns everything". Using it properly means re-declaring every actor's state as network variables and reconciling two clocks; using it only for `CustomMessagingManager` pays for the whole package to get a message pipe Steam already gives us. **It has no full prediction and reconciliation** — the docs offer "client anticipation", a simplified correct-if-wrong model. Steam only via a community transport. |
 | **FishNet** (community, free, no player-count limits) | Server-authoritative, with real client-side prediction: `[Replicate]` / `[Reconcile]` methods on each `NetworkBehaviour`, run on its own `TimeManager` tick. | **The strongest library alternative**, and the one to reach for if our own layer stalls. It still assumes each networked object predicts and reconciles itself on FishNet's tick; ours has one driver stepping everyone in a designed order. Adopting it means handing our clock to its `TimeManager` and splitting the player's step into its replicate shape — a translation, not a drop-in. (Mirror, the other big community library, was not evaluated beyond this.) |
 | **Photon Fusion 2 / Quantum** (commercial) | Fusion: host mode with prediction and lag compensation. Quantum: deterministic rollback. | Both route through Photon Cloud with per-player-count pricing past the free 100 CCU (then from $125/month), and both want the game written in their model — Quantum means rewriting the simulation in its deterministic ECS. Not Steam's relay. |
@@ -121,9 +121,10 @@ of them sit behind our own interfaces.
 - A **separate assembly** (`BattleBomb.Platform.Steam`) is the only code that references
   Steamworks.NET, compiled only when the package is present. It holds `SteamPlatformServices`, the
   Steam P2P transport, and the Steam Cloud store.
-- Two non-Steam transports: an **in-memory loopback** (tests), and **plain UDP on localhost/LAN**
-  (Multiplayer Play Mode, two editors). Both take optional fake latency, jitter and loss, so feel can
-  be tested on one PC.
+- Two non-Steam transports: an **in-memory loopback** (tests), and **a local socket on
+  localhost/LAN** (Multiplayer Play Mode, two editors — TCP in the spec, since a dev transport gets
+  its reliable channel free that way). A lag-simulator wrapper adds fake latency, jitter and loss to
+  either, so feel can be tested on one PC.
 
 ---
 
@@ -218,7 +219,7 @@ title. The guest leaves: the host carries on solo; D25's solo rules apply from t
 |---|---|---|
 | **EditMode** | Codec round-trips, snapshot write → read equality, the input buffer, prediction replay — two players always. | Every task. |
 | **PlayMode, in-process loopback** | The real Gameplay scene hosted, Player 2 a `RemoteCommandSource` fed through the loopback transport by a scripted guest; and a replica run driven by recorded snapshots. | The wiring tripwire (D45), extended. |
-| **Multiplayer Play Mode** (Unity, 2.0.x on 6000.4+) | Two editor instances on one PC over the UDP transport, with fake latency. The day-to-day loop. | From the first transport task. Steam cannot run twice on one PC, hence the UDP transport. |
+| **Multiplayer Play Mode** (Unity, 2.0.x on 6000.4+) | Two editor instances on one PC over the local-socket transport, with fake latency. The day-to-day loop. | From the first transport task. Steam cannot run twice on one PC, hence the local transport. |
 | **App 480 (Spacewar)** on two PCs, two Steam accounts | Lobbies, invites and relay before Michael's own app ID exists. `steam_appid.txt` already holds 480. | From the Steam task. |
 | **Steam Playtest** | A free child app of the real one; friend invites, key batches; same Steamworks features. | Once the app exists. |
 | **Two real PCs over the internet** | The Done-when: the fixture chapter start to finish from both ends. | The close-out. |

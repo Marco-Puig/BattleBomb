@@ -77,3 +77,6 @@ ehthumbs.db
 
 # Visual brainstorming sessions (superpowers)
 .superpowers/
+
+# Raw AI image output (D55, O2): iterate outside git, commit keepers only
+ArtSource/**/_raw/

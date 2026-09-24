@@ -1291,6 +1291,13 @@ can draw my own versions of the ai drafts."*
 - **D16's discipline binds the drafts too:** layered, cleanly separated body parts at high
   resolution, fitted to the one shared rig (D15) — or a draft cannot be rigged.
 
+**Amended 2026-09-24 (the Art lane's provenance spec, accepted by the orchestrator):** a slot is
+the unit **swapped whole** — one icon, one effect, one track, and **one whole character skin**,
+not one body part as the "Fire hero — torso" example above had it. A half-redrawn character, hand
+head on AI arms, would look wrong on screen, so a character's parts change over together; the
+parts live inside the skin and are addressed by the rig's categories. It is still one re-pointed
+entry. Michael's image tool is **ChatGPT images**. Detail: `docs/art/PROVENANCE.md`.
+
 ---
 
 ## D56 — The story is Castle Crashers-thin · **Locked** *(shapes GAME_DESIGN §9)*

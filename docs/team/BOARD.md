@@ -34,11 +34,11 @@ What is waiting on Michael, in priority order:
 
 1. **Open the BattleBomb project in Unity 6000.5.8f1 with the MCP bridge** — the Builder is
    blocked on it (the bridge stubs are up; no editor is running).
-2. **The World session** — the World lane is ready to start at question 1 (the goal).
-3. **Which AI image tool** — the Art lane will ask in its session.
+2. **M8's design session** — open in the Netcode lane's session (options memo done). M8 is the
+   next milestone, so its answers come first when both sessions are waiting.
+3. **The World session** — open in the World lane's session, at question 1 (the goal).
 4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-5. *(Later)* **M8's design session** — Netcode, once its options memo is done.
 
 ## Builder backlog — after Groundwork, before M8
 
@@ -58,6 +58,14 @@ Into M8's plan (Netcode designs them; they are online blockers, not bugs today):
 - The shop rack is rolled, stored, and priced in the UI, and `RequestBuy` trusts the UI's item and
   price (§5.1) — a rule 2 violation; the rack moves into the simulation.
 
+## M9 backlog — for whoever builds the art pipeline
+
+From the Art lane's provenance spec (`docs/art/PROVENANCE.md` §§8, 10):
+- **Four `.cs` files are still in `Art/Low_Swordman/Demo/Scripts/`** — the August trap that took the
+  editor down once; the M9 enforcement test fails on them. Remove them (after a GUID reference sweep).
+- **`Art/AI/maincharactertemp.ai` is Michael's own work**, but a folder named `AI` now means
+  AI-generated (D55). Move it out.
+
 ## Pending commits
 
 None.
@@ -68,6 +76,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: options memo (e9de806); M8 design session opened. Art `DONE`:
+  provenance spec + manifest (dc58c91); ChatGPT images chosen; D55 amended (slot = whole skin).
 - 2026-09-24 — Netcode `DONE`: readiness audit (bdc1f58). Three findings → Builder backlog, one
   → M8's plan, one → Michael's queue.
 - 2026-09-24 — Art, Builder, World `ONLINE`. Builder `BLOCKED` on Unity. The orchestrator was

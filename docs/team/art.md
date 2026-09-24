@@ -60,11 +60,10 @@ step 1 and grows with every brief.
 
 ## Current state
 
-Step 1 committed (dc58c91). **Classification sent as DONE; do not touch until COMMITTED:**
-`docs/art/PROVENANCE.md` (§5 `path` column, §10 table), `docs/art/MANIFEST.csv` (10 hand-final,
-3 licensed, 1 unclassified), `docs/team/art.md`.
-
-Starting step 2, the art bible.
+Step 2 (art bible v0) **sent as DONE; do not touch until COMMITTED:** `docs/art/ART_BIBLE.md`,
+`ArtSource/_style/brief.md` (six style-frame prompts SF1–SF6), `docs/team/art.md`.
+Waiting on Michael to run SF1 (then SF2–SF6) in ChatGPT and to sign off the bible, especially
+the Fire colour change (`#FF7326` → `#FF4A1C`, bible §5). Starting step 3, the hero template.
 
 **Provenance findings, 2026-09-24 (raised with Michael and the orchestrator):**
 - Michael answered: Low_Swordman, Templar Knight, the item icons, and the front-end art are
@@ -100,14 +99,23 @@ Starting step 2, the art bible.
 
 ## Next steps
 
-1. Art bible v0 → `docs/art/ART_BIBLE.md`: ask Michael for references and taste (one question at
-   a time; he is also answering Netcode and World, so expect gaps), then style-frame prompts for
-   ChatGPT images → `ArtSource/_style/brief.md`.
-2. Hero template → `docs/art/HERO_TEMPLATE.md` (Templar Knight rig as reference).
-3. Item-icon briefs (10 items without icons: ids 2–8, 10, 11, 13).
+1. Hero template → `docs/art/HERO_TEMPLATE.md`: part list, sizes, pivots, layering, label
+   variants, for one shared skeleton (Templar rig as the line reference, NOT proportions — its
+   head is ~60% of height vs the bible's 1/3–2/5). Brief + parts-sheet prompt in
+   `ArtSource/rig/hero-template/brief.md`; manifest row `rig/hero-template` as `briefed`.
+2. When SF images arrive in `ArtSource/_style/AI/_raw/`: review against bible §10, revise the
+   style block.
+3. Item-icon briefs (10 items without icons: ids 2–8, 10, 11, 13) after SF6 is approved.
 
 ## Answers and decisions
 
+- 2026-09-24 (Michael): **art direction = Castle Crashers + Rayman Legends; clean vector
+  outlines; chunky big-head heroes (head 1/3–2/5 of height).** Bible line: "Castle Crashers-style
+  characters living in a Rayman Legends world". Differentiation is carried by the lit, lush 3D world,
+  elemental climate, cel tone and rim light, and character design (bible §2).
+- 2026-09-24 (Art lane, measured): Templar ink `#1A1917`, silhouette line about 1/36 of the character's height.
+  Element colours clash with quality colours; rule = separate by form (loot owns ring-and-beam);
+  proposal: Fire `#FF7326` → `#FF4A1C` (Michael to confirm; Builder data change at M9).
 - 2026-09-24 (Michael): **ArtSource layout is side by side** — one folder per asset holding
   `brief.md`, `AI/` (with `_raw/`), and `Hand/`. Not two mirrored trees.
 - 2026-09-24 (Art lane, in PROVENANCE.md): a **slot is the unit swapped whole** — a whole
@@ -126,6 +134,8 @@ Starting step 2, the art bible.
 
 ## Log
 
+- 2026-09-24 — Art bible v0 + six style-frame prompts written; DONE sent.
+- 2026-09-24 — COMMITTED 4435833 (classification). Orchestrator corrected memory; M9 backlog 85d567d.
 - 2026-09-24 — Existing art classified with Michael; maincharactertemp.ai found to be a copy of the Templar .ai; DONE sent.
 - 2026-09-24 — COMMITTED dc58c91 (provenance spec, manifest, README). Orchestrator added the `_raw/` ignore and amended D55 (0a1406d).
 - 2026-09-24 — Provenance spec v0 + seeded manifest written; DONE sent.

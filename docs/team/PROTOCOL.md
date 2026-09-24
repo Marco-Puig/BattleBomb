@@ -1,7 +1,7 @@
 # BattleBomb team protocol
 
 Several Claude sessions work on BattleBomb at once, one per **lane**. One session — the
-**orchestrator**, named **"BattleBomb Orchestrator"** — plans, answers cross-lane questions, holds git,
+**orchestrator**, currently named **"Battlebomb"** (names change — rule 6) — plans, answers cross-lane questions, holds git,
 hands out the Unity editor, and keeps the shared documents. Everyone works on `main` in the same
 folder, so these rules are what stop us breaking each other's work.
 
@@ -67,11 +67,17 @@ Blender, no long-running scripts, no background processes, no bursts of subagent
 thinking, and writing docs carry on. A lane that needs quiet asks with `QUIET REQUEST`.
 
 ### 6. Messages
-Load the tools once with ToolSearch: `select:SendMessage,ListAgents`. Message the orchestrator by
-the name **"BattleBomb Orchestrator"** (never by the bracketed id — it changes every restart). Session
-names can be renamed in the app: if that name stops resolving, run `ListAgents` and message the
-session with "Orchestrator" in its name. The orchestrator replies to the address your message came
-from, so your own session's name may change freely.
+Load the tools once with ToolSearch: `select:SendMessage,ListAgents`. **Session names change** —
+Michael renames sessions in the app — so names are not addresses:
+
+- **Reply to the orchestrator at the `from=` address on its most recent message to you** (the
+  `uds:\\.\pipe\…` value). That survives renames. It changes only if the orchestrator's app
+  restarts, and the orchestrator messages every lane when that happens.
+- **Before you have one** (a brand-new lane), run `ListAgents` and message the BattleBomb session
+  that is not a lane — at the time of writing it is named **"Battlebomb"**. If you cannot tell which
+  it is, ask Michael.
+- The orchestrator always replies to the `from=` address of your message, so your own name may
+  change freely.
 
 First line of every message: **`[Lane] TYPE — one-line summary`**. Keep the body short and point at
 files for detail.

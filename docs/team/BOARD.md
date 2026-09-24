@@ -1,6 +1,6 @@
 # Team board
 
-Kept by the orchestrator ("BattleBomb Orchestrator"). The live state of the team: who is doing what,
+Kept by the orchestrator (currently named "Battlebomb"). The live state of the team: who is doing what,
 who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 **Updated:** 2026-09-24
@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | M8 online co-op readiness audit | working (no `ONLINE` received yet) | Readiness audit — reading the sim code | — |
+| Netcode | Netcode | online | Readiness audit — writing `docs/team/netcode/readiness.md` | — |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
 | Art | BattleBomb Art lane | online | Required reading, then the provenance spec | Michael's AI image tool |
 | Producer | — | starts at M9 | — | — |
@@ -44,10 +44,10 @@ None.
 
 ## Git
 
-`main` · pushed through: `bd5f110` (team set-up) · nothing unpushed
+`main` · pushed through: see `git log origin/main` — the orchestrator pushes after every commit
 
 ## Log
 
 - 2026-09-24 — Art, Builder, World `ONLINE`. Builder `BLOCKED` on Unity. The orchestrator was
-  renamed "BattleBomb Orchestrator"; PROTOCOL and PROMPTS updated.
+  renamed twice; PROTOCOL rule 6 now uses reply addresses, not names. Netcode `ONLINE`.
 - 2026-09-24 — Team set up: protocol, board, four lane files, startup prompts.

@@ -244,85 +244,85 @@ Tuned live; recorded here so the first build has somewhere to start.
 
 Approved by Michael (design §2): each stage ends with something he can try. Three implementation
 plans, written one at a time: **Plan 1 = A + B**, **Plan 2 = C + D**, **Plan 3 = E + F + close-out**.
-Task numbers continue from M7 (83); Groundwork's are `G1–G14`.
+Task numbers start at 86: 84 and 85 were taken by M7-era commits (`43cdef5`, `ae4a57d`); Groundwork's are `G1–G14`.
 
-**Before Task 84:** Groundwork (D57) is merged — seats, the menu flags, `MenuPress`,
+**Before Task 86:** Groundwork (D57) is merged — seats, the menu flags, `MenuPress`,
 `IInputDeviceReport` — and the Builder's pre-M8 batch: destroyed enemies unregistered immediately
 (readiness §4.3 item 1), the DEBUG grant out of release, seeds from the session.
 
 ### Stage A — The remote controller *(Plan 1)*
 
-- **84 — The wire.** `Core/Net`: `NetWriter`/`NetReader`, quantisation, message framing, the
+- **86 — The wire.** `Core/Net`: `NetWriter`/`NetReader`, quantisation, message framing, the
   command codec. EditMode: round-trips, bounds, the stick's quantisation is stable.
-- **85 — The transport seam.** Platform: `INetTransport`, `NetPeer`, `NetChannel`, `LoopbackTransport`,
+- **87 — The transport seam.** Platform: `INetTransport`, `NetPeer`, `NetChannel`, `LoopbackTransport`,
   `LocalSocketTransport`, `LagSimulator`, `PlatformRegistry`. EditMode: loopback ordering, seeded
   lag is repeatable, loss hits unreliable only, a localhost socket pair connects and exchanges.
-- **86 — The input buffer and the remote source.** `Core/Net/InputBuffer` (ordering, redundancy
+- **88 — The input buffer and the remote source.** `Core/Net/InputBuffer` (ordering, redundancy
   de-duplication, starvation repeats held never pressed, adaptive depth); `RemoteCommandSource`.
   EditMode, two players.
-- **87 — The session and the handshake.** `NetSession`, `Hello`/`Welcome`, version refusal,
+- **89 — The session and the handshake.** `NetSession`, `Hello`/`Welcome`, version refusal,
   timeouts, the host swapping the guest slot's source; a dev-only *Host local* / *Join local* pair
   on the title (behind `DEVELOPMENT_BUILD || UNITY_EDITOR`). PlayMode: the Gameplay scene hosted,
   Player 2 driven through loopback by a headless scripted guest.
-- **88 — Two editors.** Multiplayer Play Mode added, the two-instance scenario, the fake-lag
+- **90 — Two editors.** Multiplayer Play Mode added, the two-instance scenario, the fake-lag
   profiles selectable. **Michael tries it:** Player 2 moves from the other window.
 
 ### Stage B — The mirror *(Plan 1)*
 
-- **89 — Ids and the snapshot.** Entity ids (planning decision 8); the snapshot model and codec for
+- **91 — Ids and the snapshot.** Entity ids (planning decision 8); the snapshot model and codec for
   players, enemies, dummies, bolts, drops, stage, driver state; the Core factories of planning
   decision 2; field-coverage tests.
-- **90 — The host speaks.** `NetHost`: snapshots every 2nd step, events captured inside the step
+- **92 — The host speaks.** `NetHost`: snapshots every 2nd step, events captured inside the step
   and batched, `HitEvent` as entity references.
-- **91 — Replica mode.** The driver's `ReplicaStep`; `SnapshotBuffer` and interpolation;
+- **93 — Replica mode.** The driver's `ReplicaStep`; `SnapshotBuffer` and interpolation;
   `ApplyReplica` on actors; replica spawn/despawn of enemies and drops; replicated events; replica
   guards on `StageRunner`, `EnemySpawner`, `SaveService`.
-- **92 — The stage follows.** `LoadStage`/`StageReady`; the both-ready airlock; the launch hold.
-- **93 — Proof.** PlayMode `ReplicaReplaySmokeTests`: a host run recorded to memory and replayed into
+- **94 — The stage follows.** `LoadStage`/`StageReady`; the both-ready airlock; the launch hold.
+- **95 — Proof.** PlayMode `ReplicaReplaySmokeTests`: a host run recorded to memory and replayed into
   a replica scene, positions and health compared frame by frame. The hosted smoke suite extended to
   the full fixture chapter with a remote Player 2.
-- **94 — Michael's pass (stage B).** Two editors, both lag profiles: how late does the guest feel?
+- **96 — Michael's pass (stage B).** Two editors, both lag profiles: how late does the guest feel?
   The answer sizes Stage E. Plan 1 close-out notes.
 
 ### Stage C — Menus and saves *(Plan 2)*
 
-- **95** — The requests seam: explicit player, `Sack.Revision`, the host's request phase,
+- **97** — The requests seam: explicit player, `Sack.Revision`, the host's request phase,
   `RequestResult`.
-- **96** — The rack in the simulation.
-- **97** — `InventoryState` to the guest; the guest's chest, shop and hero panel online.
-- **98** — Online screen rules: no pause online, local-player layout and camera, host-driven session
+- **98** — The rack in the simulation.
+- **99** — `InventoryState` to the guest; the guest's chest, shop and hero panel online.
+- **100** — Online screen rules: no pause online, local-player layout and camera, host-driven session
   moments.
-- **99** — Two stashes; the `Hello` save payload; each machine saves its own participant;
+- **101** — Two stashes; the `Hello` save payload; each machine saves its own participant;
   `AutosaveNow`; chapter credit.
 
 ### Stage D — Joining and leaving *(Plan 2)*
 
-- **100** — The lobby at character select: a remote slot, host-driven chapter select, launch both.
-- **101** — Drop-in at checkpoint rooms: the waiting state, `Welcome` with a baseline, `BindLate`,
+- **102** — The lobby at character select: a remote slot, host-driven chapter select, launch both.
+- **103** — Drop-in at checkpoint rooms: the waiting state, `Welcome` with a baseline, `BindLate`,
   appear-when-loaded.
-- **102** — Leaving and drops: `Bye`, the banner, the 10 s rule, the host's live switch back to solo
+- **104** — Leaving and drops: `Bye`, the banner, the 10 s rule, the host's live switch back to solo
   rules, the guest's return to title; open-by-default with its setting.
-- **103** — **Michael's pass (stage D):** join late, leave, rejoin, pull the plug on each side.
+- **105** — **Michael's pass (stage D):** join late, leave, rejoin, pull the plug on each side.
 
 ### Stage E — Feel *(Plan 3)*
 
-- **104** — `PredictionLog` and `CharacterActor.PredictStep`.
-- **105** — Reconcile, replay, and correction smoothing.
-- **106** — **Michael's feel pass** on the guest side, both lag profiles.
+- **106** — `PredictionLog` and `CharacterActor.PredictStep`.
+- **107** — Reconcile, replay, and correction smoothing.
+- **108** — **Michael's feel pass** on the guest side, both lag profiles.
 
 ### Stage F — Steam *(Plan 3)*
 
-- **107** — Steamworks.NET (UPM, pinned tag), the `Platform.Steam` assembly with its version define,
+- **109** — Steamworks.NET (UPM, pinned tag), the `Platform.Steam` assembly with its version define,
   `SteamPlatformServices` (init on app 480, identity → the save's name).
-- **108** — The Steam P2P transport.
-- **109** — Lobbies, invites, join requests, rich presence.
-- **110** — Steam Cloud as the second `ISaveStore`.
-- **111** — The collaborator's build and a one-page "how to run it" sheet (Steam running,
+- **110** — The Steam P2P transport.
+- **111** — Lobbies, invites, join requests, rich presence.
+- **112** — Steam Cloud as the second `ISaveStore`.
+- **113** — The collaborator's build and a one-page "how to run it" sheet (Steam running,
   `steam_appid.txt` beside the exe); **the first real internet game**.
 
 ### Close-out *(Plan 3)*
 
-- **112** — Michael's Steamworks app ID swapped in (created at close-out — ROADMAP §5.3; its
+- **114** — Michael's Steamworks app ID swapped in (created at close-out — ROADMAP §5.3; its
   paperwork started early enough not to block this); the collaborator plays the fixture chapter start
   to finish from both homes — fight, revive, grab, chest, shop, wipe, results, save — with a
   checklist from each end; the couch replayed exactly as before; both gates green; close-out notes.
@@ -364,7 +364,7 @@ New in M8:
   must be host-only or it double-acts on the guest. Plan 1 adds an acceptance test that lists
   `Stepped` subscribers and fails on one not marked for its role.
 - **A snapshot field forgotten is a silent desync on the guest's screen.** The field-coverage tests
-  guard the Core structs; the actor-level `ApplyReplica` needs a PlayMode comparison (Task 93) to
+  guard the Core structs; the actor-level `ApplyReplica` needs a PlayMode comparison (Task 95) to
   stay honest.
 
 ---

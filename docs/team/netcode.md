@@ -53,10 +53,10 @@ join point → screens online → saves online (who holds guest gear / what gues
 feel → test tooling + Steamworks account timing. Record each answer below as it lands.
 **Session place: decisions recorded as D58–D62. Design presentation: §1 (player experience)
 approved; §2 (build order) approved; §3 (testing) approved.** `docs/HANDOFF-M8.md` written and
-self-reviewed (20 planning decisions; tasks 84–112 across stages A–F + close-out). Also corrected
+self-reviewed (20 planning decisions; tasks 86–114 across stages A–F + close-out — renumbered from 84–112 because 84/85 were taken by M7-era commits). Also corrected
 `options.md` (bandwidth ~2.5 KB/snapshot ~75 KB/s; local transport is TCP). **Michael approved the
 written spec (2026-09-24); DONE sent** (HANDOFF-M8 + options.md + this file — do not touch
-HANDOFF-M8/options.md until COMMITTED). Now: `superpowers:writing-plans` for Plan 1 (tasks 84–94)
+HANDOFF-M8/options.md until COMMITTED — HANDOFF-M8, options, lane file COMMITTED; renumbering DONE sent separately). Now: `superpowers:writing-plans` for Plan 1 (tasks 86–96; Plan 2 = 97–105, Plan 3 = 106–114)
 → `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`
 (needs deep reads: SimulationDriver/CharacterActor/EnemyActor/StageRunner/LoadedStage/SessionBinder,
 the Groundwork plan's final shapes, Tests/PlayMode smoke suites + ScriptedCommandSource). Then send DONE for readiness.md and go

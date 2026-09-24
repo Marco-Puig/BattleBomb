@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
 | Netcode | Netcode | online | M8 Plan 1 (stages A+B) — spec approved | — |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | Art | online | Story-free fixture environment kit, then HUD and menu mockups | Michael: images, bible review, music tool |
+| Art | Art | online | HUD and menus canvas v1 up for review | Michael: canvas review, images, bible review, music tool |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -49,7 +49,9 @@ What is waiting on Michael, in priority order:
    up privately; or CC0 sounds only.
 7. *(Whenever there is a gap)* **Pick the music tool** — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-8. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+8. **Review the HUD and menus canvas v1** — eleven artboards in UI Pass 01's look, in the Art lane's
+   session: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj. On approval Art saves it into `design/`.
+9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
@@ -98,6 +100,10 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
 - **M9's effects start from** `docs/art/EFFECTS.md` §1–2: particle systems driving still-sprite kits
   (flipbooks only where a kit cannot do the job), and every effect fired by a simulation event, so
   it works online.
+- **M9's HUD plan inherits these additions** from the HUD canvas (pending Michael's approval): separate
+  pause and settings menus; volume, damage-number (on/off, S/M/L) and controls-view settings; "sack
+  full" drawn on the loot card (GDD §5.4); white-hot crit numbers (orange clashes with Fire and
+  Legendary); Settings and Quit on the title screen.
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
 
@@ -111,6 +117,7 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art: fixture kit brief (80b5030); HUD and menus canvas v1 up for Michael's review.
 - 2026-09-24 — Art `DONE`: audio v0 (b144d79); first pass complete. Approved: a minimal story-free
   fixture environment kit; next, HUD and menu mockups (ROADMAP §5.2 item 6). Licensed-audio question
   → Michael's queue.

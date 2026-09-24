@@ -91,9 +91,9 @@ strokes, it is Hand.
 <name>__<ai|hand>_v<N>.<ext>
 ```
 
-- **name:** lowercase words joined by hyphens: `steel-helmet`. A part of a larger asset is
-  `<asset>-<part>`, for example `hero-template-forearm-front`. Part names come from the hero
-  template (`docs/art/HERO_TEMPLATE.md`, to come).
+- **name:** lowercase words joined by hyphens: `steel-helmet`. A part of a rigged character is
+  `<asset>-<part>-<label>`, for example `hero-template-arm-front-bent`. A part with a single
+  drawing uses the label `default`. Parts and labels come from `docs/art/HERO_TEMPLATE.md` §2.
 - **`__ai` or `__hand`,** after a double underscore. Licensed files keep their vendor's names;
   their folder and manifest row carry the provenance.
 - **`_vN`** starts at 1. It goes up when a new version **replaces the one the game uses**. AI and

@@ -60,10 +60,15 @@ step 1 and grows with every brief.
 
 ## Current state
 
-Step 2 (art bible v0) **sent as DONE; do not touch until COMMITTED:** `docs/art/ART_BIBLE.md`,
-`ArtSource/_style/brief.md` (six style-frame prompts SF1–SF6), `docs/team/art.md`.
-Waiting on Michael to run SF1 (then SF2–SF6) in ChatGPT and to sign off the bible, especially
-the Fire colour change (`#FF7326` → `#FF4A1C`, bible §5). Starting step 3, the hero template.
+Step 3 (hero template) **sent as DONE; do not touch until COMMITTED:** `docs/art/HERO_TEMPLATE.md`,
+`ArtSource/rig/hero-template/brief.md`, `ArtSource/rig/hero-template/guides/` (make_guides.py +
+6 PNGs), `docs/art/PROVENANCE.md` (§4 part naming), `docs/art/MANIFEST.csv` (+ `rig/hero-template`
+briefed), `docs/team/art.md`.
+
+**Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
+the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
+`ArtSource/rig/hero-template/AI/_raw/`, **the Art lane cuts them** onto the section 4 canvases with
+Python (PIL) and sends back an assembled preview.
 
 **Provenance findings, 2026-09-24 (raised with Michael and the orchestrator):**
 - Michael answered: Low_Swordman, Templar Knight, the item icons, and the front-end art are
@@ -99,16 +104,23 @@ the Fire colour change (`#FF7326` → `#FF4A1C`, bible §5). Starting step 3, th
 
 ## Next steps
 
-1. Hero template → `docs/art/HERO_TEMPLATE.md`: part list, sizes, pivots, layering, label
-   variants, for one shared skeleton (Templar rig as the line reference, NOT proportions — its
-   head is ~60% of height vs the bible's 1/3–2/5). Brief + parts-sheet prompt in
-   `ArtSource/rig/hero-template/brief.md`; manifest row `rig/hero-template` as `briefed`.
-2. When SF images arrive in `ArtSource/_style/AI/_raw/`: review against bible §10, revise the
-   style block.
-3. Item-icon briefs (10 items without icons: ids 2–8, 10, 11, 13) after SF6 is approved.
+1. Step 4 story-independent briefs: item icons first (10 items without icons: ids 2–8, 10, 11,
+   13; set brief at `ArtSource/icons/items/brief.md`, one folder per item, manifest rows
+   `item-icon/<id>` briefed), then weapon sprites, effects (four casts, aura, leap, statuses,
+   hits: D39, D46), the drop glow (ring and beam, bible section 5).
+2. Step 5 audio v0: `docs/art/AUDIO.md` (sound list from the design docs plus a licensed-library
+   shortlist with licence terms).
+3. When SF or parts images arrive: review against bible section 10; cut the parts sheets.
 
 ## Answers and decisions
 
+- 2026-09-24 (Art lane, HERO_TEMPLATE.md): **rigid cut-out parts, bends by label swap**, 21
+  drawings per hero (head x4, torso, arm x2x2, hand x2x3, leg x2x2, foot x2) plus optional
+  back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
+  (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
+  Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Orchestrator): the bible review is item 5 in Michael's queue; don't press. The Fire
+  colour change and unlit-painted-cel recommendation are parked on the M9 backlog until he decides.
 - 2026-09-24 (Michael): **art direction = Castle Crashers + Rayman Legends; clean vector
   outlines; chunky big-head heroes (head 1/3–2/5 of height).** Bible line: "Castle Crashers-style
   characters living in a Rayman Legends world". Differentiation is carried by the lit, lush 3D world,
@@ -134,6 +146,8 @@ the Fire colour change (`#FF7326` → `#FF4A1C`, bible §5). Starting step 3, th
 
 ## Log
 
+- 2026-09-24 — Hero template spec + parts-sheet prompts + generated guides written; DONE sent.
+- 2026-09-24 — COMMITTED 75fcc3b (art bible v0, style-frame brief).
 - 2026-09-24 — Art bible v0 + six style-frame prompts written; DONE sent.
 - 2026-09-24 — COMMITTED 4435833 (classification). Orchestrator corrected memory; M9 backlog 85d567d.
 - 2026-09-24 — Existing art classified with Michael; maincharactertemp.ai found to be a copy of the Templar .ai; DONE sent.

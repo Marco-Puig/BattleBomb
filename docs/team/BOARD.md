@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
 | Netcode | Netcode | online | M8 Plan 1 (stages A+B) — spec approved | — |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | Art | online | Audio v0 (icons, effects and held weapons briefed) | — |
+| Art | Art | online | Story-free fixture environment kit, then HUD and menu mockups | Michael: images, bible review, music tool |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -41,7 +41,15 @@ What is waiting on Michael, in priority order:
    tester; there is no second PC (D59, ROADMAP §4 M8).
 5. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-6. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+6. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+   vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
+   raw files, and a public GitHub repo does exactly that. Options: make the repo private
+   *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
+   two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
+   up privately; or CC0 sounds only.
+7. *(Whenever there is a gap)* **Pick the music tool** — Art's research (`AUDIO.md`): AIVA Pro grants
+   ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
+8. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
@@ -103,6 +111,9 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art `DONE`: audio v0 (b144d79); first pass complete. Approved: a minimal story-free
+  fixture environment kit; next, HUD and menu mockups (ROADMAP §5.2 item 6). Licensed-audio question
+  → Michael's queue.
 - 2026-09-24 — Netcode `DONE`: `HANDOFF-M8.md`, approved by Michael. Task numbers to be moved to
   start at 86 (84 and 85 are M7's). Plan 1 next.
 - 2026-09-24 — Art `DONE`: item-icon brief (3ce0274); effects spec, seven kit prompts, held-weapons

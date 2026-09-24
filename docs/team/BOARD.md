@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
 | Netcode | Netcode | online | M8 design presented in sections, then `docs/HANDOFF-M8.md` | Michael's review |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | Art | online | The hero template (bible v0 done) | — |
+| Art | Art | online | Story-free briefs (item icons first), then audio v0 | — |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -80,6 +80,9 @@ From the Art lane's provenance spec (`docs/art/PROVENANCE.md` §§8, 10):
 From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Michael's sign-off:
 - **Fire's element colour** `#FF7326` → `#FF4A1C` in `Data/Elements/Fire.asset`, so it no longer
   reads as Legendary loot.
+- **M9's rig session confirms on the Unity side** (`docs/art/HERO_TEMPLATE.md` §7, proposals not
+  decisions): Sprite Resolver label swaps keyed in clips on rigid parts (2D Animation 15.1), pivots
+  set by an importer preset, one Sorting Group per character, sorted by depth.
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
 
@@ -93,6 +96,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art `DONE`: hero template — 21 parts, fixed canvases and pivots, layering, guide
+  images, and the first (story-free) skin's prompts (f9b6611).
 - 2026-09-24 — Netcode `DONE`: M8 design session. Recorded as **D58–D62**; D57 (the menu layer,
   Groundwork) recorded now so the log stays in order. ROADMAP §4/§5.3 and GAME_DESIGN §7 follow.
 - 2026-09-24 — Art `DONE`: art bible v0 and six style-frame prompts. Bible review added to

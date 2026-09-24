@@ -42,14 +42,17 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-- **Orchestrator: COMMITTED for the readiness DONE** (sent 2026-09-24; mirrored here in case it was
-  held). Paths: `docs/team/netcode/readiness.md` (new), `docs/team/netcode.md`. Subject: "Netcode:
-  M8 readiness audit". Also flagged four out-of-lane bugs for scheduling (see Log).
+- **Orchestrator: COMMITTED for the options DONE** (sent 2026-09-24; mirrored here in case it was
+  held). Paths: `docs/team/netcode/options.md` (new), `docs/team/netcode.md`. Subject: "Netcode:
+  M8 options memo". Do not edit `options.md` until COMMITTED.
 
 ## Current state
 
-Step 1 done: `readiness.md` complete (all eight sections). Step 2: `options.md` drafted and
-reviewed against the audit; next is a final read, DONE, then open the design session with Michael. Then send DONE for readiness.md and go
+Steps 1–2 done (readiness committed `bdc1f58`; options DONE sent). Step 3: the design session with
+Michael, in this session, one decision at a time, recommendation first. Agenda order: topology →
+netcode layer + Steam wrapper (Claude recommends, Michael agrees) → how couch and online mix →
+join point → screens online → saves online (who holds guest gear / what guest keeps / leaving) →
+feel → test tooling + Steamworks account timing. Record each answer below as it lands. Then send DONE for readiness.md and go
 straight to the options memo (orchestrator: no need to wait for COMMITTED).
 
 Research already done (Context7 + release pages, 2026-09-24): Steamworks.NET 2025.164.1 (Aug 2025,
@@ -69,6 +72,10 @@ is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (
 
 ## Answers and decisions
 
+- 2026-09-24 (orchestrator, COMMITTED bdc1f58): audit findings scheduled — deferred-Destroy bug,
+  DEBUG grant, constant seeds → Builder batch after Groundwork, before M8. **Shop rack → MINE: the
+  M8 spec and plan must say "the rack lives in the simulation; buy = buy rack slot N".** Seeds: M8
+  only needs to say the host owns the seed. Same-hero couch save → Michael's queue, not M8.
 - 2026-09-24 (Michael): online co-op ships in Early Access (D54), chosen over Remote Play Together
   and couch-only. D11 still caps the game at two players; how couch and online mix is M8's call.
 

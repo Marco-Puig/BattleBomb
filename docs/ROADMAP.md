@@ -131,34 +131,31 @@ following each player separately, and two players on different devices at once.
 
 ### M8 — Online co-op
 
-**Starts with a design session.** The questions it must settle:
+**Designed 2026-09-24** in the Netcode lane's session with Michael — **D58–D62**:
 
-- **Topology.** Host-authoritative (one player's machine runs the simulation; the guest sends
-  commands and receives state) or lockstep/rollback (both machines run the simulation from shared
-  inputs). The starting recommendation is host-authoritative: two friends co-operating need no
-  anti-cheat, and it does not demand bit-identical floating-point maths across two PCs. Decided
-  with current library docs in hand.
-- **Transport and lobbies:** Steam networking and Steam friend invites; which Steamworks wrapper;
-  whether Unity's Netcode fits a custom simulation or state sync is written over the existing
-  command model.
-- **How the two players mix:** D11 locks two players; the recommendation is two in total in any
-  combination — both on one couch, or one on each PC.
-- **When a guest can join:** character select only, as locally (M7), or mid-stage too.
-- **Screens online:** the world cannot pause for one player, so the chest (D42 already has online
-  full-screen) and the pause menu run with the world live.
-- **Saves online:** each participant brings their own save (D51). What a grab writes into the
-  guest's save, and what the guest keeps when the host quits.
-- **Feel:** how the guest's own character stays responsive under latency.
-- **Test tooling:** Unity's Multiplayer Play Mode (several players inside one editor), Steam
-  Playtest, and two real PCs.
+- **D58** — the host's machine runs the one real game; the guest sends button presses and draws
+  what the host sends back. Our own thin layer over a transport seam: Steam (Steamworks.NET) for
+  PC, a free cross-platform transport later for mobile.
+- **D59** — two players in any shape (solo, couch, or one per PC). Friends join at character
+  select **or at a checkpoint room mid-run**; a solo game is open to friends by default.
+- **D60** — nothing pauses online; the host drives the whole-session moments.
+- **D61** — the host holds the guest's gear during a match; the guest keeps loot, XP, and chapter
+  credit. The shopkeeper's rack moves into the simulation.
+- **D62** — the guest's own movement and swings are predicted, the rest arrives a round trip later.
+
+Evidence: `docs/team/netcode/readiness.md`, `docs/team/netcode/options.md`. Spec and plan:
+`docs/HANDOFF-M8.md` and its implementation plan (Netcode lane, in progress).
 
 **Delivers:** a real `IPlatformServices` for Steam, with `NullPlatformServices` still the default
-(rule 6); the host / invite / join flow in the front end; remote players as command sources; state
-sync; the online rules for screens and pause; per-participant saves; Steam Cloud as the second
-`ISaveStore` (D52); PlayMode tests with two networked players.
+(rule 6); the host / invite / join flow in the front end, including drop-in at checkpoint rooms
+(D59); remote players as command sources; state sync and the guest's prediction; the online rules
+for screens and pause; per-participant saves and the rack in the simulation (D61); Steam Cloud as
+the second `ISaveStore` (D52); PlayMode tests with two networked players.
 
-**Needs from Michael:** the design session; a Steamworks account and app ID; a second PC or the
-collaborator as the remote player.
+**Needs from Michael:** the design session (done); **the collaborator as the remote tester** —
+there is no second PC; and **the Steamworks account and app ID at M8's close-out** (his choice —
+development runs on Valve's test app 480 until then). Valve's onboarding paperwork can take days,
+so start it early enough that it does not hold up the two-PC pass.
 
 **Done when:** two players on two PCs over the internet play the fixture chapter start to finish —
 fight, revive, grab, chest, shop, wipe, results, save — with a checklist pass from both ends; the
@@ -321,9 +318,9 @@ which reaction pairs exist; are pets beyond stat pets in Early Access.
 
 ### 5.3 Business
 
-- **Steamworks account and app** ($100, refunded once the game earns $1,000) — set up **during
-  M8**: online testing needs a real app ID, and Steam Playtest's free closed tests suit online
-  testing with the collaborator.
+- **Steamworks account and app** ($100, refunded once the game earns $1,000) — set up **at M8's
+  close-out** (Michael's choice): M8 is developed on Valve's test app 480, and Steam Playtest's free
+  closed tests wait for the real app ID. Start the paperwork a few days ahead — it can take that long.
 - **The "Coming Soon" store page** goes up once the art is presentable — around mid-M10. Wishlists
   only build while it is live, and Steam requires it up at least two weeks before launch anyway.
 - **Steam Next Fest** with M10's demo. It runs in February, June, and October with registration
@@ -340,7 +337,7 @@ which reaction pairs exist; are pets beyond stat pets in Early Access.
 | Online at Early Access | Michael | **done** — D54 |
 | The menu map's proposed items (X, Y, LB/RB) | Michael | Groundwork kickoff |
 | Text rendering: stay on the current legacy text, or move to TextMeshPro (sharper text; the Archivo weights resolve with it) | Claude recommends, Michael agrees | Before M9's HUD rebuild |
-| Topology, how couch and online players mix, join points, online screens and saves | M8 design session | M8 |
+| Topology, how couch and online players mix, join points, online screens and saves | M8 design session | **done** — D58–D62 |
 | The World session | Michael + collaborator | Early M8 ideally; M10 at the latest |
 | The art bible | Michael | M9 |
 | Hero tuning; reaction pairs; boss design | Michael | M10 |
@@ -400,4 +397,4 @@ consoles and mobile (D5) · localisation.
 2. **Groundwork** — confirm the three proposed menu buttons, then it gets built.
 3. **Book the World session** with the collaborator — it gates the art.
 4. **Pick an AI image tool** for the drafts, and start thinking about the art bible.
-5. **During M8:** create the Steamworks account.
+5. **At M8's close-out:** create the Steamworks account (start the paperwork a few days ahead).

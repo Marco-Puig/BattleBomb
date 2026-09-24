@@ -1323,6 +1323,168 @@ structure is the pattern that stalled.
 
 ---
 
+## D57 — The menu layer and the seats · **Locked** *(amends D17; retires PlayerInput)* — built by Groundwork
+
+Directed by Michael in two sittings — the map itself, then its open details at Groundwork's
+kickoff (2026-09-24): *"A should be select/confirm, B should be back,
+we can use x/y for options like selling, upgrading, locking … we should not make them
+redundant. Controls shouldnt get too advanced that we can't implement touch taps and swipes as
+mobile replacements."* And: *"esc to be the natural back button, only pause if you are not in a
+menu. Arrow keys and enter/space also are helpful."*
+
+| Role | Gamepad | Keyboard |
+|---|---|---|
+| Navigate | Left stick + D-pad | WASD + arrows |
+| Confirm | A | Enter / Space |
+| Back | B | Esc — backs out one level; closes the screen from its top level |
+| Sell (Combine-all mid-pick) | X | J |
+| Lock / release | Y | K |
+| Switch tab or mode | LB / RB | Q / E |
+| Pause | Start — and inside a menu, leave it outright | Esc, outside menus only |
+
+- **Menus have their own action map and their own buttons.** A physical button carries a fight
+  meaning and a menu meaning at once — A is Jump and Confirm — and a screen never reads a combat
+  verb. Rebinding a verb can never move "confirm". D17's five-verb budget is untouched.
+- **No two buttons do the same job.** So X does nothing at the shop rack: A already buys there.
+- **X and Y are only ever shortcuts.** Every verb they fire is also reachable by choosing the item
+  and then the verb, which is what keeps touch possible (D5): a phone taps, it needs no X.
+- **X sells instantly; the lock is the only safety** (Michael's choice over hold-to-sell and a
+  second press above Clean).
+- **Escape is Back inside a menu and Pause outside one.** Start still leaves any screen outright,
+  so M6's promise — getting out is never a puzzle — survives Escape becoming one level at a time.
+  The press that closes a screen never also opens the settings.
+- **Solo at a chest, the shoulders cross between the sack and the hero panel** — the "other half"
+  in every layout.
+- **Prompts show the device the player last pressed**: Xbox letters on every controller
+  (Michael's choice), key caps on a keyboard, badges per UI Pass 01's hint row.
+- **Seats replace PlayerInput.** Player 2 owns the device they joined with; Player 1 owns
+  everything else — so a solo player switches between keyboard and any controller just by using
+  it. At character select Player 1 is held to the device that started the game, so a press on
+  another is a join. The seat is authored and is the player's id, which fixes the solo "P2" label.
+- **A button held across a scene change is not a press.** A now leaves the results screen and
+  confirms the title; without this a held A would skip through the front door.
+
+**Rejected:** double-binding confirm and back (A and X both confirming) — Michael: *"we should not
+make them redundant."* Hold-to-sell — his call, instant with locks.
+
+---
+
+## D58 — Online runs on the host's machine, over our own layer · **Locked** *(amends D10; cashes in D54)*
+
+Settled in the M8 design session with Michael (2026-09-24).
+
+- **Host-authoritative.** One player's PC — the host — runs the one real simulation, exactly as it
+  runs today. The guest's device becomes `PlayerCommand`s sent to the host, where a
+  `RemoteCommandSource` feeds them in like any local pad (D10's promise, cashed). The host sends the
+  guest world snapshots and simulation events; the guest's machine draws them and never rolls,
+  resolves or decides anything. The host owns every RNG seed.
+- **Our own thin netcode layer**, not a library: a message codec, snapshots, a replica mode for the
+  guest, an input buffer, and own-character prediction (D62). The simulation already owns its clock,
+  state, order and ids; a library would make us translate it into someone else's.
+- **The transport sits behind a Platform seam.** Steam (via Steamworks.NET, a UPM package pinned to
+  a tag, in its own assembly) is the PC Early Access transport: friends-only lobbies, overlay invites,
+  P2P over Valve's relay, Steam Cloud as D52's second `ISaveStore`. An in-memory loopback and a plain
+  UDP transport exist for tests and two-editor development. **Nothing above the seam may assume
+  Steam** — Michael: *"Whatever is the best free option for mobile."* A free cross-platform
+  transport (Epic Online Services is the candidate) slots in when mobile arrives (D5). Rule 6
+  stands: a build without Steamworks compiles and runs.
+
+**Why host-authoritative:** it needs no bit-identical maths across two PCs (the audit counted 588
+`float`s across 62 Core files and `Mathf.Pow` in the XP curve and prices), it is untouched by the ten
+live sources of divergence the audit found (stage loads landing at machine-dependent moments above
+all), and it keeps the host's game exactly as it plays today. Cheating is irrelevant to two friends
+co-operating.
+
+**Rejected:** lockstep (input delay on both players, plus determinism forever); rollback (all of
+lockstep's cost plus whole-world save/restore); Netcode for GameObjects (per-object sync on its own
+tick, no full prediction/reconciliation); FishNet (the strongest library — kept as the fallback if
+our layer stalls); Photon Fusion/Quantum (paid per concurrent player past 100, and a rewrite into
+their model); Facepunch.Steamworks (last release April 2024).
+
+---
+
+## D59 — Two players, any shape; friends drop in at character select and checkpoint rooms · **Locked** *(extends D11, D51)*
+
+Settled with Michael (2026-09-24).
+
+- **Two in total** (D11 unchanged): solo, a couch pair on one PC, or one player on each of two PCs.
+  A couch pair cannot also take an online guest.
+- **A guest joins at character select, or at a checkpoint room mid-run.** A join request that
+  arrives mid-fight waits until the host's run is at a checkpoint room; the guest appears at that
+  room's respawn point. Mid-fight drop-in is rejected. (Michael chose the checkpoint rooms over the
+  recommended character-select-only.)
+- **A solo game is open to the host's platform friends by default** — they see "Join game", and the
+  host can invite from the overlay at any time. A setting turns it off. A couch game is full and never
+  open.
+- **The host's save decides what can be launched**; a guest may help in a chapter above their own
+  unlocks.
+
+**Consequence:** a solo run can become a two-player online run mid-chapter, so every solo rule — the
+chest pause, the camera, the chest layout — switches live when a guest arrives or leaves. M8 must
+send a whole running world to a newcomer and load their save into a live run.
+
+---
+
+## D60 — Online, nothing pauses · **Locked** *(extends D42)*
+
+Settled with Michael (2026-09-24).
+
+- **No screen stops the world online** — chest, shopkeeper, hero panel, settings. Each opens
+  full-screen on its own player's display (D42's online rule, extended); the player at a screen stands
+  idle, as a couch player at a chest does now.
+- **Each display lays out for its own local players**, not for how many characters exist — online
+  that is always one, so full-screen chest and solo camera.
+- **The host drives the whole-session moments:** leaving results, returning to chapter select,
+  launching. The guest's screens follow.
+- Solo and couch keep today's rules. A solo game switches to this rule the moment a guest drops in.
+
+**Rejected:** settings pausing both players ("Paused by Player 2") — either player could stop the
+other's game at will.
+
+---
+
+## D61 — Online saves: the host holds the run, each player keeps what they earned · **Locked** *(amends D51; extends D52)*
+
+Settled with Michael (2026-09-24). D51 left "reconciling two saves' progress" to the networking
+milestone; this is that reconciliation.
+
+- **The host's machine holds the guest's gear during a match.** At join the guest's character and
+  stash travel to the host; the host's simulation owns them for the run. Online there are therefore
+  **two stashes in the simulation**, one per save; the couch keeps one shared stash (D51 unchanged
+  for the couch). Auto-sell and auto-equip travel with their stash — they are saved state. The guest's
+  menu actions are requests that name the player and carry a sack revision; the host refuses one
+  aimed at a sack that has since changed.
+- **The shopkeeper's rack lives in the simulation**, rolled by the host; buying names a rack slot.
+  (Today the menu rolls and prices it — a rule 2 violation the audit found.)
+- **The guest keeps everything they earned** — loot, gold, XP, levels, allocations, worn gear — and
+  **credit for chapters and tiers finished with the host**, written on the guest's own machine at
+  D52's autosave moments from the state the host sends. The resume point stays the host's.
+- **Leaving:** the host quits or drops → the guest keeps everything up to the last autosave moment,
+  exactly what a crash costs (D52), and returns to the title. The guest leaves → the host carries on
+  solo, with D25's solo rules from that step.
+
+**Rejected:** the guest holding their own gear with the host keeping a mirror (instant menus, but two
+machines deciding at every grab whether the sack has room); loot-and-XP-only (a helper made to replay
+a chapter alone to unlock it).
+
+---
+
+## D62 — The guest's own character is predicted · **Locked**
+
+Settled with Michael (2026-09-24).
+
+- **The guest's movement and swings react instantly on their own machine:** running, jumping,
+  facing, and the start of every attack and cast are predicted locally with Core's own
+  `CharacterMotor` and `CombatMachine`, then corrected to the host's answer when it arrives.
+- **Everything the host decides arrives a round trip later** — whether a swing hit, damage numbers,
+  knockback from enemies, and everything about enemies.
+- **Built in two steps:** interpolation only first, to measure real connections; prediction on top.
+
+**Rejected:** movement-only prediction (attacks feel late); no prediction (the guest's own character
+visibly behind their presses).
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

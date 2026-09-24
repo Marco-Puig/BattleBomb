@@ -12,9 +12,9 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | Netcode | online | Readiness audit — writing `docs/team/netcode/readiness.md` | — |
+| Netcode | Netcode | online | M8 design presented in sections, then `docs/HANDOFF-M8.md` | Michael's review |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | BattleBomb Art lane | online | Required reading, then the provenance spec | Michael's AI image tool |
+| Art | Art | online | The hero template (bible v0 done) | — |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -34,13 +34,17 @@ What is waiting on Michael, in priority order:
 
 1. **Open the BattleBomb project in Unity 6000.5.8f1 with the MCP bridge** — the Builder is
    blocked on it (the bridge stubs are up; no editor is running).
-2. **M8's design session** — open in the Netcode lane's session (options memo done). M8 is the
-   next milestone, so its answers come first when both sessions are waiting.
+2. **Review M8's design in sections** — the Netcode lane is presenting it in its session, then
+   writes `docs/HANDOFF-M8.md`. The session itself is done: D58–D62.
 3. **The World session** — open in the World lane's session, at question 1 (the goal).
 4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
 
-5. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+   tester; there is no second PC (D59, ROADMAP §4 M8).
+6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+   days ahead; it can take that long.
+7. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
@@ -89,6 +93,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: M8 design session. Recorded as **D58–D62**; D57 (the menu layer,
+  Groundwork) recorded now so the log stays in order. ROADMAP §4/§5.3 and GAME_DESIGN §7 follow.
 - 2026-09-24 — Art `DONE`: art bible v0 and six style-frame prompts. Bible review added to
   Michael's queue.
 - 2026-09-24 — Art `DONE`: existing art classified with Michael (4435833) — hand-final except the

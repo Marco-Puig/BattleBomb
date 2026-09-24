@@ -347,7 +347,8 @@ Enemy mechanics are **standardized archetypes**; regions and ranks style and sca
 
 **Two players, local and shared screen — and online from Early Access (D54).** Written
 network-shaped from the first line (D10), which is what lets online arrive as M8 rather than a
-rewrite; its topology, and how couch and online players mix, are settled in M8's design session.
+rewrite. The host's machine runs the game and friends drop in at character select or a
+checkpoint room (D58–D62).
 
 Design consequences:
 - Shared camera framing constrains level width and enemy placement. Encounters must stay readable

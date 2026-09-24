@@ -3594,7 +3594,7 @@ Expected: `clear True`. `capture_game_view` for the record. `editor_stop`.
 - Modify: `CLAUDE.md` (rule 3), `docs/ARCHITECTURE.md` (wherever rule 3's wording appears)
 - Modify: `docs/ROADMAP.md` (§4 Groundwork, §9 debts)
 
-- [ ] **Step 1: Append D57**
+- [ ] **Step 1: D57 is already recorded** — the orchestrator wrote it into `DECISIONS.md` from the text below on 2026-09-24, when M8's decisions took D58–D62. Re-read it against what was actually built and send the orchestrator any correction. The text, for reference:
 
 ```markdown
 ## D57 — The menu layer and the seats · **Locked** *(amends D17; retires PlayerInput)*

@@ -60,10 +60,9 @@ step 1 and grows with every brief.
 
 ## Current state
 
-Step 3 (hero template) **sent as DONE; do not touch until COMMITTED:** `docs/art/HERO_TEMPLATE.md`,
-`ArtSource/rig/hero-template/brief.md`, `ArtSource/rig/hero-template/guides/` (make_guides.py +
-6 PNGs), `docs/art/PROVENANCE.md` (§4 part naming), `docs/art/MANIFEST.csv` (+ `rig/hero-template`
-briefed), `docs/team/art.md`.
+Step 4, item icons, **sent as DONE; do not touch until COMMITTED:** `ArtSource/icons/items/brief.md`,
+`docs/art/MANIFEST.csv` (+10 `item-icon/<id>` rows briefed, 25 rows), `docs/team/art.md`.
+Next: the effects kit brief, weapon held sprites, and the drop glow; then audio v0.
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -146,6 +145,8 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Item icon brief (3 batches, 10 icons) + manifest rows; DONE sent.
+- 2026-09-24 — COMMITTED f9b6611 (hero template).
 - 2026-09-24 — Hero template spec + parts-sheet prompts + generated guides written; DONE sent.
 - 2026-09-24 — COMMITTED 75fcc3b (art bible v0, style-frame brief).
 - 2026-09-24 — Art bible v0 + six style-frame prompts written; DONE sent.

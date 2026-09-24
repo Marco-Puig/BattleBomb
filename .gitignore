@@ -68,6 +68,9 @@ crashlytics-build.properties
 .Spotlight-V100
 .Trashes
 Icon?
+# Icon? is macOS's hidden 'Icon' file, but Windows git matches it case-insensitively and it
+# swallowed a folder named 'icons'. Put such folders back.
+![Ii]cons
 ehthumbs.db
 [Tt]humbs.db
 [Dd]esktop.ini

@@ -169,3 +169,21 @@ Heroes wait for the story bible (D56), but the rig and its animations do not hav
 template's first skin is the knight from style frame SF1**: your own Templar Knight, redrawn in
 the new proportions. He is a stand-in test skin, not one of the four heroes. He lets M9 build and
 animate the rig before any hero exists. Brief and prompts: `ArtSource/rig/hero-template/brief.md`.
+
+---
+
+## 9. The weapon (`weapon/<definition id>`)
+
+A weapon is an item, not part of the skin. It hangs on `hand-front` at layer 11, under the
+gripping fingers. It has its own canvas and pivot so that any weapon fits any hero:
+
+- **Drawn pointing straight up**, with the edge or string facing forward (right). The animation
+  rotates it.
+- **The pivot is the centre of the grip,** the spot the `grip` hand closes around.
+- **Drawn new and plain,** like its icon: one drawing serves every quality rank.
+
+| Weapon | Canvas (px at H = 1600) | Pivot (fraction from bottom-left) | Size |
+|---|---|---|---|
+| Hunting Knife (id 7) | 256 × 640 | (0.500, 0.125) | about 0.30 H long |
+| Hunting Bow (id 8) | 384 × 1024 | (0.400, 0.500) | about 0.55 H tall; string on the back (left) side |
+| its arrow (the shot) | 640 × 128 | (0.500, 0.500) | about 0.35 H long, flying right |

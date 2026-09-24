@@ -134,7 +134,7 @@ ladder uses most of the colour wheel, so **hue alone can never keep elements and
 |---|---|---|---|---|---|
 | **Fire** | `#FF4A1C` *(proposed; now `#FF7326`)* | `#FFF1B0` | `#9E1B0F` | Licking flame tongues, rising embers, heat shimmer | **Burn:** small flames on the target, embers rising |
 | **Ice** | `#59BFFF` | `#E8FBFF` | `#1F6FA8` | Angular shards, faceted crystal, frost rings | **Chill:** frost crust on the feet, a cool tint, slow drifting flakes |
-| **Earth** | `#8C6B40` | `#E3C99A` | `#4A3320` | Chunky angular rocks, dust puffs, ground cracks | **Stun** (a property of the hit): small rocks orbiting the head |
+| **Earth** | `#8C6B40` | `#E3C99A` | `#4A3320` | Chunky angular rocks, pillars, pale dust puffs (no dark ground marks, §4) | **Stun** (a property of the hit): small rocks orbiting the head |
 | **Air** | `#D9F2FF` | `#FFFFFF` | `#5FA3A0` | Curling swooshes, spirals, speed lines, carried leaves | **Launch** (a property of the hit): an upward swirl under the target |
 
 Air is pale on purpose (wind is nearly invisible). It relies on its **teal-grey dark tone and its

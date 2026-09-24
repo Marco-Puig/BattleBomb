@@ -60,9 +60,11 @@ step 1 and grows with every brief.
 
 ## Current state
 
-Step 4, item icons, **sent as DONE; do not touch until COMMITTED:** `ArtSource/icons/items/brief.md`,
-`docs/art/MANIFEST.csv` (+10 `item-icon/<id>` rows briefed, 25 rows), `docs/team/art.md`.
-Next: the effects kit brief, weapon held sprites, and the drop glow; then audio v0.
+Step 4 (effects, weapons, drop glow) **sent as DONE; do not touch until COMMITTED:**
+`docs/art/EFFECTS.md`, `ArtSource/effects/brief.md` (7 kit prompts), `ArtSource/weapons/brief.md`,
+`docs/art/HERO_TEMPLATE.md` (section 9, weapon convention), `docs/art/ART_BIBLE.md` (Earth: no
+ground cracks), `ArtSource/_style/brief.md` (SF5: no cracks), `docs/art/MANIFEST.csv` (34 rows),
+`docs/team/art.md`. Next: step 5, audio v0.
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -118,6 +120,13 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Art lane, EFFECTS.md): **effects are sprite kits animated by Unity particles**, not
+  AI flipbooks; 7 kits = 7 slots (fire, ice, earth, air, melee, loot, feedback). Loot glow is
+  greyscale, tinted by QualityColors. No dark ground marks from effects (bible section 4). Weapons:
+  drawn pointing up, pivot = grip centre (HERO_TEMPLATE section 9).
+- 2026-09-24 (Orchestrator): **git trap**: `.gitignore`'s `Icon?` rule was hiding
+  `ArtSource/icons/` (fixed in 05919b0). If a new folder doesn't show in
+  `git status --untracked-files=all`, run `git check-ignore -v <path>` and tell the orchestrator.
 - 2026-09-24 (Orchestrator): the bible review is item 5 in Michael's queue; don't press. The Fire
   colour change and unlit-painted-cel recommendation are parked on the M9 backlog until he decides.
 - 2026-09-24 (Michael): **art direction = Castle Crashers + Rayman Legends; clean vector
@@ -145,6 +154,8 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Effects spec + 7 kit prompts + weapons brief + manifest (34 rows); DONE sent.
+- 2026-09-24 — COMMITTED 3ce0274 (item icons).
 - 2026-09-24 — Item icon brief (3 batches, 10 icons) + manifest rows; DONE sent.
 - 2026-09-24 — COMMITTED f9b6611 (hero template).
 - 2026-09-24 — Hero template spec + parts-sheet prompts + generated guides written; DONE sent.

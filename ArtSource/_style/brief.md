@@ -125,8 +125,8 @@ space between them, each seen from the side and travelling to the right:
    blue (#59BFFF) with white-cyan highlights (#E8FBFF) and deep blue shadows (#1F6FA8), a short
    frosty trail.
 3. EARTH (bottom left): a short wall of chunky, angular rocks erupting out of the ground, ochre
-   stone (#8C6B40) with pale sand highlights (#E3C99A) and dark umber shadows (#4A3320), dust
-   puffs and cracks at its base.
+   stone (#8C6B40) with pale sand highlights (#E3C99A) and dark umber shadows (#4A3320), pale
+   dust puffs at its base and no marks on the ground.
 4. AIR (bottom right): a curling gust of wind lifting upward, pale mint-white swooshes (#D9F2FF)
    with teal-grey edges (#5FA3A0), spiral lines and a few carried leaves.
 Style: match the attached image's clean vector cartoon look. Solid shapes (rocks, ice) get the

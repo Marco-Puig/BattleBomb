@@ -24,3 +24,12 @@ item-icon/8,Hunting Bow icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired 
 item-icon/10,Terrier icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 10 once drafted. Needs SF6 approved first.
 item-icon/11,Lucky Charm icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 11 once drafted. Needs SF6 approved first.
 item-icon/13,Ember Stone icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 13 once drafted. Needs SF6 approved first.
+effect/fire,Fire effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
+effect/ice,Ice effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
+effect/earth,Earth effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
+effect/air,Air effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
+effect/melee,"Melee effect kit (arcs, hit stars, dust)",effect,briefed,,,,,,,effects/brief.md,Needs SF2 approved first.
+effect/loot,"Loot glow kit (greyscale, tinted by QualityColors)",effect,briefed,,,,,,,effects/brief.md,
+effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,briefed,,,,,,,effects/brief.md,Needs SF1 approved first.
+weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.
+weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.

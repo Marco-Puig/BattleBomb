@@ -56,25 +56,60 @@ step 1 and grows with every brief.
 
 ## Waiting on
 
-- **Michael's choice of AI image tool** — needed before prompts are final. Everything else can
-  start.
 - **The World lane's story bible** — for heroes, regions, enemies, and bosses.
 
 ## Current state
 
-Not started.
+**Step 1 (provenance spec) written, sent as DONE — do not touch its paths until COMMITTED:**
+`docs/art/PROVENANCE.md`, `docs/art/MANIFEST.csv` (14 seed rows: 3 fonts licensed, 11
+`unclassified`), `ArtSource/README.md`. Validated: CSV parses, every existing art file under
+`Assets/_BattleBomb/Art/` is covered by a row.
+
+Asking Michael where the existing art came from (packs, icons, frontend, props) so the
+`unclassified` rows can be classified after the commit.
+
+**Facts gathered (so they survive a reset):**
+- Michael's own character source `Art/AI/maincharactertemp.ai` is an Illustrator file (PDF-based,
+  layered) — he draws in vector. The Templar Knight source is `.ai` + 10 `.eps` parts + a Spriter
+  `Animations.scml` under `Sprites/Characters/Templar Knight/PNG/Vector Parts/`.
+- Templar Knight rig parts (`Art/Templar Knight/Graphics/`): Head 480², Body 320², four limbs and
+  two hands 128² each, Sword 400×128, SlashFX 496². Ten parts: Head, Body, L/R Arm, L/R Hand,
+  L/R Leg, Sword, SlashFX. Package: `com.unity.2d.animation` 15.1.0.
+- Item icons are joined by **definition id**: `ItemDefinition.Icon` (Sprite, presentation-only)
+  → `ItemIconLibrary.For(id)`, reached via `SimulationDriver.ItemIcons`; a missing icon is normal
+  and draws a placeholder plate. 13 item definitions in `Data/Items/` (ids 1–13); only 3 have
+  icons (1 Leather Helmet, 9 Health, 12 Mana). 12 weapon PNGs in `Art/UI/Items/Weapons/` are
+  unassigned. Existing icons are 375–670 px square RGBA.
+- Enums: ItemSlot Helmet0 Chest1 Boots2 Weapon3 Pet4 Equipment5 Consumable6; WeaponClass
+  Sword1 Bow2; PetClass Attacker1 StatBoost2 Unique3.
 
 ## Next steps
 
-1. Read the list above.
-2. Ask Michael which AI image tool he is using.
-3. The provenance spec.
+1. On COMMITTED: classify the `unclassified` manifest rows from Michael's answers (new DONE).
+2. Art bible v0 → `docs/art/ART_BIBLE.md`: ask Michael for references and taste first (one
+   question at a time), then style-frame prompts for ChatGPT images → `ArtSource/_style/brief.md`.
+3. Hero template → `docs/art/HERO_TEMPLATE.md` (Templar Knight rig as reference).
 
 ## Answers and decisions
 
+- 2026-09-24 (Michael): **ArtSource layout is side by side** — one folder per asset holding
+  `brief.md`, `AI/` (with `_raw/`), and `Hand/`. Not two mirrored trees.
+- 2026-09-24 (Art lane, in PROVENANCE.md): a **slot is the unit swapped whole** — a whole
+  character skin, not one body part (refines D55's "Fire hero — torso" example; flagged to the
+  orchestrator). **Traced/edited AI stays AI**; Hand = drawn fresh over a locked reference layer.
+  Correction to what Michael was told in the tool question: Image Trace does NOT make a draft Hand.
+- 2026-09-24 (Michael): **the AI image tool is ChatGPT images.** Prompts are written for it: long,
+  exact, layout-precise; transparent backgrounds; follow-up edits against a reference image for
+  consistency. Drafts are raster; Michael redraws over them in Illustrator (never traces).
+- 2026-09-24 (Orchestrator): **reach the orchestrator at the `from=` address of its last message**,
+  not by name — Michael renames sessions (PROTOCOL rule 6, 853ad08). Last known:
+  `uds:\\.\pipe\LOCAL\cc-msg-a5467c87452d77bccc60c704d3ef83a9`. Hero, region, enemy and boss
+  prompts stay parked until the World bible lands; the orchestrator will say when.
 - 2026-09-24 (Michael): AI drafts first for all art, organised so he can tell AI from his own work
   and redraw each (D55). Audio: AI-drafted music plus licensed sound-effect libraries.
 
 ## Log
 
+- 2026-09-24 — Provenance spec v0 + seeded manifest written; DONE sent.
+- 2026-09-24 — ONLINE; required reading done; facts on rig, icons, and source art recorded.
 - 2026-09-24 — Lane seeded by the orchestrator.

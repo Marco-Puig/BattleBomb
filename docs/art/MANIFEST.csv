@@ -1,0 +1,15 @@
+slot,asset,category,status,ai_path,hand_path,path,licence,ai_tool,date,brief,notes
+font/archivo,Archivo,font,licensed,,,UI/Fonts/Archivo-Variable.ttf,SIL OFL 1.1 — UI/Fonts/OFL-Archivo.txt,,,,
+font/passion-one,Passion One,font,licensed,,,UI/Fonts/PassionOne-Black.ttf;UI/Fonts/PassionOne-Bold.ttf;UI/Fonts/PassionOne-Regular.ttf,SIL OFL 1.1 — UI/Fonts/OFL-PassionOne.txt,,,,
+font/space-mono,Space Mono,font,licensed,,,UI/Fonts/SpaceMono-Bold.ttf;UI/Fonts/SpaceMono-Regular.ttf,SIL OFL 1.1 — UI/Fonts/OFL-SpaceMono.txt,,,,
+item-icon/1,Leather Helmet icon,item-icon,unclassified,,,UI/Items/Armor/Leather_Helmet.png,,,,,Wired to item id 1. Source unknown.
+item-icon/9,Health potion icon,item-icon,unclassified,,,UI/Items/Consumables/HealthPotion.png,,,,,Wired to item id 9. Source unknown.
+item-icon/12,Mana potion icon,item-icon,unclassified,,,UI/Items/Consumables/ManaPotion.png,,,,,Wired to item id 12. Source unknown.
+pack/weapon-icons,Weapon icons (12 unwired),pack,unclassified,,,UI/Items/Weapons,,,,,Twelve sword and staff icons; none wired to an item yet. Source unknown.
+pack/low-swordman,Low Swordman 2D pack,pack,unclassified,,,Low_Swordman,,,,,Demo/Scripts holds 4 .cs files: delete at M9 (R3). Source unknown.
+pack/templar-knight,Templar Knight pack,pack,unclassified,,,Templar Knight;Sprites/Characters/Templar Knight,,,,,Rig plus source; reference for the hero template. Move the source to ArtSource/_reference/ at M9.
+ui/title,Title logo,ui,unclassified,,,UI/Frontend/Title.png,,,,,Source unknown.
+ui/game-icon,Game icon,ui,unclassified,,,UI/Frontend/Icon.png,,,,,Source unknown.
+ui/chapter-select-earth,Chapter-select globe (Earth),ui,unclassified,,,UI/Frontend/ChapterSelect_Earth.png,,,,,Source unknown.
+pack/world-props,World props,pack,unclassified,,,World/Props,,,,,"Door, Door_Alt, Asteroid. Source unknown."
+reference/main-character-temp,Michael's main character source,reference,unclassified,,,AI/maincharactertemp.ai,,,,,Believed hand (Michael's own). Move out of Art/AI/ at M9.

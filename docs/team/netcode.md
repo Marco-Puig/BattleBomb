@@ -42,9 +42,10 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-- **Orchestrator: COMMITTED for the options DONE** (sent 2026-09-24; mirrored here in case it was
-  held). Paths: `docs/team/netcode/options.md` (new), `docs/team/netcode.md`. Subject: "Netcode:
-  M8 options memo". Do not edit `options.md` until COMMITTED.
+- **Orchestrator: COMMITTED + D numbers** for the design-session DONE (sent 2026-09-24). Paths:
+  `docs/team/netcode/decisions-draft.md` (new), `docs/team/netcode.md`. Asked: record Dα–Dε; note
+  Steam app at close-out in ROADMAP; collaborator availability on Michael's queue. Do not edit
+  `decisions-draft.md` until COMMITTED.
 
 ## Current state
 
@@ -52,7 +53,11 @@ Steps 1–2 done (readiness committed `bdc1f58`; options DONE sent). Step 3: the
 Michael, in this session, one decision at a time, recommendation first. Agenda order: topology →
 netcode layer + Steam wrapper (Claude recommends, Michael agrees) → how couch and online mix →
 join point → screens online → saves online (who holds guest gear / what guest keeps / leaving) →
-feel → test tooling + Steamworks account timing. Record each answer below as it lands. Then send DONE for readiness.md and go
+feel → test tooling + Steamworks account timing. Record each answer below as it lands.
+**Session place: all eight decisions answered; draft D entries sent.** Next: present the design to
+Michael in sections for approval (brainstorming skill: architecture → the wire → the guest's machine
+→ joining/leaving → saves → testing), then write `docs/HANDOFF-M8.md`, self-review, Michael reviews,
+then `superpowers:writing-plans`. Then send DONE for readiness.md and go
 straight to the options memo (orchestrator: no need to wait for COMMITTED).
 
 Research already done (Context7 + release pages, 2026-09-24): Steamworks.NET 2025.164.1 (Aug 2025,
@@ -72,6 +77,56 @@ is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (
 
 ## Answers and decisions
 
+- 2026-09-24 (Michael, M8 design session, decision 1): **Topology — host-authoritative.** The host's
+  PC runs the one real simulation; the guest sends commands and draws what the host sends; the
+  guest's own character is predicted locally. Chosen over lockstep and rollback (options.md §1).
+- 2026-09-24 (Michael, decision 2): *"Whatever is the best free option for mobile."* Recorded as:
+  **our own thin netcode layer (free), with the transport behind a seam.** Steam (Steamworks.NET)
+  is the PC Early Access transport; a cross-platform transport — Epic Online Services is free,
+  cross-platform, with authenticated P2P (checked in Epic's docs 2026-09-24) — slots in when mobile
+  arrives, and could enable PC↔mobile crossplay later (not an M8 question). **Design constraint from
+  this answer: nothing above the transport seam may assume Steam** (ids, lobbies, invites all behind
+  Platform interfaces). Told Michael the interpretation; he can object.
+- 2026-09-24 (Michael, decision 3): **Two in total** — solo, a couch pair, or one player per PC.
+  A couch pair cannot also take an online guest. D11 unchanged.
+- 2026-09-24 (Michael, decision 4): **Join at character select AND at checkpoint rooms** (chosen over
+  my recommendation of character select only; mid-fight drop-in rejected). M8 scope therefore
+  includes: a full world snapshot sent to a newcomer, the guest's save loaded into a live run
+  (activating the second player object mid-run — today `SessionBinder.Awake` deactivates an empty
+  slot for good), the stage scene(s) streamed to the guest. Rule I told Michael: a join request that
+  arrives mid-fight waits until the host's run is at a checkpoint room (`StagePhase.AtCheckpoint`);
+  the guest appears at that room's respawn point.
+- 2026-09-24 (Michael, decision 4b): **Solo games are open to friends by default** — friends see
+  "Join game", the host can invite from the overlay any time, a setting turns it off. Couch games are
+  full and never open. (Write it platform-neutral: "platform friends", Steam's today.) Consequence:
+  a solo game becomes a two-player online game mid-run, so the solo rules (chest pause, camera,
+  layout) must switch live when a guest arrives or leaves.
+- 2026-09-24 (Michael, decision 5): **Nothing pauses online** — chest, shop, hero panel, settings
+  all full-screen on the player's own display with the world live; the player stands idle. Solo and
+  couch keep today's rules; a solo game switches to the online rule the moment a friend drops in.
+  (Implied, from options §7: each display lays out for its own local players; the host drives the
+  whole-session moments — results, return to chapters, launch.)
+- 2026-09-24 (Michael, decision 6a): **The host's PC holds the guest's sack and gear during the
+  match.** The guest's character + stash travel to the host at join; two stashes in the simulation
+  online (one per save); guest menu actions are requests with a round trip (~0.1 s) before redraw.
+- 2026-09-24 (Michael, decision 6b): **The guest keeps loot, gold, XP, levels, gear AND chapter/tier
+  credit** for chapters finished with the host, written on the guest's own PC at D52's autosave
+  moments. The resume point stays the host's. The host's save gates what can be launched; a guest
+  may help above their own unlocks. Leaving: host quits/drops → guest keeps everything up to the
+  last autosave (same as a crash); guest leaves → host carries on solo (D25's solo rules from then).
+- 2026-09-24 (Michael, decision 7): **Predict the guest's movement and swings** — run, jump, facing,
+  and the start of every attack/cast react instantly on the guest's PC; hit confirmation, damage
+  numbers, enemy reactions arrive a round trip later. Built in two steps: interpolation-only first
+  (measure real connections), then prediction on top.
+- 2026-09-24 (Michael, decision 8a): **Steamworks account and app ID at the M8 close-out** (chosen
+  over my recommendation of "when the Steam task starts"). All M8 development on app 480
+  (Spacewar); Steam Playtest is not available until the close-out. Risk to surface in the spec:
+  Valve's onboarding (tax/bank/identity) may take days, so the close-out should start that paperwork
+  early enough not to block the two-PC pass. ROADMAP §5.3 says "set up during M8" — orchestrator to
+  note the timing.
+- 2026-09-24 (Michael, decision 8b): **The collaborator is the remote tester** (from their own home,
+  over the real internet). No second PC at home. On app 480 the collaborator needs a build zip with
+  `steam_appid.txt`, and Steam running — the plan must include a way to hand builds over.
 - 2026-09-24 (orchestrator, COMMITTED bdc1f58): audit findings scheduled — deferred-Destroy bug,
   DEBUG grant, constant seeds → Builder batch after Groundwork, before M8. **Shop rack → MINE: the
   M8 spec and plan must say "the rack lives in the simulation; buy = buy rack slot N".** Seeds: M8

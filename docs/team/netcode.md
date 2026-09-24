@@ -42,17 +42,30 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-Nothing.
+- **Orchestrator: COMMITTED for the readiness DONE** (sent 2026-09-24; mirrored here in case it was
+  held). Paths: `docs/team/netcode/readiness.md` (new), `docs/team/netcode.md`. Subject: "Netcode:
+  M8 readiness audit". Also flagged four out-of-lane bugs for scheduling (see Log).
 
 ## Current state
 
-Not started.
+Step 1 done: `readiness.md` complete (all eight sections). Step 2: `options.md` drafted and
+reviewed against the audit; next is a final read, DONE, then open the design session with Michael. Then send DONE for readiness.md and go
+straight to the options memo (orchestrator: no need to wait for COMMITTED).
+
+Research already done (Context7 + release pages, 2026-09-24): Steamworks.NET 2025.164.1 (Aug 2025,
+SDK 1.64, UPM git URL `https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.164.1`,
+no MonoBehaviour wrapper included); Facepunch.Steamworks 2.5.2 (Apr 2024 — two years stale, zip
+install, nicer async API: lobbies, InviteFriend, OnGameLobbyJoinRequested, relay SocketManager);
+NGO 2.11 has no full prediction/reconciliation ("client anticipation" only), own tick (default 30),
+CustomMessagingManager for raw messages, Steam only via community transports; Multiplayer Play Mode
+2.0.x on Unity 6000.4+, up to 4 editor instances (needs a non-Steam transport); ISteamNetworkingMessages
+is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (Spacewar).
 
 ## Next steps
 
-1. Read the list above.
-2. Readiness audit.
-3. Options memo.
+1. Finish reading the sim code; write `docs/team/netcode/readiness.md`.
+2. Options memo (Context7 for Steamworks.NET / Facepunch / Netcode for GameObjects / NGO transports).
+3. Design session with Michael.
 
 ## Answers and decisions
 
@@ -61,4 +74,13 @@ Not started.
 
 ## Log
 
+- 2026-09-24 — readiness.md complete; DONE sent. Flagged out-of-lane: deferred-Destroy multi-step
+  bug (enemies act after a wipe below 60 fps), DEBUG grant in release, shop rack rolled in the UI,
+  constant RNG seeds (+ same-hero couch save collision).
+- 2026-09-24 — Delivery notice: my resent ONLINE was *held for the orchestrator user's approval and
+  expired* (the orchestrator runs in a different permission mode). The orchestrator nonetheless
+  answered "ONLINE received". **Messages from this lane may be held; mirror every DONE/QUESTION at
+  the top of this file under Waiting on** so it is seen either way.
+- 2026-09-24 — ONLINE resent to the orchestrator's from= address. **Session names keep changing:
+  always reply to the `from=` address on the orchestrator's latest message** (PROTOCOL §6 updated).
 - 2026-09-24 — Lane seeded by the orchestrator.

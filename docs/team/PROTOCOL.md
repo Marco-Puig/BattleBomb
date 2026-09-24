@@ -1,7 +1,7 @@
 # BattleBomb team protocol
 
 Several Claude sessions work on BattleBomb at once, one per **lane**. One session — the
-**orchestrator**, named **"BattleBomb Planning"** — plans, answers cross-lane questions, holds git,
+**orchestrator**, named **"BattleBomb Orchestrator"** — plans, answers cross-lane questions, holds git,
 hands out the Unity editor, and keeps the shared documents. Everyone works on `main` in the same
 folder, so these rules are what stop us breaking each other's work.
 
@@ -68,8 +68,10 @@ thinking, and writing docs carry on. A lane that needs quiet asks with `QUIET RE
 
 ### 6. Messages
 Load the tools once with ToolSearch: `select:SendMessage,ListAgents`. Message the orchestrator by
-the name **"BattleBomb Planning"** (never by the bracketed id — it changes every restart). The
-orchestrator replies to your session by name.
+the name **"BattleBomb Orchestrator"** (never by the bracketed id — it changes every restart). Session
+names can be renamed in the app: if that name stops resolving, run `ListAgents` and message the
+session with "Orchestrator" in its name. The orchestrator replies to the address your message came
+from, so your own session's name may change freely.
 
 First line of every message: **`[Lane] TYPE — one-line summary`**. Keep the body short and point at
 files for detail.

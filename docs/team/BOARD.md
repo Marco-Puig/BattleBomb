@@ -1,6 +1,6 @@
 # Team board
 
-Kept by the orchestrator ("BattleBomb Planning"). The live state of the team: who is doing what,
+Kept by the orchestrator ("BattleBomb Orchestrator"). The live state of the team: who is doing what,
 who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 **Updated:** 2026-09-24
@@ -11,13 +11,14 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | — | not started | Groundwork plan, Task 1 | Unity reopened with the MCP bridge |
-| Netcode | — | not started | M8 readiness audit | — |
-| World | — | not started | Preparing the World session | Michael + collaborator's time |
-| Art | — | not started | Art bible v0, provenance spec | — |
+| Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
+| Netcode | M8 online co-op readiness audit | working (no `ONLINE` received yet) | Readiness audit — reading the sim code | — |
+| World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
+| Art | BattleBomb Art lane | online | Required reading, then the provenance spec | Michael's AI image tool |
 | Producer | — | starts at M9 | — | — |
 
-*Session* is the name each lane shows in `ListAgents`, recorded when it sends `ONLINE`.
+*Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
+go to the address a message came from.
 
 ## The sim
 
@@ -31,9 +32,11 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 What is waiting on Michael, in priority order:
 
-1. **Reopen Unity with the MCP bridge** — the Builder cannot start without it.
-2. **Book the World session** with the collaborator — it gates the art.
-3. **Pick an AI image tool** — the Art lane writes prompts for it.
+1. **Open the BattleBomb project in Unity 6000.5.8f1 with the MCP bridge** — the Builder is
+   blocked on it (the bridge stubs are up; no editor is running).
+2. **The World session** — the World lane is ready to start at question 1 (the goal).
+3. **Which AI image tool** — the Art lane will ask in its session.
+4. *(Later)* **M8's design session** — Netcode, once its audit and options memo are done.
 
 ## Pending commits
 
@@ -41,8 +44,10 @@ None.
 
 ## Git
 
-`main` · pushed through: `3833bd7` · local and unpushed: `f95fb23` (roadmap, D54–D56)
+`main` · pushed through: `bd5f110` (team set-up) · nothing unpushed
 
 ## Log
 
+- 2026-09-24 — Art, Builder, World `ONLINE`. Builder `BLOCKED` on Unity. The orchestrator was
+  renamed "BattleBomb Orchestrator"; PROTOCOL and PROMPTS updated.
 - 2026-09-24 — Team set up: protocol, board, four lane files, startup prompts.

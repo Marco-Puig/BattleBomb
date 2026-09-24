@@ -40,6 +40,10 @@ What is waiting on Michael, in priority order:
 4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
 
+5. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+   lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
+   Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
+
 ## Builder backlog — after Groundwork, before M8
 
 Found by the Netcode audit (`docs/team/netcode/readiness.md`), checked against the code by the
@@ -69,6 +73,12 @@ From the Art lane's provenance spec (`docs/art/PROVENANCE.md` §§8, 10):
 - **Delete `Art/World/Props/`** (Door, Door_Alt, Asteroid) — a third-party pack with no known name
   or licence, referenced by nothing. Confirm with a GUID reference sweep before deleting.
 
+From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Michael's sign-off:
+- **Fire's element colour** `#FF7326` → `#FF4A1C` in `Data/Elements/Fire.asset`, so it no longer
+  reads as Legendary loot.
+- **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
+  tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
+
 ## Pending commits
 
 None.
@@ -79,6 +89,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art `DONE`: art bible v0 and six style-frame prompts. Bible review added to
+  Michael's queue.
 - 2026-09-24 — Art `DONE`: existing art classified with Michael (4435833) — hand-final except the
   unlicensed props; two deletions added to the M9 backlog.
 - 2026-09-24 — Netcode `DONE`: options memo (e9de806); M8 design session opened. Art `DONE`:

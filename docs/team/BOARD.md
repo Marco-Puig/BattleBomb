@@ -63,8 +63,11 @@ Into M8's plan (Netcode designs them; they are online blockers, not bugs today):
 From the Art lane's provenance spec (`docs/art/PROVENANCE.md` §§8, 10):
 - **Four `.cs` files are still in `Art/Low_Swordman/Demo/Scripts/`** — the August trap that took the
   editor down once; the M9 enforcement test fails on them. Remove them (after a GUID reference sweep).
-- **`Art/AI/maincharactertemp.ai` is Michael's own work**, but a folder named `AI` now means
-  AI-generated (D55). Move it out.
+- **Delete `Art/AI/maincharactertemp.ai`** — a byte-identical copy of
+  `Sprites/Characters/Templar Knight/AI/Templar Knight.ai`, sitting in a folder whose name now means
+  AI-generated (D55).
+- **Delete `Art/World/Props/`** (Door, Door_Alt, Asteroid) — a third-party pack with no known name
+  or licence, referenced by nothing. Confirm with a GUID reference sweep before deleting.
 
 ## Pending commits
 
@@ -76,6 +79,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art `DONE`: existing art classified with Michael (4435833) — hand-final except the
+  unlicensed props; two deletions added to the M9 backlog.
 - 2026-09-24 — Netcode `DONE`: options memo (e9de806); M8 design session opened. Art `DONE`:
   provenance spec + manifest (dc58c91); ChatGPT images chosen; D55 amended (slot = whole skin).
 - 2026-09-24 — Netcode `DONE`: readiness audit (bdc1f58). Three findings → Builder backlog, one

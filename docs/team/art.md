@@ -57,18 +57,17 @@ step 1 and grows with every brief.
 ## Waiting on
 
 - **The World lane's story bible:** for heroes, regions, enemies, and bosses.
-- **Orchestrator plus Michael: licensed audio vs the public repo** (AUDIO.md section 1). Option (a)
-  git-ignore licensed audio, (b) make the repo private, or (c) CC0 only. Asked 2026-09-24.
-- **Michael: the AI music tool** (AUDIO.md section 4; AIVA recommended, since it gives ownership and MIDI).
-- **Michael, whenever there's a gap (don't press):** run SF1–SF6; sign off the bible (walk him
-  through the changes since v0: Earth "ground cracks" dropped); the Fire colour change.
+- **Michael's queue, not to be pressed:** item 6, licensed audio vs the public repo (the
+  collaborator owns the repo; the orchestrator recommended making it private); item 7, the
+  music tool (AIVA recommended); item 5, the bible sign-off (walk him through changes since v0:
+  Earth ground cracks dropped); the Fire colour change; running SF1–SF6.
 
 ## Current state
 
-Step 5 (audio v0) **sent as DONE; do not touch until COMMITTED:** `docs/art/AUDIO.md`,
-`docs/team/art.md`. **All five steps of the lane's first pass are now drafted.** What's left
-waits on Michael (images, bible sign-off, music tool) or on the story bible (heroes, regions,
-enemies, bosses, region music).
+Fixture environment kit **sent as DONE; do not touch until COMMITTED:**
+`ArtSource/environments/fixture/brief.md`, `docs/art/MANIFEST.csv` (35 rows), `docs/team/art.md`.
+Next: the **HUD and menu mockups** (ROADMAP section 5.2 item 6). Asking Michael first: HTML
+mockups under `design/` (like `design/chest-screen.html`), or Claude Design (like UI Pass 01)?
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -125,6 +124,10 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Orchestrator): **fixture environment kit approved, minimal**: ground strip, backdrop,
+  foreground framing, labelled fixture-only with no region identity. **Then the HUD and menu
+  mockups**; the Art lane may now write **new files under `design/`** (PROTOCOL). Ask Michael the
+  format first. Browser-pane previews pause during QUIET.
 - 2026-09-24 (Art lane, AUDIO.md, web-checked): **Udio has no downloads** (UMG deal);
   **ElevenLabs Music self-serve excludes commercial games**; **Suno paid = licence, not ownership**;
   **AIVA Pro = ownership + MIDI**. SFX shortlist: Sonniss GDC (free, no credit, no AI training),
@@ -164,6 +167,8 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Fixture environment kit brief (6 pieces, measured ground acceptance); DONE sent.
+- 2026-09-24 — COMMITTED b144d79 (audio v0).
 - 2026-09-24 — Audio v0 (sound list, SFX shortlist, music tool research); DONE + public-repo QUESTION sent.
 - 2026-09-24 — COMMITTED 8f16b69 (effects, weapons).
 - 2026-09-24 — Effects spec + 7 kit prompts + weapons brief + manifest (34 rows); DONE sent.

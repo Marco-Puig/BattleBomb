@@ -1235,6 +1235,87 @@ stage they cannot finish, which is worse.
 
 ---
 
+## D54 — Early Access on Steam, with online co-op at launch · **Locked** *(amends D10; reorders GAME_DESIGN §10)*
+
+Settled with Michael (2026-09-24), planning the road from M7's machine to a release. The full plan
+is `docs/ROADMAP.md`.
+
+- **The first release is Steam Early Access**, on PC. It launches with four heroes (one per
+  element, D46), two authored chapters with their bosses on all three tiers (D50), and **Endless
+  mode**. Consoles and mobile stay later (D5).
+- **Online co-op ships in Early Access** — Michael's explicit choice over Steam's Remote Play
+  Together (local co-op streamed, zero netcode) and over couch-only. This amends D10's "no netcode
+  in the initial build": the network-shaped architecture D10 insisted on is now cashed in rather
+  than protected. Topology, how couch and online players mix (D11 still caps it at two), and join points belong
+  to M8's design session.
+- **Online is built before content.** Retrofitting networking into a finished game rebuilds every
+  boss, effect, and menu; built first, everything after it is online-aware by default. It is also
+  pure engineering, so it runs while the story is unstuck, and it is the largest remaining unknown.
+- **Endless is in Early Access because it needs no story** (D56) and gives the loot chase
+  unlimited runway (D12) while chapters keep arriving.
+- **No launch date.** The order is by dependency; a milestone finishes when it is right (Michael:
+  quality first).
+- **Rejected:** a full 1.0 (a long stretch with no players and no income); PC and console at
+  launch (dev kits, certification, usually a publisher); a demo-first order (it would advertise
+  an online game it cannot show, and carries the retrofit cost).
+
+**Consequence:** the build order after M7 is M8 Online co-op, M9 Look & sound, M10 Vertical slice,
+M11 Endless, M12 Chapter 2, M13 Early Access readiness. The vertical slice keeps its meaning — the
+real target — and moves from M8 to M10. `GAME_DESIGN.md` §7, §8, §10 and §11 are updated.
+
+---
+
+## D55 — Art and audio: AI drafts first, provenance always · **Locked** *(extends D16)*
+
+Directed by Michael (2026-09-24): *"I want AI-assisted drafts for all the art we need to work on
+first. I want the files organized in a way that lets me know it was done by ai or me, this way I
+can draw my own versions of the ai drafts."*
+
+- **Every art asset is drafted with AI first** and redrawn by Michael or his collaborator over
+  time. Music follows the same pipeline; sound effects come from licensed libraries.
+- **Provenance is recorded three ways:** the folder (`AI/` or `Hand/`), the filename (`__ai_v1`),
+  and one manifest listing every asset's AI draft, its hand version, and its status — AI draft,
+  being redrawn, hand final. The manifest is also the redraw backlog. Exact paths are M9's to set.
+- **The game references stable slots, never files.** A slot ("Fire hero — torso") points at
+  whichever version is current, so a hand-drawn replacement is one re-pointed entry; nothing is
+  rewired, and the draft stays alongside for reference.
+- **A test enforces it:** shipping art missing from the manifest fails the suite, alongside the two
+  import traps that each cost a recovery session in August — a `.cs` file inside `Art/`, and
+  duplicate GUIDs from importing with `.meta` files.
+- **Steam requires AI-generated content that ships to be disclosed.** The manifest is what makes
+  the disclosure accurate. The store art and the four heroes are hand-drawn before the store page
+  goes live, because players judge AI art hardest where it is most visible.
+- **Division of labour:** Claude writes each asset's brief and prompt from the art bible and the
+  manifest; Michael generates the drafts in the tool of his choice. Claude cannot generate images
+  in this setup.
+- **D16's discipline binds the drafts too:** layered, cleanly separated body parts at high
+  resolution, fitted to the one shared rig (D15) — or a draft cannot be rigged.
+
+---
+
+## D56 — The story is Castle Crashers-thin · **Locked** *(shapes GAME_DESIGN §9)*
+
+Michael (2026-09-24), with the story stalled: keep it Castle Crashers-thin.
+
+- **The story is a goal, four heroes, regions, and bosses** — almost no dialogue, and no dialogue
+  or cutscene system to build.
+- **It is settled in one World session.** Michael and his collaborator make every call; Claude asks
+  the questions and records the answers as a one-page story bible. The standing rule holds: Claude
+  invents no lore.
+- **The bible holds:** the goal (moved toward, never defended — D48); setting and tone; the four
+  heroes (name, look, a one-line personality, why they wield their element); per chapter the
+  region, its climate element, its enemy family (2–3 elemental skins of the four archetypes, D22),
+  its boss (the concept, and how it is dodged by jump and by depth — §6) and the boss's signature
+  drop (D23); the shopkeeper; one line on why Endless exists.
+- **Gate:** ideally early in M8, because the art drafts wait on it; hard gate at M10's start. If it
+  slips, M11 Endless may move ahead of M10 — it needs no story.
+
+**Why thin:** it turns an open-ended writing project into a short list of decisions, and the
+genre's reference point proves the loop does not need more. Writing it outside the repo with no
+structure is the pattern that stalled.
+
+---
+
 ## Open
 
 - **O7 / O8 — resolved 2026-08-18** as D23 (shared free-grab drops) and D25 (partner revive).

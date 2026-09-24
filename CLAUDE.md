@@ -10,6 +10,7 @@ This file is the working brief. The three documents in `docs/` are the authority
 | `docs/DECISIONS.md` | Locked decisions (D1…D16) and their reasoning. **Wins any disagreement.** |
 | `docs/GAME_DESIGN.md` | Pillars, combat, elements, roster, milestones M0–M9. |
 | `docs/ARCHITECTURE.md` | Assemblies, layering rules, Core's constraints, testing, conventions. |
+| `docs/ROADMAP.md` | The plan from M7 to Steam Early Access: milestones, parallel tracks, decisions due. |
 
 Read the relevant document before proposing anything structural. Do not re-litigate a locked decision
 without saying which one and why.
@@ -119,13 +120,21 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
 | **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
 | **M7** | Chapters — the machine (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door | **machine complete**; authored chapters wait on story |
-| M8 | **Vertical slice** — the real target | **next** |
+| — | Groundwork — input switching, button icons, the menu map, two known bugs | **next** |
+| M8 | Online co-op (D54) | |
+| M9 | Look & sound — the art pipeline (D55), animation, effects, audio, the HUD | |
+| M10 | **Vertical slice** — the real target | |
+| M11 | Endless | |
+| M12 | Chapter 2 | |
+| M13 | Early Access readiness | |
 
-Build order and completion criteria: `docs/GAME_DESIGN.md` §10.
+The target is **Steam Early Access** (D54). Each milestone's scope, what it needs from Michael,
+and the parallel world, art, and business tracks: `docs/ROADMAP.md`. Build order summary:
+`docs/GAME_DESIGN.md` §10.
 
-**Story and world are being written outside this repo.** M7's machine is built story-free against
-a graybox fixture; only authored chapters need the story. Do not draft placeholder lore to fill
-the gap; it will only be thrown away.
+**The story is Castle Crashers-thin (D56)** and is settled in one World session with Michael and
+his collaborator; Claude asks and records, and invents no lore. M8, M9, and Endless need none of
+it. Do not draft placeholder lore to fill the gap; it will only be thrown away.
 
 ---
 

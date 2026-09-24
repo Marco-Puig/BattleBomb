@@ -345,8 +345,9 @@ Enemy mechanics are **standardized archetypes**; regions and ranks style and sca
 
 ## 7. Co-op
 
-**Two players, local, shared screen.** Written network-shaped so online is a later project rather
-than a rewrite (see D10 for the non-negotiable rules that depend on).
+**Two players, local and shared screen — and online from Early Access (D54).** Written
+network-shaped from the first line (D10), which is what lets online arrive as M8 rather than a
+rewrite; its topology, and how couch and online players mix, are settled in M8's design session.
 
 Design consequences:
 - Shared camera framing constrains level width and enemy placement. Encounters must stay readable
@@ -375,7 +376,7 @@ Mode is a first-class concept from the first line of code. No core system assume
 |---|---|---|
 | **Story** | First to ship | Authored **chapters**, extendable without structural change. |
 | **Story — scaling difficulty** | With story | Chapters replayed at higher tiers with better loot tables. |
-| **Endless** | Planned | Procedural, escalating difficulty. Long-term retention. |
+| **Endless** | Early Access (D54) | Procedural, escalating difficulty. Long-term retention. |
 | **PvP** | Planned | Requires the networking groundwork D10 protects. |
 | **Missions** | Considered | — |
 
@@ -433,6 +434,10 @@ princesses-and-crystals question — something moved toward, never defended, per
 and tone, the chapter spine, who the characters are and why they fight, and how
 elements are justified in the fiction. §3 (roster) and §6 (enemy and boss families) resolve alongside it.
 
+**The story is Castle Crashers-thin (D56):** a goal, four heroes, regions, and bosses, with
+almost no dialogue. It is settled in one World session — Michael and his collaborator decide,
+the answers become a one-page story bible — ideally early in M8, and no later than M10's start.
+
 ---
 
 ## 10. Build order
@@ -449,16 +454,23 @@ Dependency-ordered. Each milestone is verifiable before the next begins.
 | **M5** | Abilities and elements | Ability framework, per-character variants, environment climate modifiers. |
 | **M6** | Loot loop | The chest, the economy, deepen-or-gamble, elites. The chase is legible and satisfying. |
 | **M7** | Chapters | **Machine complete.** Stages streamed through checkpoint airlocks, the save, tiers, the front door (D48–D52), proven on a graybox fixture. Authored chapters follow when the story lands. |
-| **M8** | **Vertical slice** | One chapter, two characters, one boss, full loop, co-op, polished. |
-| **M9+** | Scale | More chapters and characters, endless mode, then PvP. |
+| — | Groundwork | Input switching, button icons, the menu map; two known bugs. |
+| **M8** | Online co-op | Two PCs play the fixture chapter start to finish over Steam; the couch plays exactly as before (D54). |
+| **M9** | Look & sound | Art and sound are drop-in: sprite characters on one shared rig, animation, effects, audio, the real HUD (D55). |
+| **M10** | **Vertical slice** | Chapter 1, four heroes, the first boss, a tutorial — solo, couch, and online, polished. The Next Fest demo. |
+| **M11** | Endless | The procedural mode, couch and online. |
+| **M12** | Chapter 2 | The second region, family, and boss; both chapters on every tier. |
+| **M13** | Early Access readiness | Settings, accessibility, Steam Deck, performance, Steam features, store, launch. |
 
-M8 is the real target. It is the thing the 2019 build never reached, and it proves every system talks
-to every other before content scales.
+M10 is the real target. It is the thing the 2019 build never reached, and it proves every system
+talks to every other before content scales. It sits after online co-op because networking a
+finished slice would rebuild it (D54). Each milestone's scope, what it needs from Michael, and what
+comes after Early Access: `docs/ROADMAP.md`.
 
 ---
 
 ## 11. Explicitly out of scope for now
 
-Recorded so they are not re-litigated: online multiplayer (D10 — deferred, not foreclosed), mobile
-builds (D5 — kept viable, not shipped), PvP, missions, monetisation, daily rewards, and the 2019
-highscore and inventory systems.
+Recorded so they are not re-litigated: mobile and console builds (D5 — kept viable, not shipped
+in Early Access), PvP, missions, monetisation, daily rewards, and the 2019 highscore and inventory
+systems. Online co-op left this list with D54.

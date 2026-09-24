@@ -56,15 +56,19 @@ step 1 and grows with every brief.
 
 ## Waiting on
 
-- **The World lane's story bible** — for heroes, regions, enemies, and bosses.
+- **The World lane's story bible:** for heroes, regions, enemies, and bosses.
+- **Orchestrator plus Michael: licensed audio vs the public repo** (AUDIO.md section 1). Option (a)
+  git-ignore licensed audio, (b) make the repo private, or (c) CC0 only. Asked 2026-09-24.
+- **Michael: the AI music tool** (AUDIO.md section 4; AIVA recommended, since it gives ownership and MIDI).
+- **Michael, whenever there's a gap (don't press):** run SF1–SF6; sign off the bible (walk him
+  through the changes since v0: Earth "ground cracks" dropped); the Fire colour change.
 
 ## Current state
 
-Step 4 (effects, weapons, drop glow) **sent as DONE; do not touch until COMMITTED:**
-`docs/art/EFFECTS.md`, `ArtSource/effects/brief.md` (7 kit prompts), `ArtSource/weapons/brief.md`,
-`docs/art/HERO_TEMPLATE.md` (section 9, weapon convention), `docs/art/ART_BIBLE.md` (Earth: no
-ground cracks), `ArtSource/_style/brief.md` (SF5: no cracks), `docs/art/MANIFEST.csv` (34 rows),
-`docs/team/art.md`. Next: step 5, audio v0.
+Step 5 (audio v0) **sent as DONE; do not touch until COMMITTED:** `docs/art/AUDIO.md`,
+`docs/team/art.md`. **All five steps of the lane's first pass are now drafted.** What's left
+waits on Michael (images, bible sign-off, music tool) or on the story bible (heroes, regions,
+enemies, bosses, region music).
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -105,13 +109,14 @@ Python (PIL) and sends back an assembled preview.
 
 ## Next steps
 
-1. Step 4 story-independent briefs: item icons first (10 items without icons: ids 2–8, 10, 11,
-   13; set brief at `ArtSource/icons/items/brief.md`, one folder per item, manifest rows
-   `item-icon/<id>` briefed), then weapon sprites, effects (four casts, aura, leap, statuses,
-   hits: D39, D46), the drop glow (ring and beam, bible section 5).
-2. Step 5 audio v0: `docs/art/AUDIO.md` (sound list from the design docs plus a licensed-library
-   shortlist with licence terms).
-3. When SF or parts images arrive: review against bible section 10; cut the parts sheets.
+1. When images land in `ArtSource/**/AI/_raw/`: review against bible section 10, then cut sheets
+   onto canvases with PIL (parts: HERO_TEMPLATE section 4; icons: 512 px; effects: EFFECTS section 6)
+   and send Michael an assembled preview or contact sheet.
+2. Proposed to the orchestrator: a **story-free environment kit brief for M9's fixture chapter**
+   (ROADMAP M9 "done when" needs drafted art on the fixture; SF3's generic meadow could be it).
+   Wait for its answer.
+3. On the music-tool answer: write the music briefs (menu, checkpoint room, stings) in
+   `ArtSource/audio/music/`.
 
 ## Answers and decisions
 
@@ -120,6 +125,11 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Art lane, AUDIO.md, web-checked): **Udio has no downloads** (UMG deal);
+  **ElevenLabs Music self-serve excludes commercial games**; **Suno paid = licence, not ownership**;
+  **AIVA Pro = ownership + MIDI**. SFX shortlist: Sonniss GDC (free, no credit, no AI training),
+  Kenney (CC0), ZapSplat (credit unless Premium), Freesound (per-file; no NC), BOOM (paid,
+  single user). **Only CC0 is safe in the public repo.**
 - 2026-09-24 (Art lane, EFFECTS.md): **effects are sprite kits animated by Unity particles**, not
   AI flipbooks; 7 kits = 7 slots (fire, ice, earth, air, melee, loot, feedback). Loot glow is
   greyscale, tinted by QualityColors. No dark ground marks from effects (bible section 4). Weapons:
@@ -154,6 +164,8 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Audio v0 (sound list, SFX shortlist, music tool research); DONE + public-repo QUESTION sent.
+- 2026-09-24 — COMMITTED 8f16b69 (effects, weapons).
 - 2026-09-24 — Effects spec + 7 kit prompts + weapons brief + manifest (34 rows); DONE sent.
 - 2026-09-24 — COMMITTED 3ce0274 (item icons).
 - 2026-09-24 — Item icon brief (3 batches, 10 icons) + manifest rows; DONE sent.

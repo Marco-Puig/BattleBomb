@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | Netcode | online | M8 design presented in sections, then `docs/HANDOFF-M8.md` | Michael's review |
+| Netcode | Netcode | online | M8 Plan 1 (stages A+B) — spec approved | — |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
 | Art | Art | online | Audio v0 (icons, effects and held weapons briefed) | — |
 | Producer | — | starts at M9 | — | — |
@@ -34,19 +34,23 @@ What is waiting on Michael, in priority order:
 
 1. **Open the BattleBomb project in Unity 6000.5.8f1 with the MCP bridge** — the Builder is
    blocked on it (the bridge stubs are up; no editor is running).
-2. **Review M8's design in sections** — the Netcode lane is presenting it in its session, then
-   writes `docs/HANDOFF-M8.md`. The session itself is done: D58–D62.
-3. **The World session** — open in the World lane's session, at question 1 (the goal).
-4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+2. **The World session** — open in the World lane's session, at question 1 (the goal).
+3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-
-5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+4. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+5. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-7. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+6. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
+
+## M8 — ready to build after Groundwork
+
+Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one
+before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F and the close-out.
+**Starts only after** Groundwork is merged **and** the Builder backlog below is done. M8 will ask
+for **quiet** during two-editor Multiplayer Play Mode runs.
 
 ## Builder backlog — after Groundwork, before M8
 
@@ -99,6 +103,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: `HANDOFF-M8.md`, approved by Michael. Task numbers to be moved to
+  start at 86 (84 and 85 are M7's). Plan 1 next.
 - 2026-09-24 — Art `DONE`: item-icon brief (3ce0274); effects spec, seven kit prompts, held-weapons
   brief (8f16b69). `.gitignore`'s `Icon?` was hiding `icons/` folders on Windows — fixed (05919b0).
 - 2026-09-24 — Art `DONE`: hero template — 21 parts, fixed canvases and pivots, layering, guide

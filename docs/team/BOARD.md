@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
 | Netcode | Netcode | online | M8 design presented in sections, then `docs/HANDOFF-M8.md` | Michael's review |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | Art | online | Story-free briefs (item icons first), then audio v0 | — |
+| Art | Art | online | Audio v0 (icons, effects and held weapons briefed) | — |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -83,6 +83,9 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
 - **M9's rig session confirms on the Unity side** (`docs/art/HERO_TEMPLATE.md` §7, proposals not
   decisions): Sprite Resolver label swaps keyed in clips on rigid parts (2D Animation 15.1), pivots
   set by an importer preset, one Sorting Group per character, sorted by depth.
+- **M9's effects start from** `docs/art/EFFECTS.md` §1–2: particle systems driving still-sprite kits
+  (flipbooks only where a kit cannot do the job), and every effect fired by a simulation event, so
+  it works online.
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
 
@@ -96,6 +99,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Art `DONE`: item-icon brief (3ce0274); effects spec, seven kit prompts, held-weapons
+  brief (8f16b69). `.gitignore`'s `Icon?` was hiding `icons/` folders on Windows — fixed (05919b0).
 - 2026-09-24 — Art `DONE`: hero template — 21 parts, fixed canvases and pivots, layering, guide
   images, and the first (story-free) skin's prompts (f9b6611).
 - 2026-09-24 — Netcode `DONE`: M8 design session. Recorded as **D58–D62**; D57 (the menu layer,

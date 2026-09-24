@@ -64,10 +64,22 @@ step 1 and grows with every brief.
 
 ## Current state
 
-Fixture environment kit **sent as DONE; do not touch until COMMITTED:**
-`ArtSource/environments/fixture/brief.md`, `docs/art/MANIFEST.csv` (35 rows), `docs/team/art.md`.
-Next: the **HUD and menu mockups** (ROADMAP section 5.2 item 6). Asking Michael first: HTML
-mockups under `design/` (like `design/chest-screen.html`), or Claude Design (like UI Pass 01)?
+**HUD and menus canvas v1 published** (private, owner Michael):
+https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj. It holds 11 artboards: HUD solo (Main), HUD couch
+with a partner down, loot card states, revive and wipe, damage numbers, title, character select,
+chapter select, results, pause, settings. The source files were built in the scratchpad
+`hudcanvas/project/`; **to revise, `read` each file from the artifact first** (users edit live),
+change it, and publish only the changed files. Uploaded assets: Title.png
+`/_blob/ede3cca206fb7ac3e28314e53f46a1b0`, HealthPotion `/_blob/23e9d76a1b6a0b7cf1fc9b779290f15e`,
+ManaPotion `/_blob/c07fecb1f8ae44295f397fd53df3532b`, Leather_Helmet
+`/_blob/966cafd657004345943c637ccbe6e728`.
+**Waiting on Michael's review** (comments on the canvas). Sharing with the collaborator is
+Michael's own step (the Share menu). On approval: save the HTML into `design/` for the
+Builder, then DONE.
+Additions beyond today's game, flagged to Michael: Settings and Quit on the title screen; a pause
+menu separate from settings; volume, damage-number and controls settings; ▲▼ on the loot card;
+sack full shown on the card (per GAME_DESIGN section 5.4) instead of over the player; crits
+white-hot.
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -90,6 +102,29 @@ Python (PIL) and sends back an assembled preview.
 - World props: third-party, licence unknown, **referenced by nothing**, so delete at M9.
 - The memory note `battlebomb-art-library` calls maincharactertemp.ai "Michael's own character
   source". That is wrong (it is a copy of the Templar file); tell the orchestrator, who owns memory.
+
+**HUD survey facts (2026-09-24, Explore agent):**
+- The HUD is all IMGUI placeholders. `UI/Combat/PlayerHealthBars.cs`: top-centre, one 240×22 bar per
+  player **stacked**, reading `P1 Lv3  87/100` (with `★2` for prestige, `DOWN`), plus 4px XP
+  `#F2CC40` and mana `#4D8CFF` strips, a splash-cost tick, `loot {n}` and `potion x{n} (cd)`.
+  No wallet on the HUD.
+- `ReviveHud.cs`: `P1 DOWN — Light on the beat`, a 90×10 progress bar and a pulsing square
+  heartbeat; `WIPED OUT` banner.
+- `LootHud.cs`: floats over the drop; name in its quality colour, one core-stats line joined with
+  ` · `, affix lines, `Upgrades 0/n`, `Requires level n`, `Light to grab`. **No compare-vs-worn,
+  no rank name, no price.** Sack full: a red ✕ `#EB3D38` over the player, with `used/cap`.
+- `DamageNumbers.cs`: normal `#FFED59`, crit `#FF7326` ×1.4 (**same orange as Fire and
+  Legendary**), DoT `#FF9E4D` ×0.7. Size 30, not wired to settings.
+- `FrontendFlow.cs`: title (`Continue`/`Start`); character select for 2 slots with only a name
+  (the roster is one character, `Default`); chapter select (`Fixture Chapter`, 2 stages, tier
+  row Normal/Hard/Nightmare). `ResultsScreen.cs`: `CHAPTER COMPLETE`, per player
+  `grabbed n  level n`. Pause **is** Settings (`SettingsMenu.cs`): auto-equip, auto-sell,
+  debug rows, return to chapter select. **No volume, damage-number or controls settings.**
+- **UI Pass 01 palette (the chest only):** Bed `#1c1424`, Bone `#f6efe2`, Brass `#c9ab6a`,
+  BrassDim `#7d6636`, OnBrass `#231a2b`, Board `#2e2239`, BoardDeep `#1e1628`, Well `#120d18`,
+  Gold `#edc65a`, Up `#63c96e`, Down `#e0574f`, Muted = Bone 62%, Faint = Bone 40%. Fonts:
+  Passion One = display, Archivo = UI, Space Mono = small caps and labels. Legendary cell =
+  octagon, Mythical = hexagon. The older graybox palette is in `UiBuild.cs`.
 
 **Facts gathered (so they survive a reset):**
 - Michael's own character source `Art/AI/maincharactertemp.ai` is an Illustrator file (PDF-based,
@@ -124,6 +159,19 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Michael): **HUD taste calls.** Player panels **along the top** (P1 top-left, P2
+  next to them; the ground and its shadows fill the lower half). The **loot card gets ▲▼ vs worn
+  plus the rank name.** Panel contents are the **Castle Crashers set**: portrait (an element
+  emblem until hero art exists), level, health, mana with the splash-cost tick, a thin XP strip,
+  and the quick-use slot with a cooldown dial; the `loot n` counter is dropped. Also in the
+  plan: crit numbers become white-hot (the current `#FF7326` clashes with Fire and Legendary);
+  a real pause menu separate from settings; settings gains volume and damage-number options.
+- 2026-09-24 (Michael): **HUD and menu mockups go on a Claude Design canvas** (the Artifact tool's
+  "Design" type, `type_url` https://claude.ai/artifact/QKN21svewxgyPb6SYRqWnd; no design system is
+  attached, so carry over UI Pass 01's fonts, colours and frames from the game). Every screen is an
+  artboard; Michael and the collaborator comment there. Once approved, save the HTML into
+  `design/` for the Builder. Note: DesignSync is only for the user-started `/design-sync` skill;
+  don't use it.
 - 2026-09-24 (Orchestrator): **fixture environment kit approved, minimal**: ground strip, backdrop,
   foreground framing, labelled fixture-only with no region identity. **Then the HUD and menu
   mockups**; the Art lane may now write **new files under `design/`** (PROTOCOL). Ask Michael the
@@ -167,6 +215,9 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — HUD and menus canvas v1 published (11 artboards); waiting on Michael's review.
+- 2026-09-24 — Michael chose a Claude Design canvas for the HUD and menus; requirements survey started.
+- 2026-09-24 — COMMITTED 80b5030 (fixture kit).
 - 2026-09-24 — Fixture environment kit brief (6 pieces, measured ground acceptance); DONE sent.
 - 2026-09-24 — COMMITTED b144d79 (audio v0).
 - 2026-09-24 — Audio v0 (sound list, SFX shortlist, music tool research); DONE + public-repo QUESTION sent.

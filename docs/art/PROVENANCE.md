@@ -124,7 +124,7 @@ skin rather than one part.*
 | `status` | always | See below. |
 | `ai_path` | an AI draft exists | The asset's `AI` folder, relative to the art root (§7): `icons/items/steel-helmet/AI` |
 | `hand_path` | a hand version exists | The asset's `Hand` folder, same form. |
-| `path` | `licensed` or `unclassified` | Files outside the AI/Hand scheme: the file(s) or folder in use, relative to the art root. Separate several with `;`. |
+| `path` | art outside the `AI/`/`Hand/` folders | The file(s) or folder in use, relative to the art root: licensed art, and hand-made art that predates this scheme (§10). Separate several with `;`. |
 | `licence` | `licensed` | The licence and where its proof lives: `SIL OFL 1.1 — UI/Fonts/OFL-Archivo.txt` |
 | `ai_tool` | an AI draft exists | `ChatGPT images` |
 | `date` | an AI draft or hand version exists | When the current version was made, `YYYY-MM-DD`. |
@@ -142,7 +142,7 @@ skin rather than one part.*
 | `redrawing` | Someone is redrawing it (name them in `notes`) | the AI draft |
 | `hand-final` | The hand version is done and swapped in | the hand version |
 | `licensed` | Third-party, under a recorded licence | the licensed file |
-| `unclassified` | Art already in the project whose source is not yet known | — **the M9 test fails on it** |
+| `unclassified` | Art already in the project whose source or licence is not yet established | — **the M9 test fails on it** |
 
 A `hand-final` row **keeps its `ai_path`**. That record of "this was redrawn from an AI draft"
 is what keeps the Steam disclosure accurate (§3).
@@ -226,7 +226,7 @@ eps wav ogg mp3 ttf otf fbx blend`. Unity-authored files (`prefab`, `controller`
 | **R4: no duplicate GUIDs** | No `guid:` value appears in two `.meta` files anywhere under `Assets/` (August trap 2). |
 | **R5: manifest is well-formed** | Exact header; `slot` unique and matching `^[a-z0-9-]+/[a-z0-9-]+$`; `category` and `status` from §5's lists; **no `unclassified` rows**; the columns §5 requires for each status are filled. |
 | **R6: manifest paths exist** | `ai_path` and `hand_path` exist under `ArtSource/`; `path` entries exist under the Unity art root. |
-| **R7: the game shows the current version** | For every `ItemDefinition` with an icon: a row `item-icon/<id>` exists, and the icon's file sits in that row's current folder (`hand_path` if `hand-final`; `ai_path` if `ai-draft` or `redrawing`; the `path` if `licensed`). The same check covers skins once M9 binds them. **This is what keeps the Steam disclosure true.** |
+| **R7: the game shows the current version** | For every `ItemDefinition` with an icon: a row `item-icon/<id>` exists, and the icon's file sits in that row's current folder (`hand_path`, or `path` for older art, if `hand-final`; `ai_path` if `ai-draft` or `redrawing`; the `path` if `licensed`). The same check covers skins once M9 binds them. **This is what keeps the Steam disclosure true.** |
 | **R8: no art outside the root** | Every sprite an `ItemDefinition` or a skin library references lives under the Unity art root, so nothing escapes R1. |
 
 **Also for M9, not a test:** an editor menu item that writes the **disclosure report**. It lists
@@ -250,18 +250,18 @@ AI draft. The Producer lane fills Steam's content survey from it.
 
 ---
 
-## 10. Art already in the project (2026-09-24)
-
-Seeded in the manifest as `unclassified` or `licensed`. **Before M9's test can pass, Michael
-classifies each one and M9 carries out the action.**
+## 10. Art already in the project (classified by Michael, 2026-09-24)
 
 | Under `Assets/_BattleBomb/Art/` | What it is | Provenance | M9 action |
 |---|---|---|---|
-| `Low_Swordman/` | 2D swordman pack plus its `Demo/` | unknown pack: **ask** | Classify. **Delete the 4 scripts in `Demo/Scripts/`.** R3 fails on them today, and they are a live August-trap-1 tripwire. |
-| `Templar Knight/` | Rig: 10 part PNGs, prefab, controller, 3 anims | unknown pack: **ask** | Classify. It is the reference for the hero template (step 3). |
-| `Sprites/Characters/Templar Knight/` | Its source: `.ai`, 10 `.eps`, 189 frames, Spriter `.scml` | same pack | Classify. Move it to `ArtSource/_reference/`, because masters do not belong in Unity (§7). |
-| `UI/Items/` | 15 icons: 12 weapons (none wired), leather helmet, health and mana potions (wired to ids 1, 9, 12) | unknown: **ask** | Classify. Wired icons get `item-icon/` rows. |
-| `UI/Frontend/` | Title logo, game icon, "Earth" chapter-select globe | unknown: **ask** | Classify |
-| `World/Props/` | Door, Door_Alt, Asteroid | unknown: **ask** | Classify |
+| `Low_Swordman/` | 2D swordman rig plus its `Demo/` | **hand** (Michael: his or his collaborator's own work; the PSD dates from 2017) | **Delete the 4 scripts in `Demo/Scripts/`.** R3 fails on them today, and they are a live August-trap-1 tripwire. |
+| `Templar Knight/` | Rig: 10 part PNGs, prefab, controller, 3 anims | **hand** (as above; the `.ai` dates from 2017) | Keep. It is the reference for the hero template (step 3). |
+| `Sprites/Characters/Templar Knight/` | Its source: `.ai`, 10 `.eps`, 189 frames, Spriter `.scml` | **hand** | Move it to `ArtSource/_reference/`, because masters do not belong in Unity (§7). |
+| `UI/Items/` | 15 icons: 12 weapons (none wired), leather helmet, health and mana potions (wired to ids 1, 9, 12) | **hand** | Keep |
+| `UI/Frontend/` | Title logo, game icon, "Earth" chapter-select globe | **hand** | Keep |
+| `World/Props/` | Door, Door_Alt, Asteroid | **third-party pack**, name and licence unknown | **Delete them.** No scene, prefab, or asset references them, and art with an unknown licence cannot ship. Stays `unclassified` until then. |
 | `UI/Fonts/` | Archivo, Passion One, Space Mono | **licensed**, SIL OFL 1.1, licence files present | Done |
-| `AI/maincharactertemp.ai` | Michael's own character source (Illustrator) | hand: **confirm** | **Move it out of `Art/AI/`.** Under this scheme a folder named `AI` means AI-generated, and R2 would mislabel the file. Move it to `ArtSource/_reference/`. |
+| `AI/maincharactertemp.ai` | **A byte-identical copy of `Templar Knight.ai`** (same checksum and document ID), not a separate drawing | **hand** (the Templar source) | **Delete it as a duplicate.** It also sits in a folder named `AI`, which under this scheme means AI-generated. |
+
+This older hand-made art sits outside the `AI/`/`Hand/` folders, so its rows use `path` (§5)
+rather than `hand_path`. It moves into the scheme only if and when it is redrawn or reorganised.

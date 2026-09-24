@@ -60,13 +60,28 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Step 1 (provenance spec) written, sent as DONE — do not touch its paths until COMMITTED:**
-`docs/art/PROVENANCE.md`, `docs/art/MANIFEST.csv` (14 seed rows: 3 fonts licensed, 11
-`unclassified`), `ArtSource/README.md`. Validated: CSV parses, every existing art file under
-`Assets/_BattleBomb/Art/` is covered by a row.
+Step 1 committed (dc58c91). **Classification sent as DONE; do not touch until COMMITTED:**
+`docs/art/PROVENANCE.md` (§5 `path` column, §10 table), `docs/art/MANIFEST.csv` (10 hand-final,
+3 licensed, 1 unclassified), `docs/team/art.md`.
 
-Asking Michael where the existing art came from (packs, icons, frontend, props) so the
-`unclassified` rows can be classified after the commit.
+Starting step 2, the art bible.
+
+**Provenance findings, 2026-09-24 (raised with Michael and the orchestrator):**
+- Michael answered: Low_Swordman, Templar Knight, the item icons, and the front-end art are
+  "made by you or collaborator"; the world props (Door, Door_Alt, Asteroid) are a bought or free pack.
+- **Evidence against the packs being hand-made:** `Art/AI/maincharactertemp.ai` is
+  **byte-identical** to `Sprites/Characters/Templar Knight/AI/Templar Knight.ai` (same size
+  1173275, same MD5 412de5b76d, same XMP DocumentID). Both were created 2017-10-20 at UTC+07:00
+  in Illustrator CS5.1. The Swordman PSD was created 2017-10-31 at UTC+09:00 in Photoshop CS5. The
+  2019 project postdates both, and the folder layouts match commercial asset packs.
+- **The repo is PUBLIC**: github.com/Marco-Puig/BattleBomb. If the packs are third-party, their
+  source files are publicly downloadable from it. The PROVENANCE §9 git policy would also make
+  Michael's hand masters and all AI drafts public.
+- **Michael's decision (after seeing the evidence): the packs are their own work, keep as is;
+  the public repo is fine for art.** Recorded that way, with the 2017 dates noted in the manifest.
+- World props: third-party, licence unknown, **referenced by nothing**, so delete at M9.
+- The memory note `battlebomb-art-library` calls maincharactertemp.ai "Michael's own character
+  source". That is wrong (it is a copy of the Templar file); tell the orchestrator, who owns memory.
 
 **Facts gathered (so they survive a reset):**
 - Michael's own character source `Art/AI/maincharactertemp.ai` is an Illustrator file (PDF-based,
@@ -85,10 +100,11 @@ Asking Michael where the existing art came from (packs, icons, frontend, props) 
 
 ## Next steps
 
-1. On COMMITTED: classify the `unclassified` manifest rows from Michael's answers (new DONE).
-2. Art bible v0 → `docs/art/ART_BIBLE.md`: ask Michael for references and taste first (one
-   question at a time), then style-frame prompts for ChatGPT images → `ArtSource/_style/brief.md`.
-3. Hero template → `docs/art/HERO_TEMPLATE.md` (Templar Knight rig as reference).
+1. Art bible v0 → `docs/art/ART_BIBLE.md`: ask Michael for references and taste (one question at
+   a time; he is also answering Netcode and World, so expect gaps), then style-frame prompts for
+   ChatGPT images → `ArtSource/_style/brief.md`.
+2. Hero template → `docs/art/HERO_TEMPLATE.md` (Templar Knight rig as reference).
+3. Item-icon briefs (10 items without icons: ids 2–8, 10, 11, 13).
 
 ## Answers and decisions
 
@@ -110,6 +126,8 @@ Asking Michael where the existing art came from (packs, icons, frontend, props) 
 
 ## Log
 
+- 2026-09-24 — Existing art classified with Michael; maincharactertemp.ai found to be a copy of the Templar .ai; DONE sent.
+- 2026-09-24 — COMMITTED dc58c91 (provenance spec, manifest, README). Orchestrator added the `_raw/` ignore and amended D55 (0a1406d).
 - 2026-09-24 — Provenance spec v0 + seeded manifest written; DONE sent.
 - 2026-09-24 — ONLINE; required reading done; facts on rig, icons, and source art recorded.
 - 2026-09-24 — Lane seeded by the orchestrator.

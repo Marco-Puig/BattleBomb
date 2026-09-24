@@ -36,7 +36,27 @@ What is waiting on Michael, in priority order:
    blocked on it (the bridge stubs are up; no editor is running).
 2. **The World session** — the World lane is ready to start at question 1 (the goal).
 3. **Which AI image tool** — the Art lane will ask in its session.
-4. *(Later)* **M8's design session** — Netcode, once its audit and options memo are done.
+4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+   — the second overwrites the first. Stop equal picks at character select, or save per seat?
+5. *(Later)* **M8's design session** — Netcode, once its options memo is done.
+
+## Builder backlog — after Groundwork, before M8
+
+Found by the Netcode audit (`docs/team/netcode/readiness.md`), checked against the code by the
+orchestrator. Each is a small plan task with a test; the Builder takes them as one batch.
+
+1. **Destroyed enemies keep acting for the rest of the frame** (§4.3 item 1). `Destroy` lands at
+   frame end, and the driver can run up to 5 steps a frame, so below 60 fps enemies removed by a
+   wipe, a launch, or an airlock keep stepping and hitting; corpses keep pushing bodies
+   (`SeparateBodies` has no depleted check). Unregister or deactivate immediately.
+2. **The debug grant row ships in release builds** (§5.2). Put it behind the same `#if` as the
+   tier-overlay row.
+3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
+   session at launch — *orchestrator's call, flagged to Michael*.
+
+Into M8's plan (Netcode designs them; they are online blockers, not bugs today):
+- The shop rack is rolled, stored, and priced in the UI, and `RequestBuy` trusts the UI's item and
+  price (§5.1) — a rule 2 violation; the rack moves into the simulation.
 
 ## Pending commits
 
@@ -48,6 +68,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: readiness audit (bdc1f58). Three findings → Builder backlog, one
+  → M8's plan, one → Michael's queue.
 - 2026-09-24 — Art, Builder, World `ONLINE`. Builder `BLOCKED` on Unity. The orchestrator was
   renamed twice; PROTOCOL rule 6 now uses reply addresses, not names. Netcode `ONLINE`.
 - 2026-09-24 — Team set up: protocol, board, four lane files, startup prompts.

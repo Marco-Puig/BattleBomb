@@ -149,50 +149,54 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectBags();
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            const int rows = 5;
-#else
-            const int rows = 4;
-#endif
-            _cursor = (_cursor - (move.y > 0f ? 1 : -1) + rows) % rows;
+            _cursor = SettingsRows.Step(_cursor, move.y > 0f ? -1 : 1, SettingsRows.Current.Count);
         }
 
         private void Toggle()
         {
-            // Ahead of the bag check: leaving the run is the one row that has nothing to do with
-            // an inventory, and a machine with no bags is exactly when you most want a way out.
-            if (_cursor == 3)
+            switch (SettingsRows.Current[_cursor])
             {
-                ReturnToChapters();
-                return;
-            }
+                // Ahead of the bag check: leaving the run is the one row that has nothing to do with
+                // an inventory, and a machine with no bags is exactly when you most want a way out.
+                case SettingsRow.ReturnToChapters:
+                    ReturnToChapters();
+                    return;
+
+                case SettingsRow.AutoEquip:
+                case SettingsRow.AutoSell:
+                    ToggleSetting(SettingsRows.Current[_cursor] == SettingsRow.AutoSell);
+                    return;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            if (_cursor == OverlayRow)
-            {
-                Debug.TierOverlay overlay = Overlay;
-                if (overlay != null)
-                {
-                    overlay.Visible = !overlay.Visible;
-                }
+                case SettingsRow.GrantTestLoot:
+                    CollectBags();
+                    if (_bags.Count > 0)
+                    {
+                        GrantTestLoot();
+                    }
 
-                return;
-            }
+                    return;
+
+                case SettingsRow.TierOverlay:
+                    Debug.TierOverlay overlay = Overlay;
+                    if (overlay != null)
+                    {
+                        overlay.Visible = !overlay.Visible;
+                    }
+
+                    return;
 #endif
+            }
+        }
 
+        private void ToggleSetting(bool autoSell)
+        {
             CollectBags();
             if (_bags.Count == 0)
             {
                 return;
             }
 
-            if (_cursor == 2)
-            {
-                GrantTestLoot();
-                return;
-            }
-
-            bool autoSell = _cursor == 1;
             bool current = autoSell ? _bags[0].Inventory.AutoSell : _bags[0].Inventory.AutoEquip;
             for (int i = 0; i < _bags.Count; i++)
             {
@@ -208,6 +212,7 @@ namespace BattleBomb.UI.Chest
             }
         }
 
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         /// <summary>
         /// Debug only, and it dies when real content arrives: hands every player one of each
         /// starter definition *twice* plus spending money. Combining (D44) needs two identical
@@ -241,12 +246,6 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>Mid-ladder, so a feel judgement is never about an absurd item.</summary>
         private const float DebugGrantQuality = 2.2f;
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        /// <summary>The tier overlay's row, last because it only exists here (D50): the numbers
-        /// it draws are the ones the player is deliberately never shown, so the row that reveals
-        /// them compiles out of a release along with the overlay itself.</summary>
-        private const int OverlayRow = 4;
 
         private Debug.TierOverlay _overlay;
 
@@ -366,25 +365,37 @@ namespace BattleBomb.UI.Chest
 
             bool autoEquip = _bags.Count > 0 && _bags[0].Inventory.AutoEquip;
             bool autoSell = _bags.Count > 0 && _bags[0].Inventory.AutoSell;
-            AppendToggle(0, "Auto-equip upgrades", autoEquip);
-            AppendToggle(1, "Auto-sell at the cap", autoSell);
-            _text.Append('\n');
+            IReadOnlyList<SettingsRow> rows = SettingsRows.Current;
+            for (int row = 0; row < rows.Count; row++)
+            {
+                switch (rows[row])
+                {
+                    case SettingsRow.AutoEquip:
+                        AppendToggle(row, "Auto-equip upgrades", autoEquip);
+                        break;
 
-            int debugRow = 2;
-            string debugLine = $"  {(debugRow == _cursor ? ">" : " ")} [ DEBUG ] grant test loot, coin and XP";
-            _text.Append(debugRow == _cursor ? UiBuild.Tint(debugLine, UiBuild.Coin) : debugLine);
+                    case SettingsRow.AutoSell:
+                        AppendToggle(row, "Auto-sell at the cap", autoSell);
+                        _text.Append('\n');
+                        break;
 
-            int returnRow = debugRow + 1;
-            string returnLine = $"  {(returnRow == _cursor ? ">" : " ")} Return to chapter select";
-            _text.Append('\n').Append(returnRow == _cursor ? UiBuild.Tint(returnLine, UiBuild.Focus) : returnLine);
+                    case SettingsRow.ReturnToChapters:
+                        AppendLine(row, "Return to chapter select", UiBuild.Focus);
+                        break;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-            Debug.TierOverlay overlay = Overlay;
-            string mark = overlay != null && overlay.Visible ? "x" : " ";
-            string overlayLine = $"  {(OverlayRow == _cursor ? ">" : " ")} [{mark}] [ DEBUG ] tier overlay";
-            _text.Append('\n')
-                .Append(OverlayRow == _cursor ? UiBuild.Tint(overlayLine, UiBuild.Coin) : overlayLine);
+                    case SettingsRow.GrantTestLoot:
+                        AppendLine(row, "[ DEBUG ] grant test loot, coin and XP", UiBuild.Coin);
+                        break;
+
+                    case SettingsRow.TierOverlay:
+                        Debug.TierOverlay overlay = Overlay;
+                        string mark = overlay != null && overlay.Visible ? "x" : " ";
+                        AppendLine(row, $"[{mark}] [ DEBUG ] tier overlay", UiBuild.Coin);
+                        break;
 #endif
+                }
+            }
 
             _body.text = _text.ToString();
 
@@ -399,6 +410,12 @@ namespace BattleBomb.UI.Chest
         {
             string line = $"  {(row == _cursor ? ">" : " ")} [{(value ? "x" : " ")}] {label}";
             _text.Append(row == _cursor ? UiBuild.Tint(line, UiBuild.Focus) : line).Append('\n');
+        }
+
+        private void AppendLine(int row, string label, Color focus)
+        {
+            string line = $"  {(row == _cursor ? ">" : " ")} {label}";
+            _text.Append(row == _cursor ? UiBuild.Tint(line, focus) : line).Append('\n');
         }
     }
 }

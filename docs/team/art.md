@@ -61,7 +61,11 @@ step 1 and grows with every brief.
   owns the repo; the orchestrator recommended making it private); the music tool (ChatGPT can't
   do audio: AIVA free or Suno Pro); the bible sign-off (walk him through changes since v0:
   Templar proportions, storybook environments, Earth ground cracks dropped); the Fire colour
-  change; **a new pet art direction** (he raised it; he'll say when).
+  change; **a new pet art direction** (he raised it; he'll say when); the five HUD additions
+  (yes or no to each, BOARD item 4).
+- **Orchestrator address** (unchanged as of 2026-09-25):
+  `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095` (session "Battlebomb"). If a send
+  fails, run ListAgents and message the non-lane BattleBomb session.
 
 ## Current state
 
@@ -77,12 +81,37 @@ knights; greyscale shadows read.
 **The terrier redo is parked** (Michael): no attempt beat v1, so v1 stays, and he wants to change
 the pet art direction later. The step is removed from GPT_PROMPTS, the cut_sheets job is gone, and
 the brief section is marked parked.
-**Sent as DONE; do not touch until COMMITTED.**
+**COMMITTED 2813733.** The lane is idle until Michael picks a music tool or a pet direction, or
+the World bible lands (orchestrator, 2026-09-24).
 
-**`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
-`python ArtSource/make_gpt_prompts.py [--sort]`. Never hand-edit the output. The phase and step
-order, save paths and attach overrides live in the script's `PHASES` list. Michael sometimes
-saves into `_style/AI/_raw/` rather than `ArtSource/_raw/`; `--sort` handles both.
+**GPT progress (2026-09-25):** steps 1–25 done (SF1–SF6, Sheets A and B, SF3b, the 5 fixture
+v2 pieces, 7 effect kits, the weapon sheet, icon Batches A–C). Steps 26–32 (7 music tracks) are
+blocked on the music tool. The terrier redo is out of the queue (parked).
+
+**Tools and workflow (run everything from the repo root):**
+- `PYTHONIOENCODING=utf-8 python ArtSource/make_gpt_prompts.py [--sort]` rebuilds
+  `ArtSource/GPT_PROMPTS.md` from the briefs, ticking steps whose file exists; `--sort` first moves
+  results from the inbox to their `AI/_raw/` folders. **Never hand-edit the output**; the phase
+  and step order, save paths and attach overrides live in its `PHASES` list.
+- **The inbox is `ArtSource/_raw/`** (git-ignored, like every `_raw/`). Michael sometimes saves into
+  `ArtSource/_style/AI/_raw/` instead; `--sort` checks both. Music saves are
+  `<track>.mp3` or `.wav`, filed into `ArtSource/audio/music/<track>/AI/_raw/`.
+- `python ArtSource/cut_sheets.py [effects|icons|weapons]` cuts grid sheets. The effect `KITS`,
+  loot `RECTS`, icon `JOBS` (a `'skip'` cell is cut, then thrown away) and `WEAPONS` (grip on
+  the HERO_TEMPLATE section 9 pivot) all live there.
+- `python ArtSource/environments/fixture/prepare.py` prepares the fixture kit. It prefers `-v2`
+  raws and writes `__ai_v2`, levels the ground to p95 84%, cuts backdrop repeats at matching
+  edges (`best_join`), and splits the frames into a and b.
+- `python ArtSource/rig/hero-template/cut_parts.py [--measure]` fits the knight's parts to the
+  section 4 canvases. `guides/make_guides.py` draws the guides.
+- To preview a stage, stack far, then mid, then near backdrops over the tiled ground, with the
+  frames at the corners and SF1 knights with ellipse shadows, then check it in greyscale. The
+  scratch script was not kept; rebuild it with PIL in the scratchpad if needed.
+- **Traps:** non-ASCII text (§, …, ✓) passed through a bash heredoc gets mangled, so use
+  Edit/Write for those and set `PYTHONIOENCODING=utf-8` to print them. Importing the tools creates
+  `__pycache__`; delete it. MANIFEST.csv notes that contain commas need quotes; check with
+  `csv.reader` (12 columns, 42 rows). If a new folder is missing from `git status`, run
+  `git check-ignore -v`.
 HUD canvas: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj (approved direction; exported
 2026-09-24). To revise, `read` from the artifact first.
 
@@ -239,6 +268,8 @@ HUD canvas: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj (approved directio
 
 ## Log
 
+- 2026-09-25 — PREPARE TO COMPACT: lane file brought up to date (GPT progress, tools, traps, address); READY TO COMPACT sent.
+- 2026-09-24 — COMMITTED 2813733 (fixture v2, terrier parked); D16 marks pets provisional (2832ea3). Idle.
 - 2026-09-24 — Round 2 in: storybook fixture v2 prepared (clean repeat joins); terrier redo parked, pet direction to be redone; DONE sent.
 - 2026-09-24 — Round 1 art finished; icons and weapons cut; review → storybook environments + simple pets; round 2 prompts queued; DONE sent.
 - 2026-09-24 — GPT steps 9–20 processed (step 11 missing): single inbox, sort, fixture prepare, 49 effect pieces; DONE sent.

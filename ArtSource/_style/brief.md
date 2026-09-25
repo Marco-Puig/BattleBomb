@@ -24,11 +24,11 @@ drafted. They never ship, and they invent nothing. The only character is the Tem
 **Attach:** `Assets/_BattleBomb/Art/Sprites/Characters/Templar Knight/PNG/PNG Sequences/Idle/Idle_000.png`
 
 ```
-Redraw the knight in the attached image as new game art. Keep his design: the great helm with
-the gold cross on its face, the white tabard with the red cross, the grey armour. Change his
-proportions and style to match the style below: his head should be smaller than in the
-attached image, about a third to two-fifths of his total height, with a sturdier body, big hands
-and big boots.
+Redraw the knight in the attached image as new game art. Keep his design AND his proportions
+exactly as they are: the huge great helm with the gold cross on its face, about two-thirds of his
+height, sitting straight on his short, round body; the white tabard with the red cross; the grey
+armour; the big round hands and short stubby legs. Only the drawing style changes, to match the
+style below.
 
 Pose: standing at rest, body turned three-quarters toward the right, feet apart and planted,
 a short sword held point-down in his front hand, relaxed but ready.
@@ -38,9 +38,9 @@ in warm near-black (#1A1917): the outer silhouette line is thick, about 1/36 of 
 height; inner detail lines are half that. Flat, saturated fill colours, each with exactly one
 hard-edged shadow tone about 25% darker and slightly cooler, and at most one small highlight.
 Light comes from directly above, so the shading is symmetrical left to right. No gradients, no
-texture, no noise, no painted ground shadow. Chunky proportions: the head is about a third to
-two-fifths of the total height, with big hands and big feet and slim wrists and ankles. Friendly,
-expressive, bouncy.
+texture, no noise, no painted ground shadow. Big-head proportions: the head is about two-thirds
+of the total height and sits straight on a short, round body with no visible neck; short arms
+with big round hands; short stubby legs with small boots. Friendly, expressive, bouncy.
 
 Output: a single image, portrait 1024x1536, transparent background, the whole subject inside the
 frame with a clear margin, nothing cropped, no text, no watermark, no border.

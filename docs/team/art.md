@@ -64,11 +64,11 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Run-order fix sent as DONE; do not touch until COMMITTED:** `ArtSource/make_gpt_prompts.py`,
-`ArtSource/GPT_PROMPTS.md`, `ArtSource/weapons/brief.md`, `ArtSource/icons/items/brief.md`,
-`docs/art/MANIFEST.csv` (4 notes), `docs/team/art.md`. The order now follows ROADMAP section 5.2:
-style frames, hero template, fixture environment, effects, held weapons, item icons, music.
-Weapons attach SF1 and SF6; icon Batch B attaches the approved weapon sheet.
+**Proportions fix sent as DONE; do not touch until COMMITTED:** `docs/art/ART_BIBLE.md` (section 3,
+section 9 style block, section 10), `docs/art/HERO_TEMPLATE.md` (v1), `docs/art/PROVENANCE.md` (section 4
+example), `ArtSource/_style/brief.md` (SF1), `ArtSource/rig/hero-template/brief.md` (sheets),
+`ArtSource/rig/hero-template/guides/` (make_guides.py + 6 PNGs), `ArtSource/GPT_PROMPTS.md`,
+`docs/team/art.md`.
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
 `python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
@@ -156,6 +156,14 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Michael): **hero proportions = the Templar Knight's** ("castle-crashers sized
+  proportions from templar knight... didn't want to change that"). **Supersedes** the earlier
+  "head 1/3–2/5" answer, which came from a misworded question (I had described 1/3 as "like
+  your Templar rig"; the Templar's head is actually about 0.66 H). Measured on the Templar idle
+  frame: chin 0.35 H, body to 0.08 H, stub legs. The hero template is now v1: rigid parts as in
+  the Templar rig, **no elbows, knees or separate feet**, legs include the boot; 15 drawings
+  (head x4, torso, arm x2, hand x2x3, leg x2) plus optional back and waist pieces. Root 0.11 H,
+  neck 0.34 H. Bow resized to 0.40 H, arrow to 0.25 H.
 - 2026-09-24 (Michael): **approved the HUD and menus canvas direction**: "you chose the right
   directions... I really like the general style... we may change some colors slightly" once
   everything is in place. Exported to `design/hud-menus/` for the Builder.
@@ -196,7 +204,7 @@ Python (PIL) and sends back an assembled preview.
 - 2026-09-24 (Orchestrator): the bible review is item 5 in Michael's queue; don't press. The Fire
   colour change and unlit-painted-cel recommendation are parked on the M9 backlog until he decides.
 - 2026-09-24 (Michael): **art direction = Castle Crashers + Rayman Legends; clean vector
-  outlines; chunky big-head heroes (head 1/3–2/5 of height).** Bible line: "Castle Crashers-style
+  outlines; big-head heroes** (proportions later corrected to the Templar's; see above). Bible line: "Castle Crashers-style
   characters living in a Rayman Legends world". Differentiation is carried by the lit, lush 3D world,
   elemental climate, cel tone and rim light, and character design (bible §2).
 - 2026-09-24 (Art lane, measured): Templar ink `#1A1917`, silhouette line about 1/36 of the character's height.
@@ -221,6 +229,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Proportions switched to the Templar's (Michael); hero template v1 (15 parts); bible, SF1, parts sheets, guides, and queue rebuilt; DONE sent.
 - 2026-09-24 — GPT_PROMPTS run order aligned to ROADMAP section 5.2 (env before effects; weapons before icons); DONE sent.
 - 2026-09-24 — COMMITTED: HUD export, GPT_PROMPTS, music brief. The orchestrator restarted, so its address changed.
 - 2026-09-24 — Canvas approved and exported to design/hud-menus/; GPT_PROMPTS.md (31 prompts) + generator; temporary music brief; DONE sent.

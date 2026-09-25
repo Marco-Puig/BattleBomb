@@ -31,30 +31,23 @@ def poly(pts):
 
 
 # Part-local coordinates in px at H=1600: x right (facing), y up, origin = the part's pivot joint.
+# Proportions follow the Templar Knight rig (measured from its idle frame): head 0.66 H.
 VARIANTS = {
-    'torso': {'default': [rrect(-240, -90, 240, 540, 170)]},
-    'head': {k: [ellipse((20, 315), 300, 315)] for k in ('neutral', 'attack', 'hurt', 'ko')},
-    'arm': {
-        'straight': [capsule((0, 45), (0, -320), 62)],
-        'bent': [capsule((0, 45), (0, -170), 62), capsule((0, -170), (170, -230), 62)],
-    },
-    'hand': {k: [ellipse((0, -60), 85, 85)] for k in ('open', 'fist', 'grip')},
-    'leg': {
-        'straight': [capsule((0, 50), (0, -356), 80)],
-        'bent': [capsule((0, 50), (90, -170), 80), capsule((90, -170), (0, -356), 80)],
-    },
-    'foot': {'default': [rrect(-80, -104, 210, 45, 50)]},
-    'back-piece': {'default': [poly([(-150, 20), (150, 20), (170, -560), (-280, -560)])]},
-    'waist-piece': {'default': [poly([(-150, 20), (170, 20), (190, -260), (-120, -260)])]},
+    'torso': {'default': [rrect(-230, -70, 230, 400, 160)]},
+    'head': {k: [ellipse((10, 528), 496, 528)] for k in ('neutral', 'attack', 'hurt', 'ko')},
+    'arm': {'default': [capsule((0, 40), (0, -190), 64)]},
+    'hand': {k: [ellipse((0, -80), 96, 96)] for k in ('open', 'fist', 'grip')},
+    'leg': {'default': [capsule((0, 40), (0, -80), 70), rrect(-72, -166, 140, -86, 40)]},
+    'back-piece': {'default': [poly([(-140, 20), (140, 20), (160, -400), (-250, -400)])]},
+    'waist-piece': {'default': [poly([(-150, 20), (170, 20), (190, -110), (-120, -110)])]},
 }
 CHILD_JOINTS = {
-    'torso': {'neck': (8, 490), 'shoulder-front': (90, 400), 'shoulder-back': (-110, 415),
-              'hip-front': (70, -20), 'hip-back': (-70, -10), 'back-piece': (-60, 440),
-              'waist-piece': (30, 30)},
-    'arm': {'wrist': (0, -320)},
-    'leg': {'ankle': (0, -356)},
+    'torso': {'neck': (0, 368), 'shoulder-front': (150, 290), 'shoulder-back': (-165, 300),
+              'hip-front': (70, -10), 'hip-back': (-75, -10), 'back-piece': (-60, 330),
+              'waist-piece': (20, 20)},
+    'arm': {'wrist': (0, -190)},
 }
-ROOT_Y = 480  # hips centre above the ground (0.30 H)
+ROOT_Y = 176  # hips centre above the ground (0.11 H)
 
 
 def bounds(shapes):
@@ -111,7 +104,7 @@ def cross(d, P, c=RED, r=14, w=4):
     d.line([P[0] - r, P[1], P[0] + r, P[1]], fill=c, width=w); d.line([P[0], P[1] - r, P[0], P[1] + r], fill=c, width=w)
 
 
-LAYERS = ['back-piece', 'arm-back', 'hand-back', 'leg-back', 'foot-back', 'leg-front', 'foot-front',
+LAYERS = ['back-piece', 'arm-back', 'hand-back', 'leg-back', 'leg-front',
           'torso', 'waist-piece', 'head', 'arm-front', 'weapon', 'hand-front']
 
 
@@ -131,17 +124,17 @@ def assembled(labelled):
                       ('waist-piece', 'waist-piece')):
         joint_world[slot] = (torso[key][0], ROOT_Y + torso[key][1])
     for side in ('front', 'back'):
-        a = joint_world['arm-' + side]; joint_world['hand-' + side] = (a[0], a[1] - 320)
-        l = joint_world['leg-' + side]; joint_world['foot-' + side] = (l[0], l[1] - 356)
+        a = joint_world['arm-' + side]; joint_world['hand-' + side] = (a[0], a[1] - 190)
     joint_world['weapon'] = joint_world['hand-front']
     for slot in LAYERS:
         if slot in ('back-piece', 'waist-piece'):
             continue
         if slot == 'weapon':
             j = joint_world['hand-front']
-            tx = lambda x, y, j=j: (gx + j[0] + x, gy - (j[1] + y))
-            d.polygon([tx(-14, -40), tx(14, -40), tx(14, -520), tx(0, -560), tx(-14, -520)], fill=(230, 230, 240, 255), outline=INK, width=6)
-            d.rectangle([tx(-60, -30)[0], tx(-60, -30)[1], tx(60, -52)[0], tx(60, -52)[1]], fill=(200, 170, 90, 255), outline=INK, width=5)
+            c, sn = math.cos(math.radians(-50)), math.sin(math.radians(-50))
+            tx = lambda x, y, j=j: (gx + j[0] + x * c - y * sn, gy - (j[1] + x * sn + y * c))
+            d.polygon([tx(-16, 40), tx(16, 40), tx(16, 400), tx(0, 440), tx(-16, 400)], fill=(230, 230, 240, 255), outline=INK, width=6)
+            d.polygon([tx(-56, 30), tx(56, 30), tx(56, 52), tx(-56, 52)], fill=(200, 170, 90, 255), outline=INK, width=5)
             continue
         cat = cat_of(slot)
         variant = list(VARIANTS[cat].keys())[0]
@@ -156,7 +149,7 @@ def assembled(labelled):
         if labelled:
             d.text((P[0] + 18, P[1] - 12), slot, fill=RED, font=FONT_S)
     if labelled:
-        for frac, name in ((1.0, 'top of head 1.00 H'), (0.606, 'chin/neck 0.61 H (head = 0.39 H)'), (0.30, 'root: hips 0.30 H'), (0.0, 'ground')):
+        for frac, name in ((1.0, 'top of head 1.00 H'), (0.34, 'chin/neck 0.34 H (head = 0.66 H)'), (0.11, 'root: hips 0.11 H'), (0.0, 'ground')):
             y = gy - frac * H
             d.line([60, y, 200, y], fill=BLUE, width=3); d.text((60, y - 30), name, fill=BLUE, font=FONT_S)
         d.text((60, 30), 'Hero template: rest pose, facing right. Red crosses = pivots (joints).', fill=INK, font=FONT)
@@ -164,12 +157,10 @@ def assembled(labelled):
     img.save(os.path.join(OUT, 'template-assembled%s.png' % ('-labelled' if labelled else '')))
 
 
-SHEET_A = [('head', 'neutral'), ('torso', 'default'), ('arm-front', 'straight'), ('arm-back', 'straight'),
-           ('hand-front', 'open'), ('hand-back', 'open'), ('leg-front', 'straight'), ('leg-back', 'straight'),
-           ('foot-front', 'default'), ('foot-back', 'default')]
-SHEET_B = [('head', 'attack'), ('head', 'hurt'), ('head', 'ko'), ('arm-front', 'bent'), ('arm-back', 'bent'),
-           ('hand-front', 'fist'), ('hand-front', 'grip'), ('hand-back', 'fist'), ('hand-back', 'grip'),
-           ('leg-front', 'bent'), ('leg-back', 'bent')]
+SHEET_A = [('head', 'neutral'), ('torso', 'default'), ('arm-front', 'default'), ('arm-back', 'default'),
+           ('hand-front', 'open'), ('hand-back', 'open'), ('leg-front', 'default'), ('leg-back', 'default')]
+SHEET_B = [('head', 'attack'), ('head', 'hurt'), ('head', 'ko'),
+           ('hand-front', 'fist'), ('hand-front', 'grip'), ('hand-back', 'fist'), ('hand-back', 'grip')]
 
 
 def sheet(name, items, rows, labelled, s):
@@ -203,8 +194,8 @@ def sheet(name, items, rows, labelled, s):
 os.makedirs(OUT, exist_ok=True)
 for lab in (False, True):
     assembled(lab)
-    print('sheet A height used', sheet('parts-sheet-a', SHEET_A, [2, 4, 4], lab, 0.55))
-    print('sheet B height used', sheet('parts-sheet-b', SHEET_B, [2, 3, 4, 2], lab, 0.5))
+    print('sheet A height used', sheet('parts-sheet-a', SHEET_A, [2, 4, 2], lab, 0.5))
+    print('sheet B height used', sheet('parts-sheet-b', SHEET_B, [2, 1, 4], lab, 0.42))
 
 print('\ncategory      canvas(px)   pivot(x,y from bottom-left)  variants')
 for cat in VARIANTS:

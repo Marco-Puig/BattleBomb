@@ -41,11 +41,11 @@ there, the fix is in the world and the palette, not in abandoning clean lines.
 ## 3. Characters
 
 ### Proportions
-- **Heroes:** the head is about **a third to two-fifths** of total height (roughly 2.5 heads
-  tall). Big hands and big feet, because poses read through them. Thin wrists, ankles and neck,
-  which hide the joints on a cut-out rig (D16).
-- The Templar Knight rig is the **line-weight** reference, not the proportion reference. Its
-  head is about 60% of its height, far chunkier than this.
+- **Heroes have the Templar Knight's proportions** (Michael, 2026-09-24): the head is about
+  **two-thirds of the total height** (measured on the Templar: 0.66 H) and sits straight on a
+  short, round body with no visible neck. Short arms with **big round hands**, which carry the
+  poses, and short stubby legs with small boots. HERO_TEMPLATE §3 has the exact joint heights.
+- The Templar Knight is the reference for **both line weight and proportions**.
 - **Enemies vary by archetype**, so a crowd reads at a glance (GAME_DESIGN §6): the grunt is small
   and round, the ranged enemy lanky, the caster tall with a hat or staff breaking its silhouette,
   the brute huge and blocky. Regions reskin them (after the story bible); the silhouettes stay.
@@ -207,9 +207,9 @@ in warm near-black (#1A1917): the outer silhouette line is thick, about 1/36 of 
 height; inner detail lines are half that. Flat, saturated fill colours, each with exactly one
 hard-edged shadow tone about 25% darker and slightly cooler, and at most one small highlight.
 Light comes from directly above, so the shading is symmetrical left to right. No gradients, no
-texture, no noise, no painted ground shadow. Chunky proportions: the head is about a third to
-two-fifths of the total height, with big hands and big feet and slim wrists and ankles. Friendly,
-expressive, bouncy.
+texture, no noise, no painted ground shadow. Big-head proportions: the head is about two-thirds
+of the total height and sits straight on a short, round body with no visible neck; short arms
+with big round hands; short stubby legs with small boots. Friendly, expressive, bouncy.
 ```
 
 ### The output line (paste verbatim, choosing the size)
@@ -226,7 +226,7 @@ The first prompts to run are the **style frames**: `ArtSource/_style/brief.md`.
 
 - [ ] Ink `#1A1917`, smooth; silhouette line about 1/36 of the height, interior lines half.
 - [ ] Flat colours, one hard shadow tone, light from above, no gradients or texture.
-- [ ] Heroes: head a third to two-fifths of the height; big hands and feet.
+- [ ] Heroes: the Templar's proportions: head about two-thirds of the height, big round hands, stubby legs.
 - [ ] Readable as a solid black silhouette at 64 px.
 - [ ] No painted ground shadow.
 - [ ] Element colours and shapes from §5; nothing uses loot's ring-and-beam.

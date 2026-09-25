@@ -92,7 +92,7 @@ strokes, it is Hand.
 ```
 
 - **name:** lowercase words joined by hyphens: `steel-helmet`. A part of a rigged character is
-  `<asset>-<part>-<label>`, for example `hero-template-arm-front-bent`. A part with a single
+  `<asset>-<part>-<label>`, for example `hero-template-hand-front-grip`. A part with a single
   drawing uses the label `default`. Parts and labels come from `docs/art/HERO_TEMPLATE.md` §2.
 - **`__ai` or `__hand`,** after a double underscore. Licensed files keep their vendor's names;
   their folder and manifest row carry the provenance.

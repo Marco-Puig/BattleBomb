@@ -40,12 +40,34 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ---
 
-## Waiting on
+- **Orchestrator: COMMITTED for the pre-M8 fixes plan DONE** (sent 2026-09-24; mirrored here).
+  Paths: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md` (new), `docs/team/netcode.md`.
+  Subject: "Pre-M8 fixes plan (F1–F3)". Do not edit the plan until COMMITTED.
 
-- **Orchestrator: COMMITTED for the Plan 1 DONE** (sent 2026-09-24; mirrored here in case it was
-  held). Paths: `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md` (new),
-  `docs/team/netcode.md`. Subject: "M8 Plan 1: the wire and the mirror (Tasks 86–96)". Do not edit
-  the plan until COMMITTED.
+## Current job — DONE: pre-M8 fixes plan written (2026-09-24)
+
+Written: F1 `Despawn.Now` (deactivate then destroy) in ResolveDeaths (collect-then-despawn),
+ResetBrood, LoadedStage.Unload; PlayMode tripwire forces five steps a frame with
+`Time.captureDeltaTime` and checks from a Stepped handler. F2 `SettingsRows` table (release: 3 rows;
+dev: + grant, overlay, last), menu routed through it, source-scan acceptance test for the release
+flavour. F3 `RunSeeds.From(entropy)` in Core/Loot; `GameSession.Seeds`/`DrawRunSeeds` (Guid entropy)
+called in `FrontendFlow.LaunchNow`; `SessionBinder.Awake` → `SimulationDriver.UseSeeds`; no session →
+constants 1/2/3. Next lane job: Plan 2 once the Builder is into Plan 1.
+
+### The brief as received
+
+Write `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, Groundwork style, tasks **F1–F3**, one
+DONE per task (i.e. the plan's tasks each commit separately when executed; the plan itself is one
+DONE from me):
+- **F1 deferred Destroy** — enemies removed by ResetBrood/despawn keep stepping for the rest of a
+  multi-step frame; corpses feed SeparateBodies; LoadedStage props linger. Unregister/deactivate
+  immediately. Failing test must fail on today's code with >1 step in a frame.
+- **F2 DEBUG grant row** behind the same `#if` as the tier-overlay row; check Toggle's row indices
+  and cursor wrap in both build flavours.
+- **F3 seeds** — with a GameSession, each launch draws fresh loot/combat/spawn seeds held on the
+  session (one set per run); with no session keep today's constants (tests deterministic); shape it
+  so M8's host passes its own (D58).
+Against post-Groundwork shapes; re-read every file. Then Plan 2 once the Builder is into Plan 1.
 
 ## Current state
 

@@ -188,6 +188,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — **M8 begins.** Task 86 committed (5e586a4): the wire in Core/Net — bytes, the stick,
+  the command packet. EditMode 708. The loopback transport will enforce the socket's frame limit
+  (87); the Events batch gets bounded or split at 92.
 - 2026-09-25 — F5.2 committed (cc7a9fe): the chest grid scrolls; the menu anchors to the drawn cell;
   X and Y refuse an undrawn cursor; a bar shows there is more. EditMode 694, PlayMode 35. **The
   pre-M8 batch is done (F1–F3, F5). M8 Plan 1 starts.** Checklist item 16 added.

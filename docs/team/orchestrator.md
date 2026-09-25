@@ -63,6 +63,10 @@ address (the address changes when this app restarts).
 - **A scene goes dirty after a save** when a property edit is recorded in the same `eval` as the
   `SaveScene` call. Save in its own eval and check `isDirty` before any sync run.
 - **`.gitignore`'s macOS `Icon?`** matched any folder named `icons` on Windows; `![Ii]cons` fixes it.
+- **The MCP bridge reaches only the main editor.** Multiplayer Play Mode's Player 2 is a separate
+  process; its IMGUI buttons need a click. Michael declined screen control of Unity (2026-09-25,
+  Task 90) — never ask a lane to work around that. Clone-side checks go to a harness
+  (HeadlessGuest, Task 95's guest harness) or into Michael's checklists, batched into few sittings.
 - **Task numbers 84–85 are M7's.** M8 runs 86–114; Groundwork is G1–G14; the pre-M8 fixes F1–F3.
 
 ## Log

@@ -26,8 +26,7 @@ go to the address a message came from.
 
 ## Quiet
 
-**On** — the Builder, M8 Task 90 step 4: two Unity editors (Multiplayer Play Mode), ~10 min
-(2026-09-25).
+**Off**
 
 ## Michael's queue
 
@@ -219,6 +218,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 90: Multiplayer Play Mode added. Step 4's clone-side Join needs a click the
+  bridge cannot make and Michael declined screen control, so it folds into his step 6 checklist.
+  Quiet on and off again.
 - 2026-09-25 — Task 89 committed (fd33bea): the session and handshake — a remote Player 2, the dev
   panel. EditMode 746, PlayMode 43. Review saved Michael's save twice (a replica never saves; the
   stand-in hero never enters the session). Flagged items placed under M8.

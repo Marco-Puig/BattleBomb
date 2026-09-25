@@ -105,7 +105,8 @@ namespace BattleBomb.Core.Combat
         }
 
         /// <summary>Every mark, in order — the first is the one presentation tints with.</summary>
-        public StatusInstance[] ToArray() => _active.ToArray();
+        public StatusInstance[] ToArray() =>
+            _active.Count == 0 ? System.Array.Empty<StatusInstance>() : _active.ToArray();
 
         /// <summary>Replaces every mark with another machine's (M8's replica), order kept.</summary>
         public void Restore(IReadOnlyList<StatusInstance> statuses)

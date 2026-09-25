@@ -39,7 +39,8 @@ namespace BattleBomb.Core.Net
             _queue.Insert(index, command);
             if (_queue.Count > MaxQueued)
             {
-                TryTake(out _);
+                TryTake(out WireCommand dropped);
+                return dropped.Frame != command.Frame;
             }
 
             return true;

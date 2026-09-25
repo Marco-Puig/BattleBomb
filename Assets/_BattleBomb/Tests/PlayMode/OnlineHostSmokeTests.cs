@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using BattleBomb.Core.Items;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Net;
@@ -30,6 +32,7 @@ namespace BattleBomb.Tests.PlayMode
         private const int FrameCeiling = 30000;
         private const int LoadFrameCeiling = 1500;
         private const string MachineScene = "Gameplay";
+        private const int KnifeDefinitionId = 7;
 
         private SimulationDriver _driver;
         private StageRunner _runner;
@@ -227,6 +230,158 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(GameSession.Find().Characters[1], Is.Null,
                 "The guest's stand-in was written into the session; the front door would seat it as a local Player 2.");
             yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator Snapshots_carry_both_players_as_the_host_sees_them()
+        {
+            _guest.Move = Vector2.right;
+            yield return Steps(40);
+            _guest.Move = Vector2.zero;
+            yield return Steps(6);
+
+            WorldSnapshot latest = LatestSnapshot();
+            Assert.That(latest, Is.Not.Null, "No snapshot reached the guest.");
+            Assert.That(latest.HostFrame % NetProtocol.SnapshotEverySteps, Is.Zero);
+            Assert.That(latest.Players.Count, Is.EqualTo(2));
+            Assert.That(latest.TryGetPlayer(1, out PlayerSnapshot two), Is.True);
+            Assert.That(Mathf.Abs(two.Motor.Position.x - _guestBody.Position.x), Is.LessThan(0.5f),
+                "The snapshot's Player 2 is not where the host has them.");
+            Assert.That(latest.AckGuestFrame, Is.GreaterThan(0), "The host never acknowledged a guest command.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_partner_shove_reaches_the_guest_as_a_hit_between_players()
+        {
+            float side = _host.Position.x <= _guestBody.Position.x ? -1f : 1f;
+            yield return WalkHostTo(_guestBody.Position + new Vector3(side * 1.4f, 0f, 0f));
+
+            // Face the partner before swinging: the walk may have ended facing away.
+            _hostInput.Set(new Vector2(-side * 0.2f, 0f), CommandButtons.None);
+            yield return Steps(2);
+            _hostInput.Set(Vector2.zero, CommandButtons.Heavy);
+            yield return Steps(3);
+            _hostInput.Release();
+            yield return Steps(40);
+
+            bool found = false;
+            foreach (ReplicatedEvent e in AllEvents())
+            {
+                found |= e.Kind == ReplicatedEventKind.Hit && e.Hit.IsPartner
+                    && e.Hit.Attacker.Equals(EntityRef.Player(0)) && e.Hit.Target.Equals(EntityRef.Player(1));
+            }
+
+            Assert.That(found, Is.True, "The host's swing shoved Player 2 and the guest never heard about it.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_drop_reaches_the_guest_with_its_item_and_is_named_after()
+        {
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            int spawnedAt = _driver.Frame;
+            _driver.SpawnDebugDrop(_host.Position + new Vector3(3f, 0f, 0f), knife);
+            yield return Steps(6);
+
+            ReplicatedEvent drop = default;
+            foreach (ReplicatedEvent e in AllEvents())
+            {
+                if (e.Kind == ReplicatedEventKind.DropSpawned)
+                {
+                    drop = e;
+                }
+            }
+
+            Assert.That(drop.Kind, Is.EqualTo(ReplicatedEventKind.DropSpawned), "The drop never reached the guest.");
+            Assert.That(drop.Drop.Item.DefinitionId, Is.EqualTo(KnifeDefinitionId));
+            Assert.That(drop.Drop.NetId, Is.GreaterThan(0));
+            Assert.That(drop.HostFrame, Is.EqualTo(spawnedAt),
+                "The drop crossed without the step it appeared in; the guest would place it against the wrong snapshot.");
+            Assert.That(LatestSnapshot().DropIds, Does.Contain(drop.Drop.NetId),
+                "Snapshots do not name the drop the guest was told about.");
+        }
+
+        [UnityTest]
+        public IEnumerator Past_the_snapshot_bound_the_drops_nearest_the_players_are_the_ones_named()
+        {
+            // One at the guest's feet before the far ones and one after, so keeping the oldest or the
+            // newest cuts one of them, and only keeping the nearest names both.
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            _driver.SpawnDebugDrop(_guestBody.Position, knife);
+            int firstAtTheirFeet = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
+            Vector3 away = _host.Position + new Vector3(8f, 0f, 0f);
+            for (int i = 0; i < NetProtocol.MaxEntities + 20; i++)
+            {
+                _driver.SpawnDebugDrop(away + new Vector3(0f, 0f, (i % 5) * 0.2f), knife);
+            }
+
+            _driver.SpawnDebugDrop(_guestBody.Position, knife);
+            int lastAtTheirFeet = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
+            int spawnedAt = _driver.Frame;
+            yield return Steps(6);
+
+            WorldSnapshot latest = LatestSnapshot();
+            Assert.That(latest.HostFrame, Is.GreaterThan(spawnedAt),
+                "The host stopped sending snapshots past the bound: a Stepped subscriber threw.");
+            Assert.That(latest.DropIds.Count, Is.EqualTo(NetProtocol.MaxEntities));
+            Assert.That(latest.DropIds, Does.Contain(firstAtTheirFeet),
+                "The oldest drop at the guest's feet was cut to name one farther away.");
+            Assert.That(latest.DropIds, Does.Contain(lastAtTheirFeet),
+                "The newest drop at the guest's feet was cut to name one farther away.");
+        }
+
+        private WorldSnapshot LatestSnapshot()
+        {
+            for (int i = _guest.Received.Count - 1; i >= 0; i--)
+            {
+                var reader = new NetReader(_guest.Received[i]);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Snapshot)
+                {
+                    var snapshot = new WorldSnapshot();
+                    SnapshotCodec.Read(reader, snapshot);
+                    return snapshot;
+                }
+            }
+
+            return null;
+        }
+
+        private List<ReplicatedEvent> AllEvents()
+        {
+            var all = new List<ReplicatedEvent>();
+            var batch = new List<ReplicatedEvent>();
+            foreach (byte[] message in _guest.Received)
+            {
+                var reader = new NetReader(message);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Events)
+                {
+                    EventCodec.Read(reader, _driver.ItemSpecs, batch);
+                    all.AddRange(batch);
+                }
+            }
+
+            return all;
+        }
+
+        private IEnumerator WalkHostTo(Vector3 target)
+        {
+            int deadline = _driver.Frame + PatienceSteps;
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < deadline; guard++)
+            {
+                Vector3 to = target - _host.Position;
+                to.y = 0f;
+                if (to.magnitude <= 0.3f)
+                {
+                    _hostInput.Release();
+                    yield return Steps(2);
+                    yield break;
+                }
+
+                _hostInput.Set(new Vector2(Mathf.Clamp(to.x, -1f, 1f), Mathf.Clamp(to.z, -1f, 1f)), CommandButtons.None);
+                yield return null;
+            }
+
+            _hostInput.Release();
+            Assert.Fail($"The host never reached {target} — stopped {Vector3.Distance(target, _host.Position):F2} away.");
         }
 
         private IEnumerator Steps(int steps)

@@ -1,5 +1,6 @@
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Movement;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Simulation;
@@ -85,6 +86,8 @@ namespace BattleBomb.Gameplay.Characters
                 0);
             _hitstopSteps = Mathf.Max(_hitstopSteps, hit.HitstopSteps);
         }
+
+        internal DummySnapshot CaptureReplica(int stageIndex) => new DummySnapshot(stageIndex, PropIndex, _state, _health);
 
         private void Awake()
         {

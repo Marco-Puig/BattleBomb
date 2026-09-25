@@ -420,6 +420,18 @@ namespace BattleBomb.Gameplay.Simulation
         public bool WasGrabRefused(int playerIdValue) =>
             _refusedGrabs.TryGetValue(playerIdValue, out int steps) && steps > 0;
 
+        internal int RefusedStepsFor(int playerIdValue) =>
+            _refusedGrabs.TryGetValue(playerIdValue, out int steps) ? steps : 0;
+
+        internal int AttemptStepsAllDown => _attempt.StepsAllDown;
+
+        /// <summary>
+        /// Plan 1 only (HANDOFF-M8 Task 99 retires it): until the guest's screens are online, the host
+        /// declines to open a chest or shop for a player whose screen would be on another machine. The
+        /// press is still the chest's, so nothing else happens either. Null lets everyone open.
+        /// </summary>
+        internal Func<int, bool> MayOpenScreen { get; set; }
+
         /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
         public IReadOnlyList<DropPickup> Pickups => _pickups;
 
@@ -766,7 +778,8 @@ namespace BattleBomb.Gameplay.Simulation
                     FindReviveTarget(actors, i), grabTarget >= 0,
                     !screenOpen && interactable >= 0);
 
-                if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count)
+                if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count
+                    && (MayOpenScreen == null || MayOpenScreen(playerId)))
                 {
                     OpenScreen(
                         playerId, _interactables[interactable].Kind, _interactables[interactable]);

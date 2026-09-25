@@ -35,7 +35,10 @@ namespace BattleBomb.Core.Net
 
         public int Buffered => _buffer.Count;
 
-        /// <summary>The sender's frame of the newest command played — what a snapshot acknowledges.</summary>
+        /// <summary>The sender's frame of the newest command consumed — played, merged into another step,
+        /// or skipped as stale — which is what a snapshot acknowledges. Skipped counts on purpose: the
+        /// host's world will never take such a command later, so the guest must not replay it either
+        /// (Plan 3's replay point).</summary>
         public int LastConsumedFrame => _buffer.LastTakenFrame;
 
         public int StarvedSteps { get; private set; }

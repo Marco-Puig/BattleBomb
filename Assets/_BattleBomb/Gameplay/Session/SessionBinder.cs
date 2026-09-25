@@ -186,7 +186,8 @@ namespace BattleBomb.Gameplay.Session
             _session.Seats.Follow(FrontendScreen.Title, false, SeatAssignment.NoDevice, SeatAssignment.NoDevice);
             _remoteSeat = slot;
             RemoteCommandSource remote = NetSeats.MakeRemote(_players[slot], net.GuestPlayerId);
-            gameObject.AddComponent<NetHost>().Begin(net, _session, _driver, remote);
+            gameObject.AddComponent<NetHost>().Begin(
+                net, _session, _driver, FindAnyObjectByType<World.StageRunner>(), remote);
         }
 
         private void BindGuest(NetSession net)

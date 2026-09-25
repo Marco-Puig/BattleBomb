@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Movement;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Core.Stats;
@@ -955,6 +956,13 @@ namespace BattleBomb.Gameplay.Characters
             tuning.MaxFallSpeed,
             tuning.CoyoteSteps,
             tuning.JumpBufferSteps);
+
+        /// <summary>This player as the host simulates them, for the snapshot (D58). The derived stats
+        /// never travel — only what they are derived from does, in Plan 2's inventory state.</summary>
+        internal PlayerSnapshot CaptureReplica(int openScreen, int grabCount, int refusedSteps) =>
+            new PlayerSnapshot(
+                PlayerId.Value, _state, _combat, _condition, _revive, _mana, _leapAvailable,
+                Statuses.ToArray(), openScreen, grabCount, refusedSteps);
 
         private void OnEnable()
         {

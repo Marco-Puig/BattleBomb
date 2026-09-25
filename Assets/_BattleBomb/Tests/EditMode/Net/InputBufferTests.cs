@@ -75,6 +75,20 @@ namespace BattleBomb.Tests.EditMode.Net
             Assert.That(Take(buffer), Is.EqualTo(11));
         }
 
+        [Test]
+        public void A_command_the_same_flood_drops_is_not_reported_kept()
+        {
+            var buffer = new InputBuffer();
+            for (int frame = 2; frame <= InputBuffer.MaxQueued + 1; frame++)
+            {
+                buffer.Add(At(frame));
+            }
+
+            Assert.That(buffer.Add(At(1)), Is.False, "Reported keeping a command the same call dropped as the oldest.");
+            Assert.That(buffer.Count, Is.EqualTo(InputBuffer.MaxQueued));
+            Assert.That(Take(buffer), Is.EqualTo(2));
+        }
+
         private static WireCommand At(int frame) => new WireCommand(frame, Vector2.zero, CommandButtons.None);
 
         private static int Take(InputBuffer buffer)

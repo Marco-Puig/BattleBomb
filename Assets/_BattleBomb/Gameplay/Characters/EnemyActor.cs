@@ -3,6 +3,7 @@ using BattleBomb.Core.Combat;
 using BattleBomb.Core.Enemies;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Movement;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Data;
@@ -289,6 +290,11 @@ namespace BattleBomb.Gameplay.Characters
             _deathReported = true;
             return true;
         }
+
+        internal EnemySnapshot CaptureReplica() => new EnemySnapshot(
+            NetId, OriginStage, OriginRoster, _isElite,
+            _carriedDrop.IsEmpty ? -1 : (int)_carriedDrop.Quality,
+            _state, _brain, _health, _targetIndex, _depletedSteps, Statuses.ToArray());
 
         private void Awake()
         {

@@ -207,6 +207,55 @@ for COMMITTED. Next: Task 90 (two editors) — QUIET REQUEST before any two-edit
   - Round 3: swapping GrabCount/RefusedSteps fails the new test and the plan's own round trip.
 - **EditMode 767/767; PlayMode 43/43** on the final code. **Task 91 DONE sent (19:50)** → waiting for COMMITTED.
 
+**Task 91 COMMITTED `5be281c`** (A–D accepted). Orchestrator's calls:
+- **92:** cap each list at its bound in Capture. **For drops over the cap, keep the ones nearest the players, not the oldest.** No Stepped subscriber may throw on normal play. Do this alongside the Events-batch bound (+ a test sending a batch past the limit that arrives whole) and the flood-ack fix (88 item 5: InputBuffer's drop moves LastTakenFrame / Add returns true for a dropped command, so AckGuestFrame reports unplayed frames).
+- **93:** carry the stage in the dummy ref (`stage << 16 | prop`, or cleaner), per planning decision 8.
+- **96:** bandwidth numbers are on the board; nothing to do now.
+**Task 92 started (19:55):** read-only premise check running (anchors after 88–91's deviations; Events batch, Capture caps, ack source).
+
+**92 premise check.** Found:
+- The plan's NetHost replacement brings back the pre-89 `SendLaunch` loop, which would break `…told_which_run_to_load`.
+- The plan's "all nine" is 12 (8 existing + its 3 + X3a).
+- Statuses can't pass 16: one mark per element, 4 elements.
+Everything else matches.
+
+**Ack fix, done by me (X4, red-first):**
+- `InputBuffer.Add` returned true for a command the same call dropped as the oldest. New test `A_command_the_same_flood_drops_is_not_reported_kept` failed first; InputBufferTests now 6/6.
+- `LastConsumedFrame`'s doc now says skipped frames count on purpose: the host will never take them, so the guest must not replay them. Tell the orchestrator this is the whole fix: acking skipped frames is the right replay semantics.
+
+**Extra spec** `<scratchpad>/tasks/task92_extra.md`:
+- X1: NetHost keeps 89's stand-in loop.
+- X2: `EventCodec.WriteBatches` / `FitFrom` / range `Write`; NetHost sends through it. Tests: 600 hits and 40 big drops over the loopback, both arriving whole.
+- X3: Capture caps every list; drops over the cap keep the nearest to players. PlayMode test red-first.
+
+Stages:
+- S1: Step 1 + X2a (compile red).
+- S2: Step 3 + X2b (EventCodec green).
+- S3: Step 5, Step 6 + X1 + X2c, SessionBinder, Step 7 + X3a (X3a red).
+- S4: X3b (green); then both suites.
+
+**92 progress (20:10):**
+- **S1–S4 all script-verified.** NetHost = the plan + exactly X1/X2c/X3b.
+- **EventCodec 4/4.** Mutation: dropping the count bound, or the byte bound, fails only its own test.
+- **X3a red on the plan's Capture:** "Count 277 is outside 0..256", thrown in NetHost.OnStepped. Green after X3b.
+- **Mutation:** keeping the oldest drops cuts id 277, the one at the guest's feet → the test fails.
+- **EditMode 772/772; OnlineHost 12/12.** Full PlayMode and the review are running.
+
+**92 gates:** full PlayMode 47/47.
+
+**Review "Yes with fixes" (20:20). Applied:**
+- **1 (Important).** No test checked that events carry their step; without `.At(frame)` every drop would vanish on the guest at 93. The drop test now asserts `drop.HostFrame == spawnedAt`.
+- **3.** The drop-cap test uses two at-feet drops, one spawned first and one last, so keeping the oldest or the newest cuts one. (The reviewer's own fix, moving the single drop to first, would have let "keep the oldest" pass.)
+- **2 (comment).** Capped-out drops are "left out of this snapshot", not "wait for a later one".
+- **4.** `StatusTrack.ToArray` returns `Array.Empty` when empty: one fix instead of two call sites.
+- **Mutation-proved:** removing the stamp fails the drop test (expected 5, got 0); keeping the newest fails on id 1; keeping the oldest fails on id 278.
+- **EditMode 772/772; OnlineHost 12/12; full PlayMode 47/47** on the final code. **Task 92 DONE sent (20:35)** → waiting for COMMITTED and the call on DropRemoved (at 93 or later).
+
+**Carried forward:**
+- **93:** a drop cut by the cap is deleted on the guest by ApplyDrops' absence rule and can't come back (no item left) → add a reliable `DropRemoved` event rather than inferring removal. Plus the dummy stage in EntityRef.
+- **Plan 2 Task 103:** the drop-in baseline must send a DropSpawned for every drop still on the ground before the first snapshot.
+- **Task 107 (Plan 3):** a press landing in a skipped frame is registered by the host at N+1 while the guest's log has it at the skipped frame; if the feel pass shows it, snapshots carry the host's held baseline.
+
 **Carried forward:**
 - **92:** SnapshotCodec throws on >256 inside the host's step; cap each list at the bound in Capture. DropIds can exceed 256 (drops outlive stages).
 - **93:** `EntityRef.Dummy(prop)` drops the stage, so dummy ids collide across stages; carry the stage (pack `stage << 16 | prop`).

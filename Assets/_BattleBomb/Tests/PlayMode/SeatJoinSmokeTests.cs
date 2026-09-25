@@ -126,6 +126,31 @@ namespace BattleBomb.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator Start_starts_the_game_on_the_title_and_nowhere_else()
+        {
+            InputSystem.AddDevice<Keyboard>();
+            var pad = InputSystem.AddDevice<Gamepad>();
+
+            SceneManager.LoadScene("Frontend", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+            FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+
+            yield return Tap(pad.startButton);
+            Assert.That(flow.State.Screen, Is.EqualTo(FrontendScreen.Characters),
+                "Start did not start the game from the title.");
+
+            yield return Tap(pad.startButton);
+            Assert.That(flow.State.IsReady(0), Is.False, "Start readied Player 1 — that is A's job (D57).");
+
+            yield return Tap(pad.buttonSouth);
+            Assert.That(flow.State.Screen, Is.EqualTo(FrontendScreen.Chapters));
+
+            yield return Tap(pad.startButton);
+            Assert.That(flow.State.Screen, Is.EqualTo(FrontendScreen.Chapters), "Start at chapter select launched a run.");
+        }
+
         private IEnumerator Tap(ButtonControl button)
         {
             Press(button);

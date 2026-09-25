@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Simulation;
+using BattleBomb.UI.Chest;
 using BattleBomb.UI.Items;
 using UnityEngine;
 
@@ -62,6 +64,7 @@ namespace BattleBomb.UI.Combat
                 {
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
+                    richText = true,
                 };
             }
 
@@ -72,7 +75,8 @@ namespace BattleBomb.UI.Combat
 
             for (int i = 0; i < pickups.Count; i++)
             {
-                if (pickups[i] == null || !AnyoneOver(players, pickups[i].Position))
+                CharacterActor over = pickups[i] != null ? FirstOver(players, pickups[i].Position) : null;
+                if (over == null)
                 {
                     continue;
                 }
@@ -100,8 +104,8 @@ namespace BattleBomb.UI.Combat
                     y += lineHeight;
                 }
 
-                DrawLine(new Rect(x, y, 240f, lineHeight),
-                    "Light to grab", new Color(0.65f, 0.65f, 0.65f));
+                string grab = PromptRow.Inline(_driver.Players.FamilyOf(over.PlayerId), PromptKey.Light);
+                DrawLine(new Rect(x, y, 240f, lineHeight), $"{grab} to grab", new Color(0.65f, 0.65f, 0.65f));
             }
         }
 
@@ -145,7 +149,8 @@ namespace BattleBomb.UI.Combat
             }
         }
 
-        private static bool AnyoneOver(IReadOnlyList<CharacterActor> players, Vector3 position)
+        /// <summary>The first standing player close enough to take this drop, or null.</summary>
+        private static CharacterActor FirstOver(IReadOnlyList<CharacterActor> players, Vector3 position)
         {
             for (int i = 0; i < players.Count; i++)
             {
@@ -158,17 +163,17 @@ namespace BattleBomb.UI.Combat
                 to.y = 0f;
                 if (to.sqrMagnitude <= SimulationDriver.GrabRadius * SimulationDriver.GrabRadius)
                 {
-                    return true;
+                    return players[i];
                 }
             }
 
-            return false;
+            return null;
         }
 
         private void DrawLine(Rect rect, string text, Color color)
         {
             _style.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
-            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, _style);
+            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), PromptRow.Plain(text), _style);
             _style.normal.textColor = color;
             GUI.Label(rect, text, _style);
         }

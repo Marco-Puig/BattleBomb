@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using BattleBomb.Core.Players;
 using UnityEngine;
 using UnityEngine.UI;
@@ -146,6 +147,13 @@ namespace BattleBomb.UI.Chest
             PromptGlyph glyph = PromptGlyphs.For(family, key);
             return UiBuild.Tint(glyph.Label.Length > 0 ? glyph.Label : "Stick", ToneColor(glyph.Tone));
         }
+
+        /// <summary>The text with its colour tags taken out, for a drop shadow drawn under a rich
+        /// line: IMGUI lets a tag override the style's colour, so a tinted button would otherwise
+        /// cast a tinted shadow.</summary>
+        internal static string Plain(string text) => ColourTags.Replace(text, string.Empty);
+
+        private static readonly Regex ColourTags = new Regex("</?color[^>]*>", RegexOptions.Compiled);
 
         private Entry EntryAt(int index)
         {

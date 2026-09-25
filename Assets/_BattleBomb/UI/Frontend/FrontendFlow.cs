@@ -36,13 +36,23 @@ namespace BattleBomb.UI.Frontend
         [Tooltip("Samples the two devices. Leave empty to find the one in the scene.")]
         [SerializeField] private CommandSampler _input;
 
+        [Tooltip("The same three fonts the chest host loads. The front door comes up first, so it " +
+                 "loads them itself; without them it draws in the built-in font.")]
+        [SerializeField] private Font _displayFont;
+
+        [SerializeField] private Font _uiFont;
+
+        [SerializeField] private Font _monoFont;
+
         private readonly StringBuilder _text = new StringBuilder();
         private readonly Vector2[] _lastMove = new Vector2[FrontendState.Slots];
         private readonly List<ChapterDefinition> _live = new List<ChapterDefinition>();
+        private readonly List<Prompt> _prompts = new List<Prompt>();
 
         private GameSession _session;
         private FrontendState _state;
         private StageSelection _selection;
+        private PromptRow _promptRow;
         private Text _body;
         private Button _primary;
         private Button _back;
@@ -86,6 +96,7 @@ namespace BattleBomb.UI.Frontend
                 RejoinTheCouch();
             }
 
+            UiBuild.UseFonts(_displayFont, _uiFont, _monoFont);
             Build();
             Repaint();
         }
@@ -175,8 +186,9 @@ namespace BattleBomb.UI.Frontend
                 MenuPress press = MenuPress.From(command);
                 Steer(slot, command);
 
-                // Start confirms for Player 1 as it always has; Escape backs out (D57).
-                if (press.Confirm || (slot == 0 && press.Pause))
+                // Start starts the game from the title and does nothing else here — anywhere else
+                // it would be a second A (D57). Escape backs out.
+                if (press.Confirm || (slot == 0 && press.Pause && _state.Screen == FrontendScreen.Title))
                 {
                     Confirm(slot);
                 }
@@ -310,6 +322,8 @@ namespace BattleBomb.UI.Frontend
             UiBuild.Box("Back", panel, UiBuild.Panel);
             RectTransform pad = UiBuild.Place(UiBuild.Rect("Pad", panel), 0f, 0.12f, 1f, 1f, 24f);
             _body = UiBuild.Label("Text", pad, string.Empty, 18, UiBuild.Ink, TextAnchor.UpperLeft);
+            _promptRow = new PromptRow(pad);
+            _promptRow.Place(0f, 1f, 0f, 0f, 0f);
 
             _primary = MakeButton(panel, "Primary", 0.55f, 0.02f, 0.95f, 0.1f, () => Confirm(0));
             _back = MakeButton(panel, "Back", 0.05f, 0.02f, 0.45f, 0.1f, () => _state.Back(0));
@@ -340,6 +354,9 @@ namespace BattleBomb.UI.Frontend
             return button;
         }
 
+        private InputFamily FamilyOf(int slot) =>
+            _input != null ? _input.Players.FamilyOf(new PlayerId(slot)) : InputFamily.Keyboard;
+
         private void Repaint()
         {
             if (_body == null)
@@ -359,7 +376,6 @@ namespace BattleBomb.UI.Frontend
                     }
 
                     AppendRow(row, "Start", _state.TitleCursor);
-                    _text.Append("\n\nStick: move   Light: choose");
                     SetButtonLabel(_primary, "Choose");
                     SetButtonLabel(_back, string.Empty);
                     break;
@@ -371,7 +387,15 @@ namespace BattleBomb.UI.Frontend
                         _text.Append("Player ").Append(slot + 1).Append(":  ");
                         if (!_state.IsJoined(slot))
                         {
-                            _text.Append(UiBuild.Tint("press Light to join", UiBuild.InkDim));
+                            // Player 1 keeps the device they came in on (D57): with Player 1 on the
+                            // keyboard, Enter is theirs, and only a pad can join.
+                            string join = PromptRow.Inline(InputFamily.Gamepad, PromptKey.Confirm);
+                            if (FamilyOf(0) != InputFamily.Keyboard)
+                            {
+                                join += " or " + PromptRow.Inline(InputFamily.Keyboard, PromptKey.Confirm);
+                            }
+
+                            _text.Append(UiBuild.Tint($"press {join} to join", UiBuild.InkDim));
                         }
                         else
                         {
@@ -379,13 +403,14 @@ namespace BattleBomb.UI.Frontend
                                 ? _roster[_state.PickOf(slot)].DisplayName
                                 : "?";
                             _text.Append("<  ").Append(UiBuild.Tint(name, UiBuild.Focus)).Append("  >");
-                            _text.Append(_state.IsReady(slot) ? "   READY" : "   (Light: ready)");
+                            _text.Append(_state.IsReady(slot)
+                                ? "   READY"
+                                : $"   ({PromptRow.Inline(FamilyOf(slot), PromptKey.Confirm)}: ready)");
                         }
 
                         _text.Append('\n');
                     }
 
-                    _text.Append("\nLeft/right: pick   Light: ready   Heavy: back");
                     SetButtonLabel(_primary, "Ready");
                     SetButtonLabel(_back, "Back");
                     break;
@@ -414,9 +439,6 @@ namespace BattleBomb.UI.Frontend
                         _text.Append("\n\nContinue from stage ").Append(_selection.LaunchStageIndex + 1);
                     }
 
-                    _text.Append("\n\nUp/down: chapter   Left/right: tier   Light: ")
-                        .Append(_selection.CanLaunch ? "launch" : UiBuild.Tint("locked", UiBuild.Worse))
-                        .Append("   Heavy: back");
                     SetButtonLabel(_primary, _selection.CanLaunch ? "Launch" : "Locked");
                     SetButtonLabel(_back, "Back");
                     break;
@@ -427,6 +449,29 @@ namespace BattleBomb.UI.Frontend
             }
 
             _body.text = _text.ToString();
+
+            _prompts.Clear();
+            switch (_state.Screen)
+            {
+                case FrontendScreen.Title:
+                    _prompts.Add(new Prompt(PromptKey.Move, "Move"));
+                    _prompts.Add(new Prompt(PromptKey.Confirm, "Choose"));
+                    break;
+
+                case FrontendScreen.Characters:
+                    _prompts.Add(new Prompt(PromptKey.Move, "Pick"));
+                    _prompts.Add(new Prompt(PromptKey.Confirm, "Ready"));
+                    _prompts.Add(new Prompt(PromptKey.Back, "Back"));
+                    break;
+
+                case FrontendScreen.Chapters:
+                    _prompts.Add(new Prompt(PromptKey.Move, "Chapter and tier"));
+                    _prompts.Add(new Prompt(PromptKey.Confirm, _selection.CanLaunch ? "Launch" : "Locked"));
+                    _prompts.Add(new Prompt(PromptKey.Back, "Back"));
+                    break;
+            }
+
+            _promptRow.Show(_prompts, FamilyOf(0));
         }
 
         private void AppendRow(int row, string label, int cursor)

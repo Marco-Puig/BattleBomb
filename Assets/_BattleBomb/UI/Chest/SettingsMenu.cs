@@ -25,7 +25,9 @@ namespace BattleBomb.UI.Chest
 
         private readonly StringBuilder _text = new StringBuilder();
         private readonly List<PlayerInventory> _bags = new List<PlayerInventory>();
+        private readonly List<Prompt> _prompts = new List<Prompt>();
 
+        private PromptRow _promptRow;
         private Canvas _canvas;
         private GameObject _panel;
         private Text _body;
@@ -346,6 +348,8 @@ namespace BattleBomb.UI.Chest
             UiBuild.Box("Back", panel, UiBuild.Panel);
             RectTransform pad = UiBuild.Place(UiBuild.Rect("Pad", panel), 0f, 0f, 1f, 1f, 18f);
             _body = UiBuild.Label("Text", pad, string.Empty, 15, UiBuild.Ink, TextAnchor.UpperLeft);
+            _promptRow = new PromptRow(panel);
+            _promptRow.Place(0f, 1f, 18f, 12f, 18f);
             _panel = panel.gameObject;
         }
 
@@ -382,8 +386,13 @@ namespace BattleBomb.UI.Chest
                 .Append(OverlayRow == _cursor ? UiBuild.Tint(overlayLine, UiBuild.Coin) : overlayLine);
 #endif
 
-            _text.Append("\n\nStick: move   Light: toggle   Pause or Heavy: close");
             _body.text = _text.ToString();
+
+            _prompts.Clear();
+            _prompts.Add(new Prompt(PromptKey.Move, "Move"));
+            _prompts.Add(new Prompt(PromptKey.Confirm, "Toggle"));
+            _prompts.Add(new Prompt(PromptKey.Back, "Close"));
+            _promptRow.Show(_prompts, _driver.Players.FamilyOf(new PlayerId(_owner)));
         }
 
         private void AppendToggle(int row, string label, bool value)

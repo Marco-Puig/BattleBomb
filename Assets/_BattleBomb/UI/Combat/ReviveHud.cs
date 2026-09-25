@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Simulation;
+using BattleBomb.UI.Chest;
 using UnityEngine;
 
 namespace BattleBomb.UI.Combat
@@ -58,6 +60,7 @@ namespace BattleBomb.UI.Combat
                 {
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
+                    richText = true,
                 };
             }
 
@@ -77,7 +80,8 @@ namespace BattleBomb.UI.Combat
                 }
 
                 Rect rect = new Rect(screen.x - 110f, Screen.height - screen.y - 22f, 220f, 26f);
-                string label = $"P{players[i].PlayerId.Value + 1} DOWN — Light on the beat";
+                string beat = PromptRow.Inline(FamilyOfReviver(players, i), PromptKey.Light);
+                string label = $"P{players[i].PlayerId.Value + 1} DOWN — {beat} on the beat";
                 DrawLabel(rect, label, new Color(1f, 0.4f, 0.35f));
 
                 CharacterActor reviver = ChannellingRescuerOf(players, i);
@@ -128,10 +132,24 @@ namespace BattleBomb.UI.Combat
             return null;
         }
 
+        /// <summary>The buttons of whoever can do the reviving: the first player still standing.</summary>
+        private InputFamily FamilyOfReviver(IReadOnlyList<CharacterActor> players, int downed)
+        {
+            for (int j = 0; j < players.Count; j++)
+            {
+                if (j != downed && !players[j].Condition.IsDown)
+                {
+                    return _driver.Players.FamilyOf(players[j].PlayerId);
+                }
+            }
+
+            return InputFamily.Keyboard;
+        }
+
         private void DrawLabel(Rect rect, string text, Color color)
         {
             _style.normal.textColor = new Color(0f, 0f, 0f, 0.8f);
-            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), text, _style);
+            GUI.Label(new Rect(rect.x + 1f, rect.y + 1f, rect.width, rect.height), PromptRow.Plain(text), _style);
             _style.normal.textColor = color;
             GUI.Label(rect, text, _style);
         }

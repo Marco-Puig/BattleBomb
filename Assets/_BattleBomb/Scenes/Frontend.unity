@@ -248,6 +248,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 431622b7f981f3142864b95cf06cf678, type: 2}
   - {fileID: 11400000, guid: 5e0c73d9aa8c5514b839b71b3e26564f, type: 2}
   _input: {fileID: 314496465}
+  _displayFont: {fileID: 12800000, guid: 5b27b5c174a92694ba149285bb3d04ab, type: 3}
+  _uiFont: {fileID: 12800000, guid: 97765431fe4f3f24bb5fcbd0df876c1b, type: 3}
+  _monoFont: {fileID: 12800000, guid: 63678e76bc9aaf8438b49cc3d86829c2, type: 3}
 --- !u!4 &1664217835
 Transform:
   m_ObjectHideFlags: 0

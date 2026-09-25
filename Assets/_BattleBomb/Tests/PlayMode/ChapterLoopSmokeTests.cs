@@ -749,6 +749,12 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(_driver.PausedForScreen, Is.True,
                 "The results screen is up and the world is still running underneath it.");
 
+            // A pressed the moment the results come up is not a way out: they stay up long enough
+            // to be read, so a mashed A cannot skip a NOT SAVED warning.
+            yield return TapWhilePaused(CommandButtons.Confirm);
+            Assert.That(SceneManager.GetActiveScene().name, Is.Not.EqualTo(FrontendScene),
+                "A pressed as the results came up left them before they could be read.");
+
             results.enabled = false;
             yield return null;
             Assert.That(_driver.PausedForScreen, Is.False,
@@ -767,13 +773,13 @@ namespace BattleBomb.Tests.PlayMode
             yield return TapWhilePaused(CommandButtons.Back | CommandButtons.Pause);
             Assert.That(settings.IsOpen, Is.False, "Escape on the results screen opened the settings under it.");
 
-            // A leaves once every hand is off the buttons — the only way out on a pad.
+            // Past the dwell, A leaves once every hand is off the buttons — the only way out on a pad.
             if (_partnerInput != null)
             {
                 _partnerInput.Release();
             }
 
-            yield return null;
+            yield return new WaitForSecondsRealtime(0.8f);
             yield return TapWhilePaused(CommandButtons.Confirm);
             for (int guard = 0; guard < FrameCeiling && SceneManager.GetActiveScene().name != FrontendScene; guard++)
             {

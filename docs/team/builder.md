@@ -38,26 +38,393 @@ tests in each.
 
 ## Waiting on
 
-- **The Unity MCP bridge.** It was disconnected at the last check (2026-09-24). Step 0 is to
-  confirm it answers (`editor_status`); if it does not, send `BLOCKED` and ask Michael to reopen
-  Unity.
+Nothing (bridge restarted by Michael 2026-09-25 08:16).
 
 ## Current state
 
-Not started.
+**Task 12 gates done (08:25, 2026-09-25):** bridge back. **Dirty-scene cause:** the only undo
+record was my own font assignment ("Modified 3 properties in Frontend"); re-saving produced a
+byte-identical file (sha1 cccd6cdf…), so the dirty flag carried no change — most likely the
+property-edit undo record is flushed after `SaveScene` inside the same eval and re-marks the scene.
+Practice from now: save in a **separate** eval call, and check `isDirty` before any sync run.
+Fonts test 1/1; EditMode 679/679 (assembly filter, async); PlayMode 28/28 (async). No
+InitTestScene leftovers. Step 8 captures (source: screen): title row "WASD Move · Enter Choose";
+character select "P1 (Enter: ready) / P2 press A to join" + "WASD Pick · Enter Ready · Esc Back".
+Live font proof: in a fresh play domain UiBuild.Display/Ui/Mono = PassionOne-Bold / Archivo /
+SpaceMono, badge keys in PassionOne-Bold. Re-review: approved. **`DONE` sent — waiting for
+`COMMITTED` before Task 13.**
+
+**Task 12 (00:05, 2026-09-25):** phase 2 code verified line by line against task12.md +
+task12_extra.md (only deviation: the plan's duplicate `actors` declaration in
+`ResultsScreen.Repaint` dropped — the existing one at l.255 is the same `_driver.Characters.Ordered`).
+Recompiled clean. **Fonts assigned in `Frontend.unity`** via eval + SerializedObject + SaveScene —
+on disk exactly 3 lines added (the three GUIDs, fileID 12800000). Step 6 greps: grep 1 none; grep 2
+only the `ChestScreen.cs:193` comment (accepted). **Bridge wedged:** the first `run_tests` (fonts
+test) hit a "Scene(s) Have Been Modified — Frontend" save prompt (Frontend went dirty again after
+the save — cause unknown, investigate with `scene.isDirty` once back). I pressed Cancel (did not
+save unseen changes). **Bridge bug:** a sync `run_tests` that times out calls
+`InvalidatePreviousRun` but never completes its awaited task, so `/api/exec`'s one-slot gate
+(`BasePipelineServer.m_ExecGate`) is never released — every later command times out, even
+`console`. Unity itself is responsive; `/api/status` answers 401 fast; `/api/progress` =
+`{"active":true}`. Fix = Window → Pipeline → Stop Server + Start Server (new server object, new gate)
+or any domain reload. **Trap: never start a sync `run_tests` with a dirty scene** — check
+`EditorSceneManager` dirty state first. New scratchpad tools: `unity_dialog_text.ps1` (reads a
+dialog's body + buttons), `unity_dialog_click.ps1 -Title … -Button …`.
+Still to do: the three new tests green, EditMode 679, PlayMode 28, Step 8 capture, reviews, DONE.
+**Reviews (00:20):** spec ✅ compliant. Quality "Yes with fixes": (1) Important — the join line said
+"A or Enter" even with P1 on the keyboard (Enter is P1's → readies P1); **fixed**: Enter named only
+when `FamilyOf(0) != Keyboard`. (2) Minor — `FamilyOf` null-guards `_input` (**fixed**). (3) Minor —
+the fonts test doesn't prove `UseFonts` runs: prove it live in Step 8 instead (play mode reloads the
+domain, so only FrontendFlow can have set `UiBuild.Display`; read a badge "Key" Text's font = Passion
+One). (4) Minor — loot card names only the first player's button when both stand at a drop: not
+fixed, report as a known limit (M9 HUD rebuilds these cards). No recompile yet (bridge down).
+Orchestrator (00:10): cancelling the save prompt was right; find what dirtied Frontend and put it in
+the DONE; run EditMode async or filtered by assembly, not one long sync call.
+
+**Groundwork Task 12 — in progress (01:45).** G11 committed. Additions spec:
+`<scratchpad>/tasks/task12_extra.md` (A Start title-only + test; B results dwell + test change;
+C Frontend fonts + acceptance test — then I assign PassionOne-Bold / Archivo-Variable /
+SpaceMono-Regular in `Frontend.unity` via eval; D IMGUI shadow strips colour tags). Phase 1 = the
+three tests (red), phase 2 = plan Steps 1–5 + additions. Then: scene fonts, Step 6 grep (a comment
+hit is fine — say so), suites (PlayMode 27 + 1 = 28; EditMode 678 + 1 = 679), Step 8 front-door capture.
+
+**Groundwork Task 11 — committed.** 4 paths. EditMode 678/678,
+PlayMode 27/27. Row built last in Build() (was hidden under the split hero board). **Next: Task 12**
+— the biggest UI task: settings/results/front-door rows, loot/revive inline, plus the four
+additions: results dwell (~0.75 s unscaled, test), Start on the title only (test), Frontend calls
+`UseFonts`, IMGUI shadow pass strips colour tags. Read task12.md fresh.
+
+**Task 11 progress (01:25):** code in (plan Steps 1–6 + Grid/Loadout-only-when-they-act), EditMode
+678/678, PlayMode 27/27. Captures done in play mode (Gameplay alone): keyboard row "WASD Move ·
+Enter Actions · J Sell · K Lock · Q/E Hero · Esc Leave the chest"; pad row (P1's SeatInput
+`_lastDevice` set to a 2nd virtual pad by reflection — the 1st goes to P2's stand-in) brass Move ·
+green A · blue X · yellow Y · square LB/RB Hero · red B; item-menu row "Move · A Choose · B Back · ≡
+Leave the chest" (≡ renders via Archivo). Capture recipe traps: the driver CLOSES a screen whose
+player is not at an interactable — place P1 at the chest with `CharacterActor.PlaceAt` (internal →
+reflection) before `OpenScreen`; `capture_game_view save_path` is relative to **Assets/** (it made
+`Assets/Screenshots/` — deleted via AssetDatabase); use inline captures only. Next: reviews, DONE.
+
+**Groundwork Task 11 — started (01:20).** G10 committed. Addition:
+`<scratchpad>/tasks/task11_extra.md` (Grid/Loadout prompts only when they act). QUIET for the
+virtual-gamepad step was pre-approved by the orchestrator (01:18) — plan: use reflection for the
+pad capture instead, so no quiet needed; say so in the DONE. Task 12 also gets: Frontend calls
+`UseFonts` (orchestrator, 01:18 — list as a deviation there).
+
+**Groundwork Task 10 — committed.** EditMode 678/678, PlayMode 27/27. Task 11 notes: Its Step 8 capture: keyboard family via
+eval-opened chest + `capture_game_view` (settled — no quiet needed). For the pad capture, prefer
+setting the screen's `_family` by reflection + `Refresh()` (visual check only) over QueueStateEvent,
+which needs Unity foregrounded (→ QUIET REQUEST); the real "icons follow the hands" path is
+Michael's checklist item 2. Note: a ScreenSpaceOverlay canvas is invisible to capture_game_view —
+check the chest canvas's render mode (use `source: screen` in play mode).
+
+**Groundwork Task 9 — committed.** EditMode 678/678. **Next: Task 10** (the badge row: `UiBuild` pad colours + RoundedSquare sprite,
+`PromptRow`) — read task10.md fresh; apply the ≡-in-Archivo decision in `PromptRow.Draw` and a
+dedupe-order comment (see "For Task 10" below). Nothing uses the row until Task 11, so gates are
+recompile + EditMode (+ PlayMode for safety since UiBuild is shared).
+
+**Groundwork Task 8 — started (23:30).** G7 committed. Addition: the Start twin test
+(`<scratchpad>/tasks/task08_extra.md`). Expect PlayMode 23 + 3 = 26. The ChapterLoop results test
+only checks open/pause (never presses to leave), so the results change will not break it.
+**Task 13 gains (orchestrator, 23:28):** the solo filter-row bug — `&& !layout.HeroBeside` guard on
+the Up-from-Filters→Tabs branch + a solo EditMode test; list under Deviations in G13's DONE.
+**Task 14's checklist gains:** X sells a whole stack; a partner's sale can slide an item under your
+cursor; no menu left open after combine-all.
+
+**Groundwork Task 7 — committed.** 5 paths. EditMode 672/672,
+PlayMode 23/23. **Next: Task 8** (settings + results on the new map; Escape never double-fires) —
+read task08.md fresh; plan's PlayMode count says 21 but our base is 23 → expect 25 (+2), +1 if the
+"start" twin is added. Watch: results screen all-hands-off swallow vs a scripted partner holding a
+button (G2 note).
+
+**Task 7 progress (23:20):** all code in (plan Steps 1, 3, 5, 6 + the stick fix). Stick test pushes
+**up**, not right — with the partner the chest is the couch layout (hero = tab), so right from a
+one-item sack cannot move; with right it passed without the fix. Proven: plan code → fail;
+`_lastMove` alone → fail; both lines → pass. Nav 28/28, loot 9/9, EditMode 672/672. Full PlayMode
++ spec review running; then quality review, `DONE`.
+
+**Groundwork Task 7 — started (22:55).** G6 committed (`4b602b7`). Addition spec:
+`<scratchpad>/tasks/task07_extra.md` — the held-stick fix is TWO lines in the swallow branch
+(`_lastMove = command.Move; _repeatAt = float.MaxValue;` — the reviewer's one-liner alone would
+still move at once because `_repeatAt` starts at 0) + a PlayMode test (hold right through the
+opening X; Y must lock the knife in cell 0). Expected PlayMode after Task 7: 18 + 1 route + 2 plan
+tests + 1 = 22. EditMode: 668 + 4 nav tests = 672.
+
+**Groundwork Task 6 — committed.** 9 paths. EditMode 668/668,
+PlayMode 18/18, spec ✅, quality Yes. Raised to the orchestrator: Start-confirms vs D57 (open
+question), stale front-door help text until Task 12, pointer-start homing side effect, same-frame
+slot presses, Escape at the title now does nothing. **Next: Task 7** (chest on the new map) — read
+task07.md fresh; carry the G2 note (held stick jumps the cursor after the opening press:
+`_lastMove = command.Move;` in the swallow branch). PlayMode count after Task 7 per plan: 18 + 3 =
+21 (plan said 19 from 16 — our base is 18).
+
+**Groundwork Task 6 — started (22:30).** G5 committed. Additions spec:
+`<scratchpad>/tasks/task06_extra.md` (A: FrontendState.Back(0)→Title releases slot 1 + test;
+B: `UiBuild.PointerOnly` — Navigation.Mode.None — on the 3 runtime buttons, verified against
+`Selectable.OnPointerDown` which only selects when mode != None; PlayMode asmdef also gets
+`UnityEngine.UI`; C: 2 more SeatJoinSmokeTests — solo re-home on another pad, buttons pointer-only).
+Expect PlayMode 15 → 18 (plan's 1 + 2). EditMode 667 → 668.
+
+**Groundwork Task 5 — committed.** 20 paths (incl. 2 metas +
+`ProjectSettings/EditorBuildSettings.asset`). EditMode 667/667, PlayMode 15/15, live eval ids 0/1,
+spec ✅, quality Yes after the cross-scene reconnect fix (seed `_vanished` from
+`InputSystem.disconnectedDevices`). **Next: Task 6** — read task06.md fresh; handle the UI-module
+double-confirm note below *before* its PlayMode test; FrontendState.Back(0)→Title must release
+slot 1; seating must use `LastDeviceOf` (= last press).
+
+**Task 5 progress (21:58):** code + tests in (plan Steps 1–8 + extra A/B/C; the reconnect test
+reaches the fixture's internal `runtime` by reflection — `runtime` is internal in this package).
+Step 10 migration DONE via eval (prefab: PlayerInput removed, `_controls` + seat 0; Gameplay:
+Player 2 `_seat` override 1; Frontend: Keyboard→seat 0, Gamepad→seat 1; no dialogs; Frontend
+reopened). Verified on disk: 0 PlayerInput refs. Prefab re-save also serialized PlayerInventory's
+five M6 fields at their code defaults (harmless). **Project-wide actions cleared**
+(`EditorBuildSettings.asset` `m_configObjects: {}`). EditMode 666/666. PlayMode run in progress;
+then Step 13 live check, reviews, `DONE`.
+
+**Groundwork Task 5 — started (21:00).** Committed: G1 `56e4be5`, G2 `c73ef97`, G3 `66e8492`,
+G4 `aaeaa1f`. EditMode before Task 5: 661; PlayMode 15.
+Plan: phase 1 (implementer) = plan Steps 1–3 + the Reclaim tests from
+`<scratchpad>/tasks/task05_extra.md` → red (Reclaim missing). Phase 2 (implementer) = plan Steps
+4–8 + extra.md A/B/C. Then me: Step 9 recompile (acceptance tests red until migration), Step 10
+eval migration of prefab + Gameplay + Frontend (check for a modal after each eval; reopen
+Frontend at the end), Step 11 grep on disk, **clear the project-wide actions**
+(`InputSystem.actions = null` in edit mode; verify `ProjectSettings/EditorBuildSettings.asset`
+loses `com.unity.input.settings.actions`), Step 12 both suites, Step 13 live eval check.
+**Project-wide actions evidence (for the G5 DONE):** our code never reads `InputSystem.actions`;
+both runtime UI modules (`ChestScreenHost.EnsureEventSystem`, `FrontendFlow` ~l.308) are added with
+`AddComponent<InputSystemUIInputModule>()` and no actions → `OnEnable` → `HasNoActions` →
+`AssignDefaultActions()` = the package's `DefaultInputActions`, not the project-wide asset
+(`InputSystemUIInputModule.cs:1647`); the editor Reset hook also loads the package default
+(`InputSystemEditorInitializer.cs:91-100`). Only PlayerInput used the project-wide copy.
+
+**Task 4 plan for the evidence requirement (decided, not yet built):** in `SeatInput`, make
+`LastDeviceId` mean *the device of this seat's last button press edge* (`held & ~before`, from
+our own held/previouslyHeld — not `WasPressedThisFrame`, since sim steps ≠ frames), persistent,
+cleared in `Own` when that device leaves the seat; stick moves and the most-recently-updated guess
+feed only `Family`. Keeps Task 5's `IInputDeviceReport`/`LastDeviceOf` names unchanged (update the
+doc to "last pressed"). Add SeatInputTests: no press → `LastDeviceId` NoDevice while `Family`
+still guesses; a button held on another device does not steal the last-press device.
+**Remember: new files need their `.meta` paths in the `DONE`.**
+
+Done so far: baseline EditMode 626/626, PlayMode 15/15. **G1** — menu vocabulary; also fixed
+Pause/Heavy duplicate binding ids (since c253a83) and made the unique-id test read the raw file
+(`InputActionAsset.FromJson(File.ReadAllText(..))`) because the importer silently re-rolls
+duplicates. Gates at G1: EditMode 627/627, PlayMode 15/15.
+
+**For Task 5:** `BattleBombControls` is the project-wide actions asset
+(`ProjectSettings/EditorBuildSettings.asset`); Unity enables every map of `InputSystem.actions` on
+all devices at startup. See the orchestrator's instruction under Answers (2026-09-24 20:08).
+
+**For Tasks 4–6 (from G3's quality review — plan defects in the wiring):**
+- **Follow must get evidence, not a guess.** `SeatInput.LastDeviceId` falls back to
+  `MostRecentlyUpdated(owned)` when nothing was pressed (right for prompts), but Task 6 feeds it to
+  `Seats.Follow` via `PlayerRegistry.LastDeviceOf`. Pointer start or a noisy HID pad → P1 homed on a
+  guess; and after a title round trip P2 gets seated on seat 1's guess. Fix in Task 4/5: track a
+  separate *last pressed* device (set on a press edge, cleared when the device leaves the seat) and
+  have `LastDeviceOf` / the front door use that; keep the guess for `Family`.
+  **HARD REQUIREMENT (G3 re-review):** it must be *persistent* — the last press, kept while that
+  device stays in the seat — never "pressed this frame". G3's Follow unhomes P1 whenever their
+  reported device is `NoDevice`, so a per-frame value would unhome P1 on every idle frame at
+  character select and turn the next press on any device into P1's instead of a join. Until this
+  lands, lost-home recovery re-homes P1 on a guess (most recently updated device), not a press.
+- **Minor (Task 4):** `Sample` remembers the *last held action in list order*, so someone holding
+  LB/Esc on another seat-1 device while P2 presses A seats P2 on the wrong device. Use the action
+  pressed this sample.
+- **Task 6:** `FrontendState.Back(0)` from Characters → Title keeps slot 1 joined/ready
+  (`FrontendState.cs:~108-127`), while `Follow(Title)` forgets the seat → P2 re-seated on a guess.
+  Make Back-to-Title clear slot 1 (+ a `FrontendStateTests` case). Consider one EditMode test driving
+  `FrontendState` + `SeatAssignment` together in Task 6's order; extend the PlayMode test: after P2
+  leaves, ready P1 → Chapters, B on pad 2 → Characters, A on pad 2 must ready P1, not join P2.
+- **Reconnect (scope question sent to the orchestrator):** a reconnected pad keeps its
+  `InputDevice` object but gets a **new `deviceId`** (`InputManager.cs:2762`, then
+  `InputDeviceChange.Reconnected`). P2's pad waking from sleep mid-run would become P1's; P2
+  stranded. PlayerInput re-paired regained devices, so this would be a regression.
+
+**For Task 5 (from G4's quality review):**
+- `IInputDeviceReport.LastDeviceId`'s doc in the plan says "the device that last did anything" —
+  wrong since G4: it is the device of the last button *press* (see `SeatInput.cs` doc). Fix the doc.
+- Reclaim: capture each device's id at `InputDeviceChange.Disconnected` (unchanged until re-added);
+  on `Reconnected` call `Seats.Reclaim(old, device.deviceId)`. **Test it with
+  `runtime.ReportNewInputDevice<Gamepad>()` / `runtime.ReportInputDeviceRemoved(pad)` +
+  `InputSystem.Update()`** — `AddDevice<Gamepad>()` devices never go on the disconnected list, so
+  they cannot test a reconnect (`InputTestRuntime.cs:278-298`, `InputManager.cs:2853-2877`).
+  Two identical pads with no serials can come back as each other's objects. The stand-in's
+  `FirstGamepad` (lowest id) swaps P1/P2 pads after a reconnect (Gameplay-scene-alone only).
+- `PlayerActions.cs`' class doc still says PlayerInput clones the asset per player — update.
+
+**Known limits reported, not built (G4 review):** taps shorter than one Input System update (or
+inside frames with no sim step at >60 fps) are lost — pre-existing; fix would record presses
+between samples via `performed`/`onAfterUpdate`. The pre-input prompt guess picks a PS pad
+(streams reports) over an idle keyboard. Runtime binding overrides are not copied to seat copies
+(matters at M13 rebinding). Steam Input may expose a PS pad twice (raw + virtual) — check before EA.
+
+**For Task 6 (from G5's quality review) — MUST handle before its PlayMode test:** the runtime-added
+`InputSystemUIInputModule`s (`FrontendFlow.cs:305-312,326-328`, `ChestScreenHost.cs:128-148`) get
+`DefaultInputActions`, whose Submit/Navigate answer on *every* device (`*/{Submit}` = pad A, Enter),
+and uGUI buttons default to Automatic navigation, so a mouse click *selects* a button — after any
+click on Primary/Back, A or Enter also submits it, unseen by the seats. With Task 6 putting the
+seat's Confirm on A/Enter, one press confirms twice (and P2's A fires `Confirm(0)`). Fix: pointer
+buttons get `navigation = new Navigation { mode = Navigation.Mode.None }` (Frontend `MakeButton`,
+the chest close button), or null the module's move/submit/cancel after adding it.
+**Known limits (G5 review, report in DONE/D57 notes):** P1's own pad sleeping at character select
+→ P1 unhomed → next press on any device is P1's (never a lockout; a would-be join in that window is
+P1's). Two identical serial-less pads asleep at once can wake swapped; a pad that returns as a
+brand-new device (`Added`, not `Reconnected`) loses its seat until the title. Gameplay-alone
+stand-in follows the lowest-id pad (dev only).
+
+**For Task 10 (from G9's review) — decided:** the "≡" Start label is NOT in Passion One
+(`UiBuild.Display`, the badge font) nor Space Mono; only `Archivo-Variable.ttf` (`UiBuild.Ui`)
+has U+2261. Windows substitutes it from Arial, so the plan's Task 11 "empty box → MENU" check
+would pass here and still fail on console/Deck. In `PromptRow.Draw`, draw a badge label in
+`UiBuild.Ui` when it is "≡" (Display otherwise) — deterministic, keeps the real icon. Also: the
+dedupe keeps the *first* badge, so "Esc Back" wins only because screens list Back before Pause —
+add a line saying so (or prefer Back explicitly).
+
+**For Task 11 (from G10's review):** Step 8's expected keyboard row shows a bone "WASD" key cap
+for Move (not a brass disc — that is pad only). Its "≡ → MENU" fallback is moot (≡ is drawn in
+Archivo) and would not compile anyway (`System` is now `SystemButton`); a Windows capture cannot
+prove ≡ renders. Layout fits (longest chest rows ~560–630 units vs ~790).
+**For Task 12 (from G11's review):** the plan's Step 6 grep 2 (`'Light to\|Esc / Start\|Heavy: back'`)
+will match an old *comment* at `ChestScreen.cs:~193` ("X, which is Light to the fight…") — accept
+that hit (it is a comment, not a prompt) or exclude comments; don't "fix" the comment.
+**For Task 12 (from G10's review):** (1) `LootHud.DrawLine` and `ReviveHud` draw each string twice
+(black shadow, then colour); a `<color>` tag overrides the shadow colour, so the inline X/J would
+draw twice in colour with no dark edge — strip the colour tags for the shadow pass. (2) Front-door
+fonts: `UiBuild.UseFonts` is only called by `ChestScreenHost.OnEnable` (Gameplay scene), so on
+first boot the front door uses the built-in font, and Archivo/Passion One only after a trip into
+Gameplay — have something in `Frontend.unity` call `UseFonts`. (PromptRow now falls back to the
+built-in font when the fonts are null, so letters are never blank.)
+
+**For Task 8 (from G7's review):** `_busyBefore` must also cover Start closing the chest (Pause
+alone — same race as Escape); add a "start" twin to `Escape_out_of_the_chest_does_not_open_the_settings`.
+**For Task 11 (from G7's review):** show X Sell / Y Lock only when they act (a visible item on the
+Grid; a non-empty worn slot on the Loadout) — as planned the row would advertise dead buttons.
+The chest footer says Light/Magic/Heavy until Task 11 (on a pad, following it sells).
+**For Michael's Task 14 checklist (G7's review):** item 5 — "and no menu stays open" after X
+combines the pile; X sells a *whole stack* (menu Sell row shows the unit price); couch shared sack:
+a partner's sale can slide another item under your cursor just before X.
+**Pre-existing bug reported to the orchestrator (G7's review):** solo, Up from Filters goes to an
+invisible Tabs strip (`ChestNavigation.cs:~260-267`); sideways there flips `Tab` to Hero unseen and
+grid movement then goes via `MoveInHero`. Fix = `&& !layout.HeroBeside` guard + solo test.
+
+**For Task 7 (from G2's quality review):** a stick held through the chest-opening press moves the
+cursor — during the swallow `StepCursor` is skipped, so `_lastMove` stays zero and a still-held
+stick reads as a fresh push on release (pre-existing since M6). Suggested one-liner inside the
+swallow branch before its `return`: `_lastMove = command.Move;`. Decide in Task 7; add to Michael's
+checklist ("walk into the chest holding right, tap X").
+
+**For Task 8 (from G2's quality review):** the results screen's swallow needs *every* player's hands
+off in the same step. In PlayMode a `ScriptedCommandSource` partner left holding a button (`Set`
+holds until told otherwise) would stop the results screen from ever closing — watch for it in the
+Task 8 smoke runs.
+
+Prep done: whole plan read; split into one file per task at
+`<scratchpad>/tasks/taskNN.md` + `preamble.md` (scratchpad is session-specific — re-split after a
+reset if it is gone). Task 1's assumptions verified against the code (7 tests today, `Pause = 1 << 5`,
+only the Gameplay map, highest binding id `…151` < the script's `0x200`, `Unity.InputSystem.
+TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputactions` is CRLF.
+
+**How each task runs (my approach):**
+- Implementer subagent writes the files — **no Unity MCP calls, no git writes, never touch paths it
+  did not change**. Two phases: (1) write the test, report → I `recompile` and confirm the red;
+  (2) continue the same agent (SendMessage) to write the implementation → I run the fixture + suite.
+- **I run every Unity gate myself** (recompile, run_tests, eval, scene edits, captures) — the bridge
+  wedges on one bad `filter_type` and jams on the external-edit modal, so it stays in one hand.
+- Then spec review, then quality review (not Sonnet), then `DONE` to the orchestrator → wait for
+  `COMMITTED` before the next task.
 
 ## Next steps
 
-1. Confirm the bridge; `editor_stop` if the editor is in play mode.
-2. Record the baseline: EditMode (expect 626) and PlayMode async (expect 15).
-3. Groundwork Task 1 — the menu vocabulary.
+1. **When the bridge is back:** recompile (FrontendFlow review fixes); find what dirtied Frontend
+   (`scene.isDirty`, Undo records via reflection on `UnityEditor.Undo.GetRecords`) — save nothing
+   unseen; three new tests green; EditMode 679 (filtered by assembly or async); PlayMode 28 (async);
+   delete `Assets/InitTestScene*`; Step 8 front-door capture + live font check (badge "Key" Text
+   font = PassionOne-Bold). Then G12 `DONE`.
+2. **Task 13** after `COMMITTED` — brief ready: `task13.md` + `task13_extra.md` (solo filter-row
+   guard + `Solo_nothing_sits_above_the_filter_row`). Expect EditMode 680.
+3. **Task 14** — `task14.md` matches the plan (checked 00:40). D57 re-read, shared-doc text to the
+   orchestrator, final gates, Michael's checklist (items listed under "For Michael's Task 14
+   checklist" plus: results dwell, Start on the title only, join line names only the free device).
 
 ## Answers and decisions
 
+- 2026-09-25 00:50 (Orchestrator): **COMMITTED G8.** **Task 12 adds a results dwell:** in
+  `ResultsScreen`, a minimum time on screen of ~0.75 s of *unscaled* real time (the world is
+  paused), starting when the panel opens; A before the dwell does nothing, after it leaves. Pin it
+  with a test; list under Deviations — the "NOT SAVED" warning must not be skippable by accident.
+  Per-player arming, owner-only settings close, and the catch-up loop = board's later list (the
+  catch-up item sits with F1/F4 for Netcode). Don't fix now.
+- 2026-09-24 22:50 (Orchestrator): **COMMITTED G6.** **Start = title only** ("Press Start"); elsewhere
+  in the front door it does nothing. D57 amended. **Do it in Task 12** (back in FrontendFlow for the
+  prompts): condition becomes `slot == 0 && press.Pause && _state.Screen == FrontendScreen.Title`;
+  pin with a test (SeatJoinSmokeTests or FrontendState): Start at chapter select does not launch.
+  Pointer-start homing side effect + same-frame cross-slot presses = accepted limits (board's later
+  list) — don't fix. Escape-at-title and stale help text: the orchestrator tells Michael.
+- 2026-09-24 20:25 (Orchestrator): **Reconnect approved for Task 5.** Add
+  `SeatAssignment.Reclaim(previousId, returnedId)` in Core + EditMode tests, fed from
+  `InputSystem.onDeviceChange` in the **Gameplay layer next to `SeatInput`** (rule 3: only the
+  source and its SeatInput touch devices). **Cover the front door too**: a pad that sleeps during
+  character select keeps its seat. List it under "Deviations" in the Task 5 `DONE`.
+  **D57 amended by the orchestrator (08f7c40)**: P1 is held to "the device they came into
+  character select on", plus a line that a seat's controller that sleeps and wakes keeps its seat.
+- 2026-09-24 20:08 (Orchestrator): **COMMITTED G1** (`56e4be5`, pushed). Its session restarted —
+  **reply address now `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095`** (name
+  "Battlebomb"); the old pipe is dead. Only the Builder is running; the sim is mine uninterrupted.
+  **Task 5:** decide the project-wide actions asset with evidence — default is to clear the
+  project-wide assignment once PlayerInput is gone, unless something (e.g. the UI input module)
+  needs it. Check whether `InputSystemUIInputModule` falls back to it before changing anything, and
+  report either way in the Task 5 `DONE`.
+- 2026-09-24 (Orchestrator, 5758b03): **D57 is already in `DECISIONS.md`** (recorded early from the
+  plan's text, because M8 took D58–D62). Task 14 Step 1 is now: re-read D57 against what was
+  actually built and send the orchestrator any correction. Re-split `task14.md` from the plan
+  before Task 14 — the scratchpad copy predates this change.
+- 2026-09-24 (Orchestrator, 853ad08): **message the orchestrator at the `from=` address of its
+  last message, not by name** — Michael renames sessions. Last known:
+  `uds:\\.\pipe\LOCAL\cc-msg-a5467c87452d77bccc60c704d3ef83a9` (session name then: "Battlebomb").
+- 2026-09-24 (Orchestrator): until the bridge answers, read-only prep only — no Unity calls, no
+  writes under `Assets/`. Once `editor_status` answers, run Step 0 + baseline, send `STATUS`, and
+  start Task 1 without waiting. The orchestrator replies to whatever address my messages come from.
 - 2026-09-24 (Michael, Groundwork kickoff): X = Sell (Combine-all mid-pick), Y = Lock, LB/RB =
   switch tab or mode — as proposed. X sells **instantly**; locks are the only safety. **Xbox
   letters only** on every controller.
 
 ## Log
 
+- 2026-09-25 08:30 — **G12 complete** (every other prompt; Start title-only; results dwell;
+  front-door fonts; shadow strips tags; join line names only the free device): EditMode 679/679,
+  PlayMode 28/28, spec ✅, quality approved after fixes. `DONE` sent. Next: Task 13 on `COMMITTED`.
+- 2026-09-25 06:50 — Bridge still wedged after a 6 h watch (no server restart). Re-armed (6 h; also
+  exits if Unity closes). Task 12 reviews done + fixed; Task 13 brief ready.
+- 2026-09-25 01:40 — **G11 complete** (chest/hero badge row; prompts only for buttons that act;
+  row over the split hero board): EditMode 678/678, PlayMode 27/27. `DONE` sent. G10 committed.
+- 2026-09-25 01:15 — **G10 complete** (PromptRow + pad colours + rounded badge; ≡ in Archivo;
+  null-font fallback): EditMode 678/678, PlayMode 27/27. `DONE` sent. G9 committed.
+- 2026-09-25 01:00 — **G9 complete** (PromptGlyphs + tests; Assert.Multiple rewrite; Move explicit):
+  EditMode 678/678. `DONE` sent. G8 committed.
+- 2026-09-25 00:45 — **G8 complete** (settings/results on the new map; three double-fire races
+  closed): EditMode 672/672, PlayMode 27/27. `DONE` sent. G7 committed.
+- 2026-09-24 23:25 — **G7 complete** (chest on the new map + held-stick fix + combine-menu fix):
+  EditMode 672/672, PlayMode 23/23. `DONE` sent. G6 committed as `4b602b7`.
+- 2026-09-24 22:45 — **G6 complete** (front door hands out seats; title forgets P2; pointer-only
+  buttons): EditMode 668/668, PlayMode 18/18. `DONE` sent. G5 committed.
+- 2026-09-24 22:20 — **G5 complete** (seats replace PlayerInput + Reclaim + project-wide actions
+  cleared): EditMode 667/667, PlayMode 15/15. `DONE` sent. G4 committed as `aaeaa1f`.
+- 2026-09-24 20:50 — **G4 complete** (SeatInput): 13/13, EditMode 661/661; seats by real presses;
+  held-through-plug-in fixed. `DONE` sent. G3 committed as `66e8492`.
+- 2026-09-24 20:28 — **G3 complete** (SeatAssignment): 14/14, EditMode 648/648; home-device fix.
+- 2026-09-24 20:06 — **G2 complete** (MenuPress): 7/7, EditMode 634/634, both reviews passed.
+  `DONE` sent. G1 committed as `56e4be5`.
+- 2026-09-24 20:00 — **G1 complete**: EditMode 627/627, PlayMode 15/15, both reviews passed. Found
+  and fixed Pause/Heavy duplicate binding ids; hardened the unique-id test. `DONE` written here —
+  the orchestrator is unreachable, so paused before Task 2.
+- 2026-09-24 19:33 — Editor open; Step 0 passed (`editor_status` ready, stopped, no console
+  errors). Plan re-split (only task14 had changed). EditMode baseline 626/626. Traps: `run_tests`
+  `mode` takes `editor` / `playmode` (the tool's schema); an async PlayMode `run_tests` **times out
+  on the request** (the play-mode reload drops the reply) but the run starts — poll `test_status`.
+- 2026-09-24 18:56 — Still no editor after a 3h watch (Unity Hub is open, the editor is not; the
+  bridge still reports 0 tools). Re-armed the watch (6h).
+- 2026-09-24 — ANSWER from the orchestrator: prep read-only until the editor is up. Plan split
+  into per-task files; Task 1's assumptions checked.
+- 2026-09-24 — ONLINE (session "BattleBomb Builder lane"). Step 0 failed: editor not open. BLOCKED
+  sent. The orchestrator now lists as **"BattleBomb Orchestrator"** — "BattleBomb Planning" no
+  longer resolves.
 - 2026-09-24 — Lane seeded by the orchestrator.

@@ -37,7 +37,9 @@ namespace BattleBomb.UI.Frontend
         [SerializeField] private StageRunner _runner;
 
         private readonly StringBuilder _text = new StringBuilder();
+        private readonly List<Prompt> _prompts = new List<Prompt>();
 
+        private PromptRow _promptRow;
         private Canvas _canvas;
         private GameObject _panel;
         private Text _body;
@@ -46,6 +48,13 @@ namespace BattleBomb.UI.Frontend
         private bool _holdingPause;
         private bool _leaving;
         private bool _swallowUntilRelease;
+
+        /// <summary>How long the results stay up before A can leave, in real time — the world is
+        /// paused. Letting go and pressing again takes a blink, so the swallow alone would let a
+        /// mashed A skip the lines, a NOT SAVED warning among them.</summary>
+        private const float MinimumDwell = 0.75f;
+
+        private float _openedAt;
 
         public bool IsOpen => _open;
 
@@ -114,6 +123,7 @@ namespace BattleBomb.UI.Frontend
             Build();
             _open = true;
             _swallowUntilRelease = true;
+            _openedAt = Time.unscaledTime;
             _panel.SetActive(true);
             HoldPause(true);
             Repaint();
@@ -143,6 +153,11 @@ namespace BattleBomb.UI.Frontend
                 }
 
                 _swallowUntilRelease = false;
+            }
+
+            if (Time.unscaledTime - _openedAt < MinimumDwell)
+            {
+                return;
             }
 
             for (int i = 0; i < actors.Count; i++)
@@ -214,6 +229,9 @@ namespace BattleBomb.UI.Frontend
             UiBuild.Box("Back", panel, UiBuild.Panel);
             RectTransform pad = UiBuild.Place(UiBuild.Rect("Pad", panel), 0f, 0.15f, 1f, 1f, 20f);
             _body = UiBuild.Label("Text", pad, string.Empty, 18, UiBuild.Ink, TextAnchor.UpperLeft);
+            // Left of the pointer button, which owns the bottom-centre of the panel.
+            _promptRow = new PromptRow(panel);
+            _promptRow.Place(0f, 0.28f, 20f, 16f, 0f);
 
             Image box = UiBuild.Box("Continue", panel, UiBuild.PanelInner);
             UiBuild.Place((RectTransform)box.transform, 0.3f, 0.03f, 0.7f, 0.12f);
@@ -270,8 +288,14 @@ namespace BattleBomb.UI.Frontend
                 }
             }
 
-            _text.Append("\n\nLight: back to chapters");
             _body.text = _text.ToString();
+
+            InputFamily family = actors.Count > 0
+                ? _driver.Players.FamilyOf(actors[0].PlayerId)
+                : InputFamily.Keyboard;
+            _prompts.Clear();
+            _prompts.Add(new Prompt(PromptKey.Confirm, "Back to chapters"));
+            _promptRow.Show(_prompts, family);
         }
     }
 }

@@ -55,9 +55,9 @@ What is waiting on Michael, in priority order:
 9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
-
 10. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
+
 ## M8 — ready to build after Groundwork
 
 Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one

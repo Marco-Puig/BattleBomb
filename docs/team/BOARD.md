@@ -11,10 +11,10 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | Netcode | idle — available | Answers Builder questions; Plan 2 once Plan 1 is underway | Groundwork to start |
-| World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
-| Art | Art | online | HUD and menus canvas v1 up for review | Michael: canvas review, images, bible review, music tool |
+| Builder | Builder | working | Groundwork — G1 committed; Task 2 (`MenuPress`) next | — |
+| Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
+| World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
+| Art | — | not running (session closed) | HUD and menus canvas v1 up for review | Michael |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -32,26 +32,24 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Open the BattleBomb project in Unity 6000.5.8f1 with the MCP bridge** — the Builder is
-   blocked on it (the bridge stubs are up; no editor is running).
-2. **The World session** — open in the World lane's session, at question 1 (the goal).
-3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+1. **The World session** — open in the World lane's session, at question 1 (the goal).
+2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-4. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+3. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-5. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+4. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-6. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+5. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-7. *(Whenever there is a gap)* **Pick the music tool** — Art's research (`AUDIO.md`): AIVA Pro grants
+6. *(Whenever there is a gap)* **Pick the music tool** — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-8. **Review the HUD and menus canvas v1** — eleven artboards in UI Pass 01's look, in the Art lane's
+7. **Review the HUD and menus canvas v1** — eleven artboards in UI Pass 01's look, in the Art lane's
    session: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj. On approval Art saves it into `design/`.
-9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+8. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
@@ -123,6 +121,10 @@ None.
 
 ## Log
 
+- 2026-09-24 — Unity open; Builder baseline EditMode 626 / PlayMode 15. **G1 committed** (56e4be5) — also
+  fixed Pause reusing Heavy's binding ids. The orchestrator restarted mid-task; the Builder's
+  unreachable-orchestrator fallback worked (messages parked in its lane file). Netcode, World, Art
+  sessions closed — restart them from `PROMPTS.md` when wanted.
 - 2026-09-24 — Netcode `DONE`: pre-M8 fixes plan, F1–F3. The Builder's queue is fully planned:
   Groundwork → F1–F3 → M8 Plan 1.
 - 2026-09-24 — Netcode `DONE`: M8 Plan 1, Tasks 86–96 (1a7fdac). Next for Netcode: the pre-M8 fixes plan.

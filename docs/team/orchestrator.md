@@ -34,7 +34,7 @@ address (the address changes when this app restarts).
 | Lane | Last `from=` address | State |
 |---|---|---|
 | Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork Task 12 |
-| Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | running — out of work (waits on Michael) |
+| Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — restart from `PROMPTS.md` near M8 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
@@ -64,5 +64,7 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-25 — Art READY TO COMPACT (9902064); Netcode and World lane files committed as they
+  closed (35f5441).
 - 2026-09-25 — Lane file created for PROTOCOL rule 11 (Michael: get blocked or idle sessions,
   the orchestrator included, ready to compact).

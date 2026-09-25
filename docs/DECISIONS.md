@@ -1353,6 +1353,10 @@ menu. Arrow keys and enter/space also are helpful."*
 - **Escape is Back inside a menu and Pause outside one.** Start still leaves any screen outright,
   so M6's promise — getting out is never a puzzle — survives Escape becoming one level at a time.
   The press that closes a screen never also opens the settings.
+- **Start on the title screen starts the game** ("Press Start"); elsewhere in the front door it does
+  nothing, so it never duplicates A and never launches a run from chapter select *(orchestrator,
+  2026-09-24, from G6's review)*. Escape at the title does nothing; the keyboard starts with Enter or
+  Space.
 - **Solo at a chest, the shoulders cross between the sack and the hero panel** — the "other half"
   in every layout.
 - **Prompts show the device the player last pressed**: Xbox letters on every controller

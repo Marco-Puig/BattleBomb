@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Groundwork — G1–G5 committed; Task 6 (the front door hands out seats) | — |
+| Builder | Builder | working | Groundwork — G1–G6 committed; Task 7 (the chest on the new map) | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -130,6 +130,10 @@ From Groundwork (G4's review):
   select un-homes them until they press again; two identical serial-less pads asleep at once can
   wake swapped; a pad that returns as a brand-new device (not a reconnect) loses its seat until the
   title; the Gameplay-scene-alone stand-in follows the lowest-id pad (dev only).
+- **Front-door edge cases accepted in G6:** a game started by mouse homes nobody, so the first press
+  at character select is Player 1's — a would-be Player 2's A readies Player 1 instead of joining;
+  and two players pressing in the same frame can drop a join or eject Player 2 at chapter select
+  (pre-existing loop order).
 - **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
   keyboard — cosmetic; it corrects on the first press.
 
@@ -143,6 +147,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — **G6 committed** (4b602b7): the front door seats the couch; Player 2 joins on the pad they
+  press A on. PlayMode 18. D57 gains "Start starts the game on the title only".
 - 2026-09-24 — **G5 committed** (3e6b3bb): PlayerInput gone, the seat is the player's id (the solo "P2"
   fix), sleeping controllers keep their seat, project-wide actions cleared. EditMode 667, PlayMode 15.
   Art: the knight cut into 15 rig parts from Michael's first ChatGPT batch (1e0661c).

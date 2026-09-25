@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Groundwork — G1 committed; Task 2 (`MenuPress`) next | — |
+| Builder | Builder | working | Groundwork — G1–G4 committed; Task 5 (seats replace PlayerInput, with Reclaim) | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -83,6 +83,11 @@ Builder runs it straight after Groundwork, before M8 Plan 1.
 3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
    session at launch — *orchestrator's call, flagged to Michael*.
 
+**Candidate F4 — Netcode to assess when its lane reopens** (found in G4, pre-existing): a tap shorter
+than one Input System update, or one that lands in a frame with no simulation step (above 60 fps),
+is lost — the sample only sees what is held at that instant. It matters for the revive heartbeat's
+mashing (D31) and for M8's remote input path. Fix shape: record press edges between samples.
+
 Into M8's plan (Netcode designs them; they are online blockers, not bugs today):
 - The shop rack is rolled, stored, and priced in the UI, and `RequestBuy` trusts the UI's item and
   price (§5.1) — a rule 2 violation; the rack moves into the simulation.
@@ -115,6 +120,15 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
 
+## Later — M13 and Early Access readiness
+
+From Groundwork (G4's review):
+- **Rebinding (M13):** runtime binding overrides are not copied into each seat's copy of the
+  controls — the rebinding work must apply them to every seat.
+- **Steam Input may expose a PlayStation pad twice** (raw and virtual) — check before Early Access.
+- **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
+  keyboard — cosmetic; it corrects on the first press.
+
 ## Pending commits
 
 None.
@@ -125,6 +139,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — G2 (c73ef97), G3 (66e8492), G4 (aaeaa1f) committed. D57 amended (08f7c40): Player 1's
+  home is the device they came into character select on; seats survive a controller reconnect.
 - 2026-09-24 — G2 committed (c73ef97). Art back online: HUD canvas approved and exported to
   `design/hud-menus/`; 31 GPT prompts queued in `ArtSource/GPT_PROMPTS.md`.
 - 2026-09-24 — Unity open; Builder baseline EditMode 626 / PlayMode 15. **G1 committed** (56e4be5) — also

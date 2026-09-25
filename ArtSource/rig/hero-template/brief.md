@@ -10,7 +10,7 @@ heroes (those wait for the story bible).
 **The pipeline:**
 1. Run **Sheet A** (the 8 base parts), then **Sheet B** (the 7 variants: expressions and hand
    poses), in the same chat as your approved SF1.
-2. Save the results into `ArtSource/rig/hero-template/AI/_raw/` as `sheet-a.png` and
+2. Save the results into the inbox `ArtSource/_raw/` as `sheet-a.png` and
    `sheet-b.png`.
 3. **The Art lane cuts them** with `cut_parts.py`. Each part is cut out, scaled to its template
    size, and placed on its fixed canvas with its joint on the pivot (`HERO_TEMPLATE.md` §4), then

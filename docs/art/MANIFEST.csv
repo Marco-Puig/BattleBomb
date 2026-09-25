@@ -24,16 +24,16 @@ item-icon/8,Hunting Bow icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired 
 item-icon/10,Terrier icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 10 once drafted. Needs SF6 approved first.
 item-icon/11,Lucky Charm icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 11 once drafted. Needs SF6 approved first.
 item-icon/13,Ember Stone icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 13 once drafted. Needs SF6 approved first.
-effect/fire,Fire effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
-effect/ice,Ice effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
-effect/earth,Earth effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
-effect/air,Air effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approved first.
-effect/melee,"Melee effect kit (arcs, hit stars, dust)",effect,briefed,,,,,,,effects/brief.md,Needs SF2 approved first.
-effect/loot,"Loot glow kit (greyscale, tinted by QualityColors)",effect,briefed,,,,,,,effects/brief.md,
-effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,briefed,,,,,,,effects/brief.md,Needs SF1 approved first.
+effect/fire,Fire effect kit,effect,ai-draft,effects/fire/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/fire.png.
+effect/ice,Ice effect kit,effect,ai-draft,effects/ice/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/ice.png.
+effect/earth,Earth effect kit,effect,ai-draft,effects/earth/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/earth.png.
+effect/air,Air effect kit,effect,ai-draft,effects/air/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/air.png.
+effect/melee,"Melee effect kit (arcs, hit stars, dust)",effect,ai-draft,effects/melee/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/melee.png.
+effect/loot,"Loot glow kit (greyscale, tinted by QualityColors)",effect,ai-draft,effects/loot/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/loot.png.
+effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,ai-draft,effects/feedback/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/feedback.png.
 weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
 weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
-environment/fixture,Fixture meadow kit (fixture-only),environment,briefed,,,,,,,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. Needs SF3 approved first.
+environment/fixture,Fixture meadow kit (fixture-only),environment,ai-draft,environments/fixture/AI,,,,ChatGPT images,2026-09-24,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. Made seamless and measured by prepare.py (ground 73-84% brightness). backdrop-mid still to generate (GPT step 11).
 music/title-theme,Title theme (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
 music/checkpoint-room,Checkpoint room (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
 music/stage-fixture,Stage loop for the fixture chapter (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.

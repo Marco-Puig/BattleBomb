@@ -30,8 +30,9 @@ between 55% and 85%, and its variation stays within about ±10%** (bible §4 rul
 art, it may be levelled to fit, which is still AI (PROVENANCE §3). ChatGPT's "seamless" images
 often show a faint seam; the Art lane can blend one away.
 
-**Pipeline:** save each result into `ArtSource/environments/fixture/AI/_raw/`. The Art lane
-checks and cleans each one, then saves it as `AI/fixture-<piece>__ai_v1.png`.
+**Pipeline:** save each result into `ArtSource/_raw/` (see GPT_PROMPTS.md). The Art lane files it,
+and `prepare.py` here makes it seamless, measures the ground, and saves it as
+`AI/fixture-<piece>__ai_v1.png`.
 
 **Before you start:** SF3 must be approved, and SF4 helps. Attach SF3 to every prompt.
 

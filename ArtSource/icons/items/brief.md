@@ -37,7 +37,7 @@ icon matches the weapon in hand.
 - **It must read at 64 px.** Clear silhouette, few details.
 - The art bible §10 checklist applies.
 
-**Pipeline:** save each batch into `ArtSource/icons/items/AI/_raw/` (`batch-a.png` and so on).
+**Pipeline:** save each batch into the inbox `ArtSource/_raw/` (`batch-a.png` and so on).
 The Art lane cuts each icon onto a 512×512 transparent square, saves it as
 `<folder>/AI/<folder>__ai_v1.png` (for example `steel-helmet/AI/steel-helmet__ai_v1.png`), and
 sends back a contact sheet at 64 px and 256 px for approval.

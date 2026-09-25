@@ -9,7 +9,7 @@ drafted. They never ship, and they invent nothing. The only character is the Tem
    approved earlier one.
 2. When a result is close but wrong, **edit rather than re-roll**: "Keep everything the same;
    change only …".
-3. Save each keeper into `ArtSource/_style/AI/_raw/` as `sf1-….png`, `sf2-….png` and so on, and
+3. Save each keeper into the inbox `ArtSource/_raw/` as `sf1.png`, `sf2.png` and so on, and
    note anything you changed in the prompt below it.
 4. Judge each one against the checklist in `docs/art/ART_BIBLE.md` §10.
 5. If a "transparent" background comes back white or as a painted checkerboard, ask once more

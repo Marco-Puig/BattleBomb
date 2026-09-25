@@ -5,9 +5,10 @@ ask the Art lane to change a brief or to refresh your progress.**
 
 ## Where you are
 
-**Done: 8 of 31. Next: step 9, Ground (square 1024×1024)** (Fixture environment (test stage only, never ships)).
+**Done: 19 of 31. Next: step 11, Backdrop mid (landscape 1536×1024)** (Fixture environment (test stage only, never ships)).
 
-A step is ticked ✓ when its result file exists where "Save as" says. Progress as of 2026-09-24.
+**Save every result into one folder, `ArtSource/_raw/`,** named as the step says. A step is
+ticked ✓ once its file is there (or the Art lane has filed it). Progress as of 2026-09-24.
 
 - ✓ 1. SF1: the character style (the one that matters most)
 - ✓ 2. SF2: the same style in action
@@ -17,18 +18,18 @@ A step is ticked ✓ when its result file exists where "Save as" says. Progress 
 - ✓ 6. SF6: the item icon style
 - ✓ 7. Sheet A: the 8 base parts
 - ✓ 8. Sheet B: the 7 variants
-- ▶ 9. Ground (square 1024×1024)
--   10. Backdrop far (landscape 1536×1024)
--   11. Backdrop mid (landscape 1536×1024)
--   12. Backdrop near (landscape 1536×1024)
--   13. Foreground frames (square 1024×1024)
--   14. Fire (`effect/fire`, 7 pieces)
--   15. Ice (`effect/ice`, 8 pieces)
--   16. Earth (`effect/earth`, 8 pieces)
--   17. Air (`effect/air`, 7 pieces)
--   18. Melee (`effect/melee`, 10 pieces)
--   19. Loot glow (`effect/loot`, 4 pieces, greyscale)
--   20. Feedback (`effect/feedback`, 5 pieces)
+- ✓ 9. Ground (square 1024×1024)
+- ✓ 10. Backdrop far (landscape 1536×1024)
+- ▶ 11. Backdrop mid (landscape 1536×1024)
+- ✓ 12. Backdrop near (landscape 1536×1024)
+- ✓ 13. Foreground frames (square 1024×1024)
+- ✓ 14. Fire (`effect/fire`, 7 pieces)
+- ✓ 15. Ice (`effect/ice`, 8 pieces)
+- ✓ 16. Earth (`effect/earth`, 8 pieces)
+- ✓ 17. Air (`effect/air`, 7 pieces)
+- ✓ 18. Melee (`effect/melee`, 10 pieces)
+- ✓ 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
+- ✓ 20. Feedback (`effect/feedback`, 5 pieces)
 -   21. The weapon sheet
 -   22. Batch A: armour (6 icons, 5 kept)
 -   23. Batch B: weapons (2 icons)
@@ -45,8 +46,9 @@ How to use it:
 1. Go down the list in order. Later prompts attach images you approved earlier.
 2. For each step: attach what it says, paste the prompt, and generate.
 3. If a result is close but wrong, **edit, don't re-roll**: "Keep everything the same; change only …".
-4. Save the result exactly where it says, then tell the Art lane. It reviews the image against
-   the art bible, cuts sheets into parts, and records it in the manifest.
+4. Save the result into `ArtSource/_raw/` with the name the step gives, then tell the Art lane.
+   It files it, reviews it against the art bible, cuts sheets into parts, and records it in
+   the manifest.
 
 Paths starting `Assets/` or `ArtSource/` are inside the BattleBomb folder.
 
@@ -59,7 +61,7 @@ Paths starting `Assets/` or `ArtSource/` are inside the BattleBomb folder.
 ### ✓ 1. SF1: the character style (the one that matters most)
 
 - **Attach:** `Assets/_BattleBomb/Art/Sprites/Characters/Templar Knight/PNG/PNG Sequences/Idle/Idle_000.png`
-- **Save as:** `ArtSource/_style/AI/_raw/sf1.png`  (saved)
+- **Save as:** `sf1.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -88,7 +90,7 @@ frame with a clear margin, nothing cropped, no text, no watermark, no border.
 ### ✓ 2. SF2: the same style in action
 
 - **Attach:** your approved SF1.
-- **Save as:** `ArtSource/_style/AI/_raw/sf2.png`  (saved)
+- **Save as:** `sf2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -104,7 +106,7 @@ frame with a clear margin, nothing cropped, no text, no watermark, no border.
 ### ✓ 3. SF3: a gameplay moment (the checkpoint for "not a clone")
 
 - **Attach:** your approved SF1.
-- **Save as:** `ArtSource/_style/AI/_raw/sf3.png`  (saved)
+- **Save as:** `sf3.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -135,7 +137,7 @@ Output: a single image, landscape 1536x1024, no UI, no text, no watermark, no bo
 ### ✓ 4. SF4: the four elemental climates
 
 - **Attach:** your approved SF3.
-- **Save as:** `ArtSource/_style/AI/_raw/sf4.png`  (saved)
+- **Save as:** `sf4.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -155,7 +157,7 @@ Output: a single image, landscape 1536x1024, no text or labels, no watermark, no
 ### ✓ 5. SF5: the four signature casts (D46)
 
 - **Attach:** your approved SF1.
-- **Save as:** `ArtSource/_style/AI/_raw/sf5.png`  (saved)
+- **Save as:** `sf5.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -183,7 +185,7 @@ quarter with a clear margin, no text, no labels, no watermark, no border.
 ### ✓ 6. SF6: the item icon style
 
 - **Attach:** your approved SF1.
-- **Save as:** `ArtSource/_style/AI/_raw/sf6.png`  (saved)
+- **Save as:** `sf6.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -209,7 +211,7 @@ with clear margins, no text, no labels, no watermark, no border.
 ### ✓ 7. Sheet A: the 8 base parts
 
 - **Attach:** (1) your approved SF1 image, (2) `ArtSource/rig/hero-template/guides/parts-sheet-a.png` (the grey layout guide).
-- **Save as:** `ArtSource/rig/hero-template/AI/_raw/sheet-a.png`  (saved)
+- **Save as:** `sheet-a.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/rig/hero-template/brief.md`
 
 ```
@@ -247,7 +249,7 @@ visible, no text, no labels, no watermark, no border.
 ### ✓ 8. Sheet B: the 7 variants
 
 - **Attach:** (1) your approved SF1 image, (2) the approved Sheet A result, (3) `ArtSource/rig/hero-template/guides/parts-sheet-b.png`.
-- **Save as:** `ArtSource/rig/hero-template/AI/_raw/sheet-b.png`  (saved)
+- **Save as:** `sheet-b.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/rig/hero-template/brief.md`
 
 ```
@@ -283,10 +285,10 @@ visible, no text, no labels, no watermark, no border.
 
 *Attach your approved SF3 to every prompt.*
 
-### ▶ NEXT: 9. Ground (square 1024×1024)
+### ✓ 9. Ground (square 1024×1024)
 
 - **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/ground.png`
+- **Save as:** `ground.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -301,10 +303,10 @@ colour. Match the ground colour of the attached image, but lighter and calmer.
 Output: a single image, square 1024x1024, no text, no watermark, no border.
 ```
 
-### 10. Backdrop far (landscape 1536×1024)
+### ✓ 10. Backdrop far (landscape 1536×1024)
 
 - **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-far.png`
+- **Save as:** `backdrop-far.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -320,10 +322,10 @@ attached image.
 Output: a single image, landscape 1536x1024, no text, no watermark, no border.
 ```
 
-### 11. Backdrop mid (landscape 1536×1024)
+### ▶ NEXT: 11. Backdrop mid (landscape 1536×1024)
 
 - **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-mid.png`
+- **Save as:** `backdrop-mid.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -340,10 +342,10 @@ Output: a single image, landscape 1536x1024, transparent background above the hi
 watermark, no border.
 ```
 
-### 12. Backdrop near (landscape 1536×1024)
+### ✓ 12. Backdrop near (landscape 1536×1024)
 
 - **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-near.png`
+- **Save as:** `backdrop-near.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -359,10 +361,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 border.
 ```
 
-### 13. Foreground frames (square 1024×1024)
+### ✓ 13. Foreground frames (square 1024×1024)
 
 - **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/frames.png`
+- **Save as:** `frames.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -383,10 +385,10 @@ border.
 
 *One sheet per kit.*
 
-### 14. Fire (`effect/fire`, 7 pieces)
+### ✓ 14. Fire (`effect/fire`, 7 pieces)
 
 - **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/fire.png`
+- **Save as:** `fire.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -405,10 +407,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 15. Ice (`effect/ice`, 8 pieces)
+### ✓ 15. Ice (`effect/ice`, 8 pieces)
 
 - **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/ice.png`
+- **Save as:** `ice.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -429,10 +431,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 16. Earth (`effect/earth`, 8 pieces)
+### ✓ 16. Earth (`effect/earth`, 8 pieces)
 
 - **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/earth.png`
+- **Save as:** `earth.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -452,10 +454,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 17. Air (`effect/air`, 7 pieces)
+### ✓ 17. Air (`effect/air`, 7 pieces)
 
 - **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/air.png`
+- **Save as:** `air.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -474,10 +476,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 18. Melee (`effect/melee`, 10 pieces)
+### ✓ 18. Melee (`effect/melee`, 10 pieces)
 
 - **Attach:** your approved SF2 (the knight mid-swing).
-- **Save as:** `ArtSource/effects/AI/_raw/melee.png`
+- **Save as:** `melee.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -498,10 +500,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
+### ✓ 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
 
 - **Attach:** nothing. These are plain light shapes, tinted by the game.
-- **Save as:** `ArtSource/effects/AI/_raw/loot.png`
+- **Save as:** `loot.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -518,10 +520,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### 20. Feedback (`effect/feedback`, 5 pieces)
+### ✓ 20. Feedback (`effect/feedback`, 5 pieces)
 
 - **Attach:** your approved SF1.
-- **Save as:** `ArtSource/effects/AI/_raw/feedback.png`
+- **Save as:** `feedback.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/effects/brief.md`
 
 ```
@@ -548,7 +550,7 @@ watermark, no border.
 ### 21. The weapon sheet
 
 - **Attach:** (1) your approved SF1, (2) your approved SF6.
-- **Save as:** `ArtSource/weapons/AI/_raw/sheet.png`
+- **Save as:** `sheet.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/weapons/brief.md`
 
 ```
@@ -582,7 +584,7 @@ text, no labels, no watermark, no border.
 ### 22. Batch A: armour (6 icons, 5 kept)
 
 - **Attach:** your approved SF6.
-- **Save as:** `ArtSource/icons/items/AI/_raw/batch-a.png`
+- **Save as:** `batch-a.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -607,7 +609,7 @@ with clear margins, no text, no labels, no watermark, no border.
 ### 23. Batch B: weapons (2 icons)
 
 - **Attach:** (1) your approved SF6, (2) your approved held-weapon sheet.
-- **Save as:** `ArtSource/icons/items/AI/_raw/batch-b.png`
+- **Save as:** `batch-b.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -630,7 +632,7 @@ margins, no text, no labels, no watermark, no border.
 ### 24. Batch C: pet and trinkets (3 icons)
 
 - **Attach:** your approved SF6.
-- **Save as:** `ArtSource/icons/items/AI/_raw/batch-c.png`
+- **Save as:** `batch-c.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -658,7 +660,7 @@ spaced with clear margins, no text, no labels, no watermark, no border.
 ### 25. Title theme (`music/title-theme`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/title-theme/AI/_raw/`
+- **Save as:** `title-theme.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -675,7 +677,7 @@ Settings: D major · 112 BPM · 1:30 · loop
 ### 26. Checkpoint room (`music/checkpoint-room`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/checkpoint-room/AI/_raw/`
+- **Save as:** `checkpoint-room.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -691,7 +693,7 @@ Settings: F major · 84 BPM · 2:00 · loop
 ### 27. Stage loop (`music/stage-fixture`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/stage-fixture/AI/_raw/`
+- **Save as:** `stage-fixture.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -708,7 +710,7 @@ Settings: E minor · 128 BPM · 2:30 · loop
 ### 28. Boss loop, placeholder (`music/boss-temp`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/boss-temp/AI/_raw/`
+- **Save as:** `boss-temp.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -724,7 +726,7 @@ Settings: D minor · 140 BPM · 2:00 · loop
 ### 29. Sting: stage clear (`music/sting-stage-clear`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/sting-stage-clear/AI/_raw/`
+- **Save as:** `sting-stage-clear.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -738,7 +740,7 @@ Settings: D major · about 5 seconds · no loop
 ### 30. Sting: wipe (`music/sting-wipe`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/sting-wipe/AI/_raw/`
+- **Save as:** `sting-wipe.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```
@@ -752,7 +754,7 @@ Settings: D minor · about 4 seconds · no loop
 ### 31. Sting: level up (`music/sting-level-up`)
 
 - **Attach:** nothing
-- **Save as:** `ArtSource/audio/music/sting-level-up/AI/_raw/`
+- **Save as:** `sting-level-up.mp3` (or `.wav`) in `ArtSource/_raw/`
 - *Brief:* `ArtSource/audio/music/brief.md`
 
 ```

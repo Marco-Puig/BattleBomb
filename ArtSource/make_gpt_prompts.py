@@ -1,13 +1,18 @@
 # Builds ArtSource/GPT_PROMPTS.md from the briefs, in the order the prompts must be run.
 # The briefs stay the only place a prompt is written; rerun this after changing one:
-#   python ArtSource/make_gpt_prompts.py
+#   python ArtSource/make_gpt_prompts.py          rebuild, ticking steps whose result exists
+#   python ArtSource/make_gpt_prompts.py --sort   first move results from the inbox to their folders
 import datetime
 import os
 import re
+import shutil
+import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(ROOT)
 RAW = 'ArtSource/{}/AI/_raw/{}'
+INBOX = 'ArtSource/_raw'
+INBOXES = [INBOX, 'ArtSource/_style/AI/_raw']
 
 PHASES = [
     ('Style frames', 'One chat for the whole phase. Each frame builds on the approved one before it.', [
@@ -70,11 +75,57 @@ def attach_of(body):
     return ' '.join(match.group(1).split()) if match else None
 
 
-def is_done(save_as):
+def inbox_name(save_as):
+    parts = save_as.rstrip('/').split('/')
+    return parts[-3] if save_as.endswith('/') else os.path.splitext(parts[-1])[0]
+
+
+def filed(save_as):
     path = os.path.join(REPO, save_as)
     if save_as.endswith('/'):
         return os.path.isdir(path) and any(os.scandir(path))
     return os.path.exists(path)
+
+
+def in_inbox(save_as):
+    stem = inbox_name(save_as)
+    for box in INBOXES:
+        folder = os.path.join(REPO, box)
+        if not os.path.isdir(folder):
+            continue
+        for entry in os.scandir(folder):
+            if entry.is_file() and os.path.splitext(entry.name)[0] == stem:
+                return entry.path
+    return None
+
+
+def is_done(save_as):
+    return filed(save_as) or in_inbox(save_as) is not None
+
+
+def sort_inbox():
+    for _, _, entries in PHASES:
+        for _, _, _, save_as in entries:
+            found = in_inbox(save_as)
+            if filed(save_as) or not found:
+                continue
+            if save_as.endswith('/'):
+                dest = os.path.join(REPO, save_as, os.path.basename(found))
+            else:
+                dest = os.path.join(REPO, os.path.dirname(save_as), inbox_name(save_as) + os.path.splitext(found)[1])
+            if os.path.normcase(os.path.abspath(found)) == os.path.normcase(os.path.abspath(dest)):
+                continue
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            shutil.move(found, dest)
+            print('filed', os.path.relpath(found, REPO), '->', os.path.relpath(dest, REPO))
+
+
+def save_line(save_as, done):
+    if save_as.endswith('/'):
+        name = '`%s.mp3` (or `.wav`)' % inbox_name(save_as)
+    else:
+        name = '`%s`' % os.path.basename(save_as)
+    return '- **Save as:** %s in `%s/`%s' % (name, INBOX, '  (saved)' if done else '')
 
 
 def prompt_of(body):
@@ -83,6 +134,9 @@ def prompt_of(body):
         raise SystemExit('No prompt block')
     return match.group(1)
 
+
+if '--sort' in sys.argv:
+    sort_inbox()
 
 steps = []
 for title, note, entries in PHASES:
@@ -109,7 +163,8 @@ out = [
     '',
     where,
     '',
-    'A step is ticked ✓ when its result file exists where "Save as" says. Progress as of %s.' % (
+    '**Save every result into one folder, `ArtSource/_raw/`,** named as the step says. A step is',
+    'ticked ✓ once its file is there (or the Art lane has filed it). Progress as of %s.' % (
         datetime.date.today().isoformat()),
     '',
 ]
@@ -122,8 +177,9 @@ out += [
     '1. Go down the list in order. Later prompts attach images you approved earlier.',
     '2. For each step: attach what it says, paste the prompt, and generate.',
     "3. If a result is close but wrong, **edit, don't re-roll**: \"Keep everything the same; change only …\".",
-    '4. Save the result exactly where it says, then tell the Art lane. It reviews the image against',
-    '   the art bible, cuts sheets into parts, and records it in the manifest.',
+    '4. Save the result into `ArtSource/_raw/` with the name the step gives, then tell the Art lane.',
+    '   It files it, reviews it against the art bible, cuts sheets into parts, and records it in',
+    '   the manifest.',
     '',
     'Paths starting `Assets/` or `ArtSource/` are inside the BattleBomb folder.',
     '',
@@ -141,7 +197,7 @@ for i, (title, note, brief, full_heading, body, attach_override, save_as, done) 
         '### %s%d. %s' % (status, i + 1, full_heading),
         '',
         '- **Attach:** ' + attach,
-        '- **Save as:** `' + save_as + '`' + ('  (saved)' if done else ''),
+        save_line(save_as, done),
         '- *Brief:* `ArtSource/' + brief + '`',
         '',
         '```',

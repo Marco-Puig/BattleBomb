@@ -64,17 +64,19 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Michael finished GPT steps 1–8** (SF1–SF6, Sheets A and B) on 2026-09-24. All reviewed: the style
-holds, SF3 passes "not a clone", no style-block change needed. The sheets were saved in
-`_style/AI/_raw/`; I moved them to `rig/hero-template/AI/_raw/`.
-**Knight cut into 15 parts** by `ArtSource/rig/hero-template/cut_parts.py` →
-`rig/hero-template/AI/hero-template-*__ai_v1.png`. The preview is at `AI/_raw/assembled-preview.png`.
-The sheet drew the body too big (at head scale: torso 1.7x, legs 2.6x), so each part is **fitted
-to its template size**; the canvases were widened via `SKIN_EXTENTS` in make_guides.py (head
-1440×1280, arm 352×448, hand 320×320).
-**GPT_PROMPTS.md now tracks progress** (✓ when the Save-as file exists; ▶ marks the next step).
-Next for Michael: step 9, the fixture ground.
-**Sent as DONE; do not touch until COMMITTED** (list in the DONE message).
+**Michael has done GPT steps 1–20 except 11** (backdrop mid). 19 of 31 are done; the file says
+the next step is 11. His saves keep landing in `_style/AI/_raw/`, so there is now **one
+inbox, `ArtSource/_raw/`** (git-ignored by the `ArtSource/**/_raw/` rule).
+`make_gpt_prompts.py --sort` files inbox results (and anything in `_style/AI/_raw/` with a
+step's name) into their folders; ticks count either place. "backdrop-mid.png" was really the
+far backdrop, so I renamed it.
+**Processed:** `environments/fixture/prepare.py` (seamless strips, ground levelled to 73–84%,
+frames cut into a and b) → 5 `fixture-*__ai_v1.png`; `ArtSource/cut_sheets.py` (grid cutter;
+strays in empty cells join the nearest piece; `RECTS` for soft glows) → 49 effect pieces.
+Manifest: 7 effect kits + environment/fixture are now `ai-draft`.
+**Trap for icons Batch A:** the leather helmet is drawn but discarded. `None` in cut_sheets means
+"empty, merge strays", so a discarded cell needs a separate 'skip' marker before adding the icon jobs.
+**Sent as DONE; do not touch until COMMITTED.**
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
 `python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
@@ -235,6 +237,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — GPT steps 9–20 processed (step 11 missing): single inbox, sort, fixture prepare, 49 effect pieces; DONE sent.
 - 2026-09-24 — Reviewed GPT steps 1–8; the prompt file tracks progress; knight cut into 15 parts + preview; fixture backdrops made building-free; DONE sent.
 - 2026-09-24 — Proportions switched to the Templar's (Michael); hero template v1 (15 parts); bible, SF1, parts sheets, guides, and queue rebuilt; DONE sent.
 - 2026-09-24 — GPT_PROMPTS run order aligned to ROADMAP section 5.2 (env before effects; weapons before icons); DONE sent.

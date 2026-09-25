@@ -9,7 +9,7 @@ only sword-class item.
 M9 needs the knight holding his knife, while nothing in M9 waits on icons. Icon Batch B is then
 drawn from this sheet, so each icon matches the weapon in hand.
 
-**Pipeline:** save the sheet into `ArtSource/weapons/AI/_raw/sheet.png`. The Art lane cuts each
+**Pipeline:** save the sheet into the inbox as `ArtSource/_raw/sheet.png`. The Art lane cuts each
 piece onto its canvas with the grip on the pivot, as `weapons/hunting-knife/AI/hunting-knife__ai_v1.png`,
 `weapons/hunting-bow/AI/hunting-bow__ai_v1.png` and `weapons/hunting-bow/AI/hunting-bow-arrow__ai_v1.png`.
 

@@ -6,8 +6,8 @@ What each effect does, how long it lasts, and its rules: `docs/art/EFFECTS.md`.
 
 **Before you start:** SF5 (the four casts) must be approved. The element kits attach it.
 
-**Pipeline:** save each sheet into `ArtSource/effects/AI/_raw/` (`fire.png`, `ice.png` and so
-on). The Art lane cuts each piece onto its canvas (EFFECTS.md §6) as
+**Pipeline:** save each sheet into the inbox `ArtSource/_raw/` (`fire.png`, `ice.png` and so
+on). The Art lane cuts each piece onto its canvas (EFFECTS.md §6) with `ArtSource/cut_sheets.py`, as
 `effects/<kit>/AI/<kit>-<piece>__ai_v1.png`, and sends back a contact sheet for approval.
 
 **The shared rules, already written into each prompt:** facing and moving right; outlines only

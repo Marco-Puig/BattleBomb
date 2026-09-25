@@ -15,7 +15,8 @@ text-to-music tool. Each also carries a short **tags** line for tools with a "st
 and a **settings** line for tools with sliders (AIVA: key, tempo, length). If ChatGPT gains music,
 paste the description as is.
 
-**Pipeline:** save each result into `ArtSource/audio/music/<key>/AI/_raw/` (WAV if offered,
+**Pipeline:** save each result into the inbox `ArtSource/_raw/` as `<key>.mp3` (the Art lane files it under
+`ArtSource/audio/music/<key>/AI/_raw/`) (WAV if offered,
 otherwise MP3), and keep the tool's name. The Art lane trims the loop points and files it as
 `<key>__ai_v1.wav`.
 

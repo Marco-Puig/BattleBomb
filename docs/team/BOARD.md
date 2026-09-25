@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | **waiting** | Task 12 code in; reviews running | Michael: restart the Unity bridge (Window → Pipeline → Stop Server, then Start Server) |
+| Builder | Builder | working | Task 12 — gates after the bridge restart | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -32,8 +32,6 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-0. **Now: restart the Unity bridge** — Window → Pipeline → Stop Server, then Start Server. A timed-out
-   test run left it jammed; the Builder cannot run tests until it is restarted.
 1. **The World session** — open in the World lane's session, at question 1 (the goal).
 2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
@@ -158,6 +156,7 @@ None.
 
 ## Log
 
+- 2026-09-25 — Michael restarted the Unity bridge; the Builder continues Task 12.
 - 2026-09-25 — Task 12 code in; the Unity bridge jammed after a synchronous test run timed out.
   Waiting on Michael to restart it.
 - 2026-09-24 — G10 (8502289), **G11 committed**: the chest and hero footers are badge rows in the player's

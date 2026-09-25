@@ -42,6 +42,41 @@ Nothing (bridge restarted by Michael 2026-09-25 08:16).
 
 ## Current state
 
+**Groundwork G13b — started (09:15, 2026-09-25).** G13 committed (`7c3014f`), deviations A–B
+accepted. Orchestrator's task (no plan text — I design it): (1) the SACK/HERO strip is built
+outside the sack panel so Tabs focus shows on the Hero tab (couch); (2) the item popover clears the
+compare panel — rows 2 and 3 must show Sell and Lock in solo and couch (SetAsLastSibling or flip
+above the cell, whichever the code favours). Same gates; `DONE` as G13b. Finding 3 (>40 stacks) =
+**F5** on the backlog after Groundwork — grid scrolling; do NOT clamp the cursor as a stopgap; say if
+F5 is bigger than a normal task. Then Task 14.
+**G13b progress (09:45):** code in, one file (`ChestScreen.Visuals.cs`): `gridArea.SetAsLastSibling()`
+after compare/junk; split hero panel inside a "Body" rect inset 42 from the top; SACK/HERO tabs on
+a root "TabStrip" (same insets as the sack pad), built after the hero, before the prompt row;
+`SetTab(tab, on, cursor)` — Bone when `Focus == Tabs` (the chips' idiom). Live (scratchpad
+`popover_row2.cs`/`popover_row3.cs`): couch + solo, rows 2 and 3, Sell/Lock drawn over by nothing;
+moving CompareArea last reproduced the bug in the same check. Couch Hero tab: strip visible, HERO
+Bone, hero title 12 units under the strip. Captures taken. EditMode 680/680. PlayMode running;
+combined spec+quality review running.
+**Review (10:05) "Yes with fixes":** finding 1 (regression) — split hero doll is 42 shorter, so a
+bottom-row worn piece's 5-row upgrade list slid under the opaque Stats panel → `doll.SetAsLastSibling()`
+at the end of the HeroPanel ctor. **Found while verifying (pre-existing, fixed, flag as deviation):**
+split on the Hero tab the worn popover NEVER showed — `RefreshWornPopover` is reached only via
+RefreshSack, which Refresh skips there; A on worn gear opened an invisible list and Upgrade spent
+coin on an invisible row. Fix: `if (!sack) RefreshWornPopover();` in Refresh's hero branch. Live:
+menu [Upgrade][Take off][Lock] shows; Mythical Steel Boots (4 affixes) upgrade list 5 rows, none
+drawn over; Stats-last mutation reproduces the overlap. EditMode 680/680; PlayMode + re-review
+running. Reviewer also noted (pre-existing, board): split Hero tab hides the close ✕ with the
+sack half — no visible pointer/touch way out there.
+**Re-review 1 (10:15):** my new call showed a stale worn menu on Stats/Tabs (`OnWorn` stays true) →
+`RefreshWornPopover` now hides unless Focus is Menu or Upgrade (solo unchanged: its only other
+state there is Loadout). Live walk: Loadout hidden → A Menu SHOWN → B hidden → Stats hidden → Tabs
+hidden → Upgrade SHOWN, 5 rows clear. **Re-review 2: Approved.** EditMode 680/680, PlayMode
+28/28 on the final code. `DONE` sent — waiting for `COMMITTED` before Task 14.
+**Task 14 prep (checked 09:10):** D57 "X does nothing at the shop rack" holds — Buy mode focuses
+`ChestFocus.Stock` and `RunOption` returns unless Focus == Grid. Still to check: "Start leaves any
+screen outright" vs the results screen (only Confirm leaves it; Start/Esc do nothing there) and the
+front door (Start = title only — already amended); results bullet should gain the ¾ s dwell.
+
 **Groundwork Task 13 — started (08:40, 2026-09-25).** G12 committed (`ad189cb`), deviations A–G
 accepted. Brief: `task13.md` + `task13_extra.md` (solo filter-row guard + test). Phase 1 = the solo
 test (red); phase 2 = plan Steps 1–2 + the guard. Then: recompile, EditMode 680 (async/assembly),
@@ -406,6 +441,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-25 10:20 — **G13b complete** (tab strip on the screen + focus cursor; sack and hero
+  popovers draw over the panels they overhang; couch Hero-tab worn menu now shows at all):
+  EditMode 680/680, PlayMode 28/28, review approved. `DONE` sent. G13 committed as `7c3014f`.
 - 2026-09-25 09:05 — **G13 complete** (chips clear the grid in couch co-op: 32 units, was −10; solo
   filter-row guard): EditMode 680/680, PlayMode 28/28, spec ✅, quality Yes. `DONE` sent. G12
   committed as `ad189cb`.

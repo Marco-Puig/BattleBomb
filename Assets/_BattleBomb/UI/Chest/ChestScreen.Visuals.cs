@@ -116,6 +116,10 @@ namespace BattleBomb.UI.Chest
                 _junkBar = new JunkBar(_junkArea);
             }
 
+            // Last in the pad, so the popover draws over the compare panel it overhangs from the
+            // lower rows; under it, a third-row item's menu lost Sell and Lock.
+            gridArea.SetAsLastSibling();
+
             // ── Hero ─────────────────────────────────────────────────────────────────
             // Not at a shopkeeper (Michael, 2026-08-23). The counter is about their rack, not
             // about the player's doll, so the free half is left to the world and the camera puts
@@ -129,12 +133,32 @@ namespace BattleBomb.UI.Chest
                 // frames the hero to fill this half, so there is little world left to dim and any
                 // scrim would only sit between the player and their own character. Split has no
                 // camera move to show through, so it keeps the board.
+                RectTransform heroBody = _heroRoot;
                 if (_split)
                 {
                     UiBuild.Box("Board", _heroRoot, UiBuild.Board);
+
+                    // Under the tab strip, as the sack's head is.
+                    heroBody = UiBuild.Rect("Body", _heroRoot);
+                    UiBuild.Stretch(heroBody);
+                    heroBody.offsetMax = new Vector2(0f, -42f);
                 }
 
-                _heroPanel = new HeroPanel(_heroRoot);
+                _heroPanel = new HeroPanel(heroBody);
+            }
+
+            // The sack/hero strip belongs to the screen, not to a half: split shows one half at a
+            // time, and the strip that says which, and carries the cursor between them, has to
+            // stay up on both.
+            if (HasTabs)
+            {
+                RectTransform strip = UiBuild.Rect("TabStrip", root);
+                strip.anchorMin = Vector2.zero;
+                strip.anchorMax = Vector2.one;
+                strip.offsetMin = new Vector2(30f, 26f);
+                strip.offsetMax = new Vector2(-27f, -26f);
+                _tabSack = BuildTab(strip, "SACK", 0f);
+                _tabHero = BuildTab(strip, "HERO", 132f);
             }
 
             // The hint row belongs to the screen, not to a half: split co-op hides the sack half
@@ -147,12 +171,6 @@ namespace BattleBomb.UI.Chest
         /// <summary>Title, the wallet, and how full the sack is.</summary>
         private void BuildSackHead(RectTransform pad)
         {
-            if (HasTabs)
-            {
-                _tabSack = BuildTab(pad, "SACK", 0f);
-                _tabHero = BuildTab(pad, "HERO", 132f);
-            }
-
             _sackTitle = UiBuild.Label("Title", pad, "ITEM SACK", 38, UiBuild.Bone,
                 TextAnchor.UpperLeft, UiBuild.Display);
             UiBuild.Pin(_sackTitle.rectTransform, 0f, HasTabs ? 42f : 0f, 420f, 44f);
@@ -411,8 +429,9 @@ namespace BattleBomb.UI.Chest
             {
                 _sackRoot.gameObject.SetActive(sack);
                 _heroRoot.gameObject.SetActive(!sack);
-                SetTab(_tabSack, sack);
-                SetTab(_tabHero, !sack);
+                bool onStrip = _nav.Focus == ChestFocus.Tabs;
+                SetTab(_tabSack, sack, onStrip && sack);
+                SetTab(_tabHero, !sack, onStrip && !sack);
             }
 
             if (sack)
@@ -423,6 +442,14 @@ namespace BattleBomb.UI.Chest
             if (_heroPanel != null && (!HasTabs || !sack))
             {
                 RefreshHero();
+
+                // The worn piece's popover is otherwise refreshed from the sack's, which split
+                // skips on the hero tab — so there its verbs and upgrade list never came up, and A
+                // spent coin on a row nobody could see.
+                if (!sack)
+                {
+                    RefreshWornPopover();
+                }
             }
 
             if (_flash.Length > 0)
@@ -558,18 +585,20 @@ namespace BattleBomb.UI.Chest
             return string.Empty;
         }
 
-        private void SetTab(Text tab, bool on)
+        /// <summary>A tab's look: brass when it is the open one, bone when the cursor is on it —
+        /// the filter chips' two states, so the strip reads the same way they do.</summary>
+        private void SetTab(Text tab, bool on, bool cursor = false)
         {
             if (tab == null)
             {
                 return;
             }
 
-            tab.color = on ? UiBuild.OnBrass : UiBuild.Muted;
+            tab.color = on || cursor ? UiBuild.OnBrass : UiBuild.Muted;
             var back = tab.transform.parent.GetComponent<Image>();
             if (back != null)
             {
-                back.color = on ? UiBuild.Brass : UiBuild.BoardDeep;
+                back.color = cursor ? UiBuild.Bone : on ? UiBuild.Brass : UiBuild.BoardDeep;
             }
         }
 
@@ -749,7 +778,8 @@ namespace BattleBomb.UI.Chest
             }
 
             ItemInstance worn = WornItem;
-            if (worn.IsEmpty || !_nav.OnWorn || _nav.Focus == ChestFocus.Loadout)
+            if (worn.IsEmpty || !_nav.OnWorn
+                || (_nav.Focus != ChestFocus.Menu && _nav.Focus != ChestFocus.Upgrade))
             {
                 _heroPanel.Popover.Hide();
                 return;

@@ -239,6 +239,10 @@ namespace BattleBomb.UI.Chest
                 UiBuild.Stretch(value.rectTransform);
                 _totalValue.Add(value);
             }
+
+            // Last, so a worn piece's popover draws over the stats panel it can overhang from the
+            // bottom row, as the sack's does over its compare panel.
+            doll.SetAsLastSibling();
         }
 
         /// <summary>The verb list that floats over a worn slot.</summary>

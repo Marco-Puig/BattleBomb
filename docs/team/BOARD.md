@@ -62,7 +62,7 @@ What is waiting on Michael, in priority order:
 11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
-## M8 — ready to build after Groundwork
+## M8 — Plan 1 underway
 
 Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one
 before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F and the close-out.
@@ -73,6 +73,20 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920).
+- **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
+  - **89:** Listen before `Role = Host`; a busy port shows "Port 7777 is busy". The input buffer
+    drains back to its target of 2 (HANDOFF-M8) and merges past the documented 6; a starved
+    remote goes neutral after 15 steps (0.25 s); `Next` is idempotent for a repeated host frame
+    (a paused host samples every render frame). All paper numbers in `NetProtocol`, tuned at 96.
+  - **92:** bound or split the Events batch (up to 512 events × 8 KB drop JSON can pass the frame
+    limit). The flood path acknowledges frames it dropped — fix before Plan 3's prediction reads
+    `AckGuestFrame`.
+  - **94:** `HoldForPeer` floods the buffer while the guest keeps sending — release the stream when
+    the hold clears.
+  - **Plan 2 (Netcode):** unregistering a source by id can remove a newer source under the same id
+    (both `RemoteCommandSource` and `InputSystemCommandSource`) — bites on D61's solo carry-on and
+    rejoin. Unregister only when `TryGet` returns this source.
 
 ## Builder backlog — after Groundwork, before M8
 
@@ -188,6 +202,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 88 committed (5fd0920): the input buffer and the remote command source.
+  EditMode 736, PlayMode 35. Seven gaps found against the plan; calls recorded under M8.
 - 2026-09-25 — Task 87 committed (4f42e0c): the transport seam — loopback (with the socket's frame
   limit), lag simulator, local socket. EditMode 723. Busy-port handling lands in 89.
 - 2026-09-25 — **M8 begins.** Task 86 committed (5e586a4): the wire in Core/Net — bytes, the stick,

@@ -327,6 +327,11 @@ namespace BattleBomb.UI.Chest
             || (_nav.OnWorn && (_nav.Focus == ChestFocus.Menu || _nav.Focus == ChestFocus.Upgrade));
 
         private RectTransform _filterRow;
+        private Image _scrollTrack;
+        private Image _scrollThumb;
+
+        private const float ScrollBarWidth = 4f;
+
         private RectTransform _rackRoot;
         private readonly List<RackRow> _rackRows = new List<RackRow>();
         private Text _rackEmpty;
@@ -346,6 +351,12 @@ namespace BattleBomb.UI.Chest
                     _cells.Add(new ItemCell(_gridRoot, $"Cell {row}x{column}"));
                 }
             }
+
+            // How far down the sack the view is (F5). Drawn only when the sack has more rows than
+            // the grid shows — a player who cannot see the rest has to be told it is there.
+            _scrollTrack = UiBuild.Box("ScrollTrack", _gridRoot, UiBuild.Well);
+            _scrollThumb = UiBuild.Box("ScrollThumb", _scrollTrack.rectTransform, UiBuild.Brass);
+            _scrollTrack.gameObject.SetActive(false);
         }
 
         /// <summary>
@@ -379,6 +390,9 @@ namespace BattleBomb.UI.Chest
             float blockWidth = Columns * size + (Columns - 1) * gap;
             float left = (rect.width - blockWidth) * 0.5f;
 
+            float blockHeight = GridRows * size + (GridRows - 1) * gap;
+            UiBuild.Pin(_scrollTrack.rectTransform, left + blockWidth + gap, 0f, ScrollBarWidth, blockHeight);
+
             for (int i = 0; i < _cells.Count; i++)
             {
                 int row = i / Columns;
@@ -401,6 +415,7 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectVisible();
+            _nav.KeepCursorInView(Layout());
             Inventory inventory = _bag.Inventory;
 
             bool buying = Buying;
@@ -638,17 +653,19 @@ namespace BattleBomb.UI.Chest
             RefreshFilters();
 
             float cellSize = LayOutGrid();
+            int first = _nav.TopRow * Columns;
             for (int cell = 0; cell < _cells.Count; cell++)
             {
-                if (cell >= _visible.Count)
+                int index = first + cell;
+                if (index >= _visible.Count)
                 {
                     _cells[cell].SetEmpty();
                     continue;
                 }
 
-                ItemStack stack = items[_visible[cell]];
-                bool selected = cell == _nav.Cursor && _nav.Focus == ChestFocus.Grid;
-                bool pending = _visible[cell] == _nav.PendingCombine;
+                ItemStack stack = items[_visible[index]];
+                bool selected = index == _nav.Cursor && _nav.Focus == ChestFocus.Grid;
+                bool pending = _visible[index] == _nav.PendingCombine;
 
                 _cells[cell].Set(
                     stack.Item,
@@ -662,6 +679,8 @@ namespace BattleBomb.UI.Chest
                     pending,
                     cellSize);
             }
+
+            RefreshScrollBar();
 
             int bagIndex = _visible.Count > 0 ? _visible[Mathf.Clamp(_nav.Cursor, 0, _visible.Count - 1)] : -1;
             if (!_nav.OnWorn)
@@ -732,10 +751,29 @@ namespace BattleBomb.UI.Chest
             _popover.Show(item, _popLabels, _popPrices, _nav.Action, GridAnchor(), _cellSize, GridWidth());
         }
 
+        /// <summary>Where the cursor's cell is drawn: the view has scrolled
+        /// <see cref="ChestNavigation.TopRow"/> rows past the sack's first (F5).</summary>
         private Vector2 GridAnchor()
         {
-            int cursor = Mathf.Clamp(_nav.Cursor, 0, Mathf.Max(0, _cells.Count - 1));
-            return _cells.Count > 0 ? _cells[cursor].AnchoredPosition : Vector2.zero;
+            int cell = Mathf.Clamp(_nav.Cursor - _nav.TopRow * Columns, 0, Mathf.Max(0, _cells.Count - 1));
+            return _cells.Count > 0 ? _cells[cell].AnchoredPosition : Vector2.zero;
+        }
+
+        /// <summary>The thumb's length is the share of the sack's rows on screen; its offset, how
+        /// far the view has scrolled.</summary>
+        private void RefreshScrollBar()
+        {
+            int rows = (_visible.Count + Columns - 1) / Columns;
+            bool scrolls = rows > GridRows;
+            _scrollTrack.gameObject.SetActive(scrolls);
+            if (!scrolls)
+            {
+                return;
+            }
+
+            float track = _scrollTrack.rectTransform.rect.height;
+            UiBuild.Pin(_scrollThumb.rectTransform, 0f, track * _nav.TopRow / rows,
+                ScrollBarWidth, track * GridRows / rows);
         }
 
         private float GridWidth() => _gridRoot != null ? _gridRoot.rect.width : 900f;

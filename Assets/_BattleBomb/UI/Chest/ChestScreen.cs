@@ -148,7 +148,7 @@ namespace BattleBomb.UI.Chest
 
         private ChestLayout Layout() => new ChestLayout(
             _visible.Count, Columns, FilterNames.Length, _menu.Count, _upgradeTargets.Count,
-            _stock.Count, IsShop, JunkRankCeiling, HeroBeside);
+            _stock.Count, IsShop, JunkRankCeiling, HeroBeside, GridRows);
 
         internal void Bind(
             PlayerInventory bag, Gameplay.Characters.CharacterActor sheetSource,
@@ -511,7 +511,10 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectVisible();
-            if (_visible.Count == 0)
+
+            // Only ever the item drawn under the cursor (F5): X sells instantly with no undo, so a
+            // cursor the view has not caught up with sells nothing.
+            if (_visible.Count == 0 || !_nav.IsCursorDrawn(Layout()))
             {
                 return;
             }
@@ -541,7 +544,7 @@ namespace BattleBomb.UI.Chest
             }
 
             CollectVisible();
-            if (_visible.Count > 0)
+            if (_visible.Count > 0 && _nav.IsCursorDrawn(Layout()))
             {
                 ToggleLockAt(_visible[_nav.Cursor]);
             }

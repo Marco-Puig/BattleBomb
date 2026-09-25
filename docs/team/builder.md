@@ -134,6 +134,29 @@ F5.1 phase 1 verbatim; red = compile errors (no `rows`, TopRow, KeepCursorInView
 **editor not at a clean point until phase 2 lands**. Phase 2 dispatched (14:50).
 **F5.1 code in (15:00):** diff = plan verbatim. Recompiled clean (clean point again).
 ChestNavigationTests 34/34; EditMode 694/694. Review running; then DONE, then F5.2.
+**F5.1 DONE sent (15:10)** — review Ready: Yes. **F5.2 phase 1 dispatched** (the 45-stack PlayMode
+case + helpers in LootLoopSmokeTests; expect red "Expected < "Cell 4x0" > But was <empty>").
+**F5.1 COMMITTED `2610ef0`.** Orchestrator: F5.2's live check must include one move that skips
+`Move` — a combine's reroll past 40 (RecollectOnto → SelectCell) or a tab switch back to the sack —
+to confirm Refresh's KeepCursorInView catches it.
+**F5.2 red confirmed (15:25):** test + helpers verbatim; the new case fails "…0 elements… Missing:
+< "Cell 4x0" >". Phase 2 dispatched.
+**F5.2 code in + live check done (16:15):** diff = plan verbatim; LootLoopSmokeTests 15/15;
+EditMode 694/694. Live (probe `<scratchpad>/f5_probe.cs`): couch 45 → TopRow 1 at row 5, ring
+Cell 4x0, thumb 71/356 of 427, menu y −435 = under Cell 4x0; couch 200 → TopRow 20, ring Cell
+4x7, thumb flush at the bottom, menu under Cell 4x7; **skip-Move path**: RB→Hero→RB→Sack (SwitchTab
+resets cursor 0 while TopRow 20) → the repaint pulls TopRow to 0, ring Cell 0x0; solo 200 → TopRow
+1 at row 5; **shop Sell mode** 200 → TopRow 1, bar clear of the junk bar; **X guard**: cursor 199
+before a repaint (TopRow 1) → X sold nothing; after the repaint (TopRow 20) → X sold exactly it.
+A needs no guard (Confirm repaints → scrolls to the cursor before anchoring). Captures taken.
+Trap: CloseScreen + OpenScreen in one eval leaves the old screen alive to frame end — find the new
+one in a later eval. Full PlayMode next (expect 35), then review, DONE.
+**Gates + review (16:45):** PlayMode 35/35. Review "Yes with fixes": the menu check compared only y,
+and the old bug (cell 39 = Cell 4x7) is on the same row → added an x assertion (deviation — the
+plan's test was verbatim). Mutation-proved: old GridAnchor → "menu opened in another column,
+expected 69.1 but was 594.2"; fix restored (production diff byte-identical to the reviewed one).
+LootLoopSmokeTests 15/15 after. **F5.2 DONE sent (16:55).** Note for item 12 (from the review): "identical values stack" holds
+only for potions — gear never stacks; Equals still finds the right stack via the affix array ref.
 Board candidate from F1's review: `TargetRegistry.Ordered` hands out its live list — any future
 mid-walk despawn (self-destructing enemy, a reaction that despawns what it kills) brings the skip
 back in StepEnemies/StepStatuses.

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Players;
@@ -280,6 +281,54 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(_bag.Wallet.Balance, Is.GreaterThan(coins), "The sale paid nothing.");
         }
 
+        /// <summary>
+        /// F5: past the fortieth stack the grid scrolls. The cursor's item is drawn — in the last
+        /// row, and only there — its menu opens on it, and X sells exactly it. Before F5 the cursor
+        /// walked into cells that were never drawn and the menu opened on cell 39.
+        /// </summary>
+        [UnityTest]
+        public IEnumerator Past_the_fifth_row_the_grid_scrolls_and_every_verb_lands_on_what_is_drawn()
+        {
+            for (int i = 0; _bag.Inventory.Items.Count < 45 && i < 90; i++)
+            {
+                _bag.Take(_driver.RollDebugItem(KnifeDefinitionId, 1.5f + i * 0.05f));
+            }
+
+            Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(45), "The rolls did not land as 45 separate stacks.");
+
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            for (int row = 0; row < 5; row++)
+            {
+                yield return Push(Vector2.down);
+            }
+
+            Component screen = OpenChestScreen();
+            Assert.That(CursorCells(screen), Is.EqualTo(new[] { "Cell 4x0" }),
+                "Five rows down, the cursor's item must be drawn in the grid's last row, and only there.");
+
+            ItemInstance underCursor = _bag.Inventory.Items[40].Item;
+
+            yield return Press(CommandButtons.Confirm);
+            RectTransform popover = Named(screen, "Popover", "GridArea");
+            RectTransform cell = Named(screen, "Cell 4x0", "Grid");
+            Assert.That(popover.anchoredPosition.y,
+                Is.EqualTo(cell.anchoredPosition.y - cell.sizeDelta.y - 8f).Within(0.5f),
+                "The item's menu did not open under the item it names.");
+            Assert.That(popover.anchoredPosition.x, Is.EqualTo(cell.anchoredPosition.x).Within(0.5f),
+                "The item's menu opened in another column.");
+
+            yield return Press(CommandButtons.Back);
+            yield return Press(CommandButtons.Option);
+            Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(44), "X sold nothing.");
+            Assert.That(Holds(_bag.Inventory.Items, underCursor), Is.False,
+                "X sold something other than the item drawn under the cursor.");
+        }
+
         [UnityTest]
         public IEnumerator A_stick_held_through_the_opening_press_does_not_move_the_cursor()
         {
@@ -513,6 +562,60 @@ namespace BattleBomb.Tests.PlayMode
             return -1;
         }
 
+        private static Component OpenChestScreen()
+        {
+            System.Type type = typeof(ChestScreenHost).Assembly.GetType("BattleBomb.UI.Chest.ChestScreen");
+            Object[] found = Object.FindObjectsByType(type, FindObjectsInactive.Exclude);
+            Assert.That(found, Has.Length.EqualTo(1), "Expected exactly one open chest screen.");
+            return (Component)found[0];
+        }
+
+        /// <summary>The grid cells drawing the cursor's ring — where the screen itself shows the
+        /// cursor. The screen is internal to the UI assembly, so this reads it by reflection.</summary>
+        private static List<string> CursorCells(Component screen)
+        {
+            const BindingFlags Hidden = BindingFlags.Instance | BindingFlags.NonPublic;
+            var cells = (IList)screen.GetType().GetField("_cells", Hidden).GetValue(screen);
+            var names = new List<string>();
+            foreach (object cell in cells)
+            {
+                var ring = (Image)cell.GetType().GetField("_focusRing", Hidden).GetValue(cell);
+                if (ring.enabled)
+                {
+                    names.Add(((RectTransform)cell.GetType().GetProperty("Root", Hidden).GetValue(cell)).name);
+                }
+            }
+
+            return names;
+        }
+
+        private static RectTransform Named(Component screen, string name, string parent)
+        {
+            foreach (RectTransform rect in screen.GetComponentsInChildren<RectTransform>(false))
+            {
+                if (rect.name == name && rect.parent != null && rect.parent.name == parent)
+                {
+                    return rect;
+                }
+            }
+
+            Assert.Fail($"No active '{name}' under '{parent}' on the chest screen.");
+            return null;
+        }
+
+        private static bool Holds(IReadOnlyList<ItemStack> items, ItemInstance item)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i].Item.Equals(item))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// One deliberate press, held long enough for the simulation to actually see it.
         ///
@@ -525,6 +628,15 @@ namespace BattleBomb.Tests.PlayMode
         private IEnumerator Press(CommandButtons button)
         {
             _input.Set(Vector2.zero, button);
+            yield return SimulationFrames(3);
+            _input.Release();
+            yield return SimulationFrames(2);
+        }
+
+        /// <summary>One push of the stick: a single menu step, released well before the repeat.</summary>
+        private IEnumerator Push(Vector2 direction)
+        {
+            _input.Set(direction, CommandButtons.None);
             yield return SimulationFrames(3);
             _input.Release();
             yield return SimulationFrames(2);

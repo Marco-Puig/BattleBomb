@@ -36,8 +36,9 @@ namespace BattleBomb.Gameplay.Players
         private SeatInput _input;
         private GameSession _session;
         private bool _lookedForSession;
+        private int _speakAs = -1;
 
-        public PlayerId PlayerId => new PlayerId(_seat);
+        public PlayerId PlayerId => new PlayerId(_speakAs >= 0 ? _speakAs : _seat);
 
         public InputFamily Family => _input != null ? _input.Family : InputFamily.Keyboard;
 
@@ -52,6 +53,18 @@ namespace BattleBomb.Gameplay.Players
 
             _input.Own(Seats());
             return _input.Sample(frame);
+        }
+
+        /// <summary>
+        /// Online (HANDOFF-M8 planning decision 18): the device rules of one seat, speaking as
+        /// another player. The guest's machine gives its one local player seat 0's rule — every
+        /// device is theirs — while they are Player 2 in the host's game. Called before
+        /// <c>OnEnable</c> (the binder runs first), because the seat's controls are built there.
+        /// </summary>
+        internal void UseSeat(int seat, int speakAs)
+        {
+            _seat = seat;
+            _speakAs = speakAs;
         }
 
         private void OnEnable()

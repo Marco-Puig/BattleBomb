@@ -84,6 +84,7 @@ namespace BattleBomb.UI.Frontend
             _session = GameSession.FindOrCreate();
             _session.Chapters = _live.ToArray();
             _session.Tiers = _tiers;
+            _session.Roster = _roster;
 
             LoadSave();
             _selection = new StageSelection(

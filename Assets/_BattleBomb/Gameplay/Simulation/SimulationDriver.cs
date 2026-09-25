@@ -90,6 +90,10 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<EnemyActor> _dying = new List<EnemyActor>();
 
         private SimulationClock _clock;
+
+        /// <summary>The guest's driver (D58): it samples and sends its own player's commands and
+        /// draws what the host sends, and never runs <see cref="RunStep"/>.</summary>
+        private bool _replica;
         private AttemptCountdown _attempt;
         private DeterministicRandom _lootRng;
         private DeterministicRandom _combatRng;
@@ -195,6 +199,16 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Raised once per simulation step, with that step's frame number.</summary>
         public event Action<int> Stepped;
+
+        /// <summary>Raised on a replica driver once per local step, after this machine's commands are
+        /// sampled and before <see cref="Stepped"/> — where the guest sends its command and applies
+        /// what the host sent.</summary>
+        internal event Action<int> ReplicaStepping;
+
+        internal bool IsReplica => _replica;
+
+        /// <summary>Set by the binder in <c>Awake</c>, before the first frame.</summary>
+        internal void EnterReplicaMode() => _replica = true;
 
         /// <summary>Raised inside the fixed step for every landed hit (D20/D21 feedback).</summary>
         public event Action<HitEvent> HitLanded;
@@ -637,6 +651,22 @@ namespace BattleBomb.Gameplay.Simulation
 
         private void Update()
         {
+            if (_replica)
+            {
+                // The guest never pauses its own clock: the world it draws is the host's, and the
+                // host decides when that stops (D60). Its steps exist to sample and send its own
+                // commands at the simulation's rate, and to pace the picture.
+                _clock.Accumulate(Time.deltaTime);
+                while (_clock.TryConsumeStep(out int replicaFrame))
+                {
+                    SampleCommands(replicaFrame);
+                    ReplicaStepping?.Invoke(replicaFrame);
+                    Stepped?.Invoke(replicaFrame);
+                }
+
+                return;
+            }
+
             if (PausedForScreen)
             {
                 // Solo at a chest: the world stops (D42). The accumulator is deliberately not

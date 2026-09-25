@@ -69,6 +69,15 @@ namespace BattleBomb.Gameplay.Session
                 return;
             }
 
+            // The guest writes its own save only when the host says a D52 moment happened (Plan 2,
+            // D61). Its own copy of the session is a picture of the host's run, and saving a picture
+            // over a real file is how a guest loses their gear. Read from what this scene was built
+            // as, not from the connection: a guest who leaves mid-match still stands in a picture.
+            if (_driver != null && _driver.IsReplica)
+            {
+                return;
+            }
+
             if (!_session.LoadedCleanly)
             {
                 ReportRefusalOnce();

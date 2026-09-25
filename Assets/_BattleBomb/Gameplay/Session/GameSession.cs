@@ -4,6 +4,7 @@ using BattleBomb.Core.Loot;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Saves;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Net;
 using BattleBomb.Platform;
 using UnityEngine;
 
@@ -37,6 +38,14 @@ namespace BattleBomb.Gameplay.Session
 
         public ChapterDefinition[] Chapters { get; set; } = new ChapterDefinition[0];
         public TierDefinition[] Tiers { get; set; } = new TierDefinition[0];
+
+        /// <summary>The front door's roster, so a hero can cross the wire as an index (M8). Set by
+        /// <c>FrontendFlow</c> alongside <see cref="Chapters"/> and <see cref="Tiers"/>.</summary>
+        public CharacterDefinition[] Roster { get; set; } = new CharacterDefinition[0];
+
+        /// <summary>This machine's connection, when there is one. It lives on this object because this
+        /// is the object that survives every scene (HANDOFF-M8 planning decision 5).</summary>
+        public NetSession Net => GetComponent<NetSession>();
 
         public ISaveStore Store { get; set; }
         public string SaveName { get; set; } = "local";

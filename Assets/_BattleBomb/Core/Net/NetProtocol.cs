@@ -26,6 +26,14 @@ namespace BattleBomb.Core.Net
         public const int InputBufferTarget = 2;
         public const int InputBufferMax = 6;
 
+        /// <summary>Steps the buffer may sit above its target before one step merges two, draining
+        /// the lag a stall left behind — slowly, so jitter keeps its cushion. Tuned in Task 96.</summary>
+        public const int InputBufferDrainSteps = 30;
+
+        /// <summary>Steps a silent remote player's last held input is repeated before their body lets
+        /// go: a quarter of a second, well inside the one-second problem banner. Tuned in Task 96.</summary>
+        public const int StarvedRepeatSteps = 15;
+
         public const float KeepAliveSeconds = 0.25f;
         public const float ProblemAfterSeconds = 1f;
 

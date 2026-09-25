@@ -5,6 +5,7 @@ using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Combat;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Net;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World.Markers;
 using UnityEngine;
@@ -122,6 +123,10 @@ namespace BattleBomb.Gameplay.World
         // second one a stage hits is never reported.
         private bool _warnedCannotLeaveArena;
         private bool _warnedClampStuck;
+
+        /// <summary>The guest's runner (D58): it follows the host's stages and decides nothing.
+        /// Task 94 teaches it to follow; until then it simply does not run.</summary>
+        private bool _replica;
 
         /// <summary>Tests quiet the arena by turning this off: waves are announced and counted
         /// as already cleared, so gates open on schedule without a fight.</summary>
@@ -291,6 +296,11 @@ namespace BattleBomb.Gameplay.World
 
         private void OnStepped(int frame)
         {
+            if (_replica)
+            {
+                return;
+            }
+
             if (_current == null || !_current.IsReady)
             {
                 return;
@@ -753,6 +763,12 @@ namespace BattleBomb.Gameplay.World
             _driver.Stepped += OnStepped;
             _driver.EnemyDied += OnEnemyDied;
             _driver.AttemptReset += OnAttemptReset;
+
+            _replica = NetSession.RoleOf(Session.GameSession.Find()) == NetRole.Guest;
+            if (_replica)
+            {
+                return;
+            }
 
             if (_current != null)
             {

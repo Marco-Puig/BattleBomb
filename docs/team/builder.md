@@ -122,6 +122,51 @@ floods the buffer → Release when the hold clears; (7) merge starts at 8 buffer
 repeat lookup is redundant; skip + report. Binder is DefaultExecutionOrder(-100), so UseSeat runs
 before the sources' OnEnable as the plan assumes.
 **Task 88 DONE sent (18:20)** → waiting for COMMITTED.
+**Task 88 COMMITTED `5fd0920`.** Orchestrator's calls, all built **in 89**, red-first in Core: (1) slow
+drain (merge one step after N above target; N = `NetProtocol.InputBufferDrainSteps`); (7) merge
+threshold = the documented 6 (boundary test 6/7); (2) let go after `StarvedRepeatSteps` = 15;
+(3) repeated hostFrame consumes nothing (+ drop the pause backlog on resume). 4 → Plan 2, 5 → 92,
+6 → 94 (on the board). Skip 10(c)'s repeat lookup, report it.
+**Task 89 started (18:40):** extra spec `<scratchpad>/tasks/task89_extra.md` — X1 busy port (Listen
+before Role; SocketException → Dispose, Offline, "Port 7777 is busy"; test on a squatted port),
+X2 skip 10(c) lookup, X3 stream (constants + 5 red-first tests + full RemoteCommandStream).
+Design choices: a repeat returns held with **no edges** (same presses again = double press);
+resume trims to target instead of `Release` (Release re-accepts old redundant copies + re-presses
+held buttons); let-go keeps last-heard held as the edge base (no invented press on return).
+Stages: S1 X3a+X3b (see 5 red) → S2 X3c (green) → S3 Step 1 + X1a (compile red) → S4 Steps
+3, 5–12 with the plan's Host (NetSessionHost red at runtime) → S5 X1b → S6 Steps 14–15 → PlayMode.
+Files CRLF: GameSession, SessionBinder, SaveService, SimulationDriver, StageRunner, FrontendFlow;
+LF: InputSystemCommandSource, NetProtocol, stream + tests.
+**89 progress (18:35):**
+- **S1:** the 5 X3b tests were red as predicted.
+- **S2:** the stream matches X3c (script); Net 47/47.
+- **S3:** compile red, as expected.
+- **S4:** every new file is byte-identical to the plan; NetSession = plan + Step 12. All snippets present, X2 applied, line endings intact. Handshake tests 4/4. NetSessionHost was red: SocketException out of Host.
+- **S5:** X1b applied → green.
+- **EditMode 746/746.** No new compile warnings.
+- **S6** (HeadlessGuest + OnlineHostSmokeTests) dispatched; then PlayMode, filtered and full.
+
+**89 gates (18:40):** S6 is byte-identical to the plan. OnlineHostSmokeTests 6/6; full PlayMode 41/41.
+
+**89 review: "Yes with fixes" (19:00).**
+
+Applied:
+- **I1.** SaveService's guard is now `_driver.IsReplica`, not the live role. A guest who pressed Leave mid-match stayed in the replica with the role Offline, and the settings menu's return-to-chapters or quitting could then write the replica's empty stash over their real save.
+- **I2, host side.** SessionBinder picks the stand-in locally (`seat = hosting && i == guest ? 0 : i`) instead of writing `Characters[1]`. NetHost.SendLaunch sends the host's pick for the guest's seat. Test `The_stand_in_hero_never_enters…` was red first.
+- **I2, guest side.** NetSession holds `_couch` (a Clone taken in FollowLaunch). `RestoreCouch()` runs from ReturnToFrontend and NetGuest.OnDestroy. No test yet: the guest harness arrives at Task 95.
+- **M3.** Start skips restoring saved gear into `_remoteSeat`; a copy of the host hero's gear could otherwise have reached the shared sack.
+- **M7.** New test `A_guest_who_leaves_is_let_go_at_once…`, mutation-proved: with NetHost's Release removed, the new test fails and the plan's leave test still passes.
+
+Flagged, not fixed:
+- M1: the refusal reason gets overwritten.
+- M2: the guest's own settings menu drives Player 2 on the host.
+- M4: SocketException is caught in Gameplay.
+- M5: UseSeat relies on Player 2 being authored active.
+- M6: NetDevOverlay calls Find in OnGUI.
+- M8: LocalLagNames is a mutable static array.
+
+EditMode 746/746; OnlineHost 8/8; **full PlayMode 43/43**. **Task 89 DONE sent (19:05)** → waiting
+for COMMITTED. Next: Task 90 (two editors) — QUIET REQUEST before any two-editor run.
 
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,

@@ -46,6 +46,30 @@ Netcode heads-up: this changes its read of candidate F4 and the catch-up-loop pa
 
 ## Current state
 
+**M8 Plan 1 — started (17:00, 2026-09-25).** F5.2 committed (`cc7a9fe`); the pre-M8 batch is done.
+Plan: `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`, Tasks 86–96, one `DONE`
+per task. Prerequisite hashes (its "Before you start"): Groundwork `56e4be5..527df2b`, G14
+`5f3799a`; F1 `15778dd`, F2 `724d44e`, F3 `5abd671`, F5 `2610ef0` + `cc7a9fe`. **Stale premise
+in the plan's header:** "destroyed enemies unregistered immediately" is true via Destroy's
+immediate OnDisable (Unity 6.5), not via a Despawn helper — F1 never built one; apply the plan's
+intent on top. **Two-editor runs (Task 90 on):** `QUIET REQUEST` first; `DONE` + a note after.
+Michael's Groundwork pass may call QUIET ON any time → stop at the next clean point. Netcode is
+being reopened as my reference; until then questions go to the orchestrator.
+Baseline EditMode 694, PlayMode 35 (F5.2 gates; only docs since). Plan split into
+`<scratchpad>/tasks/m8_preamble.md` + `task86.md`…`task96.md` (89 is 1,647 lines); briefing
+`m8_context.md` (rules + "plan predates Groundwork and F1–F5: keep their changes, apply intent,
+report"). **Task 86 (the wire) phase 1 dispatched (17:15)** — CommandButtons/PlayerCommand shapes
+verified; red = compile errors (no BattleBomb.Core.Net).
+**Task 86 code in (17:30):** tests + 8 Core/Net files byte-identical to the plan (script). New
+fixtures 14/14; EditMode 708/708 (fitness green). Review running, then DONE (paths incl. the folder
+metas Core/Net.meta, Tests/EditMode/Net.meta and each file's .meta).
+**Task 86 DONE sent (17:45).** Review "Yes with fixes" → applied: the >4-commands test now sends five
+whole commands (mutation-proved: guard removed → "Expected NetFormatException but was null");
+WireCommand.Equals exact (`Move.Equals`); count-at-bound + buffer-reuse asserts. NOT applied, flagged
+for **Task 92**: NetWriter has no MaxMessageBytes cap — an Events batch (≤512 events, ≤8 KB item
+JSON each) could exceed 256 KB; LocalSocketTransport drops it as Lost() silently while Loopback
+delivers it — split/limit batches there. EditMode 708/708 after.
+
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,
 then F5 (grid scrolling; do not clamp). One `DONE` per task. **QUIET ON may come any time** for

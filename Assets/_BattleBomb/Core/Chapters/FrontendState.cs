@@ -119,6 +119,9 @@ namespace BattleBomb.Core.Chapters
                     }
                     else if (slot == 0)
                     {
+                        // The title forgets both seats (D57), so the couch re-forms from scratch.
+                        _joined[1] = false;
+                        _ready[1] = false;
                         Screen = FrontendScreen.Title;
                     }
                     else

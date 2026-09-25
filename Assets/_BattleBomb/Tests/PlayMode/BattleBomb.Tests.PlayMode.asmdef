@@ -8,7 +8,9 @@
         "BattleBomb.Platform",
         "BattleBomb.Gameplay",
         "BattleBomb.UI",
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

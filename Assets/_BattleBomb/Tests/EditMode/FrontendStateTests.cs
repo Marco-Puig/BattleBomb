@@ -86,6 +86,22 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Backing_out_to_the_title_lets_player_two_go_too()
+        {
+            var state = new FrontendState(4, false);
+            state.Confirm(0);
+            state.Confirm(1);
+            state.Confirm(1);
+
+            state.Back(0);
+
+            Assert.That(state.Screen, Is.EqualTo(FrontendScreen.Title));
+            Assert.That(state.IsJoined(1), Is.False,
+                "The title forgets the seats (D57); a Player 2 still joined would come back seated on nobody's press.");
+            Assert.That(state.IsReady(1), Is.False);
+        }
+
+        [Test]
         public void From_chapters_back_returns_to_characters_and_launch_needs_an_unlocked_pick()
         {
             var state = new FrontendState(4, false);

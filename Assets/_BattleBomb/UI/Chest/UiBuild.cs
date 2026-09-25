@@ -274,6 +274,14 @@ namespace BattleBomb.UI.Chest
             return image;
         }
 
+        /// <summary>
+        /// A button for the pointer only (D57). The seats read A and Enter themselves; left to uGUI a
+        /// clicked button stays selected, and the UI module's default Submit — every pad's A, and
+        /// Enter — would press it a second time, unseen by the seats.
+        /// </summary>
+        internal static void PointerOnly(Button button) =>
+            button.navigation = new Navigation { mode = Navigation.Mode.None };
+
         internal static Text Label(
             string name, Transform parent, string value, int size, Color color,
             TextAnchor anchor = TextAnchor.UpperLeft, Font font = null)

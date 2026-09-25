@@ -210,6 +210,7 @@ namespace BattleBomb.UI.Chest
             colors.pressedColor = new Color(0.75f, 0.28f, 0.26f);
             button.colors = colors;
             button.onClick.AddListener(CloseFromPointer);
+            UiBuild.PointerOnly(button);
 
             Image rule = UiBuild.Rule("Rule", pad, 3f, UiBuild.BrassDim);
             rule.rectTransform.anchoredPosition = new Vector2(0f, HasTabs ? -96f : -54f);

@@ -172,16 +172,25 @@ namespace BattleBomb.UI.Frontend
             for (int slot = 0; slot < FrontendState.Slots; slot++)
             {
                 PlayerCommand command = _input.CommandFor(slot);
+                MenuPress press = MenuPress.From(command);
                 Steer(slot, command);
-                if (command.WasPressed(CommandButtons.Light) || (slot == 0 && command.WasPressed(CommandButtons.Pause)))
+
+                // Start confirms for Player 1 as it always has; Escape backs out (D57).
+                if (press.Confirm || (slot == 0 && press.Pause))
                 {
                     Confirm(slot);
                 }
-                else if (command.WasPressed(CommandButtons.Heavy))
+                else if (press.Back)
                 {
                     _state.Back(slot);
                 }
             }
+
+            _session.Seats.Follow(
+                _state.Screen,
+                _state.IsJoined(1),
+                _input.Players.LastDeviceOf(new PlayerId(0)),
+                _input.Players.LastDeviceOf(new PlayerId(1)));
 
             if (_state.Screen == FrontendScreen.Launching)
             {
@@ -326,6 +335,7 @@ namespace BattleBomb.UI.Frontend
             var button = box.gameObject.AddComponent<Button>();
             button.targetGraphic = box;
             button.onClick.AddListener(onClick);
+            UiBuild.PointerOnly(button);
             UiBuild.Label("Label", box.transform, name, 16, UiBuild.Ink, TextAnchor.MiddleCenter);
             return button;
         }

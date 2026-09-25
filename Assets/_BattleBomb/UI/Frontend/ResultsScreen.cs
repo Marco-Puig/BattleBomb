@@ -200,7 +200,9 @@ namespace BattleBomb.UI.Frontend
             Image box = UiBuild.Box("Continue", panel, UiBuild.PanelInner);
             UiBuild.Place((RectTransform)box.transform, 0.3f, 0.03f, 0.7f, 0.12f);
             box.raycastTarget = true;
-            box.gameObject.AddComponent<Button>().onClick.AddListener(Leave);
+            var leave = box.gameObject.AddComponent<Button>();
+            leave.onClick.AddListener(Leave);
+            UiBuild.PointerOnly(leave);
             UiBuild.Label("Label", box.transform, "Continue", 16, UiBuild.Ink, TextAnchor.MiddleCenter);
             _panel = panel.gameObject;
         }

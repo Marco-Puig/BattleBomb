@@ -107,6 +107,8 @@ Input System action  →  PlayerCommand (per player, per fixed step)  →  Simul
   simulation cannot tell the difference. That equivalence is the entire point.
 - Players are resolved through a **player registry**. `GameObject.FindGameObjectWithTag("Player")` is
   forbidden — it is unfixable under co-op, let alone networking.
+- Each couch seat owns its own copy of the controls (`SeatInput`), restricted to the devices
+  `SeatAssignment` gives it; menus read their own action map, never a combat verb (D57).
 
 Simulation advances on a **fixed step**. Presentation interpolates between steps for smoothness.
 

@@ -1356,11 +1356,16 @@ menu. Arrow keys and enter/space also are helpful."*
 - **No two buttons do the same job.** So X does nothing at the shop rack: A already buys there.
 - **X and Y are only ever shortcuts.** Every verb they fire is also reachable by choosing the item
   and then the verb, which is what keeps touch possible (D5): a phone taps, it needs no X.
-- **X sells instantly; the lock is the only safety** (Michael's choice over hold-to-sell and a
-  second press above Clean).
-- **Escape is Back inside a menu and Pause outside one.** Start still leaves any screen outright,
-  so M6's promise — getting out is never a puzzle — survives Escape becoming one level at a time.
-  The press that closes a screen never also opens the settings.
+- **X sells the whole stack under the cursor, instantly; the lock is the only safety** (Michael's
+  choice over hold-to-sell and a second press above Clean). The menu's Sell row shows the unit
+  price; X takes the stack.
+- **Escape is Back inside a menu and Pause outside one.** Start still leaves any in-game screen
+  outright — chest, shop, settings — so M6's promise (getting out is never a puzzle) survives
+  Escape becoming one level at a time. The press that closes a screen never also opens the
+  settings. **The results screen is the exception:** it is left only with A, from any player, or
+  its pointer button, once every hand has come off the buttons and it has been up ¾ s, so a
+  mashed Jump cannot skip a NOT SAVED warning. Start and Escape do nothing there *(G12,
+  2026-09-25)*.
 - **Start on the title screen starts the game** ("Press Start"); elsewhere in the front door it does
   nothing, so it never duplicates A and never launches a run from chapter select *(orchestrator,
   2026-09-24, from G6's review)*. Escape at the title does nothing; the keyboard starts with Enter or
@@ -1368,7 +1373,9 @@ menu. Arrow keys and enter/space also are helpful."*
 - **Solo at a chest, the shoulders cross between the sack and the hero panel** — the "other half"
   in every layout.
 - **Prompts show the device the player last pressed**: Xbox letters on every controller
-  (Michael's choice), key caps on a keyboard, badges per UI Pass 01's hint row.
+  (Michael's choice), key caps on a keyboard, badges per UI Pass 01's hint row. Before a player's
+  first press they show the device most recently used; at character select the join line names
+  only the devices a newcomer can join on — with Player 1 on the keyboard, only A.
 - **Seats replace PlayerInput.** Player 2 owns the device they joined with; Player 1 owns
   everything else — so a solo player switches between keyboard and any controller just by using
   it. At character select Player 1 is held to the device they came into character select on, so

@@ -95,7 +95,7 @@ players) → **Michael's checklist pass** for anything fast-moving → close-out
 
 ## 4. Milestones
 
-### Groundwork — before M8
+### Groundwork — before M8 — built (2026-09-25, 56e4be5..527df2b); Michael's pass pending
 
 Small, mostly designed, and blocking nothing but itself.
 
@@ -106,17 +106,17 @@ Small, mostly designed, and blocking nothing but itself.
   in the design's hint-row style (24px, round for face buttons, rounded-square for Start, coloured
   per button). About fifteen hardcoded prompt strings across `ChestScreen.Visuals`, `HeroPanel`,
   `SettingsMenu`, `FrontendFlow`, and `ResultsScreen` move onto it.
-- **The menu button map** — designed 2026-08-23 from Michael's answers; the items marked *proposed*
-  were Claude's calls and get confirmed at kickoff, then recorded as a D17 amendment:
+- **The menu button map** — designed 2026-08-23 from Michael's answers; the proposed items were
+  confirmed at kickoff and recorded as **D57**, which is the authority (it amends D17):
 
   | Role | Gamepad | Keyboard |
   |---|---|---|
   | Navigate | Left stick + D-pad | WASD + arrows |
   | Confirm | A | Enter / Space |
   | Back | B | Esc — backs out one level; closes the screen from the top level |
-  | Item verb 1 | X — Sell; Buy at the rack; Combine-all mid-pick *(proposed)* | J |
-  | Item verb 2 | Y — Lock *(proposed)* | K |
-  | Switch tab / mode | LB / RB *(proposed)* | Q / E |
+  | Item verb 1 | X — Sell the whole stack; Combine-all mid-pick (nothing at the rack: A buys) | J |
+  | Item verb 2 | Y — Lock | K |
+  | Switch tab / mode | LB / RB | Q / E |
   | Pause | Start | Esc, outside menus only |
 
   Two rules come with it: **no two buttons do the same job** (Michael: "we should not make them
@@ -335,7 +335,7 @@ which reaction pairs exist; are pets beyond stat pets in Early Access.
 | Decision | Owner | Needed by |
 |---|---|---|
 | Online at Early Access | Michael | **done** — D54 |
-| The menu map's proposed items (X, Y, LB/RB) | Michael | Groundwork kickoff |
+| The menu map's proposed items (X, Y, LB/RB) | Michael | **done** — D57 |
 | Text rendering: stay on the current legacy text, or move to TextMeshPro (sharper text; the Archivo weights resolve with it) | Claude recommends, Michael agrees | Before M9's HUD rebuild |
 | Topology, how couch and online players mix, join points, online screens and saves | M8 design session | **done** — D58–D62 |
 | The World session | Michael + collaborator | Early M8 ideally; M10 at the latest |
@@ -376,8 +376,8 @@ consoles and mobile (D5) · localisation.
 
 | Debt | Source | Paid in |
 |---|---|---|
-| Solo player labelled "P2" | HANDOFF-M7 watch | Groundwork |
-| Split co-op filter chips overlap the grid | UI Pass 01 | Groundwork |
+| Solo player labelled "P2" | HANDOFF-M7 watch | **Paid** — Groundwork (G5, 3e6b3bb) |
+| Split co-op filter chips overlap the grid | UI Pass 01 | **Paid** — Groundwork (G13, 7c3014f) |
 | Archivo 500/600/700 weights missing | UI Pass 01 | With the text-rendering decision |
 | Solo camera `_screenFill` (0.72) puts loadout cells over the character | UI Pass 01 | M9, once real sprite heights exist |
 | The twelve sword PNGs have no weapon | Art import | M9 |
@@ -393,8 +393,9 @@ consoles and mobile (D5) · localisation.
 
 ## 10. What to do first
 
-1. **Reopen Unity with the MCP bridge** so the test gate is back.
-2. **Groundwork** — confirm the three proposed menu buttons, then it gets built.
+1. ~~**Reopen Unity with the MCP bridge** so the test gate is back.~~ Done.
+2. ~~**Groundwork** — confirm the three proposed menu buttons, then it gets built.~~ Built
+   2026-09-25 (D57); Michael's pass pending.
 3. **Book the World session** with the collaborator — it gates the art.
 4. **Pick an AI image tool** for the drafts, and start thinking about the art bible.
 5. **At M8's close-out:** create the Steamworks account (start the paperwork a few days ahead).

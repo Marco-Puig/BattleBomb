@@ -42,6 +42,36 @@ Nothing (bridge restarted by Michael 2026-09-25 08:16).
 
 ## Current state
 
+**Groundwork Task 14 — started (10:30, 2026-09-25).** G13b committed (`527df2b`), changes 1–5
+accepted; close ✕ on the couch Hero tab → M9 backlog; ultrawide → Later. Task 14 is text for the
+orchestrator (D57 corrections, GAME_DESIGN §3.1, CLAUDE.md rule 3 + ARCHITECTURE, ROADMAP §4/§9),
+final gates (EditMode 680, PlayMode 28), and Michael's checklist — the plan's 10 items plus: X
+sells the whole stack; partner's sale can slide an item under the cursor; no menu left open after
+combine-all; held stick through the opening X; results ¾ s dwell; Start only on the title; join
+line says only A with P1 on the keyboard; couch Hero-tab strip shows the cursor; bottom-row item's
+menu shows Sell/Lock; A on a worn piece opens its menu on the couch Hero tab; pad reconnect keeps
+the seat.
+
+**G14 `DONE` sent (10:55)** — final gates EditMode 680/680, PlayMode 28/28, no InitTestScene,
+git clean but this file. Waiting for `COMMITTED`; Michael's pass is the orchestrator's to schedule
+(quiet on). Next after Groundwork: pre-M8 fixes F1–F3 (`docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`),
+then F5 (grid scrolling — do not clamp; say if bigger than one task), then M8 Plan 1.
+**G14 handover text (drafted 10:45 — sent in the DONE):**
+- *D57 corrections* (checked against the code): (1) "Start still leaves any screen outright" →
+  any in-game screen (chest, shop, settings); the results screen is left only with A (any player)
+  or the pointer's button, once every hand is off and it has been up ¾ s; Start and Esc do nothing
+  there (`ResultsScreen.Tick`). (2) "X sells instantly" → the whole stack under the cursor.
+  (3) Prompts: before a player's first press they guess the most recently used device; the
+  character-select join line names only the devices a newcomer can join on. "X does nothing at the
+  shop rack" verified (Buy focuses `Stock`; `RunOption` acts only on Grid).
+- *GAME_DESIGN §3.1*: the plan's paragraph, after l.151 ("…out by construction (D17).").
+- *CLAUDE.md* l.56–57 rule 3: "only `InputSystemCommandSource`, with the `SeatInput` it owns,
+  touches a device". *ARCHITECTURE*: no occurrence (grep) → no change; optional §4 bullet offered.
+- *ROADMAP*: §4 heading "— built (2026-09-25, 56e4be5..<G14>); Michael's pass pending" (→
+  complete with his verdict); §9 P2 row paid in G5 `3e6b3bb`, overlap row paid in G13 `7c3014f`;
+  optional: §6 menu-map row → done (D57); §10 items 1–2 done; §4 table's "Buy at the rack" is
+  superseded by D57.
+
 **Groundwork G13b — started (09:15, 2026-09-25).** G13 committed (`7c3014f`), deviations A–B
 accepted. Orchestrator's task (no plan text — I design it): (1) the SACK/HERO strip is built
 outside the sack panel so Tabs focus shows on the Hero tab (couch); (2) the item popover clears the
@@ -441,6 +471,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-25 10:55 — **G14 sent** (D57 corrections ×3, GAME_DESIGN/CLAUDE/ROADMAP text, Michael's
+  15-item checklist): final gates EditMode 680/680, PlayMode 28/28 at eb016a5. `DONE` sent —
+  Groundwork built (56e4be5..527df2b); waiting for `COMMITTED` and Michael's pass. Next: F1–F3, F5.
 - 2026-09-25 10:20 — **G13b complete** (tab strip on the screen + focus cursor; sack and hero
   popovers draw over the panels they overhang; couch Hero-tab worn menu now shows at all):
   EditMode 680/680, PlayMode 28/28, review approved. `DONE` sent. G13 committed as `7c3014f`.

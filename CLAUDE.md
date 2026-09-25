@@ -54,7 +54,8 @@ reference Gameplay, the design is inverted.
    in an Animator, a particle system, or a UI field. A hitbox that exists because an animation state
    entered is a bug.
 3. **Input is commands, never polling.** Devices become `PlayerCommand` structs, and only
-   `InputSystemCommandSource` touches a device. No `Input.GetKey`/`GetAxis`/`GetButton` anywhere.
+   `InputSystemCommandSource`, with the `SeatInput` it owns, touches a device. No
+   `Input.GetKey`/`GetAxis`/`GetButton` anywhere.
 4. **Players come from `PlayerRegistry`.** `FindGameObjectWithTag("Player")` is forbidden — it cannot
    express two local players, let alone a remote one.
 5. **Data is authored as assets, consumed as plain structs.** ScriptableObject is an authoring
@@ -120,7 +121,7 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
 | **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
 | **M7** | Chapters — the machine (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door | **machine complete**; authored chapters wait on story |
-| — | Groundwork — input switching, button icons, the menu map, two known bugs | **next** |
+| — | Groundwork — input switching, button icons, the menu map (D57), two known bugs | **built**; Michael's pass pending |
 | M8 | Online co-op (D54) | |
 | M9 | Look & sound — the art pipeline (D55), animation, effects, audio, the HUD | |
 | M10 | **Vertical slice** — the real target | |

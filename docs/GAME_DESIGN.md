@@ -150,6 +150,11 @@ movement (§2.1), and the defence stat (§2.7, D26); the playstyle is deliberate
 sequences, holds, and stick+button flavours, never two face buttons pressed at once:** one thumb
 operates every button on a touch screen, so chorded inputs are out by construction (D17).
 
+**Menus (D57)** read their own buttons, never a combat verb: A confirms, B backs out (Esc on a
+keyboard), X sells, Y locks, LB/RB switch tab or mode (Q/E), Start leaves; D-pad and arrows
+navigate. X and Y are shortcuts only — everything they do is reachable by choosing the item, then
+the verb — so touch needs nothing but taps.
+
 **Implementation rule:** a character is a data asset — visual set, element, per-slot ability variant,
 base stat weights. Any design requiring a bespoke script per character is wrong and should be pushed
 back on. This is the largest single lever on content velocity in the project.

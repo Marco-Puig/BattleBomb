@@ -33,20 +33,21 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork G13 |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork G13b |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — restart from `PROMPTS.md` near M8 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)
 
-- **Groundwork:** G1–G12 committed (G12 = ad189cb). G13 in progress: filter/grid spacing **plus**
-  the solo filter-row guard `&& !layout.HeroBeside`.
+- **Groundwork:** G1–G13 committed (G13 = 7c3014f). G13b in progress: the SACK/HERO strip built
+  outside the sack panel (focus visible on the Hero tab, couch); the popover clears the compare
+  panel (rows 2–3 show Sell and Lock, solo and couch).
 - **Then:** G14 (verify D57 against what was built; Michael's fast-motion checklist — add: X sells
   a whole stack; a partner's sale can slide an item under the cursor; nothing stays open after
   combine-all; A can't skip the results for ~¾ s; Start does nothing at character or chapter
   select; with Player 1 on the keyboard the join line says only A).
-- **After Groundwork:** the pre-M8 fixes plan F1–F3, then M8 Plan 1 (Tasks 86–96). Netcode writes
+- **After Groundwork:** the pre-M8 fixes plan F1–F3, then F5 (chest grid scrolling past 40 stacks), then M8 Plan 1 (Tasks 86–96). Netcode writes
   Plan 2 once Plan 1 is underway, Plan 3 after Michael's lag table (Task 96). Candidate **F4** (lost
   sub-update taps) and the catch-up-loop pause item wait for Netcode to assess.
 - **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's

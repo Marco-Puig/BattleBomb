@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | G13 — filter and grid spacing, the solo filter-row guard | — |
+| Builder | Builder | working | G13b — the Hero-tab strip focus; the popover under the compare panel | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -90,6 +90,12 @@ than one Input System update, or one that lands in a frame with no simulation st
 is lost — the sample only sees what is held at that instant. It matters for the revive heartbeat's
 mashing (D31) and for M8's remote input path. Fix shape: record press edges between samples.
 
+**F5 — the chest grid past 40 stacks** (found in G13's review, pre-existing; the orchestrator's
+call). The sack holds 200 but the grid draws 40, so the cursor walks into undrawn cells and the
+popover opens under cell 39 naming another item — and X sells instantly, so a player can sell a
+stack they cannot see. Fix: scroll the grid with the cursor (no clamping — it would strand items
+41+). After F1–F3; the Builder sizes it when it gets there.
+
 Into M8's plan (Netcode designs them; they are online blockers, not bugs today):
 - The shop rack is rolled, stored, and priced in the UI, and `RequestBuy` trusts the UI's item and
   price (§5.1) — a rule 2 violation; the rack moves into the simulation.
@@ -159,6 +165,10 @@ None.
 
 ## Log
 
+- 2026-09-25 — G13 committed (7c3014f): the grid's top follows the filter chips (couch co-op);
+  solo Up from the filter row stays put. EditMode 680, PlayMode 28. Its review found three
+  pre-existing chest bugs: the Hero-tab strip focus and the popover under the compare panel
+  become G13b (both on Michael's G14 route); past-40-stacks becomes F5.
 - 2026-09-25 — G12 committed (ad189cb): every other prompt in the player's own buttons;
   Start on the title only; results dwell 0.75 s; the front door loads its fonts. EditMode 679,
   PlayMode 28. G14's checklist gains: A can't skip the results for ~¾ s; Start does nothing at

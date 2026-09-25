@@ -25,6 +25,10 @@ namespace BattleBomb.Tests.EditMode
             new ChestLayout(
                 visible, 8, ChestNavigation.FilterCount, 5, 2, stock, true, junkRanks);
 
+        /// <summary>A sack with more stacks than the five drawn rows of eight hold (F5).</summary>
+        private static ChestLayout Scrolling(int visible) =>
+            new ChestLayout(visible, 8, ChestNavigation.FilterCount, 5, 2, 0, false, 0, false, rows: 5);
+
         [Test]
         public void A_fresh_screen_starts_on_the_grid_of_the_item_sack()
         {
@@ -128,6 +132,87 @@ namespace BattleBomb.Tests.EditMode
             nav.Move(1, 0, Solo());
             Assert.That(nav.Tab, Is.EqualTo(ChestTab.ItemSack),
                 "Sideways on the filter row changes the filter, never the tab behind it.");
+        }
+
+        [Test]
+        public void Past_the_last_drawn_row_the_view_follows_the_cursor_down()
+        {
+            var nav = new ChestNavigation();
+            for (int i = 0; i < 4; i++)
+            {
+                nav.Move(0, -1, Scrolling(45));
+            }
+
+            Assert.That(nav.Cursor, Is.EqualTo(32));
+            Assert.That(nav.TopRow, Is.Zero, "The view moved while the cursor was still on screen.");
+
+            nav.Move(0, -1, Scrolling(45));
+            Assert.That(nav.Cursor, Is.EqualTo(40));
+            Assert.That(nav.TopRow, Is.EqualTo(1), "The cursor left the drawn rows and the view stayed put.");
+            Assert.That(nav.IsCursorDrawn(Scrolling(45)), Is.True);
+        }
+
+        [Test]
+        public void Back_up_the_view_follows_only_once_the_cursor_reaches_its_top()
+        {
+            var nav = new ChestNavigation();
+            for (int i = 0; i < 5; i++)
+            {
+                nav.Move(0, -1, Scrolling(45));
+            }
+
+            nav.Move(0, 1, Scrolling(45));
+            Assert.That(nav.TopRow, Is.EqualTo(1), "The view moved while the cursor was still on screen.");
+
+            for (int i = 0; i < 4; i++)
+            {
+                nav.Move(0, 1, Scrolling(45));
+            }
+
+            Assert.That(nav.Cursor, Is.Zero);
+            Assert.That(nav.TopRow, Is.Zero);
+        }
+
+        [Test]
+        public void A_full_sack_scrolls_to_its_last_row_and_no_further()
+        {
+            var nav = new ChestNavigation();
+            nav.SelectCell(199, 200);
+            nav.KeepCursorInView(Scrolling(200));
+
+            Assert.That(nav.TopRow, Is.EqualTo(20), "25 rows of eight with five drawn: the last view starts at row 20.");
+            Assert.That(nav.IsCursorDrawn(Scrolling(200)), Is.True);
+        }
+
+        [Test]
+        public void A_sack_that_shrinks_under_the_cursor_pulls_the_view_back()
+        {
+            var nav = new ChestNavigation();
+            nav.SelectCell(199, 200);
+            nav.KeepCursorInView(Scrolling(200));
+
+            nav.ClampCursor(45);
+            Assert.That(nav.IsCursorDrawn(Scrolling(45)), Is.False,
+                "Until the view catches up, the cursor's new cell is not on screen, so X must not act.");
+
+            nav.KeepCursorInView(Scrolling(45));
+            Assert.That(nav.Cursor, Is.EqualTo(44));
+            Assert.That(nav.TopRow, Is.EqualTo(1));
+            Assert.That(nav.IsCursorDrawn(Scrolling(45)), Is.True);
+        }
+
+        [Test]
+        public void Without_a_row_limit_nothing_scrolls()
+        {
+            var nav = new ChestNavigation();
+            for (int i = 0; i < 5; i++)
+            {
+                nav.Move(0, -1, Layout(visible: 45));
+            }
+
+            Assert.That(nav.Cursor, Is.EqualTo(40));
+            Assert.That(nav.TopRow, Is.Zero, "A layout that names no row limit draws every row.");
+            Assert.That(nav.IsCursorDrawn(Layout(visible: 45)), Is.True);
         }
 
         [Test]

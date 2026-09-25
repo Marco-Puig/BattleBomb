@@ -119,6 +119,21 @@ clean. RunSeedsTests 3/3, RunSeedsSmokeTests 2/2, EditMode 689/689. Full PlayMod
 fixed GameSession's stale "Alone among the fields" wording on Characters). Recompiled clean.
 `DONE` sent. **Next: F5** (grid scrolling for >40 stacks; do not clamp; say if bigger than one
 task) — needs a plan: no plan file exists yet, ask the orchestrator who writes it.
+**F3 COMMITTED `5abd671`.** **F5: I write the plan** (orchestrator, 14:00) —
+`docs/superpowers/plans/2026-09-25-f5-chest-grid-scrolling.md` (my lane for this one file; send as
+QUESTION with the path, not DONE; build only after approval). Written (14:30): two tasks — F5.1
+model (`ChestLayout.Rows`, `ChestNavigation.TopRow/KeepCursorInView/IsCursorDrawn`, Move→Step
+wrapper; 5 EditMode tests → 694), F5.2 drawing (draw from TopRow, GridAnchor on the drawn cell,
+scroll bar, X/Y refuse an undrawn cursor; 1 PlayMode case → 35; live check couch/solo/shop).
+Not done: wheel/touch (M13 pointer). Item 12 placed in OnBagChanged, ~1/3 of F5. After F5: M8
+Plan 1 (Tasks 86–96), Netcode reopening as reference.
+**F5 plan APPROVED + committed `ded6e1e` (14:40).** Scroll bar yes; no guard on A (if the live
+check finds the menu opening off its item, guard A too and say so). Build F5.1 then F5.2, one
+DONE each. Task files `<scratchpad>/tasks/taskF5_1.md`, `taskF5_2.md`. **F5.1 started.**
+F5.1 phase 1 verbatim; red = compile errors (no `rows`, TopRow, KeepCursorInView, IsCursorDrawn) —
+**editor not at a clean point until phase 2 lands**. Phase 2 dispatched (14:50).
+**F5.1 code in (15:00):** diff = plan verbatim. Recompiled clean (clean point again).
+ChestNavigationTests 34/34; EditMode 694/694. Review running; then DONE, then F5.2.
 Board candidate from F1's review: `TargetRegistry.Ordered` hands out its live list — any future
 mid-walk despawn (self-destructing enemy, a reaction that despawns what it kills) brings the skip
 back in StepEnemies/StepStatuses.

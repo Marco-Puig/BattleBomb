@@ -89,6 +89,10 @@ namespace BattleBomb.UI.Chest
         /// are neighbours the cursor can walk between. Solo at a chest, and nowhere else.</summary>
         public readonly bool HeroBeside;
 
+        /// <summary>How many grid rows the screen draws at once; past them the grid scrolls (F5).
+        /// Zero draws every row, which is how every layout built before F5 still reads.</summary>
+        public readonly int Rows;
+
         public ChestLayout(
             int visibleCount, int columns, int filterCount, int menuCount, int upgradeCount, int stockCount)
             : this(visibleCount, columns, filterCount, menuCount, upgradeCount, stockCount, false, 0, false)
@@ -97,7 +101,7 @@ namespace BattleBomb.UI.Chest
 
         public ChestLayout(
             int visibleCount, int columns, int filterCount, int menuCount, int upgradeCount,
-            int stockCount, bool isShop, int junkRankCount, bool heroBeside = false)
+            int stockCount, bool isShop, int junkRankCount, bool heroBeside = false, int rows = 0)
         {
             HeroBeside = heroBeside;
             VisibleCount = Mathf.Max(0, visibleCount);
@@ -108,6 +112,7 @@ namespace BattleBomb.UI.Chest
             StockCount = Mathf.Max(0, stockCount);
             IsShop = isShop;
             JunkRankCount = Mathf.Max(0, junkRankCount);
+            Rows = Mathf.Max(0, rows);
         }
     }
 
@@ -155,6 +160,13 @@ namespace BattleBomb.UI.Chest
         /// which stays a bag index — one number serving both put the grid's highlight on a stat
         /// row's number every time the cursor crossed into the hero panel.</summary>
         public int StatCursor { get; private set; }
+
+        /// <summary>
+        /// The first grid row the screen draws (F5). The sack holds up to 200 stacks and the grid
+        /// draws five rows of eight, so the view scrolls to keep the cursor's row on screen. Held
+        /// here rather than in the drawing, so a restyled grid redraws without redoing it.
+        /// </summary>
+        public int TopRow { get; private set; }
 
         /// <summary>
         /// The worn slots as the hero panel arranges them: two columns of armour and arms, with
@@ -206,6 +218,12 @@ namespace BattleBomb.UI.Chest
         }
 
         public void Move(int dx, int dy, in ChestLayout layout)
+        {
+            Step(dx, dy, layout);
+            KeepCursorInView(layout);
+        }
+
+        private void Step(int dx, int dy, in ChestLayout layout)
         {
             if (Focus == ChestFocus.Loadout)
             {
@@ -539,6 +557,47 @@ namespace BattleBomb.UI.Chest
             {
                 Cursor = Mathf.Max(0, visibleCount - 1);
             }
+        }
+
+        /// <summary>
+        /// Scrolls the fewest rows that bring the cursor's row on screen, and never past the
+        /// sack's last row, so the view only moves when the cursor would leave it. The screen also
+        /// calls this on every repaint, for the cursor moves it makes itself: a combine's jump, a
+        /// reroll landing at the end of the bag, a sack that shrank under the cursor.
+        /// </summary>
+        public void KeepCursorInView(in ChestLayout layout)
+        {
+            if (layout.Rows <= 0)
+            {
+                TopRow = 0;
+                return;
+            }
+
+            int row = Cursor / layout.Columns;
+            if (row < TopRow)
+            {
+                TopRow = row;
+            }
+            else if (row >= TopRow + layout.Rows)
+            {
+                TopRow = row - layout.Rows + 1;
+            }
+
+            int filledRows = (layout.VisibleCount + layout.Columns - 1) / layout.Columns;
+            TopRow = Mathf.Clamp(TopRow, 0, Mathf.Max(0, filledRows - layout.Rows));
+        }
+
+        /// <summary>Whether the cursor's cell is one the screen draws. X sells instantly with no
+        /// undo, so X and Y act on nothing else (F5).</summary>
+        public bool IsCursorDrawn(in ChestLayout layout)
+        {
+            if (layout.Rows <= 0)
+            {
+                return true;
+            }
+
+            int row = Cursor / layout.Columns;
+            return row >= TopRow && row < TopRow + layout.Rows;
         }
 
         public void ClampAction(int menuCount) => Action = Mathf.Clamp(Action, 0, Mathf.Max(0, menuCount - 1));

@@ -54,25 +54,93 @@ When the bible is done, send `DONE`. The orchestrator tells the Art lane.
 
 ---
 
+## Question list
+
+Asked one at a time, in this order. Each answer is read back before moving on. Options offered
+are *structural* only; every name, place, creature, and plot point comes from Michael and the
+collaborator. Anything they leave undecided is recorded as **open**, never filled in.
+
+**Q1 — The goal.** What pulls the players forward through the whole game? (Michael's own framing
+from M7: the "princesses-and-crystals question".) Must be moved toward, never defended (D48).
+Structural shapes to offer: something you rescue, something you collect, somewhere you reach,
+someone you chase or stop. Follow-up if needed: does it resolve at the end of the story, or keep
+going (the game never caps, D24)?
+
+**Q2 — Setting and tone.**
+- 2a. Where does it take place, broadly? (Note: `GAME_DESIGN` §9 records that the 2019 build's
+  scene names hint at an earlier premise; it is *their* material, not canon. Ask whether any of
+  it is kept, changed, or dropped — don't lead with it.)
+- 2b. Tone — how serious or silly, and in what way? Castle Crashers-thin means almost no
+  dialogue (D56), so tone lives in the look and the situations.
+
+**Q3 — The four heroes** — one hero at a time, Fire → Ice → Earth → Air (D46). For each:
+- name · look · one-line personality · why they wield that element.
+- Background the answer must fit: the signature cast belongs to the *element*, not the hero
+  (D46) — every hero with the element shares it. Heroes differ in look, animation, effects, and
+  small tuning. Billboarded 2D sprites, Castle Crashers-style (D47).
+
+**Q4 — Chapter 1.**
+- 4a. The region — what and where is it?
+- 4b. Its climate — which element(s) does it strengthen, which does it weaken? (Climate is a
+  per-element multiplier and helps enemies and players alike, D41.)
+- 4c. Its enemy family — 2–3 creature types, each filling one of the four archetypes (D22):
+  melee grunt (fights in your lane), ranged (shoots across lanes), caster (slow, elemental,
+  applies its status), brute (slow, telegraphed). Which element do they carry?
+- 4d. Its boss — the idea; one attack you dodge by **jumping**, one you dodge by **moving in
+  depth** (changing lane) (§6).
+- 4e. The boss's signature drop (D23) — what is it, and which kind of item: weapon, armour, pet,
+  or equipment?
+
+**Q5 — Chapter 2.** Same as Q4, with a *different* climate so element choice matters.
+
+**Q6 — The shopkeeper.** Who they are and their look; one recurring character or different per
+region? (Shopkeepers sit mostly in checkpoint rooms, D43.)
+
+**Q7 — Endless.** One line on why it exists in the world.
+
+**Q8 — Three design calls** (ROADMAP §5.1) → sent to the orchestrator as draft `D` entries, not
+written into the bible:
+- 8a. Do the four heroes play identically apart from their element? (Today: same kit, differing
+  in animation, effects, and small tuning — §3. A hero needing its own script is ruled out by
+  §3's implementation rule.)
+- 8b. Which elemental reaction pairs exist (D41, D46)? Today: Fire marks Burn, Ice marks Chill;
+  Earth and Air mark nothing (their hits stun / launch). The table ships empty until they pick.
+- 8c. Are pets more than stat pets in Early Access? (Needed by M12.)
+
+**Q9 — Names the game is waiting on** (optional, last; approved by the orchestrator 2026-09-24):
+- 9a. The currency's name (D43 — unnamed "until the story names it").
+- 9b. The chest's in-world name (D42 — "the chest" is a working name).
+- 9c. Does "Chill" stay as the Ice status's name (D46 — working name)?
+Anything left undecided is recorded as open. Any that land go to the orchestrator, who records
+them as amendments to those D entries.
+
 ## Waiting on
 
-- **Michael and the collaborator's time** for the session. Until then, prepare: read the list
-  above and draft the question list in this file.
+- Nothing blocking. The session runs as far as Michael can take it; the collaborator's calls may
+  come relayed.
 
 ## Current state
 
-Not started.
+Session opened 2026-09-24. **At Q1 (the goal)** — asked, awaiting answer.
 
 ## Next steps
 
-1. Read the list above.
-2. Draft the session's questions here, in order.
-3. When Michael is ready, run the session.
+1. Record Q1's answer, read it back, move to Q2.
+2. Carry on down the list; update this file after every answered question.
+3. When the list is done (or a sitting ends), write `docs/world/STORY_BIBLE.md` from what was
+   decided, open items marked open.
 
 ## Answers and decisions
 
-None yet.
+- 2026-09-24 — **Orchestrator:** question list approved; the three tail names become optional Q9.
+- 2026-09-24 — **Orchestrator:** session names are unreliable (Michael renames them). Message it
+  at the `from=` address of its last message, not by name — PROTOCOL rule 6 (853ad08). Last known
+  address: `uds:\\.\pipe\LOCAL\cc-msg-a5467c87452d77bccc60c704d3ef83a9` (session shown as
+  "Battlebomb"). If that fails, ListAgents and look for the row that "says it was" the orchestrator.
 
 ## Log
 
+- 2026-09-24 — Orchestrator ANSWER: go ahead; tail names added as Q9.
+- 2026-09-24 — ONLINE. "BattleBomb Planning" no longer resolves; orchestrator is "BattleBomb
+  Orchestrator" in ListAgents (told it). Question list drafted. Session opened at Q1.
 - 2026-09-24 — Lane seeded by the orchestrator.

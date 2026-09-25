@@ -40,9 +40,10 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ---
 
-- **Orchestrator: COMMITTED for the pre-M8 fixes plan DONE** (sent 2026-09-24; mirrored here).
-  Paths: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md` (new), `docs/team/netcode.md`.
-  Subject: "Pre-M8 fixes plan (F1–F3)". Do not edit the plan until COMMITTED.
+Nothing — everything sent is COMMITTED (pre-M8 fixes plan; Plan 1's D57 alignment). **Standing
+by until the orchestrator says the Builder has started** (nothing moves until Michael opens Unity).
+Then: be the Builder's reference for F1–F3 and Plan 1; start Plan 2 (Tasks 97–105) once the Builder
+is into Plan 1.
 
 ## Current job — DONE: pre-M8 fixes plan written (2026-09-24)
 

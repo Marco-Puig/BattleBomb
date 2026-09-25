@@ -111,3 +111,27 @@ spaced with clear margins, no text, no labels, no watermark, no border.
 *Design choices in this batch are the Art lane's reading of existing item names, not new lore:
 a four-leaf clover for "Lucky Charm", a cracked volcanic stone for "Ember Stone". Change them
 freely.*
+
+---
+
+## Terrier redo (round 2)
+
+**Why:** Michael, 2026-09-24: the Batch C dog is too detailed; he pictured "less detailed pets"
+like the classic co-op brawlers': a few chunky shapes, flat colour, no fur texture. The lucky
+charm and ember stone from Batch C stay.
+**Attach, in this order:** (1) your approved SF6, (2) your Batch C result.
+
+```
+A single game item icon of a small terrier dog, a companion pet, drawn very simply: a compact
+body built from a few chunky rounded shapes, a big blocky head with a square muzzle, two small
+dot eyes, simple folded-over ears, tiny stubby legs and a short upright tail. Wiry grey-and-white
+coat shown only as flat colour areas, with a bright red collar, so it stands apart from brown
+leather items. Standing alert in three-quarter view, facing right. NO fur texture, no fine
+detail, no tongue, no big cute eyes.
+Style: match the outline weight, flat colours and single hard-edged shadow tone of the attached
+images exactly: bold smooth near-black (#1A1917) outline, one small highlight, light from
+directly above, no gradients, no texture. It must read clearly at 64 pixels.
+
+Output: a single image, square 1024x1024, transparent background, the dog centred with a clear
+margin, no text, no watermark, no border.
+```

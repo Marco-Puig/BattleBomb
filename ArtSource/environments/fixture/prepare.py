@@ -32,35 +32,46 @@ def seamless(a, axis):
     return np.concatenate([blended, rest], axis=axis)
 
 
-def save(a, name):
-    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(os.path.join(OUT, 'fixture-%s__ai_v1.png' % name))
+def latest(piece):
+    for version, suffix in ((2, '-v2'), (1, '')):
+        path = os.path.join(RAW, piece + suffix + '.png')
+        if os.path.exists(path):
+            return path, version
+    return None, None
+
+
+def save(a, name, version):
+    out = os.path.join(OUT, 'fixture-%s__ai_v%d.png' % (name, version))
+    Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).save(out)
 
 
 def ground():
-    a = np.array(Image.open(os.path.join(RAW, 'ground.png')).convert('RGB'))
+    path, version = latest('ground')
+    a = np.array(Image.open(path).convert('RGB'))
     a = seamless(seamless(a, 1), 0)
     a = np.array(Image.fromarray(a.astype(np.uint8)).resize((1024, 1024), Image.LANCZOS)).astype(float)
     p95 = np.percentile(brightness(a), 95)
     if p95 > MAX_P95:
         a *= MAX_P95 / p95
     l = brightness(a)
-    save(a, 'ground')
-    print('ground: brightness %.0f%%, 5th-95th percentile %.0f-%.0f%%, darkest %.0f%%'
-          % (l.mean(), np.percentile(l, 5), np.percentile(l, 95), l.min()))
+    save(a, 'ground', version)
+    print('ground v%d: brightness %.0f%%, 5th-95th percentile %.0f-%.0f%%, darkest %.0f%%'
+          % (version, l.mean(), np.percentile(l, 5), np.percentile(l, 95), l.min()))
 
 
 def strip(name):
-    path = os.path.join(RAW, name + '.png')
-    if not os.path.exists(path):
+    path, version = latest(name)
+    if not path:
         print('%s: not generated yet' % name)
         return
     a = np.array(Image.open(path).convert('RGBA'))
-    save(seamless(a, 1), name)
-    print('%s: made seamless left to right' % name)
+    save(seamless(a, 1), name, version)
+    print('%s v%d: made seamless left to right' % (name, version))
 
 
 def frames():
-    rgba = np.array(Image.open(os.path.join(RAW, 'frames.png')).convert('RGBA'))
+    path, version = latest('frames')
+    rgba = np.array(Image.open(path).convert('RGBA'))
     lab, n = ndimage.label(rgba[:, :, 3] > 8, structure=np.ones((3, 3)))
     sizes = ndimage.sum(np.ones(lab.shape), lab, range(1, n + 1))
     big = sorted((i + 1 for i, s in enumerate(sizes) if s > lab.size * 0.02),
@@ -70,8 +81,8 @@ def frames():
         ys, xs = np.nonzero(keep)
         crop = rgba[ys.min():ys.max() + 1, xs.min():xs.max() + 1].copy()
         crop[~keep[ys.min():ys.max() + 1, xs.min():xs.max() + 1]] = 0
-        save(crop, 'frame-' + letter)
-    print('frames: %d clumps cut' % len(big))
+        save(crop, 'frame-' + letter, version)
+    print('frames v%d: %d clumps cut' % (version, len(big)))
 
 
 if __name__ == '__main__':

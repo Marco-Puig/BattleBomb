@@ -49,6 +49,29 @@ JOBS = [('effects/' + kit, 'effects/AI/_raw/%s.png' % kit, cols, rows, names,
          'effects/%s/AI/%s-{}__ai_v1.png' % (kit, kit), effect_canvas)
         for kit, (cols, rows, names) in KITS.items()]
 
+# 'skip' marks a cell that was drawn only for reference: cut, then thrown away.
+ICON = 'icons/items/{0}/AI/{0}__ai_v%d.png'
+JOBS += [
+    ('icons/batch-a', 'icons/items/AI/_raw/batch-a.png', 3, 2,
+     ['skip', 'leather-chestplate', 'leather-boots', 'steel-helmet', 'steel-chestplate', 'steel-boots'],
+     ICON % 1, lambda piece: (512, 512)),
+    ('icons/batch-b', 'icons/items/AI/_raw/batch-b.png', 2, 1, ['hunting-knife', 'hunting-bow'],
+     ICON % 1, lambda piece: (512, 512)),
+    ('icons/batch-c', 'icons/items/AI/_raw/batch-c.png', 3, 1, ['terrier', 'lucky-charm', 'ember-stone'],
+     ICON % 1, lambda piece: (512, 512)),
+    ('icons/terrier-v2', 'icons/items/AI/_raw/terrier-v2.png', 1, 1, ['terrier'],
+     ICON % 2, lambda piece: (512, 512)),
+]
+FILLS = {'icons': 0.80}
+
+# Held weapons sit on HERO_TEMPLATE §9's canvases with the grip on the pivot, not centred.
+# name: (output, canvas, pivot fraction from bottom-left, length along the long axis, grip rule)
+WEAPONS = {
+    'knife': ('weapons/hunting-knife/AI/hunting-knife__ai_v1.png', (256, 640), (0.5, 0.125), 480, 'handle'),
+    'bow': ('weapons/hunting-bow/AI/hunting-bow__ai_v1.png', (384, 768), (0.4, 0.5), 640, 'middle'),
+    'arrow': ('weapons/hunting-bow/AI/hunting-bow-arrow__ai_v1.png', (512, 128), (0.5, 0.5), 400, 'centre'),
+}
+
 
 def trimmed(rgba, box):
     x0, y0, x1, y1 = box
@@ -92,7 +115,7 @@ def cut(sheet, cols, rows, names, rects=None):
         pieces[name] = trimmed(rgba, box)
     for cell, name in enumerate(names):
         found = cells.get(cell)
-        if name is None or name in rects:
+        if name is None or name in rects or name == 'skip':
             continue
         if not found:
             warnings.append('%s: cell %d is empty' % (name, cell + 1))
@@ -105,17 +128,53 @@ def cut(sheet, cols, rows, names, rects=None):
     return pieces, warnings
 
 
-def on_canvas(piece, size):
+def on_canvas(piece, size, fill=FILL):
     cw, ch = size
-    scale = min(cw * FILL / piece.width, ch * FILL / piece.height)
+    scale = min(cw * fill / piece.width, ch * fill / piece.height)
     img = piece.resize((max(1, round(piece.width * scale)), max(1, round(piece.height * scale))), Image.LANCZOS)
     canvas = Image.new('RGBA', size, (0, 0, 0, 0))
     canvas.alpha_composite(img, ((cw - img.width) // 2, (ch - img.height) // 2))
     return canvas
 
 
+def grip(piece, rule):
+    a = np.array(piece)[:, :, 3] > 128
+    h, w = a.shape
+    if rule == 'centre':
+        return w / 2, h / 2
+    if rule == 'handle':
+        y = int(h * 0.84)
+    else:
+        y = h // 2
+    xs = np.nonzero(a[y])[0]
+    runs = np.split(xs, np.nonzero(np.diff(xs) > 1)[0] + 1)
+    wood = max(runs, key=len)
+    return float(wood.mean()), float(y)
+
+
+def place_weapons(sheet):
+    pieces, warnings = cut(sheet, 3, 1, list(WEAPONS))
+    for name, piece in pieces.items():
+        out, (cw, ch), (fx, fy), length, rule = WEAPONS[name]
+        scale = length / max(piece.width, piece.height)
+        img = piece.resize((max(1, round(piece.width * scale)), max(1, round(piece.height * scale))), Image.LANCZOS)
+        gx, gy = grip(img, rule)
+        canvas = Image.new('RGBA', (cw, ch), (0, 0, 0, 0))
+        canvas.alpha_composite(img, (round(cw * fx - gx), round(ch * (1 - fy) - gy)))
+        kept = (np.array(canvas)[:, :, 3] > 128).sum() / max((np.array(img)[:, :, 3] > 128).sum(), 1)
+        path = os.path.join(ROOT, out)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        canvas.save(path)
+        print('weapons          %-6s on %dx%d, %.0f%% inside the canvas' % (name, cw, ch, kept * 100))
+    for w in warnings:
+        print('   ! ' + w)
+
+
 if __name__ == '__main__':
     only = sys.argv[1] if len(sys.argv) > 1 else ''
+    weapon_sheet = os.path.join(ROOT, 'weapons/AI/_raw/sheet.png')
+    if 'weapons'.startswith(only) and os.path.exists(weapon_sheet):
+        place_weapons(weapon_sheet)
     for job, sheet, cols, rows, names, pattern, canvas_for in JOBS:
         path = os.path.join(ROOT, sheet)
         if not job.startswith(only) or not os.path.exists(path):
@@ -124,5 +183,5 @@ if __name__ == '__main__':
         for name, piece in pieces.items():
             out = os.path.join(ROOT, pattern.format(name))
             os.makedirs(os.path.dirname(out), exist_ok=True)
-            on_canvas(piece, canvas_for(name)).save(out)
+            on_canvas(piece, canvas_for(name), FILLS.get(job.split('/')[0], FILL)).save(out)
         print('%-16s %d pieces%s' % (job, len(pieces), ''.join('\n   ! ' + w for w in warnings)))

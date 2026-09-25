@@ -27,12 +27,15 @@ PHASES = [
         ('rig/hero-template/brief.md', 'Sheet A', None, RAW.format('rig/hero-template', 'sheet-a.png')),
         ('rig/hero-template/brief.md', 'Sheet B', None, RAW.format('rig/hero-template', 'sheet-b.png')),
     ]),
-    ('Fixture environment (test stage only, never ships)', 'Attach your approved SF3 to every prompt.', [
-        ('environments/fixture/brief.md', '1. Ground', 'your approved SF3', RAW.format('environments/fixture', 'ground.png')),
-        ('environments/fixture/brief.md', '2. Backdrop far', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-far.png')),
-        ('environments/fixture/brief.md', '3. Backdrop mid', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-mid.png')),
-        ('environments/fixture/brief.md', '4. Backdrop near', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-near.png')),
-        ('environments/fixture/brief.md', '5. Foreground frames', 'your approved SF3', RAW.format('environments/fixture', 'frames.png')),
+    ('Storybook world (round 2: test stage only, never ships)',
+     'Your call after round 1: a storybook world, not the semi-realistic first try. Make SF3b first; '
+     'the five stage pieces attach it.', [
+        ('_style/brief.md', 'SF3b', None, RAW.format('_style', 'sf3b.png')),
+        ('environments/fixture/brief.md', '1. Ground', 'your approved SF3b', RAW.format('environments/fixture', 'ground-v2.png')),
+        ('environments/fixture/brief.md', '2. Backdrop far', 'your approved SF3b', RAW.format('environments/fixture', 'backdrop-far-v2.png')),
+        ('environments/fixture/brief.md', '3. Backdrop mid', 'your approved SF3b', RAW.format('environments/fixture', 'backdrop-mid-v2.png')),
+        ('environments/fixture/brief.md', '4. Backdrop near', 'your approved SF3b', RAW.format('environments/fixture', 'backdrop-near-v2.png')),
+        ('environments/fixture/brief.md', '5. Foreground frames', 'your approved SF3b', RAW.format('environments/fixture', 'frames-v2.png')),
     ]),
     ('Effect kits', 'One sheet per kit.', [
         ('effects/brief.md', 'Fire', None, RAW.format('effects', 'fire.png')),
@@ -50,6 +53,7 @@ PHASES = [
         ('icons/items/brief.md', 'Batch A', None, RAW.format('icons/items', 'batch-a.png')),
         ('icons/items/brief.md', 'Batch B', None, RAW.format('icons/items', 'batch-b.png')),
         ('icons/items/brief.md', 'Batch C', None, RAW.format('icons/items', 'batch-c.png')),
+        ('icons/items/brief.md', 'Terrier redo', None, RAW.format('icons/items', 'terrier-v2.png')),
     ]),
     ('Temporary music', 'ChatGPT cannot make audio yet (September 2026). Paste these into the music tool you use; see the note in ArtSource/audio/music/brief.md.', [
         ('audio/music/brief.md', 'Title theme', 'nothing', 'ArtSource/audio/music/title-theme/AI/_raw/'),

@@ -5,7 +5,7 @@ ask the Art lane to change a brief or to refresh your progress.**
 
 ## Where you are
 
-**Done: 19 of 31. Next: step 11, Backdrop mid (landscape 1536×1024)** (Fixture environment (test stage only, never ships)).
+**Done: 19 of 33. Next: step 9, SF3b: the storybook world (round 2)** (Storybook world (round 2: test stage only, never ships)).
 
 **Save every result into one folder, `ArtSource/_raw/`,** named as the step says. A step is
 ticked ✓ once its file is there (or the Art lane has filed it). Progress as of 2026-09-24.
@@ -18,29 +18,31 @@ ticked ✓ once its file is there (or the Art lane has filed it). Progress as of
 - ✓ 6. SF6: the item icon style
 - ✓ 7. Sheet A: the 8 base parts
 - ✓ 8. Sheet B: the 7 variants
-- ✓ 9. Ground (square 1024×1024)
-- ✓ 10. Backdrop far (landscape 1536×1024)
-- ▶ 11. Backdrop mid (landscape 1536×1024)
-- ✓ 12. Backdrop near (landscape 1536×1024)
-- ✓ 13. Foreground frames (square 1024×1024)
-- ✓ 14. Fire (`effect/fire`, 7 pieces)
-- ✓ 15. Ice (`effect/ice`, 8 pieces)
-- ✓ 16. Earth (`effect/earth`, 8 pieces)
-- ✓ 17. Air (`effect/air`, 7 pieces)
-- ✓ 18. Melee (`effect/melee`, 10 pieces)
-- ✓ 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
-- ✓ 20. Feedback (`effect/feedback`, 5 pieces)
--   21. The weapon sheet
--   22. Batch A: armour (6 icons, 5 kept)
--   23. Batch B: weapons (2 icons)
--   24. Batch C: pet and trinkets (3 icons)
--   25. Title theme (`music/title-theme`)
--   26. Checkpoint room (`music/checkpoint-room`)
--   27. Stage loop (`music/stage-fixture`)
--   28. Boss loop, placeholder (`music/boss-temp`)
--   29. Sting: stage clear (`music/sting-stage-clear`)
--   30. Sting: wipe (`music/sting-wipe`)
--   31. Sting: level up (`music/sting-level-up`)
+- ▶ 9. SF3b: the storybook world (round 2)
+-   10. Ground (square 1024×1024)
+-   11. Backdrop far (landscape 1536×1024)
+-   12. Backdrop mid (landscape 1536×1024)
+-   13. Backdrop near (landscape 1536×1024)
+-   14. Foreground frames (square 1024×1024)
+- ✓ 15. Fire (`effect/fire`, 7 pieces)
+- ✓ 16. Ice (`effect/ice`, 8 pieces)
+- ✓ 17. Earth (`effect/earth`, 8 pieces)
+- ✓ 18. Air (`effect/air`, 7 pieces)
+- ✓ 19. Melee (`effect/melee`, 10 pieces)
+- ✓ 20. Loot glow (`effect/loot`, 4 pieces, greyscale)
+- ✓ 21. Feedback (`effect/feedback`, 5 pieces)
+- ✓ 22. The weapon sheet
+- ✓ 23. Batch A: armour (6 icons, 5 kept)
+- ✓ 24. Batch B: weapons (2 icons)
+- ✓ 25. Batch C: pet and trinkets (3 icons)
+-   26. Terrier redo (round 2)
+-   27. Title theme (`music/title-theme`)
+-   28. Checkpoint room (`music/checkpoint-room`)
+-   29. Stage loop (`music/stage-fixture`)
+-   30. Boss loop, placeholder (`music/boss-temp`)
+-   31. Sting: stage clear (`music/sting-stage-clear`)
+-   32. Sting: wipe (`music/sting-wipe`)
+-   33. Sting: level up (`music/sting-level-up`)
 
 How to use it:
 1. Go down the list in order. Later prompts attach images you approved earlier.
@@ -281,99 +283,169 @@ visible, no text, no labels, no watermark, no border.
 
 ---
 
-## Fixture environment (test stage only, never ships)
+## Storybook world (round 2: test stage only, never ships)
 
-*Attach your approved SF3 to every prompt.*
+*Your call after round 1: a storybook world, not the semi-realistic first try. Make SF3b first; the five stage pieces attach it.*
 
-### ✓ 9. Ground (square 1024×1024)
+### ▶ NEXT: 9. SF3b: the storybook world (round 2)
 
-- **Attach:** your approved SF3
-- **Save as:** `ground.png` in `ArtSource/_raw/`  (saved)
+- **Attach:** your approved SF1.
+- **Save as:** `sf3b.png` in `ArtSource/_raw/`
+- *Brief:* `ArtSource/_style/brief.md`
+
+```
+A mock gameplay screenshot from a side-on 2.5D co-op action game. The camera looks at the scene
+from the side and slightly above.
+
+The world: a whimsical storybook meadow built as a 3D stage. A broad, flat walkable ground strip
+runs across the lower half of the image; that is where the fighting happens. It is a light,
+even, low-contrast path of soft golden sand and bright grass, with no dark patches and no shadows
+painted on it. Behind it: curving hills with big, round, lollipop-like trees and glowing flowers,
+and far away, exaggerated rounded mountains in vivid purples and teals under a clear, rich-blue
+sky with puffy clouds. At the far left and right edges, a few big, simple, dark teal leaves in
+the foreground frame the shot without covering the ground strip. No buildings, castles, bridges
+or waterfalls.
+
+The action: two chunky cartoon knights in the style of the attached image, one in blue and
+silver and one in red and gold, fight four small, round, featureless placeholder enemies
+(simple grey-green blob creatures with eyes). Every character casts a crisp, hard-edged, dark
+shadow directly beneath them on the ground; those shadows are the darkest shapes on the ground.
+
+Characters: match the attached image exactly (same outline weight and colour, same flat colours
+and single shadow tone, the same big-head proportions).
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
+
+Output: a single image, landscape 1536x1024, no UI, no text, no watermark, no border.
+```
+
+### 10. Ground (square 1024×1024)
+
+- **Attach:** your approved SF3b
+- **Save as:** `ground-v2.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
 A seamless, tileable ground texture seen from directly above, for the walkable floor of a
-side-scrolling game: a soft mix of short light-green grass and light sandy dirt, evenly lit,
-LOW contrast, with no dark patches, holes, stones, shadows, flowers or strong details, so a
+side-scrolling game: a soft, simple mix of light, bright green grass and light golden sandy path,
+painted in a few large, clean patches of flat colour with gentle painted edges, evenly lit, LOW
+contrast. No dark patches, holes, stones, shadows, flowers, grass blades or fine texture, so a
 character's dark shadow on it is always the darkest thing in view. The left edge must continue
 seamlessly into the right edge, and the top into the bottom.
-Environment style: lush, painterly, soft, gentle painted texture, no outlines, soft saturated
-colour. Match the ground colour of the attached image, but lighter and calmer.
+Match the ground colours of the attached image, but lighter and calmer.
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 
 Output: a single image, square 1024x1024, no text, no watermark, no border.
 ```
 
-### ✓ 10. Backdrop far (landscape 1536×1024)
+### 11. Backdrop far (landscape 1536×1024)
 
-- **Attach:** your approved SF3
-- **Save as:** `backdrop-far.png` in `ArtSource/_raw/`  (saved)
+- **Attach:** your approved SF3b
+- **Save as:** `backdrop-far-v2.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
-A wide painted background strip for a side-scrolling game: a bright soft sky with a few big
-rounded clouds, and a range of distant, pale blue-violet mountains along the lower third,
-softened by atmospheric haze. The left edge must continue seamlessly into the right edge so the
-strip can repeat. Nothing in the foreground, and no buildings, castles, bridges or waterfalls:
-just sky, clouds and mountains.
-Environment style: lush, painterly 2D background art, soft rounded shapes, gentle painted
-texture, saturated but soft colour, warm sunlight, no outlines. Match the sky and distance of the
-attached image.
+A wide painted background strip for a side-scrolling game: a bright, clear sky in rich blue with
+a few big, puffy, simply shaped clouds, and a range of distant mountains with rounded, exaggerated
+peaks along the lower third, painted in vivid purples and teals, not grey and not hazy. The left
+edge must continue seamlessly into the right edge so the strip can repeat. Nothing in the
+foreground, and no buildings, castles, bridges or waterfalls: just sky, clouds and mountains.
+Match the sky and distance of the attached image.
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 
 Output: a single image, landscape 1536x1024, no text, no watermark, no border.
 ```
 
-### ▶ NEXT: 11. Backdrop mid (landscape 1536×1024)
+### 12. Backdrop mid (landscape 1536×1024)
 
-- **Attach:** your approved SF3
-- **Save as:** `backdrop-mid.png` in `ArtSource/_raw/`
+- **Attach:** your approved SF3b
+- **Save as:** `backdrop-mid-v2.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
-A painted background layer for a side-scrolling game: gently rolling green hills with big,
-rounded, lush trees and a few glowing flowers, filling the lower half of the image; everything
-above the hills is fully transparent. No buildings, castles, bridges or waterfalls. Slightly hazy
-and softer than a foreground would be. The
-left edge must continue seamlessly into the right edge so the layer can repeat.
-Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
-gentle painted texture, saturated but soft colour, warm sunlight, no outlines. Match the hills
-and trees of the attached image.
+A painted background layer for a side-scrolling game: gently rolling hills with big, round,
+lollipop-like storybook trees and a few glowing flowers, filling the lower half of the image, in
+rich teal-greens; everything above the hills is fully transparent. No buildings, castles, bridges
+or waterfalls. The left edge must continue seamlessly into the right edge so the layer can repeat.
+Match the hills and trees of the attached image.
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 
 Output: a single image, landscape 1536x1024, transparent background above the hills, no text, no
 watermark, no border.
 ```
 
-### ✓ 12. Backdrop near (landscape 1536×1024)
+### 13. Backdrop near (landscape 1536×1024)
 
-- **Attach:** your approved SF3
-- **Save as:** `backdrop-near.png` in `ArtSource/_raw/`  (saved)
+- **Attach:** your approved SF3b
+- **Save as:** `backdrop-near-v2.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
-A painted layer for a side-scrolling game: a low, continuous row of lush bushes, tall grass
-and small flowers along the bottom third of the image, seen from the side; everything above is
-fully transparent, and nothing sits below the row's base. The left edge must continue seamlessly
-into the right edge so the row can repeat.
-Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
-gentle painted texture, saturated but soft colour, warm sunlight, no outlines, medium-light
-values (nothing near black).
+A painted layer for a side-scrolling game: a low, continuous row of round, chunky storybook
+bushes and a few simple flowers along the bottom third of the image, seen from the side, in bright
+warm greens and golds; everything above is fully transparent, and nothing sits below the row's
+base. Medium-light values, nothing near black. The left edge must continue seamlessly into the
+right edge so the row can repeat.
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 
 Output: a single image, landscape 1536x1024, transparent background, no text, no watermark, no
 border.
 ```
 
-### ✓ 13. Foreground frames (square 1024×1024)
+### 14. Foreground frames (square 1024×1024)
 
-- **Attach:** your approved SF3
-- **Save as:** `frames.png` in `ArtSource/_raw/`  (saved)
+- **Attach:** your approved SF3b
+- **Save as:** `frames-v2.png` in `ArtSource/_raw/`
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
 Two separate foreground plant clumps for the edges of a side-scrolling game screen, side by side
-with clear space between them, on a transparent background: (1) a tall clump of broad dark-green
-leaves and ferns leaning right, (2) a lower, wider clump of dark leaves and a few stems leaning
-left. They are close to the camera, so they are darker, larger and slightly less detailed than
-the background.
-Environment style: lush, painterly, soft rounded shapes, no outlines.
+with clear space between them, on a transparent background: (1) a tall clump of big, simple,
+rounded leaves leaning right, (2) a lower, wider clump of rounded leaves and a few curly stems
+leaning left. They are close to the camera, so they are darker (deep teal-green), larger and
+simpler than the background, drawn as a few bold shapes rather than detailed foliage.
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 
 Output: a single image, square 1024x1024, transparent background, no text, no watermark, no
 border.
@@ -385,7 +457,7 @@ border.
 
 *One sheet per kit.*
 
-### ✓ 14. Fire (`effect/fire`, 7 pieces)
+### ✓ 15. Fire (`effect/fire`, 7 pieces)
 
 - **Attach:** your approved SF5.
 - **Save as:** `fire.png` in `ArtSource/_raw/`  (saved)
@@ -407,7 +479,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 15. Ice (`effect/ice`, 8 pieces)
+### ✓ 16. Ice (`effect/ice`, 8 pieces)
 
 - **Attach:** your approved SF5.
 - **Save as:** `ice.png` in `ArtSource/_raw/`  (saved)
@@ -431,7 +503,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 16. Earth (`effect/earth`, 8 pieces)
+### ✓ 17. Earth (`effect/earth`, 8 pieces)
 
 - **Attach:** your approved SF5.
 - **Save as:** `earth.png` in `ArtSource/_raw/`  (saved)
@@ -454,7 +526,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 17. Air (`effect/air`, 7 pieces)
+### ✓ 18. Air (`effect/air`, 7 pieces)
 
 - **Attach:** your approved SF5.
 - **Save as:** `air.png` in `ArtSource/_raw/`  (saved)
@@ -476,7 +548,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 18. Melee (`effect/melee`, 10 pieces)
+### ✓ 19. Melee (`effect/melee`, 10 pieces)
 
 - **Attach:** your approved SF2 (the knight mid-swing).
 - **Save as:** `melee.png` in `ArtSource/_raw/`  (saved)
@@ -500,7 +572,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
+### ✓ 20. Loot glow (`effect/loot`, 4 pieces, greyscale)
 
 - **Attach:** nothing. These are plain light shapes, tinted by the game.
 - **Save as:** `loot.png` in `ArtSource/_raw/`  (saved)
@@ -520,7 +592,7 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 watermark, no border.
 ```
 
-### ✓ 20. Feedback (`effect/feedback`, 5 pieces)
+### ✓ 21. Feedback (`effect/feedback`, 5 pieces)
 
 - **Attach:** your approved SF1.
 - **Save as:** `feedback.png` in `ArtSource/_raw/`  (saved)
@@ -547,10 +619,10 @@ watermark, no border.
 
 *Before the icons: M9 needs the knight holding his knife; the weapon icons are drawn from this sheet.*
 
-### 21. The weapon sheet
+### ✓ 22. The weapon sheet
 
 - **Attach:** (1) your approved SF1, (2) your approved SF6.
-- **Save as:** `sheet.png` in `ArtSource/_raw/`
+- **Save as:** `sheet.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/weapons/brief.md`
 
 ```
@@ -581,10 +653,10 @@ text, no labels, no watermark, no border.
 
 *Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time.*
 
-### 22. Batch A: armour (6 icons, 5 kept)
+### ✓ 23. Batch A: armour (6 icons, 5 kept)
 
 - **Attach:** your approved SF6.
-- **Save as:** `batch-a.png` in `ArtSource/_raw/`
+- **Save as:** `batch-a.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -606,10 +678,10 @@ Output: a single image, landscape 1536x1024, transparent background, the six ico
 with clear margins, no text, no labels, no watermark, no border.
 ```
 
-### 23. Batch B: weapons (2 icons)
+### ✓ 24. Batch B: weapons (2 icons)
 
 - **Attach:** (1) your approved SF6, (2) your approved held-weapon sheet.
-- **Save as:** `batch-b.png` in `ArtSource/_raw/`
+- **Save as:** `batch-b.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -629,10 +701,10 @@ Output: a single image, landscape 1536x1024, transparent background, both icons 
 margins, no text, no labels, no watermark, no border.
 ```
 
-### 24. Batch C: pet and trinkets (3 icons)
+### ✓ 25. Batch C: pet and trinkets (3 icons)
 
 - **Attach:** your approved SF6.
-- **Save as:** `batch-c.png` in `ArtSource/_raw/`
+- **Save as:** `batch-c.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
@@ -651,13 +723,34 @@ Output: a single image, landscape 1536x1024, transparent background, the three i
 spaced with clear margins, no text, no labels, no watermark, no border.
 ```
 
+### 26. Terrier redo (round 2)
+
+- **Attach:** (1) your approved SF6, (2) your Batch C result.
+- **Save as:** `terrier-v2.png` in `ArtSource/_raw/`
+- *Brief:* `ArtSource/icons/items/brief.md`
+
+```
+A single game item icon of a small terrier dog, a companion pet, drawn very simply: a compact
+body built from a few chunky rounded shapes, a big blocky head with a square muzzle, two small
+dot eyes, simple folded-over ears, tiny stubby legs and a short upright tail. Wiry grey-and-white
+coat shown only as flat colour areas, with a bright red collar, so it stands apart from brown
+leather items. Standing alert in three-quarter view, facing right. NO fur texture, no fine
+detail, no tongue, no big cute eyes.
+Style: match the outline weight, flat colours and single hard-edged shadow tone of the attached
+images exactly: bold smooth near-black (#1A1917) outline, one small highlight, light from
+directly above, no gradients, no texture. It must read clearly at 64 pixels.
+
+Output: a single image, square 1024x1024, transparent background, the dog centred with a clear
+margin, no text, no watermark, no border.
+```
+
 ---
 
 ## Temporary music
 
 *ChatGPT cannot make audio yet (September 2026). Paste these into the music tool you use; see the note in ArtSource/audio/music/brief.md.*
 
-### 25. Title theme (`music/title-theme`)
+### 27. Title theme (`music/title-theme`)
 
 - **Attach:** nothing
 - **Save as:** `title-theme.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -674,7 +767,7 @@ Tags: orchestral folk, adventure, playful, heroic, fiddle, tin whistle, pizzicat
 Settings: D major · 112 BPM · 1:30 · loop
 ```
 
-### 26. Checkpoint room (`music/checkpoint-room`)
+### 28. Checkpoint room (`music/checkpoint-room`)
 
 - **Attach:** nothing
 - **Save as:** `checkpoint-room.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -690,7 +783,7 @@ Tags: cozy, calm, acoustic guitar, marimba, pizzicato, soft percussion, shop mus
 Settings: F major · 84 BPM · 2:00 · loop
 ```
 
-### 27. Stage loop (`music/stage-fixture`)
+### 29. Stage loop (`music/stage-fixture`)
 
 - **Attach:** nothing
 - **Save as:** `stage-fixture.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -707,7 +800,7 @@ Tags: energetic, adventure, battle, orchestral folk, fiddle, galloping strings, 
 Settings: E minor · 128 BPM · 2:30 · loop
 ```
 
-### 28. Boss loop, placeholder (`music/boss-temp`)
+### 30. Boss loop, placeholder (`music/boss-temp`)
 
 - **Attach:** nothing
 - **Save as:** `boss-temp.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -723,7 +816,7 @@ Tags: epic, intense, boss battle, big drums, brass, low strings, electric bass, 
 Settings: D minor · 140 BPM · 2:00 · loop
 ```
 
-### 29. Sting: stage clear (`music/sting-stage-clear`)
+### 31. Sting: stage clear (`music/sting-stage-clear`)
 
 - **Attach:** nothing
 - **Save as:** `sting-stage-clear.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -737,7 +830,7 @@ Tags: victory fanfare, short sting, brass, fiddle, drum roll, cheerful, video ga
 Settings: D major · about 5 seconds · no loop
 ```
 
-### 30. Sting: wipe (`music/sting-wipe`)
+### 32. Sting: wipe (`music/sting-wipe`)
 
 - **Attach:** nothing
 - **Save as:** `sting-wipe.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -751,7 +844,7 @@ Tags: game over, comic, sad trombone, pizzicato, short sting, video game
 Settings: D minor · about 4 seconds · no loop
 ```
 
-### 31. Sting: level up (`music/sting-level-up`)
+### 33. Sting: level up (`music/sting-level-up`)
 
 - **Attach:** nothing
 - **Save as:** `sting-level-up.mp3` (or `.wav`) in `ArtSource/_raw/`

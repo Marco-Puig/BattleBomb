@@ -64,18 +64,19 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Michael has done GPT steps 1–20 except 11** (backdrop mid). 19 of 31 are done; the file says
-the next step is 11. His saves keep landing in `_style/AI/_raw/`, so there is now **one
-inbox, `ArtSource/_raw/`** (git-ignored by the `ArtSource/**/_raw/` rule).
-`make_gpt_prompts.py --sort` files inbox results (and anything in `_style/AI/_raw/` with a
-step's name) into their folders; ticks count either place. "backdrop-mid.png" was really the
-far backdrop, so I renamed it.
-**Processed:** `environments/fixture/prepare.py` (seamless strips, ground levelled to 73–84%,
-frames cut into a and b) → 5 `fixture-*__ai_v1.png`; `ArtSource/cut_sheets.py` (grid cutter;
-strays in empty cells join the nearest piece; `RECTS` for soft glows) → 49 effect pieces.
-Manifest: 7 effect kits + environment/fixture are now `ai-draft`.
-**Trap for icons Batch A:** the leather helmet is drawn but discarded. `None` in cut_sheets means
-"empty, merge strays", so a discarded cell needs a separate 'skip' marker before adding the icon jobs.
+**Round 1 of the temporary art is done** (Michael, 2026-09-24): all image steps except the v1
+backdrop-mid. **No music**: ChatGPT can't make audio (the tool choice is still on his queue).
+**Michael's review:** most art is "spot on"; **the dog** is too detailed (he wants simple
+Castle Crashers / Dungeon Defenders-style pets), and **the backgrounds** are "not what was in my
+head; colours off". Asked which look: he picked **Rayman storybook**, i.e. simplified storybook
+shapes with rich colour, not semi-realistic anime with pale haze.
+**Round 2 queued in GPT_PROMPTS (19 of 33 done, next is step 9):** SF3b (storybook style frame),
+then 5 fixture pieces as `*-v2.png` (the fixture brief is rewritten with the storybook style
+block, which is also in bible sections 4 and 9), and the Terrier redo (`terrier-v2.png`).
+`prepare.py` picks v2 raws and writes `__ai_v2`. cut_sheets job `icons/terrier-v2` writes the
+terrier `__ai_v2`.
+**Cut this round:** 10 item icons (the Batch A leather helmet was a 'skip'), knife, bow and arrow
+on the section 9 canvases with grips on the pivots. The manifest marks 13 more rows ai-draft.
 **Sent as DONE; do not touch until COMMITTED.**
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
@@ -164,6 +165,10 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Michael): **environments = "Rayman storybook"**: painted and glowing, but with
+  simplified storybook shapes and rich, bright colour, never semi-realistic or hazy (round-1
+  review). **Pets = simple, like Castle Crashers / Dungeon Defenders pets**: few chunky shapes,
+  flat colour, no fur texture.
 - 2026-09-24 (Michael): **hero proportions = the Templar Knight's** ("castle-crashers sized
   proportions from templar knight... didn't want to change that"). **Supersedes** the earlier
   "head 1/3–2/5" answer, which came from a misworded question (I had described 1/3 as "like
@@ -237,6 +242,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Round 1 art finished; icons and weapons cut; review → storybook environments + simple pets; round 2 prompts queued; DONE sent.
 - 2026-09-24 — GPT steps 9–20 processed (step 11 missing): single inbox, sort, fixture prepare, 49 effect pieces; DONE sent.
 - 2026-09-24 — Reviewed GPT steps 1–8; the prompt file tracks progress; knight cut into 15 parts + preview; fixture backdrops made building-free; DONE sent.
 - 2026-09-24 — Proportions switched to the Templar's (Michael); hero template v1 (15 parts); bible, SF1, parts sheets, guides, and queue rebuilt; DONE sent.

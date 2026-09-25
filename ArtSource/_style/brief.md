@@ -156,3 +156,43 @@ must read clearly when shrunk to 64 pixels.
 Output: a single image, landscape 1536x1024, transparent background, the four icons evenly spaced
 with clear margins, no text, no labels, no watermark, no border.
 ```
+
+## SF3b: the storybook world (round 2)
+
+**Why:** Michael, 2026-09-24: the first environments came out semi-realistic with pale, hazy
+colour; he pictured a painted **storybook** world with simplified shapes and rich colour. SF3b
+replaces SF3 as the environment reference, and the fixture prompts attach it.
+**Attach:** your approved SF1.
+**Judge:** turn the result greyscale. Can you find every shadow at a glance?
+
+```
+A mock gameplay screenshot from a side-on 2.5D co-op action game. The camera looks at the scene
+from the side and slightly above.
+
+The world: a whimsical storybook meadow built as a 3D stage. A broad, flat walkable ground strip
+runs across the lower half of the image; that is where the fighting happens. It is a light,
+even, low-contrast path of soft golden sand and bright grass, with no dark patches and no shadows
+painted on it. Behind it: curving hills with big, round, lollipop-like trees and glowing flowers,
+and far away, exaggerated rounded mountains in vivid purples and teals under a clear, rich-blue
+sky with puffy clouds. At the far left and right edges, a few big, simple, dark teal leaves in
+the foreground frame the shot without covering the ground strip. No buildings, castles, bridges
+or waterfalls.
+
+The action: two chunky cartoon knights in the style of the attached image, one in blue and
+silver and one in red and gold, fight four small, round, featureless placeholder enemies
+(simple grey-green blob creatures with eyes). Every character casts a crisp, hard-edged, dark
+shadow directly beneath them on the ground; those shadows are the darkest shapes on the ground.
+
+Characters: match the attached image exactly (same outline weight and colour, same flat colours
+and single shadow tone, the same big-head proportions).
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
+
+Output: a single image, landscape 1536x1024, no UI, no text, no watermark, no border.
+```

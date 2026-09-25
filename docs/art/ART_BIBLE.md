@@ -87,9 +87,15 @@ who it is and what it's doing.
   - **Backdrop** (far): atmospheric, paler and cooler with distance, lower contrast.
   - **Play band**: the ground plane where fights happen (the depth band, GAME_DESIGN §2.1).
   - **Foreground**: occasional dark framing elements at the screen edges, never over the play band.
-- **Lush and painterly**: rounded, layered shapes, soft painted textures, light shafts, glowing
-  details, saturated colour. The environment is **softer and lower-contrast than the
-  characters**, never crisper.
+- **A storybook world** (Michael, 2026-09-24, after round 1): painted and glowing, but with
+  **simplified, exaggerated, rounded storybook shapes** (bulbous trees, curving hills, chunky
+  rocks) and **rich, saturated colour**. It is **never semi-realistic**: no photographic detail,
+  no realistic foliage, and no hazy, washed-out distance. Round 1's "lush, painterly" wording
+  produced soft anime landscapes in pale blues, which was not what he pictured.
+- **Colour by depth:** distant layers are simpler and cooler, in vivid purples, teals and blues
+  (never grey); near layers are warmer and more saturated, in greens and golds. The environment
+  stays **softer than the characters** and never has black outlines, so the characters stay the
+  crispest thing on screen.
 
 ### Shadow readability: rules, not taste (D14, GAME_DESIGN §2.3)
 The grounded shadow is the game's only depth cue, so nothing in the play band may compete with it.
@@ -210,6 +216,18 @@ Light comes from directly above, so the shading is symmetrical left to right. No
 texture, no noise, no painted ground shadow. Big-head proportions: the head is about two-thirds
 of the total height and sits straight on a short, round body with no visible neck; short arms
 with big round hands; short stubby legs with small boots. Friendly, expressive, bouncy.
+```
+
+### The environment style block (paste verbatim into every environment prompt)
+```
+Environment style: a whimsical storybook world painted for a 2D side-scrolling game. Simplified,
+exaggerated, rounded shapes (bulbous trees, curving hills, chunky rocks) with clean painted edges,
+rich saturated colour, bold colour contrast between layers, and a soft magical glow. Hand-painted
+but clearly stylised, never realistic: no photographic detail, no fine textures, no realistic
+leaves or grass blades, no hazy washed-out distance. Distant layers are simpler and cooler (vivid
+purples, teals and blues), near layers warmer and more saturated (greens and golds). Softer than
+the game's bold-outlined characters and with no black outlines, so the characters and their
+shadows stand out.
 ```
 
 ### The output line (paste verbatim, choosing the size)

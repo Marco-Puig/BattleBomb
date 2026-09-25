@@ -14,16 +14,16 @@ ui/chapter-select-earth,Chapter-select globe (Earth),ui,hand-final,,,UI/Frontend
 pack/world-props,World props,pack,unclassified,,,World/Props,,,,,"Door, Door_Alt, Asteroid. Third-party pack (Michael 2026-09-24), name and licence unknown. Referenced by nothing: delete at M9."
 reference/main-character-temp,Duplicate of Templar Knight.ai,reference,hand-final,,,AI/maincharactertemp.ai,,,,,Byte-identical copy of Sprites/Characters/Templar Knight/AI/Templar Knight.ai (same MD5 and DocumentID). Delete at M9 as a duplicate.
 rig/hero-template,Hero template (knight test skin),rig,ai-draft,rig/hero-template/AI,,,,ChatGPT images,2026-09-24,rig/hero-template/brief.md,"Stand-in skin for building the rig at M9, not one of the four heroes. 15 parts cut by cut_parts.py from sheet-a/b; each part fitted to its template size (the sheet drew the body too big for Templar proportions)."
-item-icon/2,Leather Chestplate icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 2 once drafted. Needs SF6 approved first.
-item-icon/3,Leather Boots icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 3 once drafted. Needs SF6 approved first.
-item-icon/4,Steel Helmet icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 4 once drafted. Needs SF6 approved first.
-item-icon/5,Steel Chestplate icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 5 once drafted. Needs SF6 approved first.
-item-icon/6,Steel Boots icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 6 once drafted. Needs SF6 approved first.
-item-icon/7,Hunting Knife icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 7 once drafted. Batch B needs SF6 and the held-weapon sheet approved first.
-item-icon/8,Hunting Bow icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 8 once drafted. Batch B needs SF6 and the held-weapon sheet approved first.
-item-icon/10,Terrier icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 10 once drafted. Needs SF6 approved first.
-item-icon/11,Lucky Charm icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 11 once drafted. Needs SF6 approved first.
-item-icon/13,Ember Stone icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 13 once drafted. Needs SF6 approved first.
+item-icon/2,Leather Chestplate icon,item-icon,ai-draft,icons/items/leather-chestplate/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 2 once imported. Cut by cut_sheets.py.
+item-icon/3,Leather Boots icon,item-icon,ai-draft,icons/items/leather-boots/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 3 once imported. Cut by cut_sheets.py.
+item-icon/4,Steel Helmet icon,item-icon,ai-draft,icons/items/steel-helmet/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 4 once imported. Cut by cut_sheets.py.
+item-icon/5,Steel Chestplate icon,item-icon,ai-draft,icons/items/steel-chestplate/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 5 once imported. Cut by cut_sheets.py.
+item-icon/6,Steel Boots icon,item-icon,ai-draft,icons/items/steel-boots/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 6 once imported. Cut by cut_sheets.py.
+item-icon/7,Hunting Knife icon,item-icon,ai-draft,icons/items/hunting-knife/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 7 once imported. Cut by cut_sheets.py.
+item-icon/8,Hunting Bow icon,item-icon,ai-draft,icons/items/hunting-bow/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 8 once imported. Cut by cut_sheets.py.
+item-icon/10,Terrier icon,item-icon,ai-draft,icons/items/terrier/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,"Wired to item id 10 once imported. Cut by cut_sheets.py. v1 too detailed (Michael, 2026-09-24): redo queued as GPT step ""Terrier redo"" (becomes __ai_v2)."
+item-icon/11,Lucky Charm icon,item-icon,ai-draft,icons/items/lucky-charm/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 11 once imported. Cut by cut_sheets.py.
+item-icon/13,Ember Stone icon,item-icon,ai-draft,icons/items/ember-stone/AI,,,,ChatGPT images,2026-09-24,icons/items/brief.md,Wired to item id 13 once imported. Cut by cut_sheets.py.
 effect/fire,Fire effect kit,effect,ai-draft,effects/fire/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/fire.png.
 effect/ice,Ice effect kit,effect,ai-draft,effects/ice/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/ice.png.
 effect/earth,Earth effect kit,effect,ai-draft,effects/earth/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/earth.png.
@@ -31,9 +31,9 @@ effect/air,Air effect kit,effect,ai-draft,effects/air/AI,,,,ChatGPT images,2026-
 effect/melee,"Melee effect kit (arcs, hit stars, dust)",effect,ai-draft,effects/melee/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/melee.png.
 effect/loot,"Loot glow kit (greyscale, tinted by QualityColors)",effect,ai-draft,effects/loot/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/loot.png.
 effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,ai-draft,effects/feedback/AI,,,,ChatGPT images,2026-09-24,effects/brief.md,Cut by ArtSource/cut_sheets.py from effects/AI/_raw/feedback.png.
-weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
-weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
-environment/fixture,Fixture meadow kit (fixture-only),environment,ai-draft,environments/fixture/AI,,,,ChatGPT images,2026-09-24,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. Made seamless and measured by prepare.py (ground 73-84% brightness). backdrop-mid still to generate (GPT step 11).
+weapon/7,Hunting Knife (held),weapon,ai-draft,weapons/hunting-knife/AI,,,,ChatGPT images,2026-09-24,weapons/brief.md,"On HERO_TEMPLATE section 9 canvas, grip on the pivot (cut_sheets.py)."
+weapon/8,Hunting Bow and arrow (held),weapon,ai-draft,weapons/hunting-bow/AI,,,,ChatGPT images,2026-09-24,weapons/brief.md,"Bow and arrow on HERO_TEMPLATE section 9 canvases, grip on the pivot (cut_sheets.py)."
+environment/fixture,Fixture meadow kit (fixture-only),environment,ai-draft,environments/fixture/AI,,,,ChatGPT images,2026-09-24,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. v1 (semi-realistic) superseded by the storybook round 2 (Michael 2026-09-24): SF3b then the 5 pieces as __ai_v2; prepare.py picks the newest.
 music/title-theme,Title theme (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
 music/checkpoint-room,Checkpoint room (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
 music/stage-fixture,Stage loop for the fixture chapter (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.

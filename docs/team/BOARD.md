@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | F1 (reshaped) and F2, then F3, F5 | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | F1 (reshaped), then F3, F5 | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -86,7 +86,7 @@ Builder runs it straight after Groundwork, before M8 Plan 1.
    bug underneath: `ResolveDeaths` walks the registry's own list while `Destroy` shrinks it, so the
    enemy after each corpse settles a step late (XP, loot order). **F1 reshaped (orchestrator):**
    collect the dead, then settle them, red-first; the tripwires stay as regression guards.
-2. **The debug grant row ships in release builds** (§5.2). Put it behind the same `#if` as the
+2. ~~**The debug grant row ships in release builds** (§5.2).~~ **Done — F2, 724d44e.** Put it behind the same `#if` as the
    tier-overlay row.
 3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
    session at launch — *orchestrator's call, flagged to Michael*.
@@ -179,6 +179,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — F2 committed (724d44e): the DEBUG grant row compiles out of a release (proven by a
+  release compile read with Cecil). EditMode 686, PlayMode 32.
 - 2026-09-25 — F1's premise didn't hold (Destroy's OnDisable is immediate in this Unity); reshaped to
   the death pass's skip-the-next-enemy bug (option A). F2 runs alongside.
 - 2026-09-25 — **Groundwork built** (G1–G13b, 56e4be5..527df2b); G14 applied D57's corrections and

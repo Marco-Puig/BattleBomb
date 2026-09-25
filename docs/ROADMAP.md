@@ -382,7 +382,7 @@ consoles and mobile (D5) · localisation.
 | Solo camera `_screenFill` (0.72) puts loadout cells over the character | UI Pass 01 | M9, once real sprite heights exist |
 | The twelve sword PNGs have no weapon | Art import | M9 |
 | Casters and Brutes spawn nowhere | HANDOFF-M7 | M10, region 1's family |
-| The DEBUG grant row | HANDOFF-M6 | M10, with real content |
+| The DEBUG grant row | HANDOFF-M6 | Out of release builds since F2 (724d44e); removed in M10, with real content |
 | Earth and Air infusions are provisional | D46 | M10's balance pass |
 | Heavy on watch | D26 | Re-judged at M9's feel pass |
 | `StageRunner` at 739 lines | HANDOFF-M7 | Watch — split when M11 adds the generator's path |

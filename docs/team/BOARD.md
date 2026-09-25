@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Groundwork — G1–G7 committed; Task 8 (settings and results; Escape never double-fires) | — |
+| Builder | Builder | working | Groundwork — G1–G8 committed; Task 9 (the button pictures) | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -134,6 +134,11 @@ From Groundwork (G4's review):
   at character select is Player 1's — a would-be Player 2's A readies Player 1 instead of joining;
   and two players pressing in the same frame can drop a join or eject Player 2 at chapter select
   (pre-existing loop order).
+- **From G8's review:** one stuck button on any pad blocks everyone's A on the results screen (the
+  pointer still works — per-player arming would fix it); only the settings menu's owner can close it,
+  so if their pad dies the game stays paused; and the driver's catch-up loop does not re-check the
+  pause, so a menu opened mid-frame lets a few more steps run (the same frame-step family as F1 and
+  candidate F4 — Netcode to assess with them).
 - **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
   keyboard — cosmetic; it corrects on the first press.
 
@@ -147,6 +152,9 @@ None.
 
 ## Log
 
+- 2026-09-24 — **G8 committed**: settings and results on the new map; Escape/Start never double-fire.
+  PlayMode 27. Results gets a short minimum time on screen in Task 12. Art round 1 done; D16 gains
+  Michael's look (storybook world, simple pets).
 - 2026-09-24 — **G7 committed**: the chest on the new map. EditMode 672, PlayMode 23. A pre-existing solo
   bug (Up from the filter row enters an invisible tab strip) rides Task 13. Art: 49 effect pieces and
   5 fixture pieces cut from Michael's second batch (d5c5ff0).

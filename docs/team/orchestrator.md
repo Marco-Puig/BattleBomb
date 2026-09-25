@@ -33,7 +33,7 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — writing F5's plan |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — F5.1 / F5.2 |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — asked Michael to reopen it from `PROMPTS.md` (2026-09-25) for M8 Plan 1 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
@@ -46,8 +46,8 @@ address (the address changes when this app restarts).
   (heading → complete), CLAUDE.md's progress row, and memory. Item 12 is his judgement; if he
   wants the fix, it rides F5.
 - **Now:** F1–F3 done (15778dd, 724d44e, 5abd671; F1 reshaped — premise false). The Builder is
-  writing F5's plan (`docs/superpowers/plans/2026-09-25-f5-chest-grid-scrolling.md`) for my approval
-  (chest grid scrolling past 40 stacks; room left for Michael's item 12), then M8 Plan 1 (Tasks 86–96). Netcode writes
+  building F5 (plan approved, ded6e1e: F5.1 model, F5.2 drawing; item 12 placed, not built; on
+  F5.2's commit add its line to `groundwork-pass.md`), then M8 Plan 1 (Tasks 86–96). Netcode writes
   Plan 2 once Plan 1 is underway, Plan 3 after Michael's lag table (Task 96). Candidate **F4** (lost
   sub-update taps) and the catch-up-loop pause item wait for Netcode to assess.
 - **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's

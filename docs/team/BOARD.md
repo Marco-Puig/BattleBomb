@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | F5 — writing its plan for the orchestrator's approval | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | F5.1 then F5.2 — plan `2026-09-25-f5-chest-grid-scrolling.md` (ded6e1e) | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -171,6 +171,8 @@ From Groundwork (G4's review):
   land by M10) — brings F1's skip back in `StepEnemies` or `StepStatuses`. Collect first, or walk a
   snapshot. Also: an `EnemyDied` handler that throws would consume a step's corpses unsettled (only
   StageRunner's counter listens today). Netcode: both matter to M8's exact-order host.
+- **Chest scrolling by mouse wheel or touch drag** (F5's not-done list) — with M13's pointer work:
+  whether the view detaches from the cursor or drags it along is that work's design call.
 - **Ultrawide couch co-op:** the doll columns run into the stats panel and now draw over it (G13b's
   review) — outside the supported layouts; look again if ultrawide becomes one.
 
@@ -184,6 +186,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — F5's plan approved (ded6e1e): the view lives in `ChestNavigation`; the grid draws
+  from it; X and Y refuse an undrawn cursor; a thin bar shows there is more. Item 12 sized (~⅓ of F5).
 - 2026-09-25 — F3 committed (5abd671): each launch draws its own seeds onto the session; the driver
   takes them through `UseSeeds`, M8's host door. EditMode 689, PlayMode 34. F1–F3 done. The
   Builder writes F5's plan (`2026-09-25-f5-chest-grid-scrolling.md`); Netcode to reopen for M8.

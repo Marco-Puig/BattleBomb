@@ -186,6 +186,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — F5.1 committed (2610ef0): the chest's navigation model owns the scrolled view. EditMode
+  694. F5.2 (the drawing) next.
 - 2026-09-25 — F5's plan approved (ded6e1e): the view lives in `ChestNavigation`; the grid draws
   from it; X and Y refuse an undrawn cursor; a thin bar shows there is more. Item 12 sized (~⅓ of F5).
 - 2026-09-25 — F3 committed (5abd671): each launch draws its own seeds onto the session; the driver

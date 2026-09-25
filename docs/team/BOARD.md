@@ -188,6 +188,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 87 committed (4f42e0c): the transport seam — loopback (with the socket's frame
+  limit), lag simulator, local socket. EditMode 723. Busy-port handling lands in 89.
 - 2026-09-25 — **M8 begins.** Task 86 committed (5e586a4): the wire in Core/Net — bytes, the stick,
   the command packet. EditMode 708. The loopback transport will enforce the socket's frame limit
   (87); the Events batch gets bounded or split at 92.

@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | F1 (reshaped), then F3, F5 | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | F3 — every run rolls its own; then F5 | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -85,7 +85,7 @@ Builder runs it straight after Groundwork, before M8 Plan 1.
    leaves there, so nothing acts after removal — the plan's tripwires pass on today's code. The real
    bug underneath: `ResolveDeaths` walks the registry's own list while `Destroy` shrinks it, so the
    enemy after each corpse settles a step late (XP, loot order). **F1 reshaped (orchestrator):**
-   collect the dead, then settle them, red-first; the tripwires stay as regression guards.
+   collect the dead, then settle them, red-first; the tripwires stay as regression guards. **Done — F1, 15778dd.**
 2. ~~**The debug grant row ships in release builds** (§5.2).~~ **Done — F2, 724d44e.** Put it behind the same `#if` as the
    tier-overlay row.
 3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
@@ -166,6 +166,11 @@ From Groundwork (G4's review):
 - **From G12 (for M9's HUD):** with both players at one drop, the loot card names only the first
   player's button; the front door's body text still draws in the built-in font (only its badge
   row uses the project fonts).
+- **Watch — `TargetRegistry.Ordered` hands out its own live list** (F1's review). Anything that
+  despawns mid-walk — a self-destructing enemy, a reaction that despawns what it kills (reactions
+  land by M10) — brings F1's skip back in `StepEnemies` or `StepStatuses`. Collect first, or walk a
+  snapshot. Also: an `EnemyDied` handler that throws would consume a step's corpses unsettled (only
+  StageRunner's counter listens today). Netcode: both matter to M8's exact-order host.
 - **Ultrawide couch co-op:** the doll columns run into the stats panel and now draw over it (G13b's
   review) — outside the supported layouts; look again if ultrawide becomes one.
 
@@ -179,6 +184,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — F1 committed (15778dd): the death pass collects, then settles, so same-step deaths
+  settle together in registry order. The plan's F1 carries a revision note.
 - 2026-09-25 — F2 committed (724d44e): the DEBUG grant row compiles out of a release (proven by a
   release compile read with Cecil). EditMode 686, PlayMode 32.
 - 2026-09-25 — F1's premise didn't hold (Destroy's OnDisable is immediate in this Unity); reshaped to

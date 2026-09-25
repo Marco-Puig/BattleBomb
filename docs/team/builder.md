@@ -167,6 +167,21 @@ Flagged, not fixed:
 
 EditMode 746/746; OnlineHost 8/8; **full PlayMode 43/43**. **Task 89 DONE sent (19:05)** → waiting
 for COMMITTED. Next: Task 90 (two editors) — QUIET REQUEST before any two-editor run.
+**Task 89 COMMITTED `fd33bea`** (A–G accepted). Orchestrator's calls:
+- **M2 → build in 95, red-first:** while a screen is open on the guest, NetGuest sends neutral; after it closes, a held button counts only once it has been released (D57's held-across rule), so the A that closes a menu isn't a jump.
+- **M6 + M8 → the next task touching those files, 95 at the latest:** NetDevOverlay caches the session (a debug panel must never destroy one); LocalLagNames goes read-only.
+- **Tests carried to 95:** a guest who leaves mid-match writes no save; the guest's couch is restored after a match.
+- **Deferred:** M1 → Plan 2 lobby; M5 → Plan 2 seats; M4 → Plan 3.
+**Task 90 started (19:15):** steps 1–3 (package via `Client.Add`, runInBackground, both suites) need no QUIET; QUIET REQUEST before step 4 (Art idle → granted at once).
+**90 progress (19:15):**
+- **Step 1:** com.unity.multiplayer.playmode 2.0.2 is in the manifest and lock. The Package Manager also re-sorted `com.unity.pipeline` (fine per orchestrator).
+- **Step 2:** runInBackground was already on (1 on disk, true in the editor), so nothing was written.
+- **Step 3:** EditMode 746/746; PlayMode 43/43.
+- **QUIET ON granted.**
+- **MPPM 2.0:** the code lives in UnityEditor.MultiplayerModule. The Window/Multiplayer/Multiplayer Play Mode menu exists. Activate from code with `MultiplayerPlaymode.PlayerTwo.Activate(out err, new List<string>())` via reflection; `PlayerState` goes NotLaunched → Launching → Launched. Deactivate with `.Deactivate(out err)`. Clone data lives in Library/VP.
+- **Step 4 BLOCKED (19:15):** Join local exists only in the clone's window. The bridge reaches the main editor only, and Michael declined screen control of Unity (do not re-ask). I sent BLOCKED with (a) Michael clicks Join once, or (b) fold into his step 6 (recommended). Holding QUIET with Player 2 launched.
+**CONTINUE (b) (19:15):** I deactivated Player 2 (NotLaunched); the main editor never entered play mode. QUIET OFF sent. Activation created `ProjectSettings/VirtualProjectsConfig.json` (the player-tag list); it goes in the commit. **Task 90 DONE sent (19:20)** with step 6's checklist for Michael.
+**Standing rule, from the orchestrator:** Michael's "no" to screen control holds for this session; never reach the clone another way. For **93–95**, split the clone-side checks into (1) what a harness can prove (HeadlessGuest; 95's guest harness) and (2) what needs Michael's eyes or a click. Group 2 goes in that task's checklist; the orchestrator batches them (one pass at 95, the lag table at 96). If a task would block mid-build on a click, say so in its DONE rather than waiting in QUIET.
 
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,

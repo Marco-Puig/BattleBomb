@@ -101,8 +101,8 @@ over the local transports.
 | guest → host | `Hello` — protocol version, build id, chosen hero, the guest's save payload (that hero's `CharacterSave`, sack, wallet, auto-flags) | reliable | on connect |
 | host → guest | `Welcome` — the guest's player id, chapter/stage/tier, the host's hero, the loaded stages, a baseline snapshot | reliable | when the guest may enter |
 | guest → host | `Commands` — ack of the latest snapshot, and the last four commands (redundancy against loss) | unreliable | every step |
-| host → guest | `Snapshot` — host frame, the last guest command consumed, every player, enemy, dummy, bolt, the drop ids, the stage state, per-player screens/grab counts/refusals, the attempt countdown | unreliable | every 2nd step (30 Hz) |
-| host → guest | `Events` — hits, deaths, drops spawned (with the item), screens opened/closed, attempt reset, checkpoint/stage/chapter completed | reliable, ordered | batched per step |
+| host → guest | `Snapshot` — host frame, the last guest command consumed, every player, enemy, dummy, bolt, the stage state, per-player screens/grab counts/refusals, the attempt countdown | unreliable | every 2nd step (30 Hz) |
+| host → guest | `Events` — hits, deaths, drops spawned (with the item) and removed, screens opened/closed, attempt reset, checkpoint/stage/chapter completed | reliable, ordered | batched per step |
 | host → guest | `LoadStage` / guest → host `StageReady` | reliable | at every launch, preload and hand-over |
 | guest → host | `Request` — player id, verb, arguments, sack revision | reliable | a menu action |
 | host → guest | `RequestResult`, `InventoryState` (the guest's full sack, wallet, loadout, quick slot, ledger — binary, ~8 KB at a full sack) | reliable | after a request; after any change to the guest's inventory, at most once per snapshot |
@@ -130,7 +130,7 @@ Tuned live; recorded here so the first build has somewhere to start.
 | Drop | 10 s of silence | Michael's call, design §1 |
 | Fake lag — normal | 100 ms round trip, ±10 ms jitter, no loss | A decent home connection |
 | Fake lag — bad | 200 ms round trip, ±30 ms jitter, 2 % loss on the unreliable channel | The one to make feel acceptable |
-| Protocol version | 1 | Mismatch refuses the join with a readable reason |
+| Protocol version | 2 (drop ids left the snapshot, Task 95) | Mismatch refuses the join with a readable reason |
 
 ---
 

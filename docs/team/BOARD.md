@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | M8 Plan 1 — Tasks 86–96 (`2026-09-24-m8-plan1-wire-and-mirror.md`) | Pauses for Michael's Groundwork pass (QUIET); asks QUIET for two-editor runs (Task 90+) |
+| Builder | Builder | idle after Task 96 Step 1 — ready to compact | M8 Plan 1 built (86–95) | Michael's pass (96); Plan 2 from Netcode |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -32,35 +32,37 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Groundwork pass + M8 online checks** (one sitting, ~30 min) — the 16-item controller checklist in
-   `docs/team/groundwork-pass.md`, then Stages A and B in `docs/team/m8-plan1-pass.md`. Needs Unity in front and a pad or two; the
-   orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
-   another item under your cursor just before X. Recommended fix if it bothers him: the cursor
-   follows its item and X pauses for a moment after a partner changes it — rides F5.
-2. **The World session** — open in the World lane's session, at question 1 (the goal).
-3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+1. **Groundwork pass + M8 online checks and the lag table** (~35 min; can be two sittings) — the
+   16 controller checks in `docs/team/groundwork-pass.md`, then `docs/team/m8-plan1-pass.md`
+   (Stages A and B plus Task 96's lag table, which Plan 3 is written from). Item 12 in the
+   Groundwork list is his judgement call.
+2. **Reopen the Netcode session** (paste its prompt from `docs/team/PROMPTS.md`) — **now on the
+   critical path:** Plan 1 is built, and Plan 2 (97–105) needs writing before the Builder has
+   more M8 work.
+3. **The World session** — open in the World lane's session, at question 1 (the goal).
+4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-4. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
+5. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
    waits on the music tool below.
-5. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
+6. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-6. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+7. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-7. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+8. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-8. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+9. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-9. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
+10. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-10. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+11. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
-11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
+12. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
 ## M8 — Plan 1 underway
@@ -74,19 +76,12 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1).
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98). **96 is Michael's pass + the close-out.**
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
-  - **95:** remove `DropIds` from snapshots (unread since DropRemoved; ~1 KB of ~3.5 KB), with a
-    Version bump — and the drop cap and nearest-first sort if that leaves them dead.
-    Also: the guest's own open menu drives Player 2 on the host (South is Confirm and Jump) —
-    while a guest screen is open NetGuest sends neutral; after it closes, held buttons count only
-    once released (D57). Tests carried from 89: a guest who leaves mid-match writes no save; the
-    guest's front door gets its own couch back. In the next task touching them: the dev panel
-    caches the session (it calls `GameSession.Find()` every OnGUI, which can destroy duplicates);
-    `NetSession.LocalLagNames` becomes read-only.
-  - **96:** a starved remote lets go with a release, so a Heavy charged through a 250 ms stall fires
+  - **96:** re-measure bandwidth (the 3.5 KB figure included ~1 KB of drop ids, now gone).
+    Also: a starved remote lets go with a release, so a Heavy charged through a 250 ms stall fires
     — by design; tune `StarvedRepeatSteps`. Bandwidth measured at 91: ~3.5 KB/snapshot, ~105 KB/s
     for the paper case (2 players, 20 enemies, 20 bolts) against the paper's 2.5 KB; worst case
     ~147 KB (under the 256 KB frame).
@@ -102,6 +97,11 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     gates shut (D60/D61). **Task 103:** the drop-in baseline sends a `DropSpawned` for every drop
     still on the ground before the first snapshot.
     From 93: `ApplyReplicaPlayerSide` doesn't raise ScreenChanged (the guest's screens).
+    From 95: HANDOFF-M8 §15 makes `HoldMenuPause` a no-op online — keep a "menu open" count
+    separate from "the world pauses", or `MenuPauseHeld` never goes true online and the guest's
+    menu gate (and SettingsMenu:99) silently stop working; `The_guests_own_menu_never_reaches_the_host`
+    fails if missed. While the host sits in the results screen, a remote Player 2's last buttons
+    stay held, so only the pointer gets out (the couch version is G8's, on the Later list).
     From 94: a stale `BeginLoad` completion can unload a stage requested again — add a load
     generation. A guest who rejoins mid-match deadlocks the airlock (the host waits for a
     StageReady the new guest was never asked for); until then, Task 96 tests a rejoin by
@@ -230,6 +230,10 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 95 committed (f393d98): a recorded fight replays into a real guest frame by
+  frame; a remote Player 2 finishes the chapter; the guest's own menu stays off the wire (D57
+  amended); drop ids left the snapshot (protocol v2). EditMode 791, PlayMode 65. **M8 Plan 1's
+  code is complete**; Task 96 is Michael's pass and the close-out. Checklists merged into one sitting.
 - 2026-09-25 — Task 94 committed (3d567b1): the guest streams the host's stages; the launch and the
   airlock wait for it; hand-overs carry the host's step. EditMode 785, PlayMode 61.
 - 2026-09-25 — Task 93 committed (c8744bc): replica mode — the guest draws the host's world; drops

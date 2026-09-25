@@ -1382,7 +1382,9 @@ menu. Arrow keys and enter/space also are helpful."*
   a press on another is a join. A seat's controller that sleeps and wakes keeps its seat — the
   Input System hands a reconnected device a new id, and the seats reclaim it. The seat is authored and is the player's id, which fixes the solo "P2" label.
 - **A button held across a scene change is not a press.** A now leaves the results screen and
-  confirms the title; without this a held A would skip through the front door.
+  confirms the title; without this a held A would skip through the front door. Online, the same
+  holds for a guest's own menu: while it is open the guest sends nothing, and a button held
+  across its close is not a press on the host *(M8 Task 95, 2026-09-25)*.
 
 **Rejected:** double-binding confirm and back (A and X both confirming) — Michael: *"we should not
 make them redundant."* Hold-to-sell — his call, instant with locks.

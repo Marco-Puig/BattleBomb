@@ -52,6 +52,13 @@ namespace BattleBomb.UI.Chest
         internal static readonly Color Up = Hex("#63c96e");
         internal static readonly Color Down = Hex("#e0574f");
 
+        // Pad buttons, from the ShopPanel design's hint row (UI Pass 01). A is not in the design —
+        // nothing there needed confirming — so its green is the same pastel step as the others.
+        internal static readonly Color PadGreen = Hex("#8fd27a");
+        internal static readonly Color PadRed = Hex("#e0574f");
+        internal static readonly Color PadBlue = Hex("#7fb2e8");
+        internal static readonly Color PadYellow = Hex("#e8c95f");
+
         /// <summary>Body text at its three weights of attention.</summary>
         internal static readonly Color Muted = new Color(0.965f, 0.937f, 0.886f, 0.62f);
         internal static readonly Color Faint = new Color(0.965f, 0.937f, 0.886f, 0.40f);
@@ -61,12 +68,14 @@ namespace BattleBomb.UI.Chest
         private static Sprite _octagon;
         private static Sprite _hexagon;
         private static Sprite _disc;
+        private static Sprite _roundedSquare;
 
         internal static Font Font =>
             _font != null ? _font : (_font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"));
 
-        /// <summary>Passion One — headings, numbers, anything that shouts. Falls back to the
-        /// built-in font until <see cref="UseFonts"/> has run.</summary>
+        /// <summary>Passion One — headings, numbers, anything that shouts. Null until
+        /// <see cref="UseFonts"/> has run; <see cref="Label"/> falls back to the built-in font, but
+        /// anything assigning it directly must too.</summary>
         internal static Font Display { get; private set; }
 
         /// <summary>Archivo — body and labels.</summary>
@@ -166,7 +175,45 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>The coin, wherever a price is written. A 32-gon rather than a real circle —
         /// at the sizes this draws, nothing can tell.</summary>
-        internal static Sprite Disc => Polygon(ref _disc, "UiBuild.Disc", Ring(32));
+        internal static Sprite Disc => _disc != null ? _disc : Polygon(ref _disc, "UiBuild.Disc", Ring(32));
+
+        /// <summary>
+        /// The squared badge: Start, the shoulders, every keyboard key. Nine-sliced, so the design's
+        /// 4px corners stay 4px however wide the label makes it — "Enter" is twice the width of "J".
+        /// Draw it with <see cref="Image.Type.Sliced"/> and a pixels-per-unit multiplier of
+        /// <see cref="RoundedSquareScale"/>.
+        /// </summary>
+        internal static Sprite RoundedSquare => _roundedSquare != null
+            ? _roundedSquare
+            : Polygon(ref _roundedSquare, "UiBuild.RoundedSquare", Rounded(0.18f, 8), border: 24f);
+
+        /// <summary>Shrinks the 24-texel slice border to the design's ~4px corner.</summary>
+        internal const float RoundedSquareScale = 4f;
+
+        private static Vector2[] Rounded(float radius, int stepsPerCorner)
+        {
+            var points = new Vector2[stepsPerCorner * 4];
+            Vector2[] centres =
+            {
+                new Vector2(1f - radius, radius),
+                new Vector2(1f - radius, 1f - radius),
+                new Vector2(radius, 1f - radius),
+                new Vector2(radius, radius),
+            };
+
+            int n = 0;
+            for (int corner = 0; corner < 4; corner++)
+            {
+                for (int step = 0; step < stepsPerCorner; step++)
+                {
+                    float degrees = corner * 90f - 90f + 90f * step / (stepsPerCorner - 1);
+                    float angle = degrees * Mathf.Deg2Rad;
+                    points[n++] = centres[corner] + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
+                }
+            }
+
+            return points;
+        }
 
         private static Vector2[] Ring(int points)
         {
@@ -184,7 +231,7 @@ namespace BattleBomb.UI.Chest
         /// A filled convex polygon as a white sprite, for an <see cref="Image"/> to tint. Sampled
         /// four times per axis so the diagonals do not stair-step at cell size.
         /// </summary>
-        private static Sprite Polygon(ref Sprite cache, string name, Vector2[] points)
+        private static Sprite Polygon(ref Sprite cache, string name, Vector2[] points, float border = 0f)
         {
             if (cache != null)
             {
@@ -228,8 +275,12 @@ namespace BattleBomb.UI.Chest
             texture.SetPixels32(pixels);
             texture.Apply();
 
-            cache = Sprite.Create(
-                texture, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size);
+            var rect = new Rect(0f, 0f, size, size);
+            var pivot = new Vector2(0.5f, 0.5f);
+            cache = border > 0f
+                ? Sprite.Create(texture, rect, pivot, size, 0, SpriteMeshType.FullRect,
+                    new Vector4(border, border, border, border))
+                : Sprite.Create(texture, rect, pivot, size);
             cache.name = name;
             cache.hideFlags = HideFlags.HideAndDontSave;
             return cache;

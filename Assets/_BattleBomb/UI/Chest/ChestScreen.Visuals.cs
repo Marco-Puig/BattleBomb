@@ -69,7 +69,7 @@ namespace BattleBomb.UI.Chest
             gridArea.anchorMin = new Vector2(0f, 0f);
             gridArea.anchorMax = new Vector2(1f, 1f);
             gridArea.offsetMin = new Vector2(0f, IsShop ? ShopBodyBottom : 300f);
-            gridArea.offsetMax = new Vector2(0f, -128f);
+            gridArea.offsetMax = new Vector2(0f, -GridTop);
 
             _gridRoot = UiBuild.Rect("Grid", gridArea);
             UiBuild.Stretch(_gridRoot);
@@ -85,7 +85,7 @@ namespace BattleBomb.UI.Chest
 
                 // Buy draws no filter row, so the rack reaches up into the band the chips would
                 // have taken. Left alone it opens with a strip of empty board under the rule.
-                _rackRoot.offsetMax = new Vector2(0f, HasTabs ? 20f : 62f);
+                _rackRoot.offsetMax = new Vector2(0f, GridTop - FilterTop);
                 for (int i = 0; i < ShopStockCount; i++)
                 {
                     _rackRows.Add(new RackRow(_rackRoot, $"Roll {i}"));
@@ -251,13 +251,13 @@ namespace BattleBomb.UI.Chest
             _filterRow = UiBuild.Rect("FilterRow", pad);
             UiBuild.Stretch(_filterRow);
 
-            float top = HasTabs ? 108f : 66f;
+            float top = FilterTop;
             float x = 0f;
             for (int i = 0; i < FilterNames.Length; i++)
             {
                 float width = 34f + FilterNames[i].Length * 8f;
                 Image chip = UiBuild.Box($"Filter {i}", _filterRow, UiBuild.Well);
-                UiBuild.Pin(chip.rectTransform, x, top, width, 30f);
+                UiBuild.Pin(chip.rectTransform, x, top, width, ChipHeight);
                 _filterChips.Add(chip);
                 _filterLabels.Add(UiBuild.Label("Text", chip.rectTransform, FilterNames[i], 12,
                     UiBuild.Muted, TextAnchor.MiddleCenter, UiBuild.Ui));
@@ -265,7 +265,7 @@ namespace BattleBomb.UI.Chest
             }
 
             Image sortBox = UiBuild.Box("Sort", _filterRow, UiBuild.Well);
-            RectTransform sort = UiBuild.Pin(sortBox.rectTransform, 0f, top, 150f, 30f);
+            RectTransform sort = UiBuild.Pin(sortBox.rectTransform, 0f, top, 150f, ChipHeight);
             sort.anchorMin = new Vector2(1f, 1f);
             sort.anchorMax = new Vector2(1f, 1f);
             sort.pivot = new Vector2(1f, 1f);
@@ -279,6 +279,18 @@ namespace BattleBomb.UI.Chest
 
         /// <summary>The band the BUY / SELL tabs take off the top of the shop panel.</summary>
         private const float ShopTabBand = 40f;
+
+        private const float ChipHeight = 30f;
+
+        /// <summary>The room between the chips and the grid's first row. The grid used to start at
+        /// a fixed 128 whatever the chips did, so in couch co-op — chips 42px lower under the tabs —
+        /// their bottom edge ran 10px into the top row.</summary>
+        private const float ChipsToGrid = 32f;
+
+        /// <summary>Where the filter chips start: under the head, or under the tabs as well.</summary>
+        private float FilterTop => HasTabs ? 108f : 66f;
+
+        private float GridTop => FilterTop + ChipHeight + ChipsToGrid;
 
         /// <summary>Where the body stops at a shop, leaving room for the sweep and the compare
         /// panel beneath it.</summary>

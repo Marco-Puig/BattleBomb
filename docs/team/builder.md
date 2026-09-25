@@ -42,6 +42,23 @@ Nothing (bridge restarted by Michael 2026-09-25 08:16).
 
 ## Current state
 
+**Groundwork Task 13 — started (08:40, 2026-09-25).** G12 committed (`ad189cb`), deviations A–G
+accepted. Brief: `task13.md` + `task13_extra.md` (solo filter-row guard + test). Phase 1 = the solo
+test (red); phase 2 = plan Steps 1–2 + the guard. Then: recompile, EditMode 680 (async/assembly),
+Step 3 measurement in play mode (Gameplay alone, two players, P1 placed at the chest via
+`CharacterActor.PlaceAt` by reflection before opening), capture, PlayMode 28 for safety, reviews, DONE.
+**Progress (08:50):** test red first ("Expected: Filters But was: Tabs"); code in (plan Steps 1–2 +
+guard, verbatim; files CRLF on checkout, LF in git). EditMode 680/680. Step 3 live (Gameplay alone,
+2 players, ScreenSpaceCamera canvas): chip bottom → first cell top = **32.0 canvas units** (clear
+True; was −10); cell top flush with GridArea top. Couch cells now 79 units (were 87 — grid is
+height-bound, fixed 5 rows); solo/shop keep 128 (HasTabs = split && !shop). Capture taken. PlayMode
+running async; spec + quality reviews running.
+**Done (09:05):** PlayMode 28/28. Spec ✅. Quality "Ready: Yes"; applied its finding 1 (rack
+`offsetMax` = `GridTop - FilterTop`, same 62 at a shop; the dead `20f` branch would have gone stale).
+EditMode 680/680 after. Pre-existing findings 2–4 (popover under compare panel; couch Tabs focus
+invisible on the Hero tab; >40 stacks walk into undrawn cells) → orchestrator for the board.
+`DONE` sent — waiting for `COMMITTED` before Task 14.
+
 **Task 12 gates done (08:25, 2026-09-25):** bridge back. **Dirty-scene cause:** the only undo
 record was my own font assignment ("Modified 3 properties in Frontend"); re-saving produced a
 byte-identical file (sha1 cccd6cdf…), so the dirty flag carried no change — most likely the
@@ -389,6 +406,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-25 09:05 — **G13 complete** (chips clear the grid in couch co-op: 32 units, was −10; solo
+  filter-row guard): EditMode 680/680, PlayMode 28/28, spec ✅, quality Yes. `DONE` sent. G12
+  committed as `ad189cb`.
 - 2026-09-25 08:30 — **G12 complete** (every other prompt; Start title-only; results dwell;
   front-door fonts; shadow strips tags; join line names only the free device): EditMode 679/679,
   PlayMode 28/28, spec ✅, quality approved after fixes. `DONE` sent. Next: Task 13 on `COMMITTED`.

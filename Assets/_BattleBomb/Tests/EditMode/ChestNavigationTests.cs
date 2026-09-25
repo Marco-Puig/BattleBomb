@@ -114,6 +114,23 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void Solo_nothing_sits_above_the_filter_row()
+        {
+            var nav = new ChestNavigation();
+
+            nav.Move(0, 1, Solo());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Filters));
+
+            nav.Move(0, 1, Solo());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Filters),
+                "Solo, the hero is drawn beside the sack and there is no tab strip to go up to.");
+
+            nav.Move(1, 0, Solo());
+            Assert.That(nav.Tab, Is.EqualTo(ChestTab.ItemSack),
+                "Sideways on the filter row changes the filter, never the tab behind it.");
+        }
+
+        [Test]
         public void Off_the_bottom_of_the_sack_reaches_the_sweep_only_at_a_shop()
         {
             var chest = new ChestNavigation();

@@ -259,8 +259,9 @@ namespace BattleBomb.UI.Chest
                     }
                     else if (dy > 0)
                     {
-                        // A shopkeeper has no hero half, so nothing sits above the filters.
-                        if (!layout.IsShop)
+                        // A shopkeeper has no hero half, and solo the hero sits beside the sack
+                        // rather than behind a tab, so either way nothing sits above the filters.
+                        if (!layout.IsShop && !layout.HeroBeside)
                         {
                             Focus = ChestFocus.Tabs;
                         }

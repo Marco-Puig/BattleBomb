@@ -1,8 +1,8 @@
 # Groundwork pass — Michael's checklist
 
-Written by the Builder at G14 (2026-09-25). Everything here moves fast, so it's checked by eye in
-real time, not by the sessions. Play in Unity (Frontend scene, Play). The orchestrator calls
-QUIET ON first so nothing recompiles under you.
+Written by the Builder at G14 (2026-09-25); item 16 added with F5. Everything here moves fast,
+so it's checked by eye in real time, not by the sessions. Play in Unity (Frontend scene, Play).
+The orchestrator calls QUIET ON first so nothing recompiles under you.
 
 Tick what works; for anything that doesn't, a sentence on what you saw is enough.
 
@@ -29,6 +29,10 @@ Tick what works; for anything that doesn't, a sentence on what you saw is enough
 - [ ] **13. Results.** Finish a stage mashing A. The results stay up until you let go and press A
       again, and never less than about ¾ s. Start and Esc do nothing there.
 - [ ] **15. Title.** The bottom row shows the button badges, in the game's fonts.
+- [ ] **16. A big sack (F5).** With 45 or more stacks (the settings menu's DEBUG grant row adds
+      loot), push down past the fifth row: the grid scrolls one row at a time, the bar beside it
+      shows where you are, the menu opens on the item, and X sells exactly the item under the
+      cursor.
 
 ## Couch (two players)
 

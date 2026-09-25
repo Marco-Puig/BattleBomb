@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | F5.1 then F5.2 — plan `2026-09-25-f5-chest-grid-scrolling.md` (ded6e1e) | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | M8 Plan 1 — Tasks 86–96 (`2026-09-24-m8-plan1-wire-and-mirror.md`) | Pauses for Michael's Groundwork pass (QUIET); asks QUIET for two-editor runs (Task 90+) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -32,7 +32,7 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Groundwork pass** — the 15-item controller checklist in `docs/team/groundwork-pass.md`. Needs Unity in front and a pad or two; the
+1. **Groundwork pass** — the 16-item controller checklist in `docs/team/groundwork-pass.md`. Needs Unity in front and a pad or two; the
    orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
    another item under your cursor just before X. Recommended fix if it bothers him: the cursor
    follows its item and X pauses for a moment after a partner changes it — rides F5.
@@ -98,7 +98,7 @@ mashing (D31) and for M8's remote input path. Fix shape: record press edges betw
 *Note for Netcode:* F1's finding (removal is immediate here) changes the read of the catch-up-loop
 pause item and F4, both filed as F1's "frame-step family" — reassess them on their own.
 
-**F5 — the chest grid past 40 stacks** (found in G13's review, pre-existing; the orchestrator's
+~~**F5 — the chest grid past 40 stacks**~~ **Done — F5.1 2610ef0, F5.2 cc7a9fe.** (found in G13's review, pre-existing; the orchestrator's
 call). The sack holds 200 but the grid draws 40, so the cursor walks into undrawn cells and the
 popover opens under cell 39 naming another item — and X sells instantly, so a player can sell a
 stack they cannot see. Fix: scroll the grid with the cursor (no clamping — it would strand items
@@ -139,6 +139,8 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
   plan reaches it, settle where the close ✕ lives: in couch co-op the Hero tab hides it with the
   sack half, so a mouse or touch player has no visible way out (B, Esc and Start still work).
   The strip's right end collides with the hero panel's LEVEL readout (G13b's review).
+  Also F5's scroll bar: at 16:10 (Steam Deck's 1280×800) the solo grid is width-bound and the bar
+  hangs ~12px into the pad's right margin — cosmetic; the restyle places it properly.
 
 ## Later — M13 and Early Access readiness
 
@@ -186,6 +188,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — F5.2 committed (cc7a9fe): the chest grid scrolls; the menu anchors to the drawn cell;
+  X and Y refuse an undrawn cursor; a bar shows there is more. EditMode 694, PlayMode 35. **The
+  pre-M8 batch is done (F1–F3, F5). M8 Plan 1 starts.** Checklist item 16 added.
 - 2026-09-25 — F5.1 committed (2610ef0): the chest's navigation model owns the scrolled view. EditMode
   694. F5.2 (the drawing) next.
 - 2026-09-25 — F5's plan approved (ded6e1e): the view lives in `ChestNavigation`; the grid draws

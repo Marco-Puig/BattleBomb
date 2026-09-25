@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | working | Task 12 — gates after the bridge restart | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
-| Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
+| Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -156,6 +156,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Art `READY TO COMPACT`; its lane file committed (9902064). Netcode and World
+  lane files as they closed, committed (35f5441).
 - 2026-09-25 — PROTOCOL rule 11 (Michael): blocked or out-of-work lanes, the orchestrator included, are
   readied to compact (`PREPARE TO COMPACT` → `READY TO COMPACT`). Orchestrator lane file added.
 - 2026-09-25 — Michael restarted the Unity bridge; the Builder continues Task 12.

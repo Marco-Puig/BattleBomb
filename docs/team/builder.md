@@ -7,10 +7,11 @@ the only lane that writes under `Assets/` unless the orchestrator lends it out.
 **Owns:** `Assets/`, `Packages/`, `ProjectSettings/` (while holding the sim) · this file.
 
 **Read first (in order):** `CLAUDE.md` · `docs/team/PROTOCOL.md` · `docs/team/BOARD.md` · this file
-· `docs/ROADMAP.md` §4 "Groundwork" · the plan below.
+· `docs/ROADMAP.md` §4 M8 · `docs/HANDOFF-M8.md` · the plan below.
 
-**The plan:** `docs/superpowers/plans/2026-09-24-groundwork-input.md` — 14 tasks, full code and
-tests in each.
+**The plan:** `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md` — M8 Plan 1, Tasks
+86–96. 86–95 are committed; 96 waits on Michael's pass. Next: Plan 2 (Tasks 97–105), written by the
+Netcode lane.
 
 ---
 
@@ -31,20 +32,61 @@ tests in each.
 - **Shared docs in Task 14** (`DECISIONS.md` D57, `GAME_DESIGN.md` §3.1, `CLAUDE.md`,
   `ARCHITECTURE.md`, `ROADMAP.md`) belong to the orchestrator: send the plan's text for those steps
   in your `DONE`, and the orchestrator applies it.
-- After Groundwork: the next plan is M8, which the Netcode lane is writing. The orchestrator will
-  point you at it.
+- After M8 Plan 1: Plan 2 (Tasks 97–105) is written by the Netcode lane; the orchestrator points
+  me at it.
 
 ---
 
 ## Waiting on
 
-**`COMMITTED` for Task 95** (DONE sent 23:45); then Task 96. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
+**Michael's pass** — one sitting from `docs/team/m8-plan1-pass.md` (Stage A, Stage B, 96's lag
+table); the orchestrator wakes me to record it and commit 96 — and **Plan 2**, which Netcode writes.
+Task 95 COMMITTED `f393d98`. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
 `Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
 with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
 the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
 Netcode heads-up: this changes its read of candidate F4 and the catch-up-loop pause item.)
 
 ## Current state
+
+**Now (2026-09-26 00:05): M8 Plan 1 built through 95 and committed (`5e586a4`..`f393d98`).**
+- Task 96 Step 1 is done at `f393d98`: EditMode 791/791, PlayMode 65/65; nothing uncommitted under
+  `Assets/`. The four uncommitted docs belong to the orchestrator.
+- Step 3's close-out is drafted in "M8 Plan 1 close-out draft" below.
+- Blocked on Michael's pass and on Plan 2. `READY TO COMPACT` sent.
+
+**Resume notes (after a compact):**
+- **Orchestrator:** `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095` ("Battlebomb").
+  First line of every message: `[Builder] TYPE — summary`.
+- **Scratchpad:** `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad`.
+  - `tasks/` holds the plan split (task86–96.md), the implementer briefing `m8_context.md`, and the
+    `taskNN_extra.md` specs.
+  - The check scripts are `tNN_check.py`. `t95mut/` is empty, so every mutation is restored.
+  - Nothing there is needed to finish 96. Plan 2 needs a fresh split and a new briefing.
+- **Method per task:**
+  1. A premise check (Explore agent), then an extra spec.
+  2. A Sonnet implementer working in gated stages. I verify each stage by script: byte-identical to
+     the plan or spec, snippets present, line endings kept.
+  3. I see the reds first, then an Opus review.
+  4. Fixes go in red-first or mutation-proved, then the full gates, then the `DONE`.
+- **Bridge traps:**
+  - An async PlayMode `run_tests` "times out" but keeps running. Wait with a background `sleep`
+    (~300 s for the full suite), then read `test_status`.
+  - "Network error" or "Cannot connect" just after a recompile is a domain reload: check
+    `editor_status`, then retry.
+  - Big results spill to a file: read it with `head -c 200` and `grep -c '"Status": "Failed"'`.
+  - The testName filter matches substrings.
+  - Check the open scene isn't dirty before a sync run.
+- **Line endings:** count them with Python bytes (Git Bash grep miscounts CR). `git show HEAD:` gives
+  normalised LF, so compare working copies.
+  - CRLF: StageRunner, SimulationDriver, TrainingDummy, LoadedStage, GameSession, SessionBinder,
+    SaveService, FrontendFlow.
+  - LF: the Net files and all the tests.
+- **PlayMode timing:** the editor can run several steps in one render frame. Record per-step facts
+  from `Stepped`, never from `Frame` read between yields.
+- **Screen control:** Michael declined screen control of Unity. Never ask again, and never reach the
+  Multiplayer Play Mode clone another way. Clone-side checks split into what the harness proves
+  (HeadlessGuest, PlaybackTransport) and what needs his eyes. The pass sheet is the orchestrator's.
 
 **M8 Plan 1 — started (17:00, 2026-09-25).** F5.2 committed (`cc7a9fe`); the pre-M8 batch is done.
 Plan: `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`, Tasks 86–96, one `DONE`
@@ -894,17 +936,160 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 - Then spec review, then quality review (not Sonnet), then `DONE` to the orchestrator → wait for
   `COMMITTED` before the next task.
 
+## M8 Plan 1 close-out draft
+
+*For Task 96 Step 3. HANDOFF-M8 is the orchestrator's to write. It applies this draft together with
+Michael's Stage A/B verdicts and the lag table from `docs/team/m8-plan1-pass.md` once he has done his pass.
+Step 1 gates (2026-09-25, at `f393d98`): EditMode 791/791, PlayMode 65/65, tree clean under `Assets/`.*
+
+### Build log
+
+| Task | Commit | What landed |
+|---|---|---|
+| 86 | `5e586a4` | **The wire (Core/Net).** NetWriter/NetReader, quantisation (NetQuantize), WireCommand, CommandCodec (the command packet, last 4 commands for redundancy), NetProtocol, NetFormatException. |
+| 87 | `4f42e0c` | **The seam (Platform/Net).** INetTransport; LoopbackTransport (enforces the socket's frame limit); LagProfile/LagSimulator; LocalSocketTransport (one peer, send timeout, a busy port throws and leaves nothing behind). |
+| 88 | `5fd0920` | **The host plays a remote Player 2.** InputBuffer, RemoteCommandStream, RemoteCommandSource; CharacterActor binds to whatever source its seat has. |
+| 89 | `fd33bea` | **Session and handshake.** NetSession (Host/Join, "Port 7777 is busy"), HandshakeCodec (Hello/Welcome/Refuse/Launch/SessionEnd, version check), NetHost/NetGuest halves, NetSeats. The stream got drain-to-target, let-go after 15 starved steps, and "a repeated frame consumes nothing". SaveService never writes from a replica. The guest's couch is restored. Also the dev panel (NetDevOverlay), plus HeadlessGuest and OnlineHostSmokeTests. |
+| 90 | `d00c552` | **Two editors.** Multiplayer Play Mode 2.0.2, runInBackground, VirtualProjectsConfig; Host local / Join local on the dev panel. |
+| 91 | `5be281c` | **Ids and the snapshot.** Net ids for enemies and pickups; EntityRef; ItemWire; WorldSnapshot with StateCodec/SnapshotCodec for every travelling struct; a field-coverage test that gives every field a distinct value. |
+| 92 | `07a8c64` | **The host speaks.** 30 Hz snapshots on the unreliable channel. Events are stamped with their step on the reliable channel, split into batches under the frame limit (EventCodec.WriteBatches). Each list is capped in Capture. The flood-ack fix. |
+| 93 | `c8744bc` | **Replica mode.** The guest draws the host's world from snapshots, 6 steps behind (RenderClock, SnapshotBuffer, ReplicaWorld). Hits are raised at their step, and teleports snap. DropRemoved replaces the absence rule. `EntityRef.Dummy(stage, prop)`. PlaybackTransport and GuestReplicaSmokeTests (pulled forward from 95). |
+| 94 | `3d567b1` | **The stage follows.** StageCodec (LoadStage/StageReady/HandOver), and the launch hold and the airlock wait for the guest. HandOver carries the host's step, and a load right behind a hand-over no longer strands the guest. The host's menus stay live during the hold, and dummies know their stage. GuestStageSmokeTests. |
+| 95 | `f393d98` | **Proof.** Record a hosted fight, replay it into a real guest, and compare with the truth frame by frame; a remote Player 2 walks the whole chapter. MenuGate keeps the guest's own menu off the wire. The two tests carried from 89. DropIds are out (protocol v2). The dev panel caches its session, and the lag names are read-only. |
+| 96 | — | Gates, Michael's pass and lag table, this close-out. |
+
+Replay numbers at 95: worst player error 0.023 (tolerance 0.3), worst enemy error 0.007 (tolerance 0.5),
+2377 frames compared.
+
+### Where the plan was wrong
+
+M7's close-out warned that plans are more often wrong than right about the hard parts. This one was
+wrong in three recurring ways.
+
+**It was stale.** It was written before Groundwork and F1–F5 landed, so every task began with a
+premise check, and most checks found something.
+- The header's premise, "destroyed enemies unregistered immediately", holds because Unity 6.5 runs
+  `OnDisable` inside `Destroy`, not because of a Despawn helper. F1 never built one.
+- Whole-file replacement blocks silently reverted later work. 92's NetHost brought back the pre-89
+  SendLaunch loop, and 93's NetGuest dropped 89's RestoreCouch.
+- Small slips: 94 Step 4(a) redeclared `session` (CS0136), and "all nine" test counts were off
+  (twelve at 92).
+
+**Its own tests were wrong or racy.**
+- 93's RenderClock "ahead" test moved the newest snapshot backwards. The clock's never-past-newest
+  rule rightly won, so the test was wrong, not the clock.
+- 87's socket test waited only for the host's Connected, but the guest connects a pump later.
+- 94's airlock test scanned the headless guest's inbox in the same frame the host sent.
+- 91's field-coverage fill set every bool true and every enum to its last value, so two swapped
+  fields of the same type passed.
+- 95's replay test could pass on a stalled render clock, or with no enemy ever compared.
+
+**It inferred what should have been told.** Twice the design deduced an event from absence or
+arrival order, and both broke:
+- **Drop removal** was read from a drop missing in a snapshot. Once 92 capped the lists, missing
+  meant either "gone" or "left out". DropRemoved became a reliable event at 93, and DropIds were
+  deleted at 95.
+- **The hand-over step** was taken from when the message arrived, which is wrong when snapshots are
+  lost. From 94 it carries the host's step.
+
+The rule now: anything that happens is told, with its step.
+
+**Smaller gaps, by task:**
+- **Ids.** `EntityRef.Dummy(prop)` had no stage, so dummy ids collided across stages. At the
+  hand-over, dummies were captured with the runner's stage and not their own.
+- **Frame limits.** NetWriter was uncapped, so an Events batch could pass the socket's 256 KB frame.
+  The socket would drop it silently while the loopback delivered it. SnapshotCodec threw past 256
+  entries inside the host's step.
+- **89.** Role was committed before Listen (the busy port). SaveService's guard read the live role, so
+  a guest who pressed Leave could write the replica's empty stash over their real save. The stand-in
+  hero leaked into the guest's session. The guest's own menu drove Player 2 on the host (fixed at 95).
+- **88.** Buffer semantics were under-specified:
+  - no drain back to target after a stall;
+  - a dropped guest's body repeated its last stick for 10 s;
+  - the paused-for-screen branch drained the remote stream;
+  - the launch hold flooded the buffer;
+  - the merge threshold was off by one;
+  - InputBuffer.Add reported a command dropped by a flood as kept.
+- **94.** The hold froze the host's menus. A LoadStage arriving inside the hand-over delay wiped the
+  pending hand-over, stranding the guest on the old stage.
+- **Checks in the Player 2 window.** 90 Step 4 and 93 Step 11 asked for clicks or eval there, which the
+  bridge cannot reach. Screen control was declined. From 90 on, every such check was split into what
+  a harness proves and what needs Michael's eyes.
+
+### What felt wrong to build
+
+- **Players on the clone were out of reach.** Only harnesses could prove guest-side behaviour.
+  HeadlessGuest arrived at 89, and PlaybackTransport was pulled from 95 to 93. Building the
+  PlaybackTransport harness two tasks early paid off immediately. Guest code before that point was
+  proven only in EditMode.
+- **Timing in PlayMode tests.** The editor runs several steps in one render frame. Any test that
+  decides per-step facts by reading `Frame` between yields is flaky. 95's menu test records from
+  `Stepped` instead, and 94's airlock test waits two steps.
+- **Mixed line endings.** Working copies mix CRLF and LF, so every edit needed a byte-level check.
+- **Plan and code drifting in parallel.** Nearly every task needed an "extra spec" on top of the plan.
+  The plan was a direction, not a script. Whole-file replacement is the riskiest shape a plan step can
+  take.
+
+### Deferred
+
+Everything deferred is on the board, under "Carried into later tasks". The main items:
+
+- **Task 96 / Plan 3 (feel):**
+  - scale the teleport threshold by the gap between snapshots;
+  - hold the render clock at newest − delay while a host pause stops snapshots;
+  - tune the let-go and drain numbers, including StarvedRepeatSteps (a Heavy charged through a stall
+    fires on let-go, by design);
+  - re-measure bandwidth now that DropIds are gone (it was ~3.5 KB per snapshot, ~105 KB/s in the
+    paper case).
+- **Plan 2:**
+  - a load generation, so a stale BeginLoad can't unload a stage asked for again;
+  - a guest who rejoins mid-match deadlocks the airlock;
+  - unregistering a source by id can remove a newer source;
+  - the refusal reason is lost;
+  - UseSeat assumes Player 2 is active;
+  - ApplyReplicaPlayerSide skips ScreenChanged;
+  - D60's `HoldMenuPause` no-op would switch MenuGate off, so keep a "menu open" count apart from the
+    world pause;
+  - the host's results screen waits on a remote Player 2's frozen held buttons;
+  - Task 103: the drop-in baseline;
+  - Task 107: a press in a skipped frame.
+- **M11:** the enemy absence rule bites past 256 enemies.
+- **Cosmetic:** the guest's drop bounce starts from RestHeight.
+
+### Michael's verdicts and the lag table
+
+*Pending his single sitting, `docs/team/m8-plan1-pass.md` (Stage A, Stage B, and 96's lag table: moving
+and attacking at None / Normal / Bad).*
+
+ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller, the mirror) complete —
+`5e586a4`..`<96's commit>`.*
+
 ## Next steps
 
-1. **Task 88** after 87's `COMMITTED` — brief `<scratchpad>/tasks/task88.md`. Expect EditMode 723 +
-   its new tests.
-2. **Task 89** — `NetSession`; apply the busy-port note above (Listen before `Role = Host`).
-3. **Task 90** — `QUIET REQUEST` before any two-editor run (Multiplayer Play Mode package).
-4. **Task 92** — bound/split the Events batch against `NetProtocol.MaxMessageBytes` + a test that
-   sends a batch past the limit and shows it arrives whole. NetWriter stays uncapped.
+1. **When the orchestrator wakes me with Michael's report (Task 96, Steps 2–4):**
+   - Fill in "Michael's verdicts and the lag table" in the close-out draft above: each Stage A/B item,
+     plus moving and attacking at None / Normal / Bad.
+   - If an item failed, triage it as a fix task before 96 closes.
+   - The orchestrator writes HANDOFF-M8's Build log and close-out, and the ROADMAP §4 M8 line, from
+     the draft.
+   - Send `DONE` for 96: builder.md only, nothing under `Assets/`. Its subject is
+     `96: M8 stages A–B — Michael's pass and Plan 1's close-out`. The orchestrator then tells Netcode
+     that Plan 2 can be written.
+2. **Plan 2 (Tasks 97–105), when the orchestrator points me at it:**
+   - Split it into `<scratchpad>/tasks/` and write a new implementer briefing.
+   - Premise-check every task: the plan will predate 93–95. MenuGate, DropIds gone (protocol v2),
+     HandOver carrying the host's step, and `PlaybackTransport.Sent` are all newer.
+   - Fold in the board's Plan 2 carry-forward items (see "Deferred" in the close-out draft).
 
 ## Answers and decisions
 
+- 2026-09-25 23:50 (Orchestrator): **COMMITTED `f393d98` — Task 95.** Everything accepted (Z1,
+  review 1–9). HANDOFF-M8 rows (protocol v2) and a D57 amendment for the guest's menu applied; the
+  Stage A check is in `m8-plan1-pass.md`. **Task 96:** Step 1, the close-out draft here, then
+  `PREPARE TO COMPACT` — blocked on Michael's pass and on Netcode's Plan 2. HANDOFF-M8 is the
+  orchestrator's to write, from my draft plus Michael's verdicts and lag table.
+- 2026-09-25 22:35 (Orchestrator): **COMMITTED `3d567b1` — Task 94**, then Task 95 with the board's
+  carried items: M2, the 89 tests, DropIds, M6/M8. Tell it before any two-editor run.
 - 2026-09-25 00:50 (Orchestrator): **COMMITTED G8.** **Task 12 adds a results dwell:** in
   `ResultsScreen`, a minimum time on screen of ~0.75 s of *unscaled* real time (the world is
   paused), starting when the panel opens; A before the dwell does nothing, after it leaves. Pin it
@@ -947,6 +1132,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-26 00:05 — **Task 96 Step 1:** EditMode 791/791, PlayMode 65/65, tree clean at `f393d98`.
+  The close-out is drafted here, and the lane file is complete under rule 11. `DONE` for builder.md
+  plus `READY TO COMPACT` sent. Blocked on Michael's pass and on Plan 2.
 - 2026-09-25 23:45 — **Task 95 complete** (replay + whole-chapter proofs; M2 MenuGate; the two 89
   tests; DropIds out, Version 2; M6/M8; review fixes): EditMode 791/791, PlayMode 65/65. `DONE`
   sent; waiting for `COMMITTED`. Next: Task 96.

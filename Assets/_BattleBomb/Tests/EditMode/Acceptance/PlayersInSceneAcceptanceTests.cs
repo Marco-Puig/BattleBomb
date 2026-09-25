@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BattleBomb.Gameplay.Players;
+using BattleBomb.Gameplay.Session;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -52,16 +53,21 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         }
 
         [Test]
-        public void The_two_players_are_paired_to_different_devices()
+        public void The_players_sit_in_seats_zero_and_one_in_the_binders_order()
         {
-            string[] schemes = AcceptanceFixture.FindAll<PlayerInput>(_scene)
-                .Select(p => p.defaultControlScheme)
-                .OrderBy(s => s)
-                .ToArray();
+            SessionBinder binder = AcceptanceFixture.FindAll<SessionBinder>(_scene).Single();
+            SerializedProperty players = new SerializedObject(binder).FindProperty("_players");
+            Assert.That(players.arraySize, Is.EqualTo(2));
 
-            Assert.That(schemes, Is.EqualTo(new[] { "Gamepad", "Keyboard" }),
-                "One player defaults to Keyboard and the other to Gamepad. Left unset, both PlayerInputs " +
-                "bind every device and one keyboard drives both characters.");
+            for (int i = 0; i < players.arraySize; i++)
+            {
+                var actor = (Component)players.GetArrayElementAtIndex(i).objectReferenceValue;
+                var source = actor.GetComponent<InputSystemCommandSource>();
+                Assert.That(source.PlayerId.Value, Is.EqualTo(i),
+                    $"The binder's slot {i} must be seat {i}. The id used to come from " +
+                    "PlayerInput.playerIndex, which Unity allocates across every PlayerInput alive — " +
+                    "a solo player could come out labelled P2 (HANDOFF-M7).");
+            }
         }
 
         [Test]

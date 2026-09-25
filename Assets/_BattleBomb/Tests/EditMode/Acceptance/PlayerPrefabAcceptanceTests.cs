@@ -24,25 +24,22 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         [Test]
         public void Player_reads_input_through_the_project_action_asset()
         {
-            PlayerInput input = _prefab.GetComponent<PlayerInput>();
-            Assert.That(input, Is.Not.Null,
-                "The player needs a PlayerInput — it is what pairs devices per player and makes co-op work.");
+            var source = _prefab.GetComponent<InputSystemCommandSource>();
+            Assert.That(source, Is.Not.Null, "The player has no InputSystemCommandSource.");
 
-            Assert.That(input.actions, Is.Not.Null, "PlayerInput has no action asset assigned.");
-            Assert.That(input.actions.name, Is.EqualTo("BattleBombControls"),
+            var controls = new SerializedObject(source).FindProperty("_controls").objectReferenceValue
+                as InputActionAsset;
+            Assert.That(controls, Is.Not.Null, "The command source has no controls asset assigned.");
+            Assert.That(controls.name, Is.EqualTo("BattleBombControls"),
                 "The player must use the project's own action asset, not the URP template's.");
-            Assert.That(input.defaultActionMap, Is.EqualTo(PlayerActions.Map),
-                $"PlayerInput's default map must be '{PlayerActions.Map}'.");
         }
 
         [Test]
-        public void Player_uses_polled_notifications_not_messages()
+        public void Player_has_no_PlayerInput_pairing_devices_behind_the_seats()
         {
-            PlayerInput input = _prefab.GetComponent<PlayerInput>();
-
-            Assert.That(input.notificationBehavior, Is.EqualTo(PlayerNotifications.InvokeUnityEvents),
-                "Commands are sampled once per simulation step, so SendMessage/BroadcastMessage " +
-                "notifications are pure overhead.");
+            Assert.That(_prefab.GetComponent<PlayerInput>(), Is.Null,
+                "PlayerInput pairs devices by control scheme, which pinned Player 1 to the keyboard " +
+                "and Player 2 to one pad. Seats own devices now (D57); a PlayerInput here fights them.");
         }
 
         [Test]

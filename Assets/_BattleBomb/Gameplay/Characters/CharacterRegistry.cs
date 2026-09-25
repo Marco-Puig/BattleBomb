@@ -14,8 +14,9 @@ namespace BattleBomb.Gameplay.Characters
         private readonly List<CharacterActor> _actors = new List<CharacterActor>();
 
         /// <summary>
-        /// Sorted on every read because a PlayerInput assigns its player index after registration —
-        /// an order frozen at Register time could be stale.
+        /// Sorted on every read because a source can register before or after its partner, and the
+        /// order players are listed in must not depend on which — an order frozen at Register time
+        /// could be stale.
         /// </summary>
         public IReadOnlyList<CharacterActor> Ordered
         {

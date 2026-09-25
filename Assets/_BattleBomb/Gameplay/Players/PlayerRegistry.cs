@@ -36,6 +36,21 @@ namespace BattleBomb.Gameplay.Players
 
         public bool IsRegistered(PlayerId playerId) => _sources.ContainsKey(playerId.Value);
 
+        /// <summary>Which button pictures this player's prompts show. Keyboard for a source that
+        /// is not a device — a test script, a replay, later a remote peer.</summary>
+        public InputFamily FamilyOf(PlayerId playerId) =>
+            _sources.TryGetValue(playerId.Value, out IPlayerCommandSource source)
+                && source is IInputDeviceReport report
+                ? report.Family
+                : InputFamily.Keyboard;
+
+        /// <summary>The device this player last pressed, for the front door's seating (D57).</summary>
+        public int LastDeviceOf(PlayerId playerId) =>
+            _sources.TryGetValue(playerId.Value, out IPlayerCommandSource source)
+                && source is IInputDeviceReport report
+                ? report.LastDeviceId
+                : SeatAssignment.NoDevice;
+
         /// <summary>
         /// Samples every registered player for one step. A player with no source contributes nothing
         /// rather than stalling the step.

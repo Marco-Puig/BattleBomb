@@ -29,6 +29,8 @@ namespace BattleBomb.Gameplay.Players
             new List<(InputAction, CommandButtons)>();
         private readonly List<InputDevice> _owned = new List<InputDevice>();
         private readonly InputAction _move;
+        private readonly Dictionary<InputDevice, int> _vanished = new Dictionary<InputDevice, int>();
+        private readonly List<(int previous, int returned)> _returned = new List<(int, int)>();
 
         private CommandButtons _previouslyHeld;
         private bool _primed;
@@ -58,6 +60,15 @@ namespace BattleBomb.Gameplay.Players
             // Owns nothing until the first Own call says otherwise.
             _actions.devices = Array.Empty<InputDevice>();
             _actions.Enable();
+
+            // A pad that went to sleep before this seat was built — in the scene before this
+            // one — still carries the id it left with until it wakes, so it is remembered too.
+            foreach (InputDevice device in InputSystem.disconnectedDevices)
+            {
+                _vanished[device] = device.deviceId;
+            }
+
+            InputSystem.onDeviceChange += OnDeviceChange;
         }
 
         /// <summary>
@@ -73,10 +84,18 @@ namespace BattleBomb.Gameplay.Players
         /// <summary>
         /// Rebinds to exactly the devices the seats give this one. Cheap when nothing changed, so
         /// it runs before every sample: a controller plugged in mid-game belongs to somebody on the
-        /// next step, and a seat handed over at character select takes effect the same frame.
+        /// next step, a seat handed over at character select takes effect the same frame, and a
+        /// controller that woke under a new id is handed back to its seat first.
         /// </summary>
         public void Own(SeatAssignment seats)
         {
+            for (int i = 0; i < _returned.Count; i++)
+            {
+                seats.Reclaim(_returned[i].previous, _returned[i].returned);
+            }
+
+            _returned.Clear();
+
             _owned.Clear();
             ReadOnlyArray<InputDevice> devices = InputSystem.devices;
             for (int i = 0; i < devices.Count; i++)
@@ -157,6 +176,7 @@ namespace BattleBomb.Gameplay.Players
 
         public void Dispose()
         {
+            InputSystem.onDeviceChange -= OnDeviceChange;
             _actions.Disable();
             if (Application.isPlaying)
             {
@@ -165,6 +185,24 @@ namespace BattleBomb.Gameplay.Players
             else
             {
                 Object.DestroyImmediate(_actions);
+            }
+        }
+
+        /// <summary>
+        /// A controller that sleeps and wakes is the same device under a new id, so the id it left
+        /// with is kept and, when it returns, handed to the seats on the next <see cref="Own"/>
+        /// (D57). Both seats hear it; the second reclaim finds nothing left to move.
+        /// </summary>
+        private void OnDeviceChange(InputDevice device, InputDeviceChange change)
+        {
+            if (change == InputDeviceChange.Disconnected)
+            {
+                _vanished[device] = device.deviceId;
+            }
+            else if (change == InputDeviceChange.Reconnected && _vanished.TryGetValue(device, out int previous))
+            {
+                _vanished.Remove(device);
+                _returned.Add((previous, device.deviceId));
             }
         }
 

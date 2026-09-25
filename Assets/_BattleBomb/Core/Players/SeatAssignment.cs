@@ -101,6 +101,29 @@ namespace BattleBomb.Core.Players
         }
 
         /// <summary>
+        /// A controller that sleeps and wakes comes back as the same device under a new id — the
+        /// Input System re-numbers it on reconnect — so whichever seat held the old id takes the
+        /// new one. Without this, Player 2's pad waking mid-run would become Player 1's (D57).
+        /// </summary>
+        public void Reclaim(int previousId, int returnedId)
+        {
+            if (previousId == NoDevice || returnedId == NoDevice)
+            {
+                return;
+            }
+
+            if (SecondSeatDevice == previousId)
+            {
+                SecondSeatDevice = returnedId;
+            }
+
+            if (FirstSeatHome == previousId)
+            {
+                FirstSeatHome = returnedId;
+            }
+        }
+
+        /// <summary>
         /// No front door ran — the Gameplay scene was opened on its own. Player 2 stands in on the
         /// first controller and Player 1 has the rest, which is how that scene has always behaved.
         /// </summary>

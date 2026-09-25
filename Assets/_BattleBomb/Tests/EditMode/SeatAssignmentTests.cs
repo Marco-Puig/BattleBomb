@@ -191,5 +191,47 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(seats.SecondSeatDevice, Is.EqualTo(PadB));
         }
+
+        [Test]
+        public void A_controller_that_wakes_under_a_new_id_keeps_its_seat()
+        {
+            var seats = new SeatAssignment();
+            seats.Follow(FrontendScreen.Characters, false, Keyboard, SeatAssignment.NoDevice);
+            seats.Follow(FrontendScreen.Characters, true, Keyboard, PadA);
+
+            const int padAWoken = 12;
+            seats.Reclaim(PadA, padAWoken);
+
+            Assert.That(seats.SecondSeatDevice, Is.EqualTo(padAWoken));
+            Assert.That(seats.Owns(1, padAWoken), Is.True);
+            Assert.That(seats.Owns(0, padAWoken), Is.False, "Waking must not hand Player 2's pad to Player 1.");
+        }
+
+        [Test]
+        public void Player_ones_home_follows_their_controller_through_a_reconnect()
+        {
+            var seats = new SeatAssignment();
+            seats.Follow(FrontendScreen.Characters, false, PadA, SeatAssignment.NoDevice);
+
+            const int padAWoken = 12;
+            seats.Reclaim(PadA, padAWoken);
+
+            Assert.That(seats.FirstSeatHome, Is.EqualTo(padAWoken));
+            Assert.That(seats.Owns(1, padAWoken), Is.False, "Player 1's own pad waking is not a join.");
+        }
+
+        [Test]
+        public void Reclaiming_a_device_nobody_sat_on_changes_nothing()
+        {
+            var seats = new SeatAssignment();
+            seats.Follow(FrontendScreen.Characters, false, Keyboard, SeatAssignment.NoDevice);
+            seats.Follow(FrontendScreen.Characters, true, Keyboard, PadA);
+
+            seats.Reclaim(PadB, 12);
+            seats.Reclaim(SeatAssignment.NoDevice, 13);
+
+            Assert.That(seats.FirstSeatHome, Is.EqualTo(Keyboard));
+            Assert.That(seats.SecondSeatDevice, Is.EqualTo(PadA));
+        }
     }
 }

@@ -536,9 +536,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player 2
       objectReference: {fileID: 0}
-    - target: {fileID: 7782524822534071537, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
-      propertyPath: m_DefaultControlScheme
-      value: Gamepad
+    - target: {fileID: 8105310037222224716, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
+      propertyPath: _seat
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8513221258796164119, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
       propertyPath: m_LocalPosition.x
@@ -932,10 +932,6 @@ PrefabInstance:
     - target: {fileID: 5304322366050665028, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
       propertyPath: m_Name
       value: Player 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7782524822534071537, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
-      propertyPath: m_DefaultControlScheme
-      value: Keyboard
       objectReference: {fileID: 0}
     - target: {fileID: 8513221258796164119, guid: a6a7dc60d0813c041a8ecbb1aa2ca614, type: 3}
       propertyPath: m_LocalPosition.x

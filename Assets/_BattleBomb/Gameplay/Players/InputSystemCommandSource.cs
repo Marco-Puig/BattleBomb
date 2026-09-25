@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using BattleBomb.Core.Players;
+using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -7,77 +7,65 @@ using UnityEngine.InputSystem;
 namespace BattleBomb.Gameplay.Players
 {
     /// <summary>
-    /// Translates one player's Input System actions into <see cref="PlayerCommand"/>s. This is the
-    /// only place in the project permitted to touch an input device — everything downstream reads
-    /// commands (§4).
+    /// One couch seat's input, turned into <see cref="PlayerCommand"/>s. With the
+    /// <see cref="SeatInput"/> it owns, this is the only code in the project that touches an input
+    /// device — everything downstream reads commands (§4, rule 3).
     /// </summary>
     /// <remarks>
-    /// Actions come from the sibling <see cref="PlayerInput"/>, which clones the action asset per
-    /// player and pairs it to that player's devices. That is what makes local co-op work without any
-    /// code knowing how many players there are.
+    /// The seat is authored, and it is the player's id. It used to be <c>PlayerInput.playerIndex</c>,
+    /// which Unity allocates across every PlayerInput alive — including the front door's, which
+    /// claimed indices first — so a solo player could come out labelled "P2" (HANDOFF-M7). Which
+    /// devices the seat owns comes from the session's <see cref="SeatAssignment"/> (D57).
     /// </remarks>
     [DisallowMultipleComponent]
-    [RequireComponent(typeof(PlayerInput))]
-    public sealed class InputSystemCommandSource : MonoBehaviour, IPlayerCommandSource
+    public sealed class InputSystemCommandSource : MonoBehaviour, IPlayerCommandSource, IInputDeviceReport
     {
         [Tooltip("Driver this player registers with. Leave empty to find the driver in the scene, " +
                  "or the command sampler when there is no simulation (the front door).")]
         [SerializeField] private SimulationDriver _driver;
 
-        /// <summary>What this source is actually registered with. Usually the driver, but the
-        /// front door has no simulation and still has two devices, so anything that owns a
-        /// <see cref="PlayerRegistry"/> will do (task 80).</summary>
+        [Tooltip("The project's controls. Each seat reads its own copy.")]
+        [SerializeField] private InputActionAsset _controls;
+
+        [Tooltip("0 for Player 1, 1 for Player 2. This is the player's id, so it is what every " +
+                 "P1/P2 label reads.")]
+        [SerializeField] private int _seat;
+
+        private readonly SeatAssignment _standIn = new SeatAssignment();
         private IPlayerRegistryHost _host;
+        private SeatInput _input;
+        private GameSession _session;
+        private bool _lookedForSession;
 
-        private readonly List<(InputAction action, CommandButtons button)> _buttons =
-            new List<(InputAction, CommandButtons)>();
+        public PlayerId PlayerId => new PlayerId(_seat);
 
-        private PlayerInput _playerInput;
-        private InputAction _move;
-        private CommandButtons _previouslyHeld;
+        public InputFamily Family => _input != null ? _input.Family : InputFamily.Keyboard;
 
-        public PlayerId PlayerId => new PlayerId(_playerInput != null ? Mathf.Max(0, _playerInput.playerIndex) : 0);
+        public int LastDeviceId => _input != null ? _input.LastDeviceId : SeatAssignment.NoDevice;
 
         public PlayerCommand Sample(int frame)
         {
-            Vector2 move = _move != null ? _move.ReadValue<Vector2>() : Vector2.zero;
-
-            CommandButtons held = CommandButtons.None;
-            for (int i = 0; i < _buttons.Count; i++)
+            if (_input == null)
             {
-                if (_buttons[i].action.IsPressed())
-                {
-                    held |= _buttons[i].button;
-                }
+                return PlayerCommand.Idle(frame);
             }
 
-            PlayerCommand command = PlayerCommand.FromState(frame, move, held, _previouslyHeld);
-            _previouslyHeld = held;
-            return command;
-        }
-
-        private void Awake()
-        {
-            _playerInput = GetComponent<PlayerInput>();
-            InputActionAsset actions = _playerInput.actions;
-
-            if (actions == null)
-            {
-                Debug.LogError($"{name}: PlayerInput has no action asset — this player will contribute nothing.", this);
-                return;
-            }
-
-            _move = Find(actions, PlayerActions.Move);
-            AddButton(actions, PlayerActions.Light, CommandButtons.Light);
-            AddButton(actions, PlayerActions.Heavy, CommandButtons.Heavy);
-            AddButton(actions, PlayerActions.Magic, CommandButtons.Magic);
-            AddButton(actions, PlayerActions.Equipment, CommandButtons.Equipment);
-            AddButton(actions, PlayerActions.Jump, CommandButtons.Jump);
-            AddButton(actions, PlayerActions.Pause, CommandButtons.Pause);
+            _input.Own(Seats());
+            return _input.Sample(frame);
         }
 
         private void OnEnable()
         {
+            if (_controls == null)
+            {
+                Debug.LogError($"{name}: no controls asset — this player will contribute nothing.", this);
+                return;
+            }
+
+            // Built here rather than in Awake: a mid-play recompile re-runs OnEnable but not Awake.
+            _input = new SeatInput(_controls, _seat);
+            _lookedForSession = false;
+
             _host = _driver != null ? _driver : FindHost();
             if (_host == null)
             {
@@ -94,7 +82,45 @@ namespace BattleBomb.Gameplay.Players
             // a scene change can swap the host out from under a source that outlives it.
             _host?.Players.Unregister(PlayerId);
             _host = null;
-            _previouslyHeld = CommandButtons.None;
+            _input?.Dispose();
+            _input = null;
+        }
+
+        /// <summary>
+        /// The session's seats, looked for on the first sample rather than in OnEnable: the front
+        /// door creates the session in its own OnEnable, which may run after this one. With no
+        /// session at all — the Gameplay scene opened on its own — Player 2 stands in on the first
+        /// controller, which is how that scene has always behaved.
+        /// </summary>
+        private SeatAssignment Seats()
+        {
+            if (!_lookedForSession)
+            {
+                _session = GameSession.Find();
+                _lookedForSession = true;
+            }
+
+            if (_session != null)
+            {
+                return _session.Seats;
+            }
+
+            _standIn.StandIn(FirstGamepad());
+            return _standIn;
+        }
+
+        private static int FirstGamepad()
+        {
+            int first = SeatAssignment.NoDevice;
+            foreach (Gamepad pad in Gamepad.all)
+            {
+                if (first == SeatAssignment.NoDevice || pad.deviceId < first)
+                {
+                    first = pad.deviceId;
+                }
+            }
+
+            return first;
         }
 
         private static IPlayerRegistryHost FindHost()
@@ -106,26 +132,6 @@ namespace BattleBomb.Gameplay.Players
             }
 
             return FindAnyObjectByType<CommandSampler>();
-        }
-
-        private void AddButton(InputActionAsset actions, string actionName, CommandButtons button)
-        {
-            InputAction action = Find(actions, actionName);
-            if (action != null)
-            {
-                _buttons.Add((action, button));
-            }
-        }
-
-        private InputAction Find(InputActionAsset actions, string actionName)
-        {
-            InputAction action = actions.FindAction($"{PlayerActions.Map}/{actionName}", throwIfNotFound: false);
-            if (action == null)
-            {
-                Debug.LogWarning($"{name}: action '{PlayerActions.Map}/{actionName}' not found — it will read as inactive.", this);
-            }
-
-            return action;
         }
     }
 }

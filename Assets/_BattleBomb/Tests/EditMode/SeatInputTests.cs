@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using System.Reflection;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Tests.EditMode.Acceptance;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.Layouts;
 
 namespace BattleBomb.Tests.EditMode
 {
@@ -57,6 +60,38 @@ namespace BattleBomb.Tests.EditMode
             seat.Own(seats);
             return seat.Sample(++_frame);
         }
+
+        /// <summary>
+        /// A pad reported by the fixture's fake native layer. Only a native device is parked on
+        /// the disconnected list when it goes and comes back as the same device under a new id — a
+        /// real reconnect; AddDevice's devices are simply removed. The package keeps its test
+        /// runtime internal, so it is reached by reflection: if an Input System upgrade renames it,
+        /// this fails loudly, which is when reconnects deserve a fresh look anyway.
+        /// </summary>
+        private int ReportPad()
+        {
+            object runtime = TestRuntime();
+            MethodInfo report = runtime.GetType().GetMethod("ReportNewInputDevice", new[]
+            {
+                typeof(InputDeviceDescription), typeof(int), typeof(ulong), typeof(string), typeof(string),
+            });
+            var description = new InputDeviceDescription { deviceClass = nameof(Gamepad), interfaceName = "Test" };
+            int id = (int)report.Invoke(runtime, new object[] { description, InputDevice.InvalidDeviceId, 0UL, null, null });
+            InputSystem.Update();
+            return id;
+        }
+
+        private void UnplugPad(InputDevice pad)
+        {
+            object runtime = TestRuntime();
+            runtime.GetType().GetMethod("ReportInputDeviceRemoved", new[] { typeof(InputDevice) })
+                .Invoke(runtime, new object[] { pad });
+            InputSystem.Update();
+        }
+
+        private object TestRuntime() =>
+            typeof(InputTestFixture).GetProperty("runtime", BindingFlags.Instance | BindingFlags.NonPublic)
+                .GetValue(this);
 
         [Test]
         public void A_solo_player_answers_to_the_keyboard_and_every_controller()
@@ -294,6 +329,55 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(Next(one, seats).IsHeld(CommandButtons.Jump), Is.False);
             Assert.That(one.LastDeviceId, Is.EqualTo(SeatAssignment.NoDevice));
+        }
+
+        [Test]
+        public void Player_twos_controller_that_sleeps_at_character_select_keeps_its_seat()
+        {
+            var pad = (Gamepad)InputSystem.GetDeviceById(ReportPad());
+
+            var seats = new SeatAssignment();
+            seats.Follow(FrontendScreen.Characters, false, _keyboard.deviceId, SeatAssignment.NoDevice);
+            seats.Follow(FrontendScreen.Characters, true, _keyboard.deviceId, pad.deviceId);
+            SeatInput one = Seat(0, seats);
+            SeatInput two = Seat(1, seats);
+
+            int asleep = pad.deviceId;
+            UnplugPad(pad);
+            ReportPad();
+            Assert.That(pad.added, Is.True, "The pad did not come back as the same device.");
+            Assert.That(pad.deviceId, Is.Not.EqualTo(asleep), "The pad came back under its old id.");
+
+            Next(one, seats);
+            Next(two, seats);
+            Press(pad.buttonSouth);
+
+            Assert.That(Next(two, seats).WasPressed(CommandButtons.Jump), Is.True,
+                "Player 2 lost their pad to the reconnect.");
+            Assert.That(Next(one, seats).IsHeld(CommandButtons.Jump), Is.False, "Player 1 took Player 2's pad.");
+        }
+
+        [Test]
+        public void A_controller_that_slept_before_the_seats_were_built_keeps_its_seat()
+        {
+            var pad = (Gamepad)InputSystem.GetDeviceById(ReportPad());
+            var seats = new SeatAssignment();
+            seats.Follow(FrontendScreen.Characters, false, _keyboard.deviceId, SeatAssignment.NoDevice);
+            seats.Follow(FrontendScreen.Characters, true, _keyboard.deviceId, pad.deviceId);
+
+            // Asleep across a scene change: the seats that saw it go were destroyed with their scene.
+            UnplugPad(pad);
+            SeatInput one = Seat(0, seats);
+            SeatInput two = Seat(1, seats);
+            ReportPad();
+
+            Next(one, seats);
+            Next(two, seats);
+            Press(pad.buttonSouth);
+
+            Assert.That(Next(two, seats).WasPressed(CommandButtons.Jump), Is.True,
+                "Player 2's pad woke in a new scene and was lost to Player 1.");
+            Assert.That(Next(one, seats).IsHeld(CommandButtons.Jump), Is.False);
         }
     }
 }

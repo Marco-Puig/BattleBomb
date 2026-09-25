@@ -1,4 +1,5 @@
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Players;
 using BattleBomb.Core.Saves;
 using BattleBomb.Gameplay.Data;
 using BattleBomb.Platform;
@@ -26,6 +27,11 @@ namespace BattleBomb.Gameplay.Session
         /// after a reload must check rather than assume. Nothing does today: the only readers run
         /// on a real scene load, which is the one thing a reload is not.</summary>
         public CharacterDefinition[] Characters { get; } = new CharacterDefinition[FrontendState.Slots];
+
+        /// <summary>Which devices each couch seat owns (D57). Here because the front door hands
+        /// the seats out and the machine plays on them. Like <see cref="Characters"/>, it does not
+        /// survive a mid-play domain reload.</summary>
+        public SeatAssignment Seats { get; } = new SeatAssignment();
 
         public ChapterDefinition[] Chapters { get; set; } = new ChapterDefinition[0];
         public TierDefinition[] Tiers { get; set; } = new TierDefinition[0];

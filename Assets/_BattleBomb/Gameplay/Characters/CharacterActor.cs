@@ -97,8 +97,8 @@ namespace BattleBomb.Gameplay.Characters
         private readonly List<ElementalMultiplier> _resistScratch = new List<ElementalMultiplier>();
 
         /// <summary>
-        /// Read live from the command source: PlayerInput assigns its player index after sibling
-        /// OnEnable runs, so a snapshot taken there would freeze the wrong id.
+        /// Read from the command source, whose seat is the player's id (D57); the serialized index
+        /// is only the fallback for an actor with no source.
         /// </summary>
         public PlayerId PlayerId => _source != null ? _source.PlayerId : new PlayerId(_playerIndex);
         public Vector3 Position => _state.Position;

@@ -73,12 +73,18 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920).
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea).
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
   - **89:** Listen before `Role = Host`; a busy port shows "Port 7777 is busy". The input buffer
     drains back to its target of 2 (HANDOFF-M8) and merges past the documented 6; a starved
     remote goes neutral after 15 steps (0.25 s); `Next` is idempotent for a repeated host frame
     (a paused host samples every render frame). All paper numbers in `NetProtocol`, tuned at 96.
+  - **95:** the guest's own open menu drives Player 2 on the host (South is Confirm and Jump) —
+    while a guest screen is open NetGuest sends neutral; after it closes, held buttons count only
+    once released (D57). Plus tests carried from 89: a guest who leaves mid-match writes no save;
+    the guest's front door gets its own couch back. And, in the next task touching them: the dev
+    panel caches the session (it calls `GameSession.Find()` every OnGUI, which can destroy
+    duplicates); `NetSession.LocalLagNames` becomes read-only.
   - **92:** bound or split the Events batch (up to 512 events × 8 KB drop JSON can pass the frame
     limit). The flood path acknowledges frames it dropped — fix before Plan 3's prediction reads
     `AckGuestFrame`.
@@ -87,6 +93,16 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   - **Plan 2 (Netcode):** unregistering a source by id can remove a newer source under the same id
     (both `RemoteCommandSource` and `InputSystemCommandSource`) — bites on D61's solo carry-on and
     rejoin. Unregister only when `TryGet` returns this source.
+  - **Plan 2 (Netcode), from 89:** the refusal reason is lost (the host's Lost("left") overwrites it;
+    the guest with lag sees "The host left") — keep Status when never welcomed, and let the guest
+    close on Refuse. `UseSeat` assumes Player 2 is authored active (else OnEnable builds seat 1's
+    input first). The guest's own front door stays live while connected, and the guest's abandoned
+    body still holds gates shut (D60/D61).
+  - **Plan 3 (Netcode), from 89:** `catch (SocketException)` sits in Gameplay and always names port
+    7777 — transport-specific above the seam (D58). Listen should report failure through
+    `INetTransport` when the Steam transport arrives.
+  - **96, by design:** a starved remote lets go with a release, so a Heavy charged through a 250 ms
+    stall fires. Tune `StarvedRepeatSteps` there.
 
 ## Builder backlog — after Groundwork, before M8
 
@@ -202,6 +218,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 89 committed (fd33bea): the session and handshake — a remote Player 2, the dev
+  panel. EditMode 746, PlayMode 43. Review saved Michael's save twice (a replica never saves; the
+  stand-in hero never enters the session). Flagged items placed under M8.
 - 2026-09-25 — Task 88 committed (5fd0920): the input buffer and the remote command source.
   EditMode 736, PlayMode 35. Seven gaps found against the plan; calls recorded under M8.
 - 2026-09-25 — Task 87 committed (4f42e0c): the transport seam — loopback (with the socket's frame

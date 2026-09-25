@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | Netcode | online | M8 Plan 1 (stages A+B) — spec approved | — |
+| Netcode | Netcode | online | The pre-M8 fixes plan (Plan 1 done) | — |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
 | Art | Art | online | HUD and menus canvas v1 up for review | Michael: canvas review, images, bible review, music tool |
 | Producer | — | starts at M9 | — | — |
@@ -59,13 +59,19 @@ What is waiting on Michael, in priority order:
 
 Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one
 before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F and the close-out.
-**Starts only after** Groundwork is merged **and** the Builder backlog below is done. M8 will ask
-for **quiet** during two-editor Multiplayer Play Mode runs.
+**Starts only after** Groundwork is merged **and** the Builder backlog below is done.
+
+- **Plan 1 is written** — `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`, Tasks 86–96.
+  Tasks 90, 93, 94, 95, 96 need **quiet** (two-editor Multiplayer Play Mode runs). Task 90 adds the
+  `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
+  Michael's lag table, which Plan 3 is written from.
+- **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
 
 ## Builder backlog — after Groundwork, before M8
 
 Found by the Netcode audit (`docs/team/netcode/readiness.md`), checked against the code by the
-orchestrator. Each is a small plan task with a test; the Builder takes them as one batch.
+orchestrator. The Netcode lane is writing them up as one small plan with tests
+(`docs/superpowers/plans/…-pre-m8-fixes.md`); the Builder takes it as one batch.
 
 1. **Destroyed enemies keep acting for the rest of the frame** (§4.3 item 1). `Destroy` lands at
    frame end, and the driver can run up to 5 steps a frame, so below 60 fps enemies removed by a
@@ -117,6 +123,7 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: M8 Plan 1, Tasks 86–96 (1a7fdac). Next for Netcode: the pre-M8 fixes plan.
 - 2026-09-24 — Art: fixture kit brief (80b5030); HUD and menus canvas v1 up for Michael's review.
 - 2026-09-24 — Art `DONE`: audio v0 (b144d79); first pass complete. Approved: a minimal story-free
   fixture environment kit; next, HUD and menu mockups (ROADMAP §5.2 item 6). Licensed-audio question

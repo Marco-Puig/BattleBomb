@@ -16,7 +16,7 @@ context reset.**
 |---|---|---|---|
 | **Orchestrator** | Plans, answers, commits, pushes, hands out the sim, keeps shared docs | — | `docs/team/BOARD.md`, `PROTOCOL.md`, `PROMPTS.md`, the shared docs below, git, memory |
 | **Builder** | Builds engineering milestones in Unity — Groundwork now | 1 | `Assets/`, `Packages/`, `ProjectSettings/` **while holding the sim**; `docs/team/builder.md` |
-| **Netcode** | Gets M8 (online co-op) designed and planned | 2 | `docs/team/netcode/`, `docs/HANDOFF-M8.md`, M8 plan files under `docs/superpowers/plans/`, `docs/team/netcode.md` |
+| **Netcode** | Gets M8 (online co-op) designed and planned; the pre-M8 fixes plan | 2 | `docs/team/netcode/`, `docs/HANDOFF-M8.md`, M8 and pre-M8 plan files under `docs/superpowers/plans/`, `docs/team/netcode.md` |
 | **World** | Runs the World session; writes the story bible (D56) | 3 | `docs/world/`, `docs/team/world.md` |
 | **Art** | Art and audio bible, provenance, asset briefs and prompts (D55); HUD and menu mockups | 4 | `docs/art/`, `ArtSource/`, new mockups under `design/`, `docs/team/art.md` |
 | **Producer** *(starts later)* | Steam, store page, Early Access paperwork | 5 | `docs/business/`, `docs/team/producer.md` |

@@ -19,8 +19,8 @@ item-icon/3,Leather Boots icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wire
 item-icon/4,Steel Helmet icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 4 once drafted. Needs SF6 approved first.
 item-icon/5,Steel Chestplate icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 5 once drafted. Needs SF6 approved first.
 item-icon/6,Steel Boots icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 6 once drafted. Needs SF6 approved first.
-item-icon/7,Hunting Knife icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 7 once drafted. Needs SF6 approved first.
-item-icon/8,Hunting Bow icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 8 once drafted. Needs SF6 approved first.
+item-icon/7,Hunting Knife icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 7 once drafted. Batch B needs SF6 and the held-weapon sheet approved first.
+item-icon/8,Hunting Bow icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 8 once drafted. Batch B needs SF6 and the held-weapon sheet approved first.
 item-icon/10,Terrier icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 10 once drafted. Needs SF6 approved first.
 item-icon/11,Lucky Charm icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 11 once drafted. Needs SF6 approved first.
 item-icon/13,Ember Stone icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 13 once drafted. Needs SF6 approved first.
@@ -31,8 +31,8 @@ effect/air,Air effect kit,effect,briefed,,,,,,,effects/brief.md,Needs SF5 approv
 effect/melee,"Melee effect kit (arcs, hit stars, dust)",effect,briefed,,,,,,,effects/brief.md,Needs SF2 approved first.
 effect/loot,"Loot glow kit (greyscale, tinted by QualityColors)",effect,briefed,,,,,,,effects/brief.md,
 effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,briefed,,,,,,,effects/brief.md,Needs SF1 approved first.
-weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.
-weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.
+weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
+weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and SF6 approved first. Drawn before the icons; icon Batch B follows this sheet.
 environment/fixture,Fixture meadow kit (fixture-only),environment,briefed,,,,,,,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. Needs SF3 approved first.
 music/title-theme,Title theme (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
 music/checkpoint-room,Checkpoint room (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.

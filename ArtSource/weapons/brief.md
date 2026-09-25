@@ -5,8 +5,9 @@ Hunting Knife (id 7), and the Hunting Bow (id 8) with its arrow. Canvas, pivot a
 `docs/art/HERO_TEMPLATE.md` §9. The template's test knight fights with the Hunting Knife, the
 only sword-class item.
 
-**Before you start:** SF1 and icon Batch B must be approved. The held weapon should look like
-its icon.
+**Before you start:** SF1 and SF6 must be approved. This sheet comes **before** the item icons:
+M9 needs the knight holding his knife, while nothing in M9 waits on icons. Icon Batch B is then
+drawn from this sheet, so each icon matches the weapon in hand.
 
 **Pipeline:** save the sheet into `ArtSource/weapons/AI/_raw/sheet.png`. The Art lane cuts each
 piece onto its canvas with the grip on the pivot, as `weapons/hunting-knife/AI/hunting-knife__ai_v1.png`,
@@ -16,16 +17,19 @@ piece onto its canvas with the grip on the pivot, as `weapons/hunting-knife/AI/h
 
 ## The weapon sheet
 
-**Attach, in this order:** (1) your approved SF1, (2) your approved icon Batch B.
+**Attach, in this order:** (1) your approved SF1, (2) your approved SF6.
 
 ```
 Three separate weapon sprites for a 2D side-scrolling game, seen flat from the side, matching
-the style of the first attached image and the designs of the second attached image exactly.
-Arrange them in a row of three equal cells, each centred with clear empty space, not touching:
-(1) the hunting knife standing straight up, point at the top, handle at the bottom, sharp edge
-facing right;
-(2) the hunting bow standing straight up, its string on the left side and the curve of the bow
-bulging to the right, no arrow;
+the style of the first attached image exactly; the bow matches the hunting bow in the second
+attached image. Arrange them in a row of three equal cells, each centred with clear empty space,
+not touching:
+(1) a hunting knife standing straight up, point at the top, handle at the bottom, sharp edge
+facing right: a short, broad steel blade with a single sharp edge, a wooden handle wrapped in
+brown leather, and a small brass guard;
+(2) a hunting bow standing straight up, its string on the left side and the curve of the bow
+bulging to the right: a simple curved wooden bow wrapped with leather at the grip, a taut
+string, no arrow;
 (3) a single arrow lying horizontally, pointing right, with a steel tip and pale feather
 fletching.
 All three are new and plain: no glow, no gems.

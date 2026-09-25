@@ -243,11 +243,305 @@ visible, no text, no labels, no watermark, no border.
 
 ---
 
+## Fixture environment (test stage only, never ships)
+
+*Attach your approved SF3 to every prompt.*
+
+### 9. Ground (square 1024×1024)
+
+- **Attach:** your approved SF3
+- **Save as:** `ArtSource/environments/fixture/AI/_raw/ground.png`
+- *Brief:* `ArtSource/environments/fixture/brief.md`
+
+```
+A seamless, tileable ground texture seen from directly above, for the walkable floor of a
+side-scrolling game: a soft mix of short light-green grass and light sandy dirt, evenly lit,
+LOW contrast, with no dark patches, holes, stones, shadows, flowers or strong details, so a
+character's dark shadow on it is always the darkest thing in view. The left edge must continue
+seamlessly into the right edge, and the top into the bottom.
+Environment style: lush, painterly, soft, gentle painted texture, no outlines, soft saturated
+colour. Match the ground colour of the attached image, but lighter and calmer.
+
+Output: a single image, square 1024x1024, no text, no watermark, no border.
+```
+
+### 10. Backdrop far (landscape 1536×1024)
+
+- **Attach:** your approved SF3
+- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-far.png`
+- *Brief:* `ArtSource/environments/fixture/brief.md`
+
+```
+A wide painted background strip for a side-scrolling game: a bright soft sky with a few big
+rounded clouds, and a range of distant, pale blue-violet mountains along the lower third,
+softened by atmospheric haze. The left edge must continue seamlessly into the right edge so the
+strip can repeat. Nothing in the foreground.
+Environment style: lush, painterly 2D background art, soft rounded shapes, gentle painted
+texture, saturated but soft colour, warm sunlight, no outlines. Match the sky and distance of the
+attached image.
+
+Output: a single image, landscape 1536x1024, no text, no watermark, no border.
+```
+
+### 11. Backdrop mid (landscape 1536×1024)
+
+- **Attach:** your approved SF3
+- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-mid.png`
+- *Brief:* `ArtSource/environments/fixture/brief.md`
+
+```
+A painted background layer for a side-scrolling game: gently rolling green hills with big,
+rounded, lush trees and a few glowing flowers, filling the lower half of the image; everything
+above the hills is fully transparent. Slightly hazy and softer than a foreground would be. The
+left edge must continue seamlessly into the right edge so the layer can repeat.
+Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
+gentle painted texture, saturated but soft colour, warm sunlight, no outlines. Match the hills
+and trees of the attached image.
+
+Output: a single image, landscape 1536x1024, transparent background above the hills, no text, no
+watermark, no border.
+```
+
+### 12. Backdrop near (landscape 1536×1024)
+
+- **Attach:** your approved SF3
+- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-near.png`
+- *Brief:* `ArtSource/environments/fixture/brief.md`
+
+```
+A painted layer for a side-scrolling game: a low, continuous row of lush bushes, tall grass
+and small flowers along the bottom third of the image, seen from the side; everything above is
+fully transparent, and nothing sits below the row's base. The left edge must continue seamlessly
+into the right edge so the row can repeat.
+Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
+gentle painted texture, saturated but soft colour, warm sunlight, no outlines, medium-light
+values (nothing near black).
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no watermark, no
+border.
+```
+
+### 13. Foreground frames (square 1024×1024)
+
+- **Attach:** your approved SF3
+- **Save as:** `ArtSource/environments/fixture/AI/_raw/frames.png`
+- *Brief:* `ArtSource/environments/fixture/brief.md`
+
+```
+Two separate foreground plant clumps for the edges of a side-scrolling game screen, side by side
+with clear space between them, on a transparent background: (1) a tall clump of broad dark-green
+leaves and ferns leaning right, (2) a lower, wider clump of dark leaves and a few stems leaning
+left. They are close to the camera, so they are darker, larger and slightly less detailed than
+the background.
+Environment style: lush, painterly, soft rounded shapes, no outlines.
+
+Output: a single image, square 1024x1024, transparent background, no text, no watermark, no
+border.
+```
+
+---
+
+## Effect kits
+
+*One sheet per kit.*
+
+### 14. Fire (`effect/fire`, 7 pieces)
+
+- **Attach:** your approved SF5.
+- **Save as:** `ArtSource/effects/AI/_raw/fire.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate fire effect pieces for a side-scrolling action game, matching the fire in
+the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
+with clear empty space around it, no piece touching another:
+Top row: (1) a tall licking flame tongue, (2) a second flame tongue leaning right, (3) a short
+wide flame tongue, (4) a round burst of flame exploding outward.
+Bottom row: (5) a single glowing ember, (6) a small flame that could sit on a character's
+shoulder, (7) a spark: a small burst of flame shards and embers, (8) leave empty.
+Colours: red-orange (#FF4A1C) flames, pale yellow-white (#FFF1B0) hot cores, deep red (#9E1B0F)
+shadow tone. Style: bold flat graphic shapes with no outline, one hard-edged shade, bright
+cores, no gradients, no smoke, nothing on the ground.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 15. Ice (`effect/ice`, 8 pieces)
+
+- **Attach:** your approved SF5.
+- **Save as:** `ArtSource/effects/AI/_raw/ice.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate ice effect pieces for a side-scrolling action game, matching the ice in the
+attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred with
+clear empty space around it, no piece touching another:
+Top row: (1) a long, sharp ice bolt pointing right, (2) a large faceted ice shard, (3) a medium
+shard, (4) a small shard.
+Bottom row: (5) a soft puff of frost mist, (6) a single snowflake, (7) a crust of frost and small
+icicles, wide and low, as if coating the ground around a character's feet, (8) a spark: a small
+burst of ice splinters.
+Colours: sky blue (#59BFFF), white-cyan highlights (#E8FBFF), deep blue shadow tone (#1F6FA8).
+Style: solid ice pieces (bolt, shards, crust) have a bold near-black (#1A1917) outline; mist,
+snowflake and spark have no outline. Flat colours, one hard-edged shade, crisp highlights, no
+gradients.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 16. Earth (`effect/earth`, 8 pieces)
+
+- **Attach:** your approved SF5.
+- **Save as:** `ArtSource/effects/AI/_raw/earth.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate earth effect pieces for a side-scrolling action game, matching the rocks in
+the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
+with clear empty space around it, no piece touching another:
+Top row: (1) a large chunky angular rock, (2) a medium rock, (3) a small rock, (4) a tall rock
+pillar with a pointed top, as if erupting from the ground.
+Bottom row: (5) a shorter, wider rock pillar, (6) a pale, soft puff of dust, (7) a single small
+pebble, (8) a spark: a burst of rock chips.
+Colours: ochre stone (#8C6B40), pale sand highlights (#E3C99A), dark umber shadow tone
+(#4A3320); the dust is pale sand, never dark. Style: rocks, pillars and pebble have a bold
+near-black (#1A1917) outline; dust and spark chips have none. Flat colours, one hard-edged shade,
+no gradients, no cracks or marks on any ground.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 17. Air (`effect/air`, 7 pieces)
+
+- **Attach:** your approved SF5.
+- **Save as:** `ArtSource/effects/AI/_raw/air.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate wind effect pieces for a side-scrolling action game, matching the wind in
+the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
+with clear empty space around it, no piece touching another:
+Top row: (1) a long curling swoosh of wind moving right, (2) a swoosh curling upward, (3) a short
+tight swoosh, (4) a spiral of wind like a small whirlwind.
+Bottom row: (5) a single leaf tumbling, (6) a long thin speed line, (7) a spark: a tight burst
+of short swooshes, (8) leave empty.
+Colours: pale mint-white (#D9F2FF) with teal-grey edges and shade (#5FA3A0) so it reads against a
+bright sky; the leaf is fresh green. Style: bold flat graphic shapes with no outline, one
+hard-edged shade, no gradients.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 18. Melee (`effect/melee`, 10 pieces)
+
+- **Attach:** your approved SF2 (the knight mid-swing).
+- **Save as:** `ArtSource/effects/AI/_raw/melee.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate melee combat effect pieces for a side-scrolling action game, in the flat
+graphic style of the attached image. A 5x2 grid of equal cells, one piece per cell, each piece
+centred with clear empty space around it, no piece touching another. Every piece faces right.
+Top row: (1) a crescent sword-swipe arc, level; (2) a crescent arc slashing down diagonally;
+(3) a crescent arc slashing up diagonally; (4) a much wider, thicker crescent for a heavy
+blow; (5) a crescent sweeping upward in a rising curve.
+Bottom row: (6) a small hit star, white with a pale yellow core; (7) a bigger hit star with
+short speed lines; (8) the biggest, sharpest hit star, bold and spiky, for a critical hit;
+(9) a small pale dust puff; (10) a flatter, wider pale dust puff.
+Colours: the arcs are white with a faint pale-blue tint and a bright leading edge; stars are
+white and pale yellow; dust is pale sand. Style: bold flat shapes with no outline, one hard
+shade, no gradients, nothing dark.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 19. Loot glow (`effect/loot`, 4 pieces, greyscale)
+
+- **Attach:** nothing. These are plain light shapes, tinted by the game.
+- **Save as:** `ArtSource/effects/AI/_raw/loot.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+Four separate light-glow textures for a game, in pure greyscale (white on transparent) because
+the game tints them with colour. Arrange them in a row of four equal cells, each centred, not
+touching:
+(1) a soft glowing ring seen at a low angle, so it is a flat ellipse, bright at its rim and
+fading softly in and out; (2) a tall vertical beam of light, brightest in its centre line and
+fading softly to its sides and top; (3) a four-pointed sparkle star; (4) a smaller six-pointed
+sparkle.
+Style: clean and simple, soft light falloff only, no outline, no colour, no texture.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+### 20. Feedback (`effect/feedback`, 5 pieces)
+
+- **Attach:** your approved SF1.
+- **Save as:** `ArtSource/effects/AI/_raw/feedback.png`
+- *Brief:* `ArtSource/effects/brief.md`
+
+```
+A sheet of separate game feedback effect pieces, matching the style of the attached image. A row
+of five equal cells, one piece per cell, each centred with clear empty space, not touching:
+(1) a bright golden starburst of rays, as if a hero just levelled up; (2) a column of small
+rising golden sparkles; (3) a plump cartoon heart, red with a bold near-black (#1A1917)
+outline, one hard-edged shade and a white highlight; (4) a bright pulse burst of short radiating
+lines, pale pink-white, as if the heart just beat; (5) a small sputtering puff of grey-lilac
+smoke, as if a spell fizzled.
+Style: flat colours, one hard-edged shade; only the heart is outlined; no gradients except the
+soft glow of the burst.
+
+Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
+watermark, no border.
+```
+
+---
+
+## Held weapons
+
+*Before the icons: M9 needs the knight holding his knife; the weapon icons are drawn from this sheet.*
+
+### 21. The weapon sheet
+
+- **Attach:** (1) your approved SF1, (2) your approved SF6.
+- **Save as:** `ArtSource/weapons/AI/_raw/sheet.png`
+- *Brief:* `ArtSource/weapons/brief.md`
+
+```
+Three separate weapon sprites for a 2D side-scrolling game, seen flat from the side, matching
+the style of the first attached image exactly; the bow matches the hunting bow in the second
+attached image. Arrange them in a row of three equal cells, each centred with clear empty space,
+not touching:
+(1) a hunting knife standing straight up, point at the top, handle at the bottom, sharp edge
+facing right: a short, broad steel blade with a single sharp edge, a wooden handle wrapped in
+brown leather, and a small brass guard;
+(2) a hunting bow standing straight up, its string on the left side and the curve of the bow
+bulging to the right: a simple curved wooden bow wrapped with leather at the grip, a taut
+string, no arrow;
+(3) a single arrow lying horizontally, pointing right, with a steel tip and pale feather
+fletching.
+All three are new and plain: no glow, no gems.
+Style: clean vector cartoon: bold smooth near-black (#1A1917) outline (thick outer silhouette,
+thinner inner lines), flat colours with one hard-edged shadow tone, one small highlight, light
+from directly above, no gradients, no texture.
+
+Output: a single image, landscape 1536x1024, transparent background, no hand holding them, no
+text, no labels, no watermark, no border.
+```
+
+---
+
 ## Item icons
 
-*A new chat is fine; attach SF6 each time.*
+*Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time.*
 
-### 9. Batch A: armour (6 icons, 5 kept)
+### 22. Batch A: armour (6 icons, 5 kept)
 
 - **Attach:** your approved SF6.
 - **Save as:** `ArtSource/icons/items/AI/_raw/batch-a.png`
@@ -272,15 +566,16 @@ Output: a single image, landscape 1536x1024, transparent background, the six ico
 with clear margins, no text, no labels, no watermark, no border.
 ```
 
-### 10. Batch B: weapons (2 icons)
+### 23. Batch B: weapons (2 icons)
 
-- **Attach:** your approved SF6.
+- **Attach:** (1) your approved SF6, (2) your approved held-weapon sheet.
 - **Save as:** `ArtSource/icons/items/AI/_raw/batch-b.png`
 - *Brief:* `ArtSource/icons/items/brief.md`
 
 ```
 Two game weapon icons side by side, each centred in its own equal square, both on a diagonal
-from lower left to upper right, matching the style of the attached image exactly:
+from lower left to upper right, matching the style of the first attached image exactly and the
+weapon designs of the second attached image exactly:
 (1) a hunting knife: a short, broad steel blade with a single sharp edge, a wooden handle wrapped
 in brown leather, and a small brass guard;
 (2) a hunting bow: a simple curved wooden bow wrapped with leather at the grip, a taut
@@ -294,7 +589,7 @@ Output: a single image, landscape 1536x1024, transparent background, both icons 
 margins, no text, no labels, no watermark, no border.
 ```
 
-### 11. Batch C: pet and trinkets (3 icons)
+### 24. Batch C: pet and trinkets (3 icons)
 
 - **Attach:** your approved SF6.
 - **Save as:** `ArtSource/icons/items/AI/_raw/batch-c.png`
@@ -314,295 +609,6 @@ from directly above, no gradients, no texture. Each icon must read clearly at 64
 
 Output: a single image, landscape 1536x1024, transparent background, the three icons evenly
 spaced with clear margins, no text, no labels, no watermark, no border.
-```
-
----
-
-## Held weapons
-
-### 12. The weapon sheet
-
-- **Attach:** (1) your approved SF1, (2) your approved icon Batch B.
-- **Save as:** `ArtSource/weapons/AI/_raw/sheet.png`
-- *Brief:* `ArtSource/weapons/brief.md`
-
-```
-Three separate weapon sprites for a 2D side-scrolling game, seen flat from the side, matching
-the style of the first attached image and the designs of the second attached image exactly.
-Arrange them in a row of three equal cells, each centred with clear empty space, not touching:
-(1) the hunting knife standing straight up, point at the top, handle at the bottom, sharp edge
-facing right;
-(2) the hunting bow standing straight up, its string on the left side and the curve of the bow
-bulging to the right, no arrow;
-(3) a single arrow lying horizontally, pointing right, with a steel tip and pale feather
-fletching.
-All three are new and plain: no glow, no gems.
-Style: clean vector cartoon: bold smooth near-black (#1A1917) outline (thick outer silhouette,
-thinner inner lines), flat colours with one hard-edged shadow tone, one small highlight, light
-from directly above, no gradients, no texture.
-
-Output: a single image, landscape 1536x1024, transparent background, no hand holding them, no
-text, no labels, no watermark, no border.
-```
-
----
-
-## Effect kits
-
-*One sheet per kit.*
-
-### 13. Fire (`effect/fire`, 7 pieces)
-
-- **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/fire.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate fire effect pieces for a side-scrolling action game, matching the fire in
-the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
-with clear empty space around it, no piece touching another:
-Top row: (1) a tall licking flame tongue, (2) a second flame tongue leaning right, (3) a short
-wide flame tongue, (4) a round burst of flame exploding outward.
-Bottom row: (5) a single glowing ember, (6) a small flame that could sit on a character's
-shoulder, (7) a spark: a small burst of flame shards and embers, (8) leave empty.
-Colours: red-orange (#FF4A1C) flames, pale yellow-white (#FFF1B0) hot cores, deep red (#9E1B0F)
-shadow tone. Style: bold flat graphic shapes with no outline, one hard-edged shade, bright
-cores, no gradients, no smoke, nothing on the ground.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 14. Ice (`effect/ice`, 8 pieces)
-
-- **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/ice.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate ice effect pieces for a side-scrolling action game, matching the ice in the
-attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred with
-clear empty space around it, no piece touching another:
-Top row: (1) a long, sharp ice bolt pointing right, (2) a large faceted ice shard, (3) a medium
-shard, (4) a small shard.
-Bottom row: (5) a soft puff of frost mist, (6) a single snowflake, (7) a crust of frost and small
-icicles, wide and low, as if coating the ground around a character's feet, (8) a spark: a small
-burst of ice splinters.
-Colours: sky blue (#59BFFF), white-cyan highlights (#E8FBFF), deep blue shadow tone (#1F6FA8).
-Style: solid ice pieces (bolt, shards, crust) have a bold near-black (#1A1917) outline; mist,
-snowflake and spark have no outline. Flat colours, one hard-edged shade, crisp highlights, no
-gradients.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 15. Earth (`effect/earth`, 8 pieces)
-
-- **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/earth.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate earth effect pieces for a side-scrolling action game, matching the rocks in
-the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
-with clear empty space around it, no piece touching another:
-Top row: (1) a large chunky angular rock, (2) a medium rock, (3) a small rock, (4) a tall rock
-pillar with a pointed top, as if erupting from the ground.
-Bottom row: (5) a shorter, wider rock pillar, (6) a pale, soft puff of dust, (7) a single small
-pebble, (8) a spark: a burst of rock chips.
-Colours: ochre stone (#8C6B40), pale sand highlights (#E3C99A), dark umber shadow tone
-(#4A3320); the dust is pale sand, never dark. Style: rocks, pillars and pebble have a bold
-near-black (#1A1917) outline; dust and spark chips have none. Flat colours, one hard-edged shade,
-no gradients, no cracks or marks on any ground.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 16. Air (`effect/air`, 7 pieces)
-
-- **Attach:** your approved SF5.
-- **Save as:** `ArtSource/effects/AI/_raw/air.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate wind effect pieces for a side-scrolling action game, matching the wind in
-the attached image exactly. A 4x2 grid of equal cells, one piece per cell, each piece centred
-with clear empty space around it, no piece touching another:
-Top row: (1) a long curling swoosh of wind moving right, (2) a swoosh curling upward, (3) a short
-tight swoosh, (4) a spiral of wind like a small whirlwind.
-Bottom row: (5) a single leaf tumbling, (6) a long thin speed line, (7) a spark: a tight burst
-of short swooshes, (8) leave empty.
-Colours: pale mint-white (#D9F2FF) with teal-grey edges and shade (#5FA3A0) so it reads against a
-bright sky; the leaf is fresh green. Style: bold flat graphic shapes with no outline, one
-hard-edged shade, no gradients.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 17. Melee (`effect/melee`, 10 pieces)
-
-- **Attach:** your approved SF2 (the knight mid-swing).
-- **Save as:** `ArtSource/effects/AI/_raw/melee.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate melee combat effect pieces for a side-scrolling action game, in the flat
-graphic style of the attached image. A 5x2 grid of equal cells, one piece per cell, each piece
-centred with clear empty space around it, no piece touching another. Every piece faces right.
-Top row: (1) a crescent sword-swipe arc, level; (2) a crescent arc slashing down diagonally;
-(3) a crescent arc slashing up diagonally; (4) a much wider, thicker crescent for a heavy
-blow; (5) a crescent sweeping upward in a rising curve.
-Bottom row: (6) a small hit star, white with a pale yellow core; (7) a bigger hit star with
-short speed lines; (8) the biggest, sharpest hit star, bold and spiky, for a critical hit;
-(9) a small pale dust puff; (10) a flatter, wider pale dust puff.
-Colours: the arcs are white with a faint pale-blue tint and a bright leading edge; stars are
-white and pale yellow; dust is pale sand. Style: bold flat shapes with no outline, one hard
-shade, no gradients, nothing dark.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 18. Loot glow (`effect/loot`, 4 pieces, greyscale)
-
-- **Attach:** nothing. These are plain light shapes, tinted by the game.
-- **Save as:** `ArtSource/effects/AI/_raw/loot.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-Four separate light-glow textures for a game, in pure greyscale (white on transparent) because
-the game tints them with colour. Arrange them in a row of four equal cells, each centred, not
-touching:
-(1) a soft glowing ring seen at a low angle, so it is a flat ellipse, bright at its rim and
-fading softly in and out; (2) a tall vertical beam of light, brightest in its centre line and
-fading softly to its sides and top; (3) a four-pointed sparkle star; (4) a smaller six-pointed
-sparkle.
-Style: clean and simple, soft light falloff only, no outline, no colour, no texture.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
-### 19. Feedback (`effect/feedback`, 5 pieces)
-
-- **Attach:** your approved SF1.
-- **Save as:** `ArtSource/effects/AI/_raw/feedback.png`
-- *Brief:* `ArtSource/effects/brief.md`
-
-```
-A sheet of separate game feedback effect pieces, matching the style of the attached image. A row
-of five equal cells, one piece per cell, each centred with clear empty space, not touching:
-(1) a bright golden starburst of rays, as if a hero just levelled up; (2) a column of small
-rising golden sparkles; (3) a plump cartoon heart, red with a bold near-black (#1A1917)
-outline, one hard-edged shade and a white highlight; (4) a bright pulse burst of short radiating
-lines, pale pink-white, as if the heart just beat; (5) a small sputtering puff of grey-lilac
-smoke, as if a spell fizzled.
-Style: flat colours, one hard-edged shade; only the heart is outlined; no gradients except the
-soft glow of the burst.
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no labels, no
-watermark, no border.
-```
-
----
-
-## Fixture environment (test stage only, never ships)
-
-*Attach your approved SF3 to every prompt.*
-
-### 20. Ground (square 1024×1024)
-
-- **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/ground.png`
-- *Brief:* `ArtSource/environments/fixture/brief.md`
-
-```
-A seamless, tileable ground texture seen from directly above, for the walkable floor of a
-side-scrolling game: a soft mix of short light-green grass and light sandy dirt, evenly lit,
-LOW contrast, with no dark patches, holes, stones, shadows, flowers or strong details, so a
-character's dark shadow on it is always the darkest thing in view. The left edge must continue
-seamlessly into the right edge, and the top into the bottom.
-Environment style: lush, painterly, soft, gentle painted texture, no outlines, soft saturated
-colour. Match the ground colour of the attached image, but lighter and calmer.
-
-Output: a single image, square 1024x1024, no text, no watermark, no border.
-```
-
-### 21. Backdrop far (landscape 1536×1024)
-
-- **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-far.png`
-- *Brief:* `ArtSource/environments/fixture/brief.md`
-
-```
-A wide painted background strip for a side-scrolling game: a bright soft sky with a few big
-rounded clouds, and a range of distant, pale blue-violet mountains along the lower third,
-softened by atmospheric haze. The left edge must continue seamlessly into the right edge so the
-strip can repeat. Nothing in the foreground.
-Environment style: lush, painterly 2D background art, soft rounded shapes, gentle painted
-texture, saturated but soft colour, warm sunlight, no outlines. Match the sky and distance of the
-attached image.
-
-Output: a single image, landscape 1536x1024, no text, no watermark, no border.
-```
-
-### 22. Backdrop mid (landscape 1536×1024)
-
-- **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-mid.png`
-- *Brief:* `ArtSource/environments/fixture/brief.md`
-
-```
-A painted background layer for a side-scrolling game: gently rolling green hills with big,
-rounded, lush trees and a few glowing flowers, filling the lower half of the image; everything
-above the hills is fully transparent. Slightly hazy and softer than a foreground would be. The
-left edge must continue seamlessly into the right edge so the layer can repeat.
-Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
-gentle painted texture, saturated but soft colour, warm sunlight, no outlines. Match the hills
-and trees of the attached image.
-
-Output: a single image, landscape 1536x1024, transparent background above the hills, no text, no
-watermark, no border.
-```
-
-### 23. Backdrop near (landscape 1536×1024)
-
-- **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/backdrop-near.png`
-- *Brief:* `ArtSource/environments/fixture/brief.md`
-
-```
-A painted layer for a side-scrolling game: a low, continuous row of lush bushes, tall grass
-and small flowers along the bottom third of the image, seen from the side; everything above is
-fully transparent, and nothing sits below the row's base. The left edge must continue seamlessly
-into the right edge so the row can repeat.
-Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
-gentle painted texture, saturated but soft colour, warm sunlight, no outlines, medium-light
-values (nothing near black).
-
-Output: a single image, landscape 1536x1024, transparent background, no text, no watermark, no
-border.
-```
-
-### 24. Foreground frames (square 1024×1024)
-
-- **Attach:** your approved SF3
-- **Save as:** `ArtSource/environments/fixture/AI/_raw/frames.png`
-- *Brief:* `ArtSource/environments/fixture/brief.md`
-
-```
-Two separate foreground plant clumps for the edges of a side-scrolling game screen, side by side
-with clear space between them, on a transparent background: (1) a tall clump of broad dark-green
-leaves and ferns leaning right, (2) a lower, wider clump of dark leaves and a few stems leaning
-left. They are close to the camera, so they are darker, larger and slightly less detailed than
-the background.
-Environment style: lush, painterly, soft rounded shapes, no outlines.
-
-Output: a single image, square 1024x1024, transparent background, no text, no watermark, no
-border.
 ```
 
 ---

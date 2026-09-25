@@ -64,10 +64,11 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Sent as DONE; do not touch until COMMITTED:** `design/hud-menus/` (11 standalone HTML exports
-plus README), `ArtSource/GPT_PROMPTS.md` (31 prompts in run order), `ArtSource/make_gpt_prompts.py`,
-`ArtSource/audio/music/brief.md` (7 temporary tracks), `ArtSource/weapons/brief.md` (+ heading),
-`docs/art/MANIFEST.csv` (42 rows), `docs/team/art.md`.
+**Run-order fix sent as DONE; do not touch until COMMITTED:** `ArtSource/make_gpt_prompts.py`,
+`ArtSource/GPT_PROMPTS.md`, `ArtSource/weapons/brief.md`, `ArtSource/icons/items/brief.md`,
+`docs/art/MANIFEST.csv` (4 notes), `docs/team/art.md`. The order now follows ROADMAP section 5.2:
+style frames, hero template, fixture environment, effects, held weapons, item icons, music.
+Weapons attach SF1 and SF6; icon Batch B attaches the approved weapon sheet.
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
 `python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
@@ -212,13 +213,16 @@ Python (PIL) and sends back an assembled preview.
   consistency. Drafts are raster; Michael redraws over them in Illustrator (never traces).
 - 2026-09-24 (Orchestrator): **reach the orchestrator at the `from=` address of its last message**,
   not by name — Michael renames sessions (PROTOCOL rule 6, 853ad08). Last known:
-  `uds:\\.\pipe\LOCAL\cc-msg-a5467c87452d77bccc60c704d3ef83a9`. Hero, region, enemy and boss
+  `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095` (session "Battlebomb"; the address
+  changes when that session restarts, so run ListAgents if a send fails). Hero, region, enemy and boss
   prompts stay parked until the World bible lands; the orchestrator will say when.
 - 2026-09-24 (Michael): AI drafts first for all art, organised so he can tell AI from his own work
   and redraw each (D55). Audio: AI-drafted music plus licensed sound-effect libraries.
 
 ## Log
 
+- 2026-09-24 — GPT_PROMPTS run order aligned to ROADMAP section 5.2 (env before effects; weapons before icons); DONE sent.
+- 2026-09-24 — COMMITTED: HUD export, GPT_PROMPTS, music brief. The orchestrator restarted, so its address changed.
 - 2026-09-24 — Canvas approved and exported to design/hud-menus/; GPT_PROMPTS.md (31 prompts) + generator; temporary music brief; DONE sent.
 - 2026-09-24 — HUD and menus canvas v1 published (11 artboards); waiting on Michael's review.
 - 2026-09-24 — Michael chose a Claude Design canvas for the HUD and menus; requirements survey started.

@@ -22,6 +22,8 @@ will mix two styles until you decide whether to restyle those three yourself. Ba
 leather helmet **only so the leather set matches**; its draft is reference, not a replacement.
 
 **Before you start:** SF6 (the icon style frame) must be approved. Every batch attaches it.
+Batch B also needs the approved held-weapon sheet (`ArtSource/weapons/brief.md`), so each weapon
+icon matches the weapon in hand.
 
 ## Rules for every icon
 
@@ -67,11 +69,12 @@ with clear margins, no text, no labels, no watermark, no border.
 
 ## Batch B: weapons (2 icons)
 
-**Attach:** your approved SF6.
+**Attach:** (1) your approved SF6, (2) your approved held-weapon sheet.
 
 ```
 Two game weapon icons side by side, each centred in its own equal square, both on a diagonal
-from lower left to upper right, matching the style of the attached image exactly:
+from lower left to upper right, matching the style of the first attached image exactly and the
+weapon designs of the second attached image exactly:
 (1) a hunting knife: a short, broad steel blade with a single sharp edge, a wooden handle wrapped
 in brown leather, and a small brass guard;
 (2) a hunting bow: a simple curved wooden bow wrapped with leather at the grip, a taut

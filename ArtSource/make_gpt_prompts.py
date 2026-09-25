@@ -20,13 +20,12 @@ PHASES = [
         ('rig/hero-template/brief.md', 'Sheet A', None, RAW.format('rig/hero-template', 'sheet-a.png')),
         ('rig/hero-template/brief.md', 'Sheet B', None, RAW.format('rig/hero-template', 'sheet-b.png')),
     ]),
-    ('Item icons', 'A new chat is fine; attach SF6 each time.', [
-        ('icons/items/brief.md', 'Batch A', None, RAW.format('icons/items', 'batch-a.png')),
-        ('icons/items/brief.md', 'Batch B', None, RAW.format('icons/items', 'batch-b.png')),
-        ('icons/items/brief.md', 'Batch C', None, RAW.format('icons/items', 'batch-c.png')),
-    ]),
-    ('Held weapons', '', [
-        ('weapons/brief.md', 'The weapon sheet', None, RAW.format('weapons', 'sheet.png')),
+    ('Fixture environment (test stage only, never ships)', 'Attach your approved SF3 to every prompt.', [
+        ('environments/fixture/brief.md', '1. Ground', 'your approved SF3', RAW.format('environments/fixture', 'ground.png')),
+        ('environments/fixture/brief.md', '2. Backdrop far', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-far.png')),
+        ('environments/fixture/brief.md', '3. Backdrop mid', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-mid.png')),
+        ('environments/fixture/brief.md', '4. Backdrop near', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-near.png')),
+        ('environments/fixture/brief.md', '5. Foreground frames', 'your approved SF3', RAW.format('environments/fixture', 'frames.png')),
     ]),
     ('Effect kits', 'One sheet per kit.', [
         ('effects/brief.md', 'Fire', None, RAW.format('effects', 'fire.png')),
@@ -37,12 +36,13 @@ PHASES = [
         ('effects/brief.md', 'Loot glow', None, RAW.format('effects', 'loot.png')),
         ('effects/brief.md', 'Feedback', None, RAW.format('effects', 'feedback.png')),
     ]),
-    ('Fixture environment (test stage only, never ships)', 'Attach your approved SF3 to every prompt.', [
-        ('environments/fixture/brief.md', '1. Ground', 'your approved SF3', RAW.format('environments/fixture', 'ground.png')),
-        ('environments/fixture/brief.md', '2. Backdrop far', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-far.png')),
-        ('environments/fixture/brief.md', '3. Backdrop mid', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-mid.png')),
-        ('environments/fixture/brief.md', '4. Backdrop near', 'your approved SF3', RAW.format('environments/fixture', 'backdrop-near.png')),
-        ('environments/fixture/brief.md', '5. Foreground frames', 'your approved SF3', RAW.format('environments/fixture', 'frames.png')),
+    ('Held weapons', 'Before the icons: M9 needs the knight holding his knife; the weapon icons are drawn from this sheet.', [
+        ('weapons/brief.md', 'The weapon sheet', None, RAW.format('weapons', 'sheet.png')),
+    ]),
+    ('Item icons', 'Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time.', [
+        ('icons/items/brief.md', 'Batch A', None, RAW.format('icons/items', 'batch-a.png')),
+        ('icons/items/brief.md', 'Batch B', None, RAW.format('icons/items', 'batch-b.png')),
+        ('icons/items/brief.md', 'Batch C', None, RAW.format('icons/items', 'batch-c.png')),
     ]),
     ('Temporary music', 'ChatGPT cannot make audio yet (September 2026). Paste these into the music tool you use; see the note in ArtSource/audio/music/brief.md.', [
         ('audio/music/brief.md', 'Title theme', 'nothing', 'ArtSource/audio/music/title-theme/AI/_raw/'),

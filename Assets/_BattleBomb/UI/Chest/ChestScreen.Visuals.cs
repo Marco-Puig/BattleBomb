@@ -190,8 +190,8 @@ namespace BattleBomb.UI.Chest
             well.sizeDelta = new Vector2(118f, 7f);
             well.anchoredPosition = new Vector2(-28f, -(headTop + 18f));
 
-            // Leaving must be reachable by every input the game has: a tap or click on this,
-            // Escape/Start, or Heavy. M6's pass found a screen with no visible way out, which is
+            // Leaving must be reachable by every input the game has: a tap or click on this, B,
+            // Escape, or Start. M6's pass found a screen with no visible way out, which is
             // the same as having none.
             Image closeBox = UiBuild.Box("Close", pad, UiBuild.Well);
             closeBox.raycastTarget = true;

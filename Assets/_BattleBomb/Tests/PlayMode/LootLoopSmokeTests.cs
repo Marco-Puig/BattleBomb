@@ -41,6 +41,10 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>The starter knife — something wearable, so the equip link has a subject.</summary>
         private const int KnifeDefinitionId = 7;
 
+        /// <summary>What a real X or J press carries: the fight's Light and the menu's Option at
+        /// once (D57). Opening the chest with it proves the opening press cannot sell anything.</summary>
+        private const CommandButtons OpenPress = CommandButtons.Light | CommandButtons.Option;
+
         private SimulationDriver _driver;
         private StageRunner _runner;
         private CharacterActor _player;
@@ -131,7 +135,7 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(chest, Is.Not.Null, "The scene has no chest to open.");
 
             yield return WalkTo(chest.Position, "the chest");
-            yield return Press(CommandButtons.Light);
+            yield return Press(OpenPress);
             yield return Until(
                 () => _driver.TryGetOpenScreen(_player.PlayerId.Value, out InteractionKind kind)
                     && kind == InteractionKind.Chest,
@@ -173,7 +177,7 @@ namespace BattleBomb.Tests.PlayMode
         {
             WorldInteractable chest = FindChest();
             yield return WalkTo(chest.Position, "the chest");
-            yield return Press(CommandButtons.Light);
+            yield return Press(OpenPress);
             yield return Until(
                 () => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
                 "the chest screen never opened");
@@ -189,27 +193,31 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>
         /// Every route out of the chest screen, because M6's pass found a screen a player could
         /// not leave: the logic was fine and nothing had ever exercised it. A menu you can enter
-        /// and not exit is worse than one that never opens, so all three routes are pinned.
+        /// and not exit is worse than one that never opens, so every route is pinned.
         /// </summary>
         [UnityTest]
         public IEnumerator Every_way_out_of_the_chest_screen_works(
-            [Values("pause", "heavy", "close button")] string route)
+            [Values("start", "back", "escape", "close button")] string route)
         {
             WorldInteractable chest = FindChest();
             yield return WalkTo(chest.Position, "the chest");
-            yield return Press(CommandButtons.Light);
+            yield return Press(OpenPress);
             yield return Until(
                 () => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
                 "the chest screen never opened");
 
             switch (route)
             {
-                case "pause":
+                case "start":
                     yield return Press(CommandButtons.Pause);
                     break;
 
-                case "heavy":
-                    yield return Press(CommandButtons.Heavy);
+                case "back":
+                    yield return Press(CommandButtons.Back);
+                    break;
+
+                case "escape":
+                    yield return Press(CommandButtons.Back | CommandButtons.Pause);
                     break;
 
                 default:
@@ -223,6 +231,118 @@ namespace BattleBomb.Tests.PlayMode
 
             Assert.That(_driver.TryGetOpenScreen(_player.PlayerId.Value, out _), Is.False,
                 $"'{route}' did not close the chest screen.");
+        }
+
+        [UnityTest]
+        public IEnumerator The_press_that_opens_the_chest_sells_nothing()
+        {
+            yield return TakeAKnife();
+            int slots = _bag.Inventory.SlotsUsed;
+            int coins = _bag.Wallet.Balance;
+
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+            yield return SimulationFrames(10);
+
+            Assert.That(_bag.Inventory.SlotsUsed, Is.EqualTo(slots),
+                "Opening the chest sold something: X is Light to the fight and Option to the screen.");
+            Assert.That(_bag.Wallet.Balance, Is.EqualTo(coins));
+        }
+
+        [UnityTest]
+        public IEnumerator X_sells_and_Y_locks_the_item_under_the_cursor()
+        {
+            yield return TakeAKnife();
+
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            int slots = _bag.Inventory.SlotsUsed;
+            yield return Press(CommandButtons.Lock);
+            Assert.That(_bag.Inventory.Items[0].Item.Locked, Is.True, "Y did not lock the item.");
+
+            yield return Press(CommandButtons.Option);
+            Assert.That(_bag.Inventory.SlotsUsed, Is.EqualTo(slots), "X sold a locked item.");
+
+            yield return Press(CommandButtons.Lock);
+            Assert.That(_bag.Inventory.Items[0].Item.Locked, Is.False, "Y did not release it.");
+
+            int coins = _bag.Wallet.Balance;
+            yield return Press(CommandButtons.Option);
+            Assert.That(_bag.Inventory.SlotsUsed, Is.EqualTo(slots - 1), "X did not sell the item.");
+            Assert.That(_bag.Wallet.Balance, Is.GreaterThan(coins), "The sale paid nothing.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_stick_held_through_the_opening_press_does_not_move_the_cursor()
+        {
+            yield return TakeAKnife();
+
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+
+            // Still pushing up as X opens the chest, and still pushing after X comes up. Up, because
+            // from the knife's row it is the filter row; with a partner the hero is a tab, not a
+            // neighbour, so pushing right from a one-item sack would have nowhere to go.
+            _input.Set(Vector2.up, OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+            _input.Set(Vector2.up, CommandButtons.None);
+            yield return SimulationFrames(40);
+            _input.Release();
+            yield return SimulationFrames(2);
+
+            yield return Press(CommandButtons.Lock);
+            Assert.That(_bag.Inventory.Items[0].Item.Locked, Is.True,
+                "The cursor left the knife: a stick held while opening the chest counted as a push.");
+        }
+
+        [UnityTest]
+        public IEnumerator Escape_backs_out_one_level_and_Start_leaves_from_anywhere()
+        {
+            yield return TakeAKnife();
+
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            yield return Press(CommandButtons.Confirm);
+            yield return Press(CommandButtons.Back | CommandButtons.Pause);
+            Assert.That(_driver.TryGetOpenScreen(_player.PlayerId.Value, out _), Is.True,
+                "Escape inside the knife's menu closed the whole chest; it backs out one level (D57).");
+
+            // Y acts only on the sack's grid, so a lock here proves Escape landed exactly there.
+            yield return Press(CommandButtons.Lock);
+            Assert.That(_bag.Inventory.Items[0].Item.Locked, Is.True,
+                "Escape did not come back out of the knife's menu to the sack.");
+
+            yield return Press(CommandButtons.Confirm);
+            yield return Press(CommandButtons.Pause);
+            yield return Until(() => !_driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "Start inside the knife's menu did not leave the chest");
+        }
+
+        /// <summary>Drops the starter knife beside the player and grabs it, so the sack holds exactly
+        /// one known item in cell 0.</summary>
+        private IEnumerator TakeAKnife()
+        {
+            int before = _bag.Inventory.SlotsUsed;
+            Vector3 where = _player.Position + new Vector3(1.5f, 0f, 0f);
+            _driver.SpawnDebugDrop(where, _driver.RollDebugItem(KnifeDefinitionId, 2.2f));
+            yield return null;
+            yield return WalkTo(where, "the knife");
+            yield return Press(CommandButtons.Light);
+            yield return Until(() => _bag.Inventory.SlotsUsed > before, "the knife was never taken");
+            Assert.That(_bag.Inventory.SlotsUsed, Is.EqualTo(1),
+                "The sack did not start empty, so the knife is not the only item in cell 0.");
         }
 
         private static Button FindCloseButton()

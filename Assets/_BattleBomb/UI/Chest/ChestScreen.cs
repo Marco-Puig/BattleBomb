@@ -27,9 +27,11 @@ namespace BattleBomb.UI.Chest
     /// detail beside it, and the Hero tab's allocation and worn loadout. Reads simulation state
     /// and sends requests — it never mutates anything itself (M6 planning decision 2).
     ///
-    /// Navigated entirely by <see cref="PlayerCommand"/>: the stick moves, Light confirms, Heavy
-    /// goes back and finally closes. That keeps the menu inside rule 3's one-input-path promise
-    /// and makes two players on two screen halves need no extra machinery.
+    /// Navigated entirely by <see cref="PlayerCommand"/> through <see cref="MenuPress"/> (D57):
+    /// the stick moves, A confirms, B backs out a level and finally closes, Start leaves from
+    /// anywhere, X and Y are one-press shortcuts, and the shoulders switch halves. That keeps the
+    /// menu inside rule 3's one-input-path promise and makes two players on two screen halves
+    /// need no extra machinery.
     /// </summary>
     internal sealed partial class ChestScreen : MonoBehaviour
     {
@@ -175,16 +177,17 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
-            // The press that opened this screen must not also act inside it. Without this, the
-            // opening Light arrives here on the same step and immediately dives into the action
-            // row — which is what made Heavy look like it would not close the screen during
-            // Michael's M6 pass: it was faithfully backing out of a level he never chose.
+            // The press that opened this screen must not also act inside it. It matters more now
+            // than in M6: the opening press is X, which is Light to the fight and Option — sell —
+            // to this screen.
             if (_swallowUntilRelease)
             {
-                if (command.IsHeld(CommandButtons.Light)
-                    || command.IsHeld(CommandButtons.Heavy)
-                    || command.IsHeld(CommandButtons.Pause))
+                if (MenuPress.AnyHeld(command))
                 {
+                    // A stick held through the opening press is not a push either: it counts as
+                    // already down, and moves nothing until it is let go and pushed again.
+                    _lastMove = command.Move;
+                    _repeatAt = float.MaxValue;
                     return;
                 }
 
@@ -192,42 +195,43 @@ namespace BattleBomb.UI.Chest
             }
 
             StepCursor(command, deltaTime);
+            MenuPress press = MenuPress.From(command);
 
-            if (command.WasPressed(CommandButtons.Pause))
+            if (press.Pause)
             {
-                // Escape / Start always leaves, from anywhere in the screen — no unwinding
-                // through focus levels first. Getting out must never be a puzzle.
+                // Start leaves from anywhere. Escape now backs out a level at a time, so the pad's
+                // system button is what keeps M6's promise that getting out is never a puzzle.
                 Host?.RequestClose(_playerId);
                 return;
             }
 
-            if (command.WasPressed(CommandButtons.Magic))
+            if (press.Tab != 0)
             {
-                // Mid-combine this is the bulk verb; otherwise, at a shop, it flips the counter.
-                // Heavy was the obvious button for "combine all" and is the one thing it cannot
-                // be: Heavy is how a combine is abandoned, and M6's one real defect was a screen
-                // with no way out (Michael suggested Heavy, 2026-08-23).
-                if (_nav.PendingCombine >= 0)
-                {
-                    RunCombineAll();
-                    Refresh();
-                    return;
-                }
-
-                if (IsShop)
-                {
-                    CollectVisible();
-                    _nav.SwitchMode(Layout());
-                    Refresh();
-                    return;
-                }
+                CollectVisible();
+                _nav.CycleTab(press.Tab, Layout());
+                Refresh();
+                return;
             }
 
-            if (command.WasPressed(CommandButtons.Light))
+            if (press.Option)
+            {
+                RunOption();
+                Refresh();
+                return;
+            }
+
+            if (press.Lock)
+            {
+                RunLock();
+                Refresh();
+                return;
+            }
+
+            if (press.Confirm)
             {
                 Confirm();
             }
-            else if (command.WasPressed(CommandButtons.Heavy))
+            else if (press.Back)
             {
                 Cancel();
             }
@@ -290,7 +294,7 @@ namespace BattleBomb.UI.Chest
                     break;
 
                 case ChestOutcome.Close:
-                    // Nothing left to back out of: Heavy closes the chest.
+                    // Nothing left to back out of: B closes the chest.
                     Host?.RequestClose(_playerId);
                     break;
 
@@ -433,18 +437,102 @@ namespace BattleBomb.UI.Chest
                     break;
 
                 case ItemAction.Sell:
-                    int coins = _bag.RequestSell(bagIndex);
-                    Flash(coins > 0 ? $"Sold for {coins}." : "Locked — release it first.");
+                    SellAt(bagIndex);
                     break;
 
                 case ItemAction.Lock:
-                    _bag.RequestLock(bagIndex, !item.Locked);
-                    Flash(item.Locked ? "Released." : "Locked.");
+                    ToggleLockAt(bagIndex);
                     break;
             }
 
             CollectVisible();
             _nav.FinishMenuAction(_visible.Count);
+        }
+
+        private void SellAt(int bagIndex)
+        {
+            int coins = _bag.RequestSell(bagIndex);
+            Flash(coins > 0 ? $"Sold for {coins}." : "Locked — release it first.");
+        }
+
+        private void ToggleLockAt(int bagIndex)
+        {
+            ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
+            _bag.RequestLock(bagIndex, !item.Locked);
+            Flash(item.Locked ? "Released." : "Locked.");
+        }
+
+        private void ToggleWornLock()
+        {
+            ItemInstance worn = WornItem;
+            if (worn.IsEmpty)
+            {
+                Flash("Nothing in that slot.");
+                return;
+            }
+
+            HeroPanel.Slot slot = WornSlot;
+            _bag.RequestLockWorn(slot.Which, slot.EquipmentIndex, !worn.Locked);
+            Flash(worn.Locked ? "Released." : "Locked.");
+        }
+
+        /// <summary>
+        /// X (D57): the one-press verb for what the cursor is on. Mid-combine it grinds the whole
+        /// pile; on a sack item it sells — instantly, by Michael's choice (2026-09-24), with the
+        /// lock as the only safety. At the rack A already buys in one press, so X there would be a
+        /// second button for the same job, which the map rules out.
+        /// </summary>
+        private void RunOption()
+        {
+            if (_nav.PendingCombine >= 0)
+            {
+                // X from the pick's one-row Combine menu too: leave it, or the full menu of the
+                // rerolled item would be up and the next A would equip it.
+                RunCombineAll();
+                _nav.FinishMenuAction(_visible.Count);
+                return;
+            }
+
+            if (_nav.Focus != ChestFocus.Grid)
+            {
+                return;
+            }
+
+            CollectVisible();
+            if (_visible.Count == 0)
+            {
+                return;
+            }
+
+            SellAt(_visible[_nav.Cursor]);
+            CollectVisible();
+            _nav.ClampCursor(_visible.Count);
+        }
+
+        /// <summary>Y (D57): lock or release the item under the cursor, in the sack or worn.</summary>
+        private void RunLock()
+        {
+            if (_nav.PendingCombine >= 0)
+            {
+                return;
+            }
+
+            if (_nav.Focus == ChestFocus.Loadout)
+            {
+                ToggleWornLock();
+                return;
+            }
+
+            if (_nav.Focus != ChestFocus.Grid)
+            {
+                return;
+            }
+
+            CollectVisible();
+            if (_visible.Count > 0)
+            {
+                ToggleLockAt(_visible[_nav.Cursor]);
+            }
         }
 
         /// <summary>
@@ -487,8 +575,7 @@ namespace BattleBomb.UI.Chest
                     break;
 
                 default:
-                    _bag.RequestLockWorn(slot.Which, slot.EquipmentIndex, !worn.Locked);
-                    Flash(worn.Locked ? "Released." : "Locked.");
+                    ToggleWornLock();
                     break;
             }
 

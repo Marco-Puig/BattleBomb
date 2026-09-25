@@ -387,7 +387,39 @@ namespace BattleBomb.UI.Chest
             ClampCursor(layout.VisibleCount);
         }
 
-        /// <summary>Heavy: the combine first, then one focus level, then the door.</summary>
+        /// <summary>
+        /// LB / RB (D57): the other half of whatever this screen has two of. At a shopkeeper
+        /// that is the counter's side; in couch co-op, the sack-or-hero tab, landing in its body;
+        /// solo at a chest, where both halves are already on screen, the cursor crosses to the
+        /// other one. A combine pick and an open item menu are answered before anything moves.
+        /// </summary>
+        public ChestOutcome CycleTab(int direction, in ChestLayout layout)
+        {
+            if (direction == 0 || PendingCombine >= 0
+                || Focus == ChestFocus.Menu || Focus == ChestFocus.Upgrade)
+            {
+                return ChestOutcome.None;
+            }
+
+            if (layout.IsShop)
+            {
+                return SwitchMode(layout);
+            }
+
+            if (layout.HeroBeside)
+            {
+                Focus = Focus == ChestFocus.Loadout || Focus == ChestFocus.Stats
+                    ? ChestFocus.Grid
+                    : ChestFocus.Loadout;
+                return ChestOutcome.None;
+            }
+
+            SwitchTab();
+            Focus = Tab == ChestTab.Hero ? ChestFocus.Loadout : ChestFocus.Grid;
+            return ChestOutcome.TabSwitched;
+        }
+
+        /// <summary>B: the combine first, then one focus level, then the door.</summary>
         public ChestOutcome Cancel()
         {
             if (PendingCombine >= 0)
@@ -641,7 +673,7 @@ namespace BattleBomb.UI.Chest
             {
                 // Mid-combine the grid is the whole question, and everything in it is an answer.
                 // Walking off either edge into the filters or the rack would leave a pick open
-                // behind a screen that no longer mentions it; Heavy is the way out.
+                // behind a screen that no longer mentions it; B is the way out.
                 return;
             }
 

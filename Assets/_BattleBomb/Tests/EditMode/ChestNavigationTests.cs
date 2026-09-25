@@ -462,5 +462,60 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(nav.Confirm(Layout()), Is.EqualTo(ChestOutcome.None));
             Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "Confirming a filter returns to the grid.");
         }
+
+        [Test]
+        public void The_shoulders_flip_the_counter_at_a_shop()
+        {
+            var nav = new ChestNavigation();
+            nav.SetMode(ShopMode.Buy, Shop());
+
+            Assert.That(nav.CycleTab(1, Shop()), Is.EqualTo(ChestOutcome.ModeSwitched));
+            Assert.That(nav.Mode, Is.EqualTo(ShopMode.Sell));
+            Assert.That(nav.CycleTab(-1, Shop()), Is.EqualTo(ChestOutcome.ModeSwitched));
+            Assert.That(nav.Mode, Is.EqualTo(ShopMode.Buy));
+        }
+
+        [Test]
+        public void The_shoulders_switch_the_tab_in_couch_co_op_and_land_in_its_body()
+        {
+            var nav = new ChestNavigation();
+
+            Assert.That(nav.CycleTab(1, Layout()), Is.EqualTo(ChestOutcome.TabSwitched));
+            Assert.That(nav.Tab, Is.EqualTo(ChestTab.Hero));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Loadout),
+                "A shoulder press is a jump to the other half, not a trip to the tab strip.");
+
+            nav.CycleTab(-1, Layout());
+            Assert.That(nav.Tab, Is.EqualTo(ChestTab.ItemSack));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid));
+        }
+
+        [Test]
+        public void Solo_the_shoulders_carry_the_cursor_between_the_sack_and_the_gear()
+        {
+            var nav = new ChestNavigation();
+
+            Assert.That(nav.CycleTab(1, Solo()), Is.EqualTo(ChestOutcome.None));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Loadout));
+            Assert.That(nav.Tab, Is.EqualTo(ChestTab.ItemSack), "Solo has no tabs to change.");
+
+            nav.CycleTab(1, Solo());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid));
+        }
+
+        [Test]
+        public void The_shoulders_wait_while_a_pick_or_a_menu_is_open()
+        {
+            var nav = new ChestNavigation();
+            nav.BeginCombine(2);
+            Assert.That(nav.CycleTab(1, Solo()), Is.EqualTo(ChestOutcome.None));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Grid), "A combine pick is modal.");
+
+            nav.CancelCombine();
+            nav.Confirm(Solo());
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Menu));
+            Assert.That(nav.CycleTab(1, Solo()), Is.EqualTo(ChestOutcome.None));
+            Assert.That(nav.Focus, Is.EqualTo(ChestFocus.Menu), "An open item menu is answered first.");
+        }
     }
 }

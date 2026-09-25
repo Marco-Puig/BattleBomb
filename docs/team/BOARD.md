@@ -32,7 +32,8 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Groundwork pass** — the 16-item controller checklist in `docs/team/groundwork-pass.md`. Needs Unity in front and a pad or two; the
+1. **Groundwork pass + M8 Stage A** (one sitting, ~25 min) — the 16-item controller checklist in
+   `docs/team/groundwork-pass.md`, then the 8-step online check in `docs/team/m8-plan1-pass.md`. Needs Unity in front and a pad or two; the
    orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
    another item under your cursor just before X. Recommended fix if it bothers him: the cursor
    follows its item and X pauses for a moment after a partner changes it — rides F5.
@@ -73,7 +74,9 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea).
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552).
+- **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
+  Player 2's window; he declined screen control). Stage A is ready.
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
   - **89:** Listen before `Role = Host`; a busy port shows "Port 7777 is busy". The input buffer
     drains back to its target of 2 (HANDOFF-M8) and merges past the documented 6; a starved
@@ -218,6 +221,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 90 committed (d00c552): Multiplayer Play Mode 2.0.2. Michael's Stage A check
+  saved to `m8-plan1-pass.md`.
 - 2026-09-25 — Task 90: Multiplayer Play Mode added. Step 4's clone-side Join needs a click the
   bridge cannot make and Michael declined screen control, so it folds into his step 6 checklist.
   Quiet on and off again.

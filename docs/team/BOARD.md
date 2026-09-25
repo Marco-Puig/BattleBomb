@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | idle after Task 96 Step 1 — ready to compact | M8 Plan 1 built (86–95) | Michael's pass (96); Plan 2 from Netcode |
+| Builder | Builder | idle — ready to compact (close-out drafted) | M8 Plan 1 built (86–95) | Michael's pass (96); Plan 2 from Netcode |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -230,6 +230,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 96 Step 1: EditMode 791, PlayMode 65 at f393d98. The Builder drafted Plan 1's
+  build log and close-out notes (builder.md) and is ready to compact.
 - 2026-09-25 — Task 95 committed (f393d98): a recorded fight replays into a real guest frame by
   frame; a remote Player 2 finishes the chapter; the guest's own menu stays off the wire (D57
   amended); drop ids left the snapshot (protocol v2). EditMode 791, PlayMode 65. **M8 Plan 1's

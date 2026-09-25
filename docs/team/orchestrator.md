@@ -33,7 +33,7 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Task 96 Step 1, close-out draft, then READY TO COMPACT |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | idle — READY TO COMPACT (924c362); wake with Michael's pass (fill the close-out draft, send 96's DONE) or Plan 2 |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — asked Michael to reopen it from `PROMPTS.md` (2026-09-25) for M8 Plan 1 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
@@ -72,6 +72,8 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-25 — M8 Plan 1 code complete (86–95). Builder READY TO COMPACT (924c362), close-out drafted
+  in builder.md. Waiting on Michael (one-sitting checks; reopen Netcode for Plan 2).
 - 2026-09-25 — Art READY TO COMPACT (9902064); Netcode and World lane files committed as they
   closed (35f5441).
 - 2026-09-25 — Lane file created for PROTOCOL rule 11 (Michael: get blocked or idle sessions,

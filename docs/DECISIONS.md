@@ -1359,8 +1359,9 @@ menu. Arrow keys and enter/space also are helpful."*
   (Michael's choice), key caps on a keyboard, badges per UI Pass 01's hint row.
 - **Seats replace PlayerInput.** Player 2 owns the device they joined with; Player 1 owns
   everything else — so a solo player switches between keyboard and any controller just by using
-  it. At character select Player 1 is held to the device that started the game, so a press on
-  another is a join. The seat is authored and is the player's id, which fixes the solo "P2" label.
+  it. At character select Player 1 is held to the device they came into character select on, so
+  a press on another is a join. A seat's controller that sleeps and wakes keeps its seat — the
+  Input System hands a reconnected device a new id, and the seats reclaim it. The seat is authored and is the player's id, which fixes the solo "P2" label.
 - **A button held across a scene change is not a press.** A now leaves the results screen and
   confirms the title; without this a held A would skip through the front door.
 

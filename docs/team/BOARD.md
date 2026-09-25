@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Pre-M8 fixes F1–F3, then F5 | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | F1 (reshaped) and F2, then F3, F5 | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -80,10 +80,12 @@ Found by the Netcode audit (`docs/team/netcode/readiness.md`), checked against t
 orchestrator. **Planned:** `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, Tasks F1–F3 — the
 Builder runs it straight after Groundwork, before M8 Plan 1.
 
-1. **Destroyed enemies keep acting for the rest of the frame** (§4.3 item 1). `Destroy` lands at
-   frame end, and the driver can run up to 5 steps a frame, so below 60 fps enemies removed by a
-   wipe, a launch, or an airlock keep stepping and hitting; corpses keep pushing bodies
-   (`SeparateBodies` has no depleted check). Unregister or deactivate immediately.
+1. ~~**Destroyed enemies keep acting for the rest of the frame** (§4.3 item 1).~~ **Premise false on
+   Unity 6000.5.8f1** (Builder, 2026-09-25): `Destroy` runs `OnDisable` at once, and every registry
+   leaves there, so nothing acts after removal — the plan's tripwires pass on today's code. The real
+   bug underneath: `ResolveDeaths` walks the registry's own list while `Destroy` shrinks it, so the
+   enemy after each corpse settles a step late (XP, loot order). **F1 reshaped (orchestrator):**
+   collect the dead, then settle them, red-first; the tripwires stay as regression guards.
 2. **The debug grant row ships in release builds** (§5.2). Put it behind the same `#if` as the
    tier-overlay row.
 3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
@@ -93,6 +95,8 @@ Builder runs it straight after Groundwork, before M8 Plan 1.
 than one Input System update, or one that lands in a frame with no simulation step (above 60 fps),
 is lost — the sample only sees what is held at that instant. It matters for the revive heartbeat's
 mashing (D31) and for M8's remote input path. Fix shape: record press edges between samples.
+*Note for Netcode:* F1's finding (removal is immediate here) changes the read of the catch-up-loop
+pause item and F4, both filed as F1's "frame-step family" — reassess them on their own.
 
 **F5 — the chest grid past 40 stacks** (found in G13's review, pre-existing; the orchestrator's
 call). The sack holds 200 but the grid draws 40, so the cursor walks into undrawn cells and the
@@ -175,6 +179,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — F1's premise didn't hold (Destroy's OnDisable is immediate in this Unity); reshaped to
+  the death pass's skip-the-next-enemy bug (option A). F2 runs alongside.
 - 2026-09-25 — **Groundwork built** (G1–G13b, 56e4be5..527df2b); G14 applied D57's corrections and
   the shared-doc updates (5f3799a). Michael's controller pass is queued. The Builder starts F1–F3.
 - 2026-09-25 — G13b committed (527df2b): the SACK/HERO strip stays up on the couch Hero tab with a

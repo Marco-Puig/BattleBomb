@@ -48,6 +48,15 @@ CHILD_JOINTS = {
     'arm': {'wrist': (0, -190)},
 }
 ROOT_Y = 176  # hips centre above the ground (0.11 H)
+# Extents of the first skin's parts around their pivots, measured by cut_parts.py --measure.
+# Canvases cover both these and the mannequin shapes, so the real knight is never clipped.
+SKIN_EXTENTS = {
+    'head': (-723, -140, 626, 1056),
+    'torso': (-198, -56, 196, 423),
+    'arm': (-128, -254, 125, 32),
+    'hand': (-118, -205, 104, 27),
+    'leg': (-54, -166, 89, 21),
+}
 
 
 def bounds(shapes):
@@ -69,6 +78,9 @@ def bounds(shapes):
 def canvas_for(cat):
     allshapes = [s for v in VARIANTS[cat].values() for s in v]
     x0, y0, x1, y1 = bounds(allshapes)
+    if cat in SKIN_EXTENTS:
+        e = SKIN_EXTENTS[cat]
+        x0, y0, x1, y1 = min(x0, e[0]), min(y0, e[1]), max(x1, e[2]), max(y1, e[3])
     m = 40
     w = math.ceil((x1 - x0 + 2 * m) / 32) * 32
     h = math.ceil((y1 - y0 + 2 * m) / 32) * 32
@@ -191,17 +203,18 @@ def sheet(name, items, rows, labelled, s):
     return y
 
 
-os.makedirs(OUT, exist_ok=True)
-for lab in (False, True):
-    assembled(lab)
-    print('sheet A height used', sheet('parts-sheet-a', SHEET_A, [2, 4, 2], lab, 0.5))
-    print('sheet B height used', sheet('parts-sheet-b', SHEET_B, [2, 1, 4], lab, 0.42))
-
-print('\ncategory      canvas(px)   pivot(x,y from bottom-left)  variants')
-for cat in VARIANTS:
-    w, h, px, py = canvas_for(cat)
-    print('%-13s %4dx%-4d    (%.3f, %.3f)                 %s' % (cat, w, h, px, py, ', '.join(VARIANTS[cat])))
-print('\nbones (child joint offsets from parent pivot, px @H1600):')
-for p, cj in CHILD_JOINTS.items():
-    for k, v in cj.items():
-        print('  %s -> %s: %s' % (p, k, v))
+if __name__ == '__main__':
+    os.makedirs(OUT, exist_ok=True)
+    for lab in (False, True):
+        assembled(lab)
+        print('sheet A height used', sheet('parts-sheet-a', SHEET_A, [2, 4, 2], lab, 0.5))
+        print('sheet B height used', sheet('parts-sheet-b', SHEET_B, [2, 1, 4], lab, 0.42))
+    
+    print('\ncategory      canvas(px)   pivot(x,y from bottom-left)  variants')
+    for cat in VARIANTS:
+        w, h, px, py = canvas_for(cat)
+        print('%-13s %4dx%-4d    (%.3f, %.3f)                 %s' % (cat, w, h, px, py, ', '.join(VARIANTS[cat])))
+    print('\nbones (child joint offsets from parent pivot, px @H1600):')
+    for p, cj in CHILD_JOINTS.items():
+        for k, v in cj.items():
+            print('  %s -> %s: %s' % (p, k, v))

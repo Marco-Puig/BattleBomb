@@ -64,11 +64,17 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**Proportions fix sent as DONE; do not touch until COMMITTED:** `docs/art/ART_BIBLE.md` (section 3,
-section 9 style block, section 10), `docs/art/HERO_TEMPLATE.md` (v1), `docs/art/PROVENANCE.md` (section 4
-example), `ArtSource/_style/brief.md` (SF1), `ArtSource/rig/hero-template/brief.md` (sheets),
-`ArtSource/rig/hero-template/guides/` (make_guides.py + 6 PNGs), `ArtSource/GPT_PROMPTS.md`,
-`docs/team/art.md`.
+**Michael finished GPT steps 1–8** (SF1–SF6, Sheets A and B) on 2026-09-24. All reviewed: the style
+holds, SF3 passes "not a clone", no style-block change needed. The sheets were saved in
+`_style/AI/_raw/`; I moved them to `rig/hero-template/AI/_raw/`.
+**Knight cut into 15 parts** by `ArtSource/rig/hero-template/cut_parts.py` →
+`rig/hero-template/AI/hero-template-*__ai_v1.png`. The preview is at `AI/_raw/assembled-preview.png`.
+The sheet drew the body too big (at head scale: torso 1.7x, legs 2.6x), so each part is **fitted
+to its template size**; the canvases were widened via `SKIN_EXTENTS` in make_guides.py (head
+1440×1280, arm 352×448, hand 320×320).
+**GPT_PROMPTS.md now tracks progress** (✓ when the Save-as file exists; ▶ marks the next step).
+Next for Michael: step 9, the fixture ground.
+**Sent as DONE; do not touch until COMMITTED** (list in the DONE message).
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
 `python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
@@ -229,6 +235,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Reviewed GPT steps 1–8; the prompt file tracks progress; knight cut into 15 parts + preview; fixture backdrops made building-free; DONE sent.
 - 2026-09-24 — Proportions switched to the Templar's (Michael); hero template v1 (15 parts); bible, SF1, parts sheets, guides, and queue rebuilt; DONE sent.
 - 2026-09-24 — GPT_PROMPTS run order aligned to ROADMAP section 5.2 (env before effects; weapons before icons); DONE sent.
 - 2026-09-24 — COMMITTED: HUD export, GPT_PROMPTS, music brief. The orchestrator restarted, so its address changed.

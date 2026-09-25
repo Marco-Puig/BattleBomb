@@ -101,12 +101,23 @@ per-hero adjustment. All labels of a part share its canvas and pivot. Front and 
 | Part | Canvas (px at H = 1600) | Pivot, as a fraction from bottom-left | The pivot is |
 |---|---|---|---|
 | `torso` | 544 × 576 | (0.500, 0.214) | the hips centre (the root) |
-| `head` | 1088 × 1152 | (0.491, 0.042) | the base of the head, where it sits on the body |
-| `arm-*` | 224 × 448 | (0.500, 0.667) | the shoulder |
-| `hand-*` | 288 × 288 | (0.500, 0.778) | the wrist |
+| `head` | 1440 × 1280 | (0.534, 0.142) | the base of the head, where it sits on the body |
+| `arm-*` | 352 × 448 | (0.504, 0.667) | the shoulder |
+| `hand-*` | 320 × 320 | (0.522, 0.778) | the wrist |
 | `leg-*` | 320 × 384 | (0.394, 0.573) | the hip joint |
 | `back-piece` | 512 × 512 | (0.588, 0.871) | where it hangs from the shoulders |
 | `waist-piece` | 448 × 224 | (0.455, 0.701) | where it hangs from the belt |
+
+The canvases cover both the template's mannequin and the first skin's real parts (the knight,
+measured by `cut_parts.py --measure` and recorded as `SKIN_EXTENTS` in `make_guides.py`), so
+tilted heads with stars, and chunky arms, are never clipped.
+
+**Fitting a drafted skin:** `ArtSource/rig/hero-template/cut_parts.py` cuts a ChatGPT parts sheet
+into these canvases. It scales **each part to its template size**: the head to 1056 px above its
+pivot, the torso's neck to 368 px above the root, the arms to 254 px, hands to 176 px and legs to
+166 px below their pivots. ChatGPT draws bodies bigger than the Templar's, so fitting each part
+is what keeps the proportions right. Variants (expressions, hand poses) are matched in size to
+their neutral drawing.
 
 **In Illustrator:** one artboard per drawing at these sizes, with a crosshair at the pivot. You
 draw inside the artboards and export all of them. (The Art lane can build this template file on

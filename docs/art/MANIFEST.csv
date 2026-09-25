@@ -13,7 +13,7 @@ ui/game-icon,Game icon,ui,hand-final,,,UI/Frontend/Icon.png,,,,,Hand (Michael 20
 ui/chapter-select-earth,Chapter-select globe (Earth),ui,hand-final,,,UI/Frontend/ChapterSelect_Earth.png,,,,,Hand (Michael 2026-09-24).
 pack/world-props,World props,pack,unclassified,,,World/Props,,,,,"Door, Door_Alt, Asteroid. Third-party pack (Michael 2026-09-24), name and licence unknown. Referenced by nothing: delete at M9."
 reference/main-character-temp,Duplicate of Templar Knight.ai,reference,hand-final,,,AI/maincharactertemp.ai,,,,,Byte-identical copy of Sprites/Characters/Templar Knight/AI/Templar Knight.ai (same MD5 and DocumentID). Delete at M9 as a duplicate.
-rig/hero-template,Hero template (knight test skin),rig,briefed,,,,,,,rig/hero-template/brief.md,"Stand-in skin for building the rig at M9, not one of the four heroes. Needs SF1 approved first."
+rig/hero-template,Hero template (knight test skin),rig,ai-draft,rig/hero-template/AI,,,,ChatGPT images,2026-09-24,rig/hero-template/brief.md,"Stand-in skin for building the rig at M9, not one of the four heroes. 15 parts cut by cut_parts.py from sheet-a/b; each part fitted to its template size (the sheet drew the body too big for Templar proportions)."
 item-icon/2,Leather Chestplate icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 2 once drafted. Needs SF6 approved first.
 item-icon/3,Leather Boots icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 3 once drafted. Needs SF6 approved first.
 item-icon/4,Steel Helmet icon,item-icon,briefed,,,,,,,icons/items/brief.md,Wired to item id 4 once drafted. Needs SF6 approved first.

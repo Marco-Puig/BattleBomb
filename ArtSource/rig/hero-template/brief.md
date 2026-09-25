@@ -12,8 +12,9 @@ heroes (those wait for the story bible).
    poses), in the same chat as your approved SF1.
 2. Save the results into `ArtSource/rig/hero-template/AI/_raw/` as `sheet-a.png` and
    `sheet-b.png`.
-3. **The Art lane cuts them.** Each part is cut out, scaled, and placed on its fixed canvas with
-   its joint on the pivot (`HERO_TEMPLATE.md` §4), then saved as
+3. **The Art lane cuts them** with `cut_parts.py`. Each part is cut out, scaled to its template
+   size, and placed on its fixed canvas with its joint on the pivot (`HERO_TEMPLATE.md` §4), then
+   saved as
    `AI/hero-template-<part>-<label>__ai_v1.png` (for example
    `hero-template-hand-front-grip__ai_v1.png`; single-drawing parts use `default`). You get back
    an assembled preview of the knight built from the cut parts, to approve.

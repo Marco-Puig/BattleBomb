@@ -66,7 +66,8 @@ Output: a single image, square 1024x1024, no text, no watermark, no border.
 A wide painted background strip for a side-scrolling game: a bright soft sky with a few big
 rounded clouds, and a range of distant, pale blue-violet mountains along the lower third,
 softened by atmospheric haze. The left edge must continue seamlessly into the right edge so the
-strip can repeat. Nothing in the foreground.
+strip can repeat. Nothing in the foreground, and no buildings, castles, bridges or waterfalls:
+just sky, clouds and mountains.
 Environment style: lush, painterly 2D background art, soft rounded shapes, gentle painted
 texture, saturated but soft colour, warm sunlight, no outlines. Match the sky and distance of the
 attached image.
@@ -79,7 +80,8 @@ Output: a single image, landscape 1536x1024, no text, no watermark, no border.
 ```
 A painted background layer for a side-scrolling game: gently rolling green hills with big,
 rounded, lush trees and a few glowing flowers, filling the lower half of the image; everything
-above the hills is fully transparent. Slightly hazy and softer than a foreground would be. The
+above the hills is fully transparent. No buildings, castles, bridges or waterfalls. Slightly hazy
+and softer than a foreground would be. The
 left edge must continue seamlessly into the right edge so the layer can repeat.
 Environment style: lush, painterly 2D background art, soft rounded shapes, layered foliage,
 gentle painted texture, saturated but soft colour, warm sunlight, no outlines. Match the hills

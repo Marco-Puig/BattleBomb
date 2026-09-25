@@ -233,6 +233,14 @@ scratchpad, then concatenated to
 
 ## Log
 
+- 2026-09-24 — Plan 1 re-read against Groundwork's final shapes; two corrections sent as DONE:
+  (1) D57 makes every button carry a menu meaning, so the host now masks remote commands to the five
+  verbs (`NetProtocol.RemoteVerbs`) — else the guest's Start opens/pauses the host's settings and
+  the guest's A leaves the host's results; EditMode + PlayMode tests added. (2) `SeatAssignment`
+  can leave seat 0 held to one device (character select) or a couch P2 holding a pad, so
+  `SessionBinder` resets seats with `Follow(Title, …)` on both machines at match start. Also noted:
+  the guest's own settings "Return" row only leaves the picture until Plan 2.
+- 2026-09-24 — Pre-M8 fixes plan F1–F3 COMMITTED; standing by as the Builder's reference.
 - 2026-09-24 — Plan 1 written (Tasks 86–96) and DONE sent. Design choices worth remembering:
   dev host/join is a self-installing IMGUI panel (no scene edits, UI stays off Platform); NetHost/
   NetGuest are added at runtime by SessionBinder.Awake (order -100 is load-bearing); the guest

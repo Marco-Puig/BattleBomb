@@ -17,6 +17,7 @@ Three consequences worth knowing before building (surface them in Task 96's clos
 1. **Plan 1's guest plays the host's hero.** There is no online lobby until Plan 2; a guest connected when the host launches takes slot 2 with slot 1's `CharacterDefinition`, even over a local Player 2 join. Plan 2 Task 102 replaces this.
 2. **Remote players cannot open screens yet.** A guest pressing Light beside a chest does nothing — the press is the chest's, and the host declines to open it — until Plan 2 brings the guest's chest screen online. And the host's settings menu still pauses the host — which freezes the guest's picture until it closes (Plan 2 Task 100 makes nothing pause online).
 3. **Dev-only entry.** Hosting and joining is an IMGUI panel in editor and development builds (`NetDevOverlay`), not a menu. The real front door arrives with the lobby (Plan 2) and Steam (Plan 3).
+4. **A remote player's buttons are the fight's five verbs, nothing more.** Under D57 every physical button carries a fight meaning and a menu meaning at once, so without a filter the guest's Start would open — and pause — the *host's* settings, and the guest's A would leave the host's results screen. The host keeps only Light, Heavy, Magic, Equipment and Jump from a remote command (`NetProtocol.RemoteVerbs`); a remote player's menus always live on their own machine (Plan 2's requests), so this is permanent, not a stand-in. On the guest's own machine its settings menu still opens, and its *Return to chapter select* only takes that window back to the front door — use the panel's **Leave**; Plan 2 Task 100 makes the whole-session moments the host's.
 
 ---
 
@@ -236,6 +237,19 @@ namespace BattleBomb.Tests.EditMode.Net
                 Assert.That((uint)button, Is.LessThan(1u << 16),
                     $"{button} does not fit a ushort. Widen CommandCodec's held field before adding it.");
             }
+        }
+
+        [Test]
+        public void Remote_players_bring_only_the_fights_verbs()
+        {
+            const CommandButtons verbs = CommandButtons.Light | CommandButtons.Heavy | CommandButtons.Magic
+                | CommandButtons.Equipment | CommandButtons.Jump;
+            Assert.That(NetProtocol.RemoteVerbs, Is.EqualTo(verbs));
+
+            // Groundwork's menu layer (D57): none of it may reach the host from a remote player.
+            const CommandButtons menus = CommandButtons.Pause | CommandButtons.Confirm | CommandButtons.Back
+                | CommandButtons.Option | CommandButtons.Lock | CommandButtons.TabPrevious | CommandButtons.TabNext;
+            Assert.That(NetProtocol.RemoteVerbs & menus, Is.EqualTo(CommandButtons.None));
         }
 
         [Test]
@@ -620,6 +634,8 @@ namespace BattleBomb.Core.Net
 `Assets/_BattleBomb/Core/Net/NetProtocol.cs`:
 
 ```csharp
+using BattleBomb.Core.Players;
+
 namespace BattleBomb.Core.Net
 {
     /// <summary>
@@ -660,6 +676,15 @@ namespace BattleBomb.Core.Net
 
         /// <summary>The local socket transport's port for two editors on one machine.</summary>
         public const int DevPort = 7777;
+
+        /// <summary>
+        /// What a remote player's buttons may do on the host: the fight's five verbs (D17 as amended).
+        /// Every physical button also carries a menu meaning (D57), and a remote player's menus live on
+        /// their own machine — so Pause and the menu buttons never reach the host's screens.
+        /// </summary>
+        public const CommandButtons RemoteVerbs =
+            CommandButtons.Light | CommandButtons.Heavy | CommandButtons.Magic
+            | CommandButtons.Equipment | CommandButtons.Jump;
     }
 }
 ```
@@ -2949,7 +2974,8 @@ namespace BattleBomb.Gameplay.Net
         /// Its disabled device still answers the actor's <c>PlayerId</c> with its authored seat.</summary>
         internal static void MakeReplica(CharacterActor actor) => DisableDevices(actor);
 
-        /// <summary>Guest: this machine's one player owns every local device and speaks as the guest.</summary>
+        /// <summary>Guest: this machine's one player owns every local device and speaks as the guest.
+        /// Relies on the binder having reset the seats first, so seat 0 is not held to one device.</summary>
         internal static void MakeLocalGuest(CharacterActor actor, PlayerId speakAs)
         {
             InputSystemCommandSource device = actor.GetComponent<InputSystemCommandSource>();
@@ -3104,7 +3130,10 @@ namespace BattleBomb.Gameplay.Net
             CommandCodec.Read(reader, _commands);
             for (int i = 0; i < _commands.Count; i++)
             {
-                _remote.Stream.Receive(_commands[i]);
+                // The fight's verbs only: the guest's Start and menu buttons are for the guest's own
+                // screens, never the host's (NetProtocol.RemoteVerbs).
+                WireCommand command = _commands[i];
+                _remote.Stream.Receive(new WireCommand(command.Frame, command.Move, command.Held & NetProtocol.RemoteVerbs));
             }
         }
 
@@ -3215,7 +3244,7 @@ namespace BattleBomb.Gameplay.Net
 
 In `Assets/_BattleBomb/Gameplay/Session/SessionBinder.cs`:
 
-(a) Add `using BattleBomb.Gameplay.Net;`.
+(a) Add `using BattleBomb.Gameplay.Net;`, `using BattleBomb.Core.Chapters;` and `using BattleBomb.Core.Players;` (for `FrontendScreen` and Groundwork's `SeatAssignment`).
 
 (b) In `Awake`, directly after the `_players.Length == 0` guard, add:
 
@@ -3274,12 +3303,20 @@ In `Assets/_BattleBomb/Gameplay/Session/SessionBinder.cs`:
                 return;
             }
 
+            // Every local device drives the host's own player now: the second seat is the guest's.
+            // Without this, a couch Player 2 who joined at character select keeps their pad from Player 1.
+            _session.Seats.Follow(FrontendScreen.Title, false, SeatAssignment.NoDevice, SeatAssignment.NoDevice);
             RemoteCommandSource remote = NetSeats.MakeRemote(_players[slot], net.GuestPlayerId);
             gameObject.AddComponent<NetHost>().Begin(net, _session, _driver, remote);
         }
 
         private void BindGuest(NetSession net)
         {
+            // This machine has one player, and every local device is theirs (D57's seat 0 rule with
+            // nobody joining). The front door may have left seat 0 held to one device — the guest may
+            // have joined from character select — so the seats start clean for the match.
+            _session.Seats.Follow(FrontendScreen.Title, false, SeatAssignment.NoDevice, SeatAssignment.NoDevice);
+
             for (int i = 0; i < _players.Length; i++)
             {
                 if (_players[i] == null || !_players[i].gameObject.activeSelf)
@@ -3641,6 +3678,7 @@ using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
 using BattleBomb.Platform;
 using BattleBomb.Platform.Net;
+using BattleBomb.UI.Chest;
 using BattleBomb.UI.Frontend;
 using NUnit.Framework;
 using UnityEngine;
@@ -3811,6 +3849,21 @@ namespace BattleBomb.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator The_guests_start_and_confirm_never_reach_the_hosts_menus()
+        {
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The gameplay scene has no SettingsMenu.");
+
+            _guest.Held = CommandButtons.Pause | CommandButtons.Confirm;
+            yield return Steps(4);
+            _guest.Held = CommandButtons.None;
+            yield return Steps(4);
+
+            Assert.That(settings.IsOpen, Is.False, "The guest's Start opened the host's settings.");
+            Assert.That(_driver.PausedForScreen, Is.False, "The guest's Start paused the host's world.");
+        }
+
+        [UnityTest]
         public IEnumerator A_guest_who_leaves_stops_driving_their_body()
         {
             _guest.Move = Vector2.left;
@@ -3871,7 +3924,7 @@ namespace BattleBomb.Tests.PlayMode
 
 - [ ] **Step 16: Run the PlayMode suite**
 
-`run_tests` mode `PlayMode`, `async_tests: true`, `filter_type: testName`, `filter: OnlineHostSmokeTests`; poll `test_status`. Expected: all five pass. Then the full PlayMode suite: the M6/M7 tripwires must be unchanged. Delete `Assets/InitTestScene*`.
+`run_tests` mode `PlayMode`, `async_tests: true`, `filter_type: testName`, `filter: OnlineHostSmokeTests`; poll `test_status`. Expected: all six pass. Then the full PlayMode suite: the M6/M7 tripwires must be unchanged. Delete `Assets/InitTestScene*`.
 
 Failure guide: *"A connected guest must wake the second seat"* — `SessionBinder.Awake` did not see the session connected; check that the handshake finished before the launch (the set-up waits on it) and that `hosting` reads `net.IsConnected`. *"Player 2 is still a local device"* — `NetSeats.MakeRemote` ran after the device's `OnEnable`; confirm `SessionBinder` keeps `[DefaultExecutionOrder(-100)]`.
 
@@ -5624,7 +5677,10 @@ namespace BattleBomb.Gameplay.Net
             CommandCodec.Read(reader, _commands);
             for (int i = 0; i < _commands.Count; i++)
             {
-                _remote.Stream.Receive(_commands[i]);
+                // The fight's verbs only: the guest's Start and menu buttons are for the guest's own
+                // screens, never the host's (NetProtocol.RemoteVerbs).
+                WireCommand command = _commands[i];
+                _remote.Stream.Receive(new WireCommand(command.Frame, command.Move, command.Held & NetProtocol.RemoteVerbs));
             }
         }
 
@@ -5903,7 +5959,7 @@ In `Assets/_BattleBomb/Tests/PlayMode/OnlineHostSmokeTests.cs`, add `using Battl
 
 If `RollDebugItem` was put behind `#if UNITY_EDITOR || DEVELOPMENT_BUILD` by the Builder's batch, this still compiles in the editor, where tests run.
 
-- [ ] **Step 8: Run both suites.** `recompile`; EditMode green; PlayMode `OnlineHostSmokeTests` — all eight pass; then the full PlayMode suite. Delete `Assets/InitTestScene*`.
+- [ ] **Step 8: Run both suites.** `recompile`; EditMode green; PlayMode `OnlineHostSmokeTests` — all nine pass; then the full PlayMode suite. Delete `Assets/InitTestScene*`.
 
 - [ ] **Step 9: Commit** — subject `92: the host speaks — snapshots and events`. Body: 30 Hz unreliable snapshots, reliable events stamped with their step, hits as entity references, drops sent once with their item; the Plan 1 guard that keeps a guest's screen from opening where they cannot see it.
 

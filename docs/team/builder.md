@@ -101,6 +101,24 @@ l.54, no `using System;` yet; SessionBinder Awake guard l.42–45, `[DefaultExec
 **F1 done (12:50):** review Ready: Yes; applied its low finding (the new test's corpse match skips
 already-settled corpses — Destroy leaves them non-null to frame end). Fixture 4/4 after.
 `DONE` sent with builder.md. **Next: F3 on `COMMITTED`** (brief: `taskF3.md`; its quotes verified).
+**F1 COMMITTED `15778dd` (13:00)** — A–C accepted; review findings → board watch items.
+**F3 started (13:00):** phase 1 = RunSeedsTests + RunSeedsSmokeTests (red = compile errors:
+RunSeeds / SimulationDriver.Seeds / GameSession.Seeds missing). Expect EditMode 686 + 3 = 689,
+PlayMode 32 + 2 = 34.
+**F3 progress (13:10):** both test files byte-identical to the plan; red = compile errors
+("RunSeeds does not exist") — **the editor is NOT at a clean point until phase 2 lands** (if QUIET
+ON arrives now: finish phase 2 or remove nothing — say so to the orchestrator). Front-door path
+checked by the implementer: solo Confirm×2 reaches chapters; LaunchNow still fires with devices
+disabled (CommandSampler returns Idle); RejoinTheCouch lands on chapters. Phase 2 dispatched.
+**F3 code in (13:40):** RunSeeds.cs byte-identical; diff matches Steps 4–5 (DeterministicRandom is
+already in Core.Loot; SimulationDriver already had `using BattleBomb.Core.Loot;`). Recompiled
+clean. RunSeedsTests 3/3, RunSeedsSmokeTests 2/2, EditMode 689/689. Full PlayMode running (expect
+34); review running. Editor left on an untitled empty scene by a test run — reopen Gameplay after.
+**F3 done (13:55):** PlayMode 34/34. Review Ready: Yes; applied its low finding as comments only
+(Seeds/_runSeeds are lost on a mid-play domain reload → the run rolls the constants, editor only;
+fixed GameSession's stale "Alone among the fields" wording on Characters). Recompiled clean.
+`DONE` sent. **Next: F5** (grid scrolling for >40 stacks; do not clamp; say if bigger than one
+task) — needs a plan: no plan file exists yet, ask the orchestrator who writes it.
 Board candidate from F1's review: `TargetRegistry.Ordered` hands out its live list — any future
 mid-walk despawn (self-destructing enemy, a reaction that despawns what it kills) brings the skip
 back in StepEnemies/StepStatuses.

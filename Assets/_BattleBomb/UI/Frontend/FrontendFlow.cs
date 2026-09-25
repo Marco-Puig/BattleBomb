@@ -283,6 +283,7 @@ namespace BattleBomb.UI.Frontend
                     : null;
             }
 
+            _session.DrawRunSeeds();
             SceneManager.LoadScene(GameplayScene, LoadSceneMode.Single);
         }
 

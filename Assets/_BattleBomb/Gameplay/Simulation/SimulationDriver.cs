@@ -36,14 +36,13 @@ namespace BattleBomb.Gameplay.Simulation
         [Tooltip("Steps a single frame may run before time is dropped, so a hitch cannot spiral.")]
         [SerializeField] private int _maxStepsPerFrame = SimulationClock.DefaultMaxStepsPerFrame;
 
-        [Tooltip("Seed for the loot rolls (D23). Gameplay owns the seed; Core owns the maths.")]
+        [Tooltip("Loot seed with no session (the bare scene, the smoke suites). A launch draws its own (F3).")]
         [SerializeField] private int _lootSeed = 1;
 
-        [Tooltip("Seed for combat rolls (crits). Its own stream, so loot replay never shifts with a fight.")]
+        [Tooltip("Combat seed with no session (the bare scene, the smoke suites). A launch draws its own (F3).")]
         [SerializeField] private int _combatSeed = 2;
 
-        [Tooltip("Seed for elite spawn decisions and the gear they wear (D22). Its own stream " +
-            "again, so an elite appearing never shifts what an ordinary kill would have dropped.")]
+        [Tooltip("Spawn seed with no session (the bare scene, the smoke suites). A launch draws its own (F3).")]
         [SerializeField] private int _spawnSeed = 3;
 
         [Tooltip("The authored ladder and drop-kind weights (D33). Empty runs Core's paper defaults.")]
@@ -95,6 +94,10 @@ namespace BattleBomb.Gameplay.Simulation
         private DeterministicRandom _lootRng;
         private DeterministicRandom _combatRng;
         private DeterministicRandom _spawnRng;
+
+        /// <summary>The run's seeds when a launch supplied them; null runs the authored constants.
+        /// Lost on a mid-play domain reload, like the session's copy (editor only).</summary>
+        private RunSeeds? _runSeeds;
 
         /// <summary>Debug rolls within one frame must differ, or a grant hands out clones.</summary>
         private int _debugRollCounter;
@@ -222,6 +225,32 @@ namespace BattleBomb.Gameplay.Simulation
                 .WithSignature(definitionId, QualityRank.Nothing);
             ItemGenerator.Roll(rng, context, out ItemInstance item);
             return item;
+        }
+
+        /// <summary>The seeds the three streams started from this run — for a bug report, and for tests.</summary>
+        public RunSeeds Seeds { get; private set; }
+
+        /// <summary>
+        /// Starts the three streams from this run's seeds (F3). The binder passes the session's —
+        /// drawn fresh at every launch — and M8's host passes its own (D58). Without a call the
+        /// serialized constants run, which is what keeps the sessionless smoke suites deterministic.
+        /// Safe before or after <c>OnEnable</c>.
+        /// </summary>
+        internal void UseSeeds(in RunSeeds seeds)
+        {
+            _runSeeds = seeds;
+            if (_clock != null)
+            {
+                SeedStreams();
+            }
+        }
+
+        private void SeedStreams()
+        {
+            Seeds = _runSeeds ?? new RunSeeds((uint)_lootSeed, (uint)_combatSeed, (uint)_spawnSeed);
+            _lootRng = new DeterministicRandom(Seeds.Loot);
+            _combatRng = new DeterministicRandom(Seeds.Combat);
+            _spawnRng = new DeterministicRandom(Seeds.Spawn);
         }
 
         /// <summary>
@@ -583,9 +612,7 @@ namespace BattleBomb.Gameplay.Simulation
             // OnEnable rather than Awake: it re-runs after a mid-play domain reload, so a script
             // recompile during Play mode rebuilds the clock instead of leaving it null.
             _clock = new SimulationClock(Mathf.Max(1, _stepsPerSecond), Mathf.Max(1, _maxStepsPerFrame));
-            _lootRng = new DeterministicRandom((uint)_lootSeed);
-            _spawnRng = new DeterministicRandom((uint)_spawnSeed);
-            _combatRng = new DeterministicRandom((uint)_combatSeed);
+            SeedStreams();
 
             _itemSpecs.Clear();
             if (_itemCatalog != null)

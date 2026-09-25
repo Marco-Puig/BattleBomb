@@ -44,6 +44,16 @@ namespace BattleBomb.Gameplay.Session
                 return;
             }
 
+            if (_driver == null)
+            {
+                _driver = FindAnyObjectByType<SimulationDriver>();
+            }
+
+            if (_session.Seeds.HasValue && _driver != null)
+            {
+                _driver.UseSeeds(_session.Seeds.Value);
+            }
+
             if (_players.Length == 0)
             {
                 Debug.LogError(

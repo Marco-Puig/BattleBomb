@@ -1,4 +1,6 @@
+using System;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Loot;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Saves;
 using BattleBomb.Gameplay.Data;
@@ -21,8 +23,8 @@ namespace BattleBomb.Gameplay.Session
         public int TierIndex { get; set; }
         public int ResumeCheckpointArena { get; set; } = -1;
 
-        /// <summary>Per couch slot; null means nobody sits there. Alone among the fields here it
-        /// does <em>not</em> survive a mid-play domain reload — the array re-initialises empty
+        /// <summary>Per couch slot; null means nobody sits there. Like <see cref="Seats"/> and
+        /// <see cref="Seeds"/>, it does <em>not</em> survive a mid-play domain reload — the array re-initialises empty
         /// while Chapter, the indices, and the save come back intact — so anything reading it
         /// after a reload must check rather than assume. Nothing does today: the only readers run
         /// on a real scene load, which is the one thing a reload is not.</summary>
@@ -52,6 +54,17 @@ namespace BattleBomb.Gameplay.Session
         /// <see cref="SaveLoadReason.Ok"/> means "nothing refused" — including "nothing there".
         /// </summary>
         public SaveLoadReason LoadOutcome { get; set; } = SaveLoadReason.Ok;
+
+        /// <summary>This run's seeds (F3), drawn at every launch so each run rolls its own; null
+        /// before the first. Held here so the whole run — every stage, every wipe — uses one set.
+        /// Like <see cref="Characters"/>, it does not survive a mid-play domain reload: after a
+        /// script recompile in Play the run rolls the driver's authored constants, as every run
+        /// did before F3. Editor only.</summary>
+        public RunSeeds? Seeds { get; set; }
+
+        /// <summary>Draws a fresh set for a launch. The one place a run's randomness comes from outside
+        /// the game, and it is read once, before the run exists.</summary>
+        public void DrawRunSeeds() => Seeds = RunSeeds.From(unchecked((uint)Guid.NewGuid().GetHashCode()));
 
         /// <summary>True when nothing on disk was refused, so writing cannot destroy a file we
         /// merely failed to understand.</summary>

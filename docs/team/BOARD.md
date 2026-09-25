@@ -14,7 +14,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Builder | Builder | working | Groundwork — G1 committed; Task 2 (`MenuPress`) next | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
-| Art | — | not running (session closed) | HUD and menus canvas v1 up for review | Michael |
+| Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
 | Producer | — | starts at M9 | — | — |
 
 *Session* is the name each lane shows in `ListAgents`. Michael renames sessions freely, so replies
@@ -35,21 +35,24 @@ What is waiting on Michael, in priority order:
 1. **The World session** — open in the World lane's session, at question 1 (the goal).
 2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-3. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+3. **Run the ChatGPT image prompts** — all 31, in order, in `ArtSource/GPT_PROMPTS.md`; the Art lane
+   waits on them. Save outputs where each prompt says (raw output under `_raw/` stays out of git).
+4. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
+   volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
+   numbers; Settings and Quit on the title screen.
+5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-4. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-5. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+7. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-6. *(Whenever there is a gap)* **Pick the music tool** — Art's research (`AUDIO.md`): AIVA Pro grants
+8. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-7. **Review the HUD and menus canvas v1** — eleven artboards in UI Pass 01's look, in the Art lane's
-   session: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj. On approval Art saves it into `design/`.
-8. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
@@ -104,7 +107,8 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
 - **M9's effects start from** `docs/art/EFFECTS.md` §1–2: particle systems driving still-sprite kits
   (flipbooks only where a kit cannot do the job), and every effect fired by a simulation event, so
   it works online.
-- **M9's HUD plan inherits these additions** from the HUD canvas (pending Michael's approval): separate
+- **M9's HUD plan inherits** the approved mockups in `design/hud-menus/` (direction approved; colours may
+  shift) **and these additions, still pending Michael's word on each:** separate
   pause and settings menus; volume, damage-number (on/off, S/M/L) and controls-view settings; "sack
   full" drawn on the loot card (GDD §5.4); white-hot crit numbers (orange clashes with Fire and
   Legendary); Settings and Quit on the title screen.
@@ -121,6 +125,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — G2 committed (c73ef97). Art back online: HUD canvas approved and exported to
+  `design/hud-menus/`; 31 GPT prompts queued in `ArtSource/GPT_PROMPTS.md`.
 - 2026-09-24 — Unity open; Builder baseline EditMode 626 / PlayMode 15. **G1 committed** (56e4be5) — also
   fixed Pause reusing Heavy's binding ids. The orchestrator restarted mid-task; the Builder's
   unreachable-orchestrator fallback worked (messages parked in its lane file). Netcode, World, Art

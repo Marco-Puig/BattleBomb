@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Groundwork — G1–G4 committed; Task 5 (seats replace PlayerInput, with Reclaim) | — |
+| Builder | Builder | working | Groundwork — G1–G5 committed; Task 6 (the front door hands out seats) | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -126,6 +126,10 @@ From Groundwork (G4's review):
 - **Rebinding (M13):** runtime binding overrides are not copied into each seat's copy of the
   controls — the rebinding work must apply them to every seat.
 - **Steam Input may expose a PlayStation pad twice** (raw and virtual) — check before Early Access.
+- **Seat edge cases accepted in G5** (never a lockout): Player 1's own pad sleeping at character
+  select un-homes them until they press again; two identical serial-less pads asleep at once can
+  wake swapped; a pad that returns as a brand-new device (not a reconnect) loses its seat until the
+  title; the Gameplay-scene-alone stand-in follows the lowest-id pad (dev only).
 - **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
   keyboard — cosmetic; it corrects on the first press.
 
@@ -139,6 +143,9 @@ None.
 
 ## Log
 
+- 2026-09-24 — **G5 committed** (3e6b3bb): PlayerInput gone, the seat is the player's id (the solo "P2"
+  fix), sleeping controllers keep their seat, project-wide actions cleared. EditMode 667, PlayMode 15.
+  Art: the knight cut into 15 rig parts from Michael's first ChatGPT batch (1e0661c).
 - 2026-09-24 — G2 (c73ef97), G3 (66e8492), G4 (aaeaa1f) committed. D57 amended (08f7c40): Player 1's
   home is the device they came into character select on; seats survive a controller reconnect.
 - 2026-09-24 — G2 committed (c73ef97). Art back online: HUD canvas approved and exported to

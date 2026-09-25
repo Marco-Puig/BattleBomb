@@ -62,6 +62,10 @@ namespace BattleBomb.Core.Net
                             r.ReadInt(), r.ReadVector3(), ItemWire.Read(r, catalog))).At(frame));
                         break;
 
+                    case ReplicatedEventKind.DropRemoved:
+                        into.Add(ReplicatedEvent.OfDropRemoved(r.ReadInt()).At(frame));
+                        break;
+
                     default:
                         throw new NetFormatException($"An event of kind {(byte)kind}.");
                 }
@@ -113,6 +117,10 @@ namespace BattleBomb.Core.Net
                     w.WriteInt(e.Drop.NetId);
                     w.WriteVector3(e.Drop.Position);
                     ItemWire.Write(w, e.Drop.Item);
+                    break;
+
+                case ReplicatedEventKind.DropRemoved:
+                    w.WriteInt(e.Drop.NetId);
                     break;
             }
         }

@@ -101,6 +101,47 @@ namespace BattleBomb.Tests.EditMode.Net
             }
         }
 
+        [Test]
+        public void A_dummy_hit_names_its_stage_as_well_as_its_prop()
+        {
+            var sent = new List<ReplicatedEvent>
+            {
+                ReplicatedEvent.OfHit(new HitRecord(
+                    EntityRef.Player(0), EntityRef.Dummy(3, 1), 4f, Vector3.zero, false, false, false)).At(40),
+            };
+
+            var writer = new NetWriter();
+            EventCodec.Write(writer, sent);
+            var reader = new NetReader(writer.ToArray());
+            reader.ReadByte();
+            var received = new List<ReplicatedEvent>();
+            EventCodec.Read(reader, null, received);
+
+            Assert.That(received[0].Hit.Target.DummyStage, Is.EqualTo(3));
+            Assert.That(received[0].Hit.Target.DummyProp, Is.EqualTo(1));
+            Assert.That(EntityRef.Dummy(0, 1), Is.Not.EqualTo(EntityRef.Dummy(1, 1)),
+                "The first dummy of two stages is one ref: a hit could land on the wrong one.");
+            Assert.That(EntityRef.Dummy(-1, 2).DummyStage, Is.EqualTo(-1));
+            Assert.That(EntityRef.Dummy(-1, 2).DummyProp, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void A_removed_drop_round_trips_with_its_step()
+        {
+            var sent = new List<ReplicatedEvent> { ReplicatedEvent.OfDropRemoved(9).At(77) };
+            var writer = new NetWriter();
+            EventCodec.Write(writer, sent);
+            var reader = new NetReader(writer.ToArray());
+            reader.ReadByte();
+            var received = new List<ReplicatedEvent>();
+            EventCodec.Read(reader, null, received);
+
+            Assert.That(received.Count, Is.EqualTo(1));
+            Assert.That(received[0].Kind, Is.EqualTo(ReplicatedEventKind.DropRemoved));
+            Assert.That(received[0].Drop.NetId, Is.EqualTo(9));
+            Assert.That(received[0].HostFrame, Is.EqualTo(77));
+        }
+
         /// <summary>Through a transport that refuses a frame past the limit the way the socket does, so a
         /// batch that is too big shows up as a dropped connection rather than passing.</summary>
         private static List<ReplicatedEvent> SendAcrossLoopback(List<ReplicatedEvent> sent, out int messages)

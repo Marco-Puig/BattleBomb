@@ -12,7 +12,7 @@ namespace BattleBomb.Core.Net
 
     /// <summary>
     /// Something in the world, named the same way on both machines: a player by id, an enemy by its
-    /// session-unique network id, a dummy by its prop index in the current stage (HANDOFF-M8 planning
+    /// session-unique network id, a dummy by its stage and prop index (HANDOFF-M8 planning
     /// decisions 8 and 9). What a <c>HitEvent</c>'s component references become on the wire.
     /// </summary>
     public readonly struct EntityRef : IEquatable<EntityRef>
@@ -32,7 +32,15 @@ namespace BattleBomb.Core.Net
 
         public static EntityRef Enemy(int netId) => new EntityRef(EntityKind.Enemy, netId);
 
-        public static EntityRef Dummy(int propIndex) => new EntityRef(EntityKind.Dummy, propIndex);
+        /// <summary>A dummy by the stage it stands in and its prop index there (planning decision 8): the
+        /// first dummy of every stage is the same prop, so the index alone would name two.</summary>
+        public static EntityRef Dummy(int stageIndex, int propIndex) =>
+            new EntityRef(EntityKind.Dummy, (stageIndex << 16) | (propIndex & 0xFFFF));
+
+        /// <summary>A dummy ref's stage, or -1 when it was hit with no stage loaded.</summary>
+        public int DummyStage => Id >> 16;
+
+        public int DummyProp => Id & 0xFFFF;
 
         public bool Equals(EntityRef other) => Kind == other.Kind && Id == other.Id;
 

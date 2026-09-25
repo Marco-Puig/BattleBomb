@@ -34,6 +34,10 @@ namespace BattleBomb.Core.Net
         /// go: a quarter of a second, well inside the one-second problem banner. Tuned in Task 96.</summary>
         public const int StarvedRepeatSteps = 15;
 
+        /// <summary>How far a replica may move between two drawn steps and still be drawn sliding: past
+        /// it, it was a teleport — a respawn, an airlock — and is drawn as one.</summary>
+        public const float ReplicaTeleportDistance = 3f;
+
         public const float KeepAliveSeconds = 0.25f;
         public const float ProblemAfterSeconds = 1f;
 

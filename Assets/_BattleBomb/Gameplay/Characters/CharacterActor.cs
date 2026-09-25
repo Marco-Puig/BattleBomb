@@ -964,6 +964,28 @@ namespace BattleBomb.Gameplay.Characters
                 PlayerId.Value, _state, _combat, _condition, _revive, _mana, _leapAvailable,
                 Statuses.ToArray(), openScreen, grabCount, refusedSteps);
 
+        /// <summary>
+        /// The guest's copy of this player, set to what the host simulated (D58, HANDOFF-M8 planning
+        /// decision 7). <c>_previous</c> takes the last applied state, so <c>InterpolatedVisual</c>'s
+        /// per-step lerp is exactly as smooth as it is on the host. Never called on a host.
+        /// </summary>
+        internal void ApplyReplica(in PlayerSnapshot snapshot)
+        {
+            // A teleport — a respawn, an airlock — is drawn as one: the visual slides from the previous
+            // state, so across a jump that state is the new one too (ReplicaWorld's promise).
+            bool teleported = (snapshot.Motor.Position - _state.Position).sqrMagnitude
+                > NetProtocol.ReplicaTeleportDistance * NetProtocol.ReplicaTeleportDistance;
+            _previous = teleported ? snapshot.Motor : _state;
+            _state = snapshot.Motor;
+            _combat = snapshot.Combat;
+            _condition = snapshot.Condition;
+            _revive = snapshot.Revive;
+            _mana = snapshot.Mana;
+            _leapAvailable = snapshot.LeapAvailable;
+            Statuses.Restore(snapshot.Statuses);
+            transform.position = _state.Position;
+        }
+
         private void OnEnable()
         {
             // Built in OnEnable, not Awake, so a domain reload mid-play rebuilds everything —

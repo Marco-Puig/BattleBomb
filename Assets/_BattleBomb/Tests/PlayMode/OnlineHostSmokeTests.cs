@@ -4,6 +4,7 @@ using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Net;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Session;
@@ -327,6 +328,93 @@ namespace BattleBomb.Tests.PlayMode
                 "The oldest drop at the guest's feet was cut to name one farther away.");
             Assert.That(latest.DropIds, Does.Contain(lastAtTheirFeet),
                 "The newest drop at the guest's feet was cut to name one farther away.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_grabbed_drop_reaches_the_guest_as_gone()
+        {
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            _driver.SpawnDebugDrop(_host.Position, knife);
+            int netId = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
+            yield return Steps(40);
+
+            _hostInput.Set(Vector2.zero, CommandButtons.Light);
+            yield return Steps(3);
+            _hostInput.Release();
+            yield return Steps(10);
+
+            Assert.That(PickupIdsOnTheHost(), Has.No.Member(netId), "The host never grabbed the drop at its feet.");
+            Assert.That(RemovedDropIds(), Does.Contain(netId), "The drop was grabbed and the guest was never told it had gone.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_drop_swept_away_reaches_the_guest_as_gone()
+        {
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            _driver.SpawnDebugDrop(_host.Position + new Vector3(5f, 0f, 0f), knife);
+            DropPickup drop = _driver.Pickups[_driver.Pickups.Count - 1];
+            int netId = drop.NetId;
+            Object.Destroy(drop.gameObject);
+            yield return Steps(6);
+
+            Assert.That(RemovedDropIds(), Does.Contain(netId), "A drop left the host's world and the guest was never told.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_wipe_announces_every_drop_it_clears_as_gone()
+        {
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            _driver.SpawnDebugDrop(_host.Position + new Vector3(5f, 0f, 0f), knife);
+            int netId = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
+            yield return Steps(2);
+
+            _driver.DebugDownPlayers();
+            yield return Steps(140);
+
+            Assert.That(PickupIdsOnTheHost(), Has.No.Member(netId), "The wipe never cleared the drop.");
+            Assert.That(RemovedDropIds(), Does.Contain(netId), "A wipe cleared a drop and the guest was never told.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_drop_left_out_of_a_full_snapshot_is_never_announced_gone()
+        {
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
+            for (int i = 0; i < NetProtocol.MaxEntities + 20; i++)
+            {
+                _driver.SpawnDebugDrop(_host.Position + new Vector3(8f, 0f, (i % 5) * 0.2f), knife);
+            }
+
+            yield return Steps(10);
+
+            Assert.That(RemovedDropIds(), Is.Empty, "A drop the snapshot only left out was announced as gone.");
+        }
+
+        private List<int> PickupIdsOnTheHost()
+        {
+            var ids = new List<int>();
+            foreach (DropPickup pickup in _driver.Pickups)
+            {
+                if (pickup != null)
+                {
+                    ids.Add(pickup.NetId);
+                }
+            }
+
+            return ids;
+        }
+
+        private List<int> RemovedDropIds()
+        {
+            var ids = new List<int>();
+            foreach (ReplicatedEvent e in AllEvents())
+            {
+                if (e.Kind == ReplicatedEventKind.DropRemoved)
+                {
+                    ids.Add(e.Drop.NetId);
+                }
+            }
+
+            return ids;
         }
 
         private WorldSnapshot LatestSnapshot()

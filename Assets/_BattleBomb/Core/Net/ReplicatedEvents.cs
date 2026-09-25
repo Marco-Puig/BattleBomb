@@ -8,6 +8,7 @@ namespace BattleBomb.Core.Net
     {
         Hit = 1,
         DropSpawned = 2,
+        DropRemoved = 3,
     }
 
     /// <summary>A landed hit, with its two parties as entity references (HANDOFF-M8 planning decision 9).</summary>
@@ -72,6 +73,10 @@ namespace BattleBomb.Core.Net
 
         public static ReplicatedEvent OfDrop(in DropRecord drop) =>
             new ReplicatedEvent(ReplicatedEventKind.DropSpawned, 0, default, drop);
+
+        /// <summary>A drop that left the host's world — grabbed, swept or cleared by a wipe.</summary>
+        public static ReplicatedEvent OfDropRemoved(int netId) =>
+            new ReplicatedEvent(ReplicatedEventKind.DropRemoved, 0, default, new DropRecord(netId, Vector3.zero, default));
 
         /// <summary>The same event stamped with the step it happened in.</summary>
         public ReplicatedEvent At(int hostFrame) => new ReplicatedEvent(Kind, hostFrame, Hit, Drop);

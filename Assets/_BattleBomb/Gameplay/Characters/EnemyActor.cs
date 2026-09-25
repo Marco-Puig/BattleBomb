@@ -296,6 +296,23 @@ namespace BattleBomb.Gameplay.Characters
             _carriedDrop.IsEmpty ? -1 : (int)_carriedDrop.Quality,
             _state, _brain, _health, _targetIndex, _depletedSteps, Statuses.ToArray());
 
+        /// <summary>The guest's copy of this enemy, set to what the host simulated.</summary>
+        internal void ApplyReplica(in EnemySnapshot snapshot)
+        {
+            // A teleport — a respawn, an airlock — is drawn as one: the visual slides from the previous
+            // state, so across a jump that state is the new one too (ReplicaWorld's promise).
+            bool teleported = (snapshot.Motor.Position - _state.Position).sqrMagnitude
+                > NetProtocol.ReplicaTeleportDistance * NetProtocol.ReplicaTeleportDistance;
+            _previous = teleported ? snapshot.Motor : _state;
+            _state = snapshot.Motor;
+            _brain = snapshot.Brain;
+            _health = snapshot.Health;
+            _targetIndex = snapshot.TargetIndex;
+            _depletedSteps = snapshot.DepletedSteps;
+            Statuses.Restore(snapshot.Statuses);
+            transform.position = _state.Position;
+        }
+
         private void Awake()
         {
             if (_definition != null)

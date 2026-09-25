@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Items;
+using BattleBomb.Core.Net;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Data;
 using UnityEngine;
@@ -104,6 +106,51 @@ namespace BattleBomb.Gameplay.Combat
             }
 
             return spawned;
+        }
+
+        /// <summary>
+        /// The guest's copy of an enemy the host spawned: the same prefab and archetype, configured at
+        /// face value — health, tier and elite toughness all arrive in every snapshot, so none of them
+        /// is recomputed here. An elite wears a stand-in carrying only its piece's quality, which is
+        /// all its tint reads; the real piece drops from the host.
+        /// </summary>
+        internal EnemyActor ReplicaSpawn(EnemyDefinition definition, in EnemySnapshot snapshot)
+        {
+            if (_enemyPrefab == null || definition == null)
+            {
+                return null;
+            }
+
+            GameObject go = Instantiate(_enemyPrefab, snapshot.Motor.Position, Quaternion.identity, transform);
+            go.name = $"{definition.name} {snapshot.NetId:000}";
+            EnemyActor actor = go.GetComponent<EnemyActor>();
+            if (actor == null)
+            {
+                Destroy(go);
+                return null;
+            }
+
+            ItemInstance carried = snapshot.CarriedQuality >= 0
+                ? ItemWire.StandIn((QualityRank)snapshot.CarriedQuality)
+                : default;
+            actor.Configure(definition, 0, snapshot.IsElite, carried, 1f, 1f);
+            actor.SetOrigin(snapshot.NetId, snapshot.StageIndex, snapshot.RosterIndex);
+            _brood.Add(go);
+            return actor;
+        }
+
+        /// <summary>Gone from the host's world: gone from the guest's, at once — deactivated first so it
+        /// leaves every registry now, not at the end of the frame.</summary>
+        internal void ReplicaDespawn(EnemyActor actor)
+        {
+            if (actor == null)
+            {
+                return;
+            }
+
+            _brood.Remove(actor.gameObject);
+            actor.gameObject.SetActive(false);
+            Destroy(actor.gameObject);
         }
 
         private void OnEnable()

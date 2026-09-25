@@ -51,6 +51,7 @@ namespace BattleBomb.Gameplay.Net
             _driver.Stepped += OnStepped;
             _driver.HitLanded += OnHit;
             _driver.PickupSpawned += OnPickup;
+            _driver.PickupRemoved += OnPickupRemoved;
             _driver.MayOpenScreen = id => id != _net.GuestPlayerId.Value;
             SendLaunch();
         }
@@ -114,6 +115,15 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnPickup(DropPickup pickup) =>
             _pending.Add(ReplicatedEvent.OfDrop(new DropRecord(pickup.NetId, pickup.Position, pickup.Item)));
+
+        private void OnPickupRemoved(DropPickup pickup)
+        {
+            // A swept or wiped drop is already destroyed: read its id past Unity's null.
+            if (!(pickup is null))
+            {
+                _pending.Add(ReplicatedEvent.OfDropRemoved(pickup.NetId));
+            }
+        }
 
         /// <summary>After every host step: this step's events, then — every second step — the world.</summary>
         private void OnStepped(int frame)
@@ -234,7 +244,7 @@ namespace BattleBomb.Gameplay.Net
             return nearest;
         }
 
-        private static EntityRef RefOf(Component component)
+        private EntityRef RefOf(Component component)
         {
             switch (component)
             {
@@ -243,7 +253,7 @@ namespace BattleBomb.Gameplay.Net
                 case EnemyActor enemy:
                     return EntityRef.Enemy(enemy.NetId);
                 case TrainingDummy dummy:
-                    return EntityRef.Dummy(dummy.PropIndex);
+                    return EntityRef.Dummy(_runner != null ? _runner.StageIndex : -1, dummy.PropIndex);
                 default:
                     return EntityRef.None;
             }
@@ -266,6 +276,7 @@ namespace BattleBomb.Gameplay.Net
                 _driver.Stepped -= OnStepped;
                 _driver.HitLanded -= OnHit;
                 _driver.PickupSpawned -= OnPickup;
+                _driver.PickupRemoved -= OnPickupRemoved;
                 _driver.MayOpenScreen = null;
             }
 

@@ -154,6 +154,11 @@ namespace BattleBomb.Gameplay.World
         /// die with it.</summary>
         public Scene StageScene => _current != null ? _current.Scene : default;
 
+        /// <summary>The guest's dummy for a host dummy — only if it stands in the stage the guest has
+        /// under its feet right now, so a snapshot from across an airlock cannot move the wrong one.</summary>
+        internal TrainingDummy ReplicaDummy(int stageIndex, int propIndex) =>
+            _current != null && _current.StageIndex == stageIndex ? _current.DummyAt(propIndex) : null;
+
         /// <summary>Raised when the players reach a checkpoint room: stage index, and the arena
         /// the run's <em>banked</em> checkpoint follows. Intended for the save service to autosave
         /// on (D52, task 81).

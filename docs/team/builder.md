@@ -250,6 +250,81 @@ Stages:
 - **4.** `StatusTrack.ToArray` returns `Array.Empty` when empty: one fix instead of two call sites.
 - **Mutation-proved:** removing the stamp fails the drop test (expected 5, got 0); keeping the newest fails on id 1; keeping the oldest fails on id 278.
 - **EditMode 772/772; OnlineHost 12/12; full PlayMode 47/47** on the final code. **Task 92 DONE sent (20:35)** → waiting for COMMITTED and the call on DropRemoved (at 93 or later).
+**Task 92 COMMITTED `07a8c64`** (X1–X4, R1–R4 accepted; the X4 correction is noted and off the board).
+**93 calls from the orchestrator:**
+- **DropRemoved at 93.** Removal becomes a reliable event and the absence rule goes: since 92's caps, absence means either "gone" or "not in this snapshot".
+  - Both the grab and the despawn raise it, so grabbed drops still disappear promptly.
+  - Red-first test: a capped-out drop survives on the guest; a grabbed one goes.
+- **Dummy stage in EntityRef** (planning decision 8).
+- Task 103 (drop-in baseline) and Task 107 (Jump in a skipped frame) are on the board for Netcode.
+**Task 93 started (20:40):** premise check running.
+**93 answer (A), from the orchestrator:**
+- Pull 95's PlaybackTransport forward into 93 **verbatim**. **→ 95 Step 2 is "already present".**
+- Guest-side DropRemoved test, red-first against the absence rule: a hand-built recording plays into a real guest scene; a capped-out drop survives, a grabbed one goes.
+- Move whatever of 93 Step 11's live check the playback can honestly prove (the picture follows recorded snapshots; the dummy ref carries its stage). Leave only the eye checks (smoothness, looks) for Michael at 95. The DONE lists what moved and what stayed.
+- Host removal paths for PickupRemoved: grab (SimulationDriver :801), wipe clear (:1172–1181), StepPickups null sweep (:1104).
+
+**93 premise check.** Found:
+- The NetGuest replacement drops 89's RestoreCouch.
+- Leave/Close never clear `_held`/`_holding`.
+- **The plan's own RenderClock "ahead" test fails against the plan's clock.** It moves the newest snapshot back 100→90, and the never-past-newest rule wins (stride −4). The clock is right; the test changes to a newest that lags (96).
+- On the guest, StageRunner doesn't run at 93, so ReplicaDummy is always null. Guest-side dummy resolution is only provable once 94 streams stages; at 93 the encoding is proven in EditMode.
+- Cosmetic: the guest's drop bounce starts from RestHeight+0.2.
+- ApplyReplicaPlayerSide skips ScreenChanged (Plan 2's guest screens).
+- The plan adds no PlayMode tests. Step 11's eval runs in the Player 2 editor, which is impossible.
+
+**Extra spec** `<scratchpad>/tasks/task93_extra.md`:
+- X1: keep RestoreCouch.
+- X2: Close clears the held messages.
+- X3: the clock test fix.
+- X4: `EntityRef.Dummy(stage, prop)` with DummyStage/DummyProp; NetHost.RefOf becomes an instance method; NetGuest.Resolve.
+- X5: DropRemoved.
+  - Core kind 3 + codec.
+  - Driver `PickupRemoved` on grab, sweep and wipe; NetHost queues it.
+  - Guest: the absence rule goes; RaiseDue removes.
+  - Host tests: grab, sweep, and a capped drop never announced.
+- X6: PlaybackTransport (95 Step 2 verbatim) + GuestReplicaSmokeTests (hand-built recording). Three tests: kept vs removed drop (red-first against the absence rule); the picture follows the snapshots; hits at the render frame.
+
+Stages:
+- S1: tests (compile red).
+- S2: Core (the plan's clock test fails as traced).
+- S3: the plan's guest code + X1/X2/X4 + tests (red: kept drop, grab, sweep).
+- S4: X5 wiring → green.
+
+**95 Step 2 (PlaybackTransport) is "already present" after 93.**
+
+**93 progress (21:00):**
+- **S1** red (compile).
+- **S2** EditMode 783/784: only the plan's "ahead" clock test (−4.0), as traced.
+- **S3** script-verified. My spec used `Does.Not.Contain(int)`, which NUnit only takes as a string, so I switched to `Has.No.Member`. EditMode 784/784.
+- **Reds as predicted:**
+  - Guest: the kept drop is deleted by the absence rule.
+  - **Guest picture and hit tests pass on the plan's code**: the first automated proof of a real guest scene.
+  - Host: grab and sweep have no DropRemoved; the capped-drop guard passes.
+- **S4** (X5 wiring) dispatched.
+- **S4 done:** script-verified (ReplicaWorld = plan + X5c exactly; the three PickupRemoved raise sites are correct). GuestReplica 3/3, OnlineHost 15/15.
+- **Mutation:** a guest ignoring DropRemoved → "A drop the host said had gone is still drawn".
+- **EditMode 784/784; full PlayMode 53/53.** Review running.
+
+**Review "Yes with fixes" (21:15), all Minor. Applied:**
+- **#1.** A teleport slid for one drawn step: ApplyReplica set previous = old spot. Now `teleported ? new : old` in all 3 actors, using the new `NetProtocol.ReplicaTeleportDistance` = 3 (Blend uses it too).
+  - Red-first test `A_teleport_is_drawn_as_one_never_as_a_slide`, sampled via guest `Stepped`: red "sliding 10.20", then green.
+- **#6.** A failed replica enemy spawn warns once per id.
+- **#7.** New wipe test `A_wipe_announces_every_drop_it_clears_as_gone` (DebugDownPlayers + 140 steps). Mutation: removing the wipe raise fails it.
+- **#8.** Picture test: 0.1/0.05 per step, tolerance 0.05, and it asserts newest == Start+Length. Mutation: no interpolation → "0.09 from the snapshots".
+- **#9.** The hit must be raised before HitAt+2.
+- **#10.** Launch and drops at Start−120 (LoadMargin), so the load never eats the recording and the drops still arrive held.
+- **#11.** The ahead test uses a stalled newest (delay 20, newest stays 100) to reach the 0.75 clamp without going backwards.
+- **EditMode 784/784; full PlayMode 55/55** on the final code. **Task 93 DONE sent (21:35)**, including Step 11 split into moved-to-harness vs. Michael's-eyes (a checklist for 95's pass) → waiting for COMMITTED.
+
+**Carried forward:**
+- **#2 (96):** the teleport threshold is fixed, so under loss a fast move over a wider pair snaps. Scale it by (to−from)/SnapshotEverySteps.
+- **#3 (96):** a host pause/menu stops snapshots, the guest's clock climbs to newest, and the jitter cushion is gone for ~0.4 s after resume; after a 7–30-step gap it catches up at 1.25×. Hold at newest−delay while newest isn't advancing.
+- **#4 (Plan 2):** DropIds is unread since X5 (~1 KB/snapshot, plus the sort). Remove it (a Version bump), or name the Plan 2 reader.
+- **#5 (94):** snapshot dummies take `_runner.StageIndex`, so at the handover old props destroyed at end of frame are captured as the new stage's. Store the stage on the dummy, or deactivate props before Destroy in Unload.
+- **Plan 2:** ApplyReplicaPlayerSide skips ScreenChanged.
+- **Cosmetic, for Michael's eye:** the guest's drop bounce starts from RestHeight.
+- **M11 (Endless):** the enemy absence rule would bite past 256 enemies.
 
 **Carried forward:**
 - **93:** a drop cut by the cap is deleted on the guest by ApplyDrops' absence rule and can't come back (no item left) → add a reliable `DropRemoved` event rather than inferring removal. Plus the dummy stage in EntityRef.

@@ -227,6 +227,11 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Raised inside the step when a drop appears — the host sends it, with its item (M8).</summary>
         internal event Action<DropPickup> PickupSpawned;
 
+        /// <summary>Raised inside the step when a drop leaves the world — grabbed, swept, or cleared by a
+        /// wipe — so the host can tell the guest it is gone rather than the guest guessing from a snapshot
+        /// that may only have left it out (Task 92's caps). The drop may already be destroyed.</summary>
+        internal event Action<DropPickup> PickupRemoved;
+
         /// <summary>
         /// Debug only: rolls one authored definition at a quality floor, for the equip panel to
         /// hand over. It draws from its own stream so testing a weapon never shifts the loot the
@@ -798,6 +803,7 @@ namespace BattleBomb.Gameplay.Simulation
                     {
                         int id = actor.PlayerId.Value;
                         _grabCounts[id] = GrabCountFor(id) + 1;
+                        PickupRemoved?.Invoke(_pickups[grabTarget]);
                         Destroy(_pickups[grabTarget].gameObject);
                         _pickups.RemoveAt(grabTarget);
                     }
@@ -1105,6 +1111,7 @@ namespace BattleBomb.Gameplay.Simulation
             {
                 if (_pickups[i] == null)
                 {
+                    PickupRemoved?.Invoke(_pickups[i]);
                     _pickups.RemoveAt(i);
                 }
             }
@@ -1172,6 +1179,7 @@ namespace BattleBomb.Gameplay.Simulation
             _projectiles.Clear();
             for (int i = 0; i < _pickups.Count; i++)
             {
+                PickupRemoved?.Invoke(_pickups[i]);
                 if (_pickups[i] != null)
                 {
                     Destroy(_pickups[i].gameObject);
@@ -1747,6 +1755,72 @@ namespace BattleBomb.Gameplay.Simulation
                 _candidateOwners.Add(actors[i]);
             }
         }
+
+        // ── Replica (the guest's driver, D58): state set from the host's snapshots ──────────
+
+        internal void ApplyReplicaPlayerSide(int playerIdValue, int openScreen, int grabCount, int refusedSteps)
+        {
+            if (openScreen >= 0)
+            {
+                _openScreens[playerIdValue] = (InteractionKind)openScreen;
+            }
+            else
+            {
+                _openScreens.Remove(playerIdValue);
+            }
+
+            _grabCounts[playerIdValue] = grabCount;
+            _refusedGrabs[playerIdValue] = refusedSteps;
+        }
+
+        internal void ApplyReplicaWorld(in ArenaBounds bounds, int attemptStepsAllDown)
+        {
+            SetArena(bounds);
+            _attempt = new AttemptCountdown(attemptStepsAllDown);
+        }
+
+        /// <summary>Bolts are drawn from the snapshot nearest the picture, carried forward along their
+        /// own velocity to the render frame — they have no ids to interpolate between.</summary>
+        internal void ApplyReplicaProjectiles(IReadOnlyList<ProjectileState> projectiles, float secondsAhead)
+        {
+            _projectiles.Clear();
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                ProjectileState p = projectiles[i];
+                _projectiles.Add(new ProjectileState(
+                    p.Position + p.Velocity * secondsAhead, p.Velocity, p.Damage, p.Element, p.LifeSteps, p.OwnerPlayerId));
+            }
+        }
+
+        internal void ApplyReplicaPickup(int netId, Vector3 position, in ItemInstance item)
+        {
+            for (int i = 0; i < _pickups.Count; i++)
+            {
+                if (_pickups[i] != null && _pickups[i].NetId == netId)
+                {
+                    return;
+                }
+            }
+
+            _pickups.Add(DropPickup.Spawn(position, item, netId));
+        }
+
+        internal void RemoveReplicaPickup(int netId)
+        {
+            for (int i = _pickups.Count - 1; i >= 0; i--)
+            {
+                if (_pickups[i] == null || _pickups[i].NetId != netId)
+                {
+                    continue;
+                }
+
+                _pickups[i].gameObject.SetActive(false);
+                Destroy(_pickups[i].gameObject);
+                _pickups.RemoveAt(i);
+            }
+        }
+
+        internal void RaiseReplicatedHit(in HitEvent hit) => HitLanded?.Invoke(hit);
 
         private void OnDisable()
         {

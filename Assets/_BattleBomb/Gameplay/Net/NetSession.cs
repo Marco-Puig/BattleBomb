@@ -29,6 +29,8 @@ namespace BattleBomb.Gameplay.Net
         private double _lastReceived;
         private double _lastSent;
         private bool _welcomed;
+        private readonly System.Collections.Generic.List<byte[]> _held = new System.Collections.Generic.List<byte[]>();
+        private bool _holding;
 
         /// <summary>This machine's own couch, held while the host's launch fills the session's seats
         /// and put back when the match ends: the session outlives the match, and the front door would
@@ -270,10 +272,18 @@ namespace BattleBomb.Gameplay.Net
                         return;
                 }
 
-                if (_welcomed)
+                if (!_welcomed)
                 {
-                    MessageReceived?.Invoke(kind, reader);
+                    return;
                 }
+
+                if (_holding)
+                {
+                    _held.Add(payload);
+                    return;
+                }
+
+                MessageReceived?.Invoke(kind, reader);
             }
             catch (NetFormatException e)
             {
@@ -340,6 +350,8 @@ namespace BattleBomb.Gameplay.Net
             }
 
             Status = "Playing as the guest";
+            _held.Clear();
+            _holding = true;
             SceneManager.LoadScene(GameplayScene, LoadSceneMode.Single);
         }
 
@@ -356,8 +368,31 @@ namespace BattleBomb.Gameplay.Net
             _couch = null;
         }
 
+        /// <summary>
+        /// Plays back what arrived while the guest's machine was loading. Called by
+        /// <see cref="NetGuest"/> in <c>Start</c> — after every object in the new scene has enabled, so
+        /// the stage runner a <c>LoadStage</c> reaches is ready to take it.
+        /// </summary>
+        public void ReleaseHeld()
+        {
+            _holding = false;
+            if (_held.Count == 0)
+            {
+                return;
+            }
+
+            byte[][] held = _held.ToArray();
+            _held.Clear();
+            for (int i = 0; i < held.Length; i++)
+            {
+                Dispatch(held[i]);
+            }
+        }
+
         private void ReturnToFrontend()
         {
+            _held.Clear();
+            _holding = false;
             RestoreCouch();
             if (SceneManager.GetActiveScene().name != FrontendScene)
             {
@@ -393,6 +428,8 @@ namespace BattleBomb.Gameplay.Net
 
         private void Close()
         {
+            _held.Clear();
+            _holding = false;
             _transport?.Dispose();
             _transport = null;
             Role = NetRole.Offline;

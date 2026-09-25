@@ -89,6 +89,18 @@ namespace BattleBomb.Gameplay.Characters
 
         internal DummySnapshot CaptureReplica(int stageIndex) => new DummySnapshot(stageIndex, PropIndex, _state, _health);
 
+        internal void ApplyReplica(in DummySnapshot snapshot)
+        {
+            // A teleport — a respawn, an airlock — is drawn as one: the visual slides from the previous
+            // state, so across a jump that state is the new one too (ReplicaWorld's promise).
+            bool teleported = (snapshot.Motor.Position - _state.Position).sqrMagnitude
+                > NetProtocol.ReplicaTeleportDistance * NetProtocol.ReplicaTeleportDistance;
+            _previous = teleported ? snapshot.Motor : _state;
+            _state = snapshot.Motor;
+            _health = snapshot.Health;
+            transform.position = _state.Position;
+        }
+
         private void Awake()
         {
             _health = new Health(Mathf.Max(1f, _maxHealth));

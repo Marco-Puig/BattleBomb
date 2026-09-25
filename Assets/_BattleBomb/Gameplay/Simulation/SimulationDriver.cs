@@ -211,6 +211,14 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>Set by the binder in <c>Awake</c>, before the first frame.</summary>
         internal void EnterReplicaMode() => _replica = true;
 
+        /// <summary>
+        /// Online, the host's first step waits until the guest has the launch stage loaded (planning
+        /// decision 10): nothing is running yet, so waiting costs nobody anything, and it means the
+        /// guest never arrives in a fight already under way. The host's menus stay live throughout,
+        /// so a guest that never finishes loading cannot trap it.
+        /// </summary>
+        internal bool HoldForPeer { get; set; }
+
         /// <summary>Raised inside the fixed step for every landed hit (D20/D21 feedback).</summary>
         public event Action<HitEvent> HitLanded;
 
@@ -694,6 +702,15 @@ namespace BattleBomb.Gameplay.Simulation
                     Stepped?.Invoke(replicaFrame);
                 }
 
+                return;
+            }
+
+            if (HoldForPeer)
+            {
+                // Nothing steps, but the menus still answer, as they do when a screen pauses the world.
+                SampleCommands(Frame);
+                MenuStepped?.Invoke();
+                _clock.Reset();
                 return;
             }
 

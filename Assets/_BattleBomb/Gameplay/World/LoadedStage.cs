@@ -150,7 +150,7 @@ namespace BattleBomb.Gameplay.World
                 TrainingDummy target = placed != null ? placed.GetComponent<TrainingDummy>() : null;
                 if (target != null)
                 {
-                    target.SetPropIndex(_props.Count - 1);
+                    target.SetPlace(StageIndex, _props.Count - 1);
                 }
                 if (arena.ShopkeeperAfter)
                 {

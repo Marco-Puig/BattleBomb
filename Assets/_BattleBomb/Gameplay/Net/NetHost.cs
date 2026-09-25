@@ -18,7 +18,8 @@ namespace BattleBomb.Gameplay.Net
     /// guest's commands into their <see cref="RemoteCommandSource"/>, and sends the world back — a
     /// snapshot every second step and the step's events on the reliable channel (D58). Added by the
     /// binder when the machine boots as a host with a guest connected. It reads the simulation after
-    /// each step and never writes to it, apart from the Plan 1 screen guard.
+    /// each step and never writes to it, apart from the Plan 1 screen guard and, while a guest is
+    /// connected, the launch hold and the airlock's wait for the guest (Task 94).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NetHost : MonoBehaviour
@@ -30,6 +31,7 @@ namespace BattleBomb.Gameplay.Net
         private readonly List<ReplicatedEvent> _stamped = new List<ReplicatedEvent>();
         private readonly WorldSnapshot _snapshot = new WorldSnapshot();
         private readonly List<DropPickup> _drops = new List<DropPickup>();
+        private readonly HashSet<int> _guestReady = new HashSet<int>();
         private NetSession _net;
         private GameSession _session;
         private SimulationDriver _driver;
@@ -53,6 +55,13 @@ namespace BattleBomb.Gameplay.Net
             _driver.PickupSpawned += OnPickup;
             _driver.PickupRemoved += OnPickupRemoved;
             _driver.MayOpenScreen = id => id != _net.GuestPlayerId.Value;
+            if (_runner != null)
+            {
+                _runner.StageLoadRequested += OnStageLoadRequested;
+                _runner.StageHandedOver += OnStageHandedOver;
+                _runner.RemoteStageReady = stage => !_net.IsConnected || _guestReady.Contains(stage);
+            }
+
             SendLaunch();
         }
 
@@ -93,6 +102,12 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnMessage(NetMessageKind kind, NetReader reader)
         {
+            if (kind == NetMessageKind.StageReady)
+            {
+                OnGuestStageReady(StageCodec.ReadStage(reader));
+                return;
+            }
+
             if (kind != NetMessageKind.Commands || _remote == null)
             {
                 return;
@@ -175,7 +190,6 @@ namespace BattleBomb.Gameplay.Net
                 _snapshot.Players.Add(actors[i].CaptureReplica(open, _driver.GrabCountFor(id), _driver.RefusedStepsFor(id)));
             }
 
-            int stage = _runner != null ? _runner.StageIndex : -1;
             IReadOnlyList<ISimTarget> targets = _driver.Targets.Ordered;
             for (int i = 0; i < targets.Count; i++)
             {
@@ -190,7 +204,7 @@ namespace BattleBomb.Gameplay.Net
                 {
                     if (_snapshot.Dummies.Count < NetProtocol.MaxEntities)
                     {
-                        _snapshot.Dummies.Add(dummy.CaptureReplica(stage));
+                        _snapshot.Dummies.Add(dummy.CaptureReplica());
                     }
                 }
             }
@@ -253,10 +267,55 @@ namespace BattleBomb.Gameplay.Net
                 case EnemyActor enemy:
                     return EntityRef.Enemy(enemy.NetId);
                 case TrainingDummy dummy:
-                    return EntityRef.Dummy(_runner != null ? _runner.StageIndex : -1, dummy.PropIndex);
+                    return EntityRef.Dummy(dummy.StageIndex, dummy.PropIndex);
                 default:
                     return EntityRef.None;
             }
+        }
+
+        private void OnStageLoadRequested(int stage, bool isLaunch, float firstArenaMinX, int resumeCheckpointArena)
+        {
+            if (isLaunch)
+            {
+                _guestReady.Clear();
+                _driver.HoldForPeer = _net.IsConnected;
+            }
+            else
+            {
+                // A stage asked for again is not ready again until the guest says so.
+                _guestReady.Remove(stage);
+            }
+
+            _writer.Reset();
+            StageCodec.WriteLoad(_writer, new LoadStageMessage(stage, isLaunch, firstArenaMinX, resumeCheckpointArena));
+            _net.Send(NetChannel.Reliable, _writer);
+        }
+
+        private void OnStageHandedOver(int stage)
+        {
+            _writer.Reset();
+
+            // Raised inside the step that crossed, and the clock has already counted past it.
+            StageCodec.WriteHandOver(_writer, stage, _driver.Frame - 1);
+            _net.Send(NetChannel.Reliable, _writer);
+        }
+
+        private void OnGuestStageReady(int stage)
+        {
+            _guestReady.Add(stage);
+            if (_driver.HoldForPeer && _runner != null && stage == _runner.StageIndex)
+            {
+                _driver.HoldForPeer = false;
+
+                // What the guest sent while the host waited was pressed at a world that was not running
+                // (Task 88's review): start from what they send next, not from a second of replay.
+                if (_remote != null)
+                {
+                    _remote.Stream.Release();
+                }
+            }
+
+            _runner?.RefreshBounds();
         }
 
         /// <summary>The guest is gone: their body stops taking orders rather than running on with the
@@ -267,6 +326,9 @@ namespace BattleBomb.Gameplay.Net
             {
                 _remote.Stream.Release();
             }
+
+            _driver.HoldForPeer = false;
+            _runner?.RefreshBounds();
         }
 
         private void OnDestroy()
@@ -278,6 +340,14 @@ namespace BattleBomb.Gameplay.Net
                 _driver.PickupSpawned -= OnPickup;
                 _driver.PickupRemoved -= OnPickupRemoved;
                 _driver.MayOpenScreen = null;
+                _driver.HoldForPeer = false;
+            }
+
+            if (_runner != null)
+            {
+                _runner.StageLoadRequested -= OnStageLoadRequested;
+                _runner.StageHandedOver -= OnStageHandedOver;
+                _runner.RemoteStageReady = null;
             }
 
             if (_net == null)

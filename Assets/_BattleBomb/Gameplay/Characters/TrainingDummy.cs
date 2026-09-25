@@ -43,7 +43,16 @@ namespace BattleBomb.Gameplay.Characters
         /// -1 for a dummy placed by hand in a scene.</summary>
         public int PropIndex { get; private set; } = -1;
 
-        internal void SetPropIndex(int index) => PropIndex = index;
+        /// <summary>The stage this dummy was placed in — kept on the dummy rather than read from the runner:
+        /// at an airlock hand-over the old stage's props linger until the end of the frame, and a snapshot
+        /// taken in between must not name them as the new stage's.</summary>
+        public int StageIndex { get; private set; } = -1;
+
+        internal void SetPlace(int stageIndex, int propIndex)
+        {
+            StageIndex = stageIndex;
+            PropIndex = propIndex;
+        }
 
         internal void Step(int frame, in ArenaBounds bounds, float dt)
         {
@@ -87,7 +96,7 @@ namespace BattleBomb.Gameplay.Characters
             _hitstopSteps = Mathf.Max(_hitstopSteps, hit.HitstopSteps);
         }
 
-        internal DummySnapshot CaptureReplica(int stageIndex) => new DummySnapshot(stageIndex, PropIndex, _state, _health);
+        internal DummySnapshot CaptureReplica() => new DummySnapshot(StageIndex, PropIndex, _state, _health);
 
         internal void ApplyReplica(in DummySnapshot snapshot)
         {

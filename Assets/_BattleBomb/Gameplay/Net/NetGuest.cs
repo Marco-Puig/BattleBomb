@@ -29,6 +29,8 @@ namespace BattleBomb.Gameplay.Net
         private StageRunner _runner;
         private ReplicaWorld _world;
         private PlayerId _local;
+        private int _handOverStage = -1;
+        private int _handOverAt;
 
         /// <summary>The host frame the picture is showing right now, or -1 before the first snapshot.</summary>
         public float RenderFrame => _clock.Frame;
@@ -44,6 +46,10 @@ namespace BattleBomb.Gameplay.Net
             _world = new ReplicaWorld(_driver, _runner, FindAnyObjectByType<EnemySpawner>(), GameSession.Find());
             _driver.ReplicaStepping += OnLocalStep;
             _net.MessageReceived += OnMessage;
+            if (_runner != null)
+            {
+                _runner.ReplicaStageReady += OnStageReady;
+            }
         }
 
         private void Start() => _net.ReleaseHeld();
@@ -73,6 +79,12 @@ namespace BattleBomb.Gameplay.Net
             }
 
             RaiseDue(render);
+            if (_handOverStage >= 0 && render >= _handOverAt)
+            {
+                _runner?.ReplicaHandOver(_handOverStage);
+                _handOverStage = -1;
+            }
+
             _buffer.DiscardBefore(render);
         }
 
@@ -90,7 +102,37 @@ namespace BattleBomb.Gameplay.Net
                     EventCodec.Read(reader, _driver.ItemSpecs, _incoming);
                     _pending.AddRange(_incoming);
                     break;
+
+                case NetMessageKind.LoadStage:
+                    LoadStageMessage load = StageCodec.ReadLoad(reader);
+                    if (_handOverStage >= 0)
+                    {
+                        // A load right behind a hand-over replaces the stage that hand-over is waiting on:
+                        // take it now rather than lose it. A launch starts the run again, so it goes.
+                        if (!load.IsLaunch)
+                        {
+                            _runner?.ReplicaHandOver(_handOverStage);
+                        }
+
+                        _handOverStage = -1;
+                    }
+
+                    _runner?.ReplicaLoad(load);
+                    break;
+
+                case NetMessageKind.HandOver:
+                    // Applied when the picture reaches the host's step, not when it arrives: the guest draws
+                    // that step about a tenth of a second later, and the snapshots around it may be lost.
+                    _handOverStage = StageCodec.ReadHandOver(reader, out _handOverAt);
+                    break;
             }
+        }
+
+        private void OnStageReady(int stage)
+        {
+            _writer.Reset();
+            StageCodec.WriteReady(_writer, stage);
+            _net.Send(NetChannel.Reliable, _writer);
         }
 
         /// <summary>Raises every event whose step the picture has reached, in the order they happened.</summary>
@@ -145,6 +187,11 @@ namespace BattleBomb.Gameplay.Net
             if (_driver != null)
             {
                 _driver.ReplicaStepping -= OnLocalStep;
+            }
+
+            if (_runner != null)
+            {
+                _runner.ReplicaStageReady -= OnStageReady;
             }
 
             if (_net != null)

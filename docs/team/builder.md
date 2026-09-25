@@ -38,7 +38,7 @@ tests in each.
 
 ## Waiting on
 
-Nothing. (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
+**`COMMITTED` for Task 94** (DONE sent 22:30); then Task 95. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
 `Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
 with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
 the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
@@ -316,12 +316,61 @@ Stages:
 - **#10.** Launch and drops at Start−120 (LoadMargin), so the load never eats the recording and the drops still arrive held.
 - **#11.** The ahead test uses a stalled newest (delay 20, newest stays 100) to reach the 0.75 clamp without going backwards.
 - **EditMode 784/784; full PlayMode 55/55** on the final code. **Task 93 DONE sent (21:35)**, including Step 11 split into moved-to-harness vs. Michael's-eyes (a checklist for 95's pass) → waiting for COMMITTED.
+**Task 93 COMMITTED `c8744bc`** (X1–X6 and R1–R11 accepted). The eyes-only checklist is Stage B in `docs/team/m8-plan1-pass.md` (theirs).
+**Orchestrator's calls:**
+- **95 (the tidy task):** remove `DropIds` from snapshots, with a NetProtocol.Version bump (Task 103's baseline goes through DropSpawned). If that makes Capture's drop cap and the NearestFirst sort (CaptureDrops, `_drops`, DistanceToNearestPlayer) dead code, remove those too, along with their test (the drop-cap test) and the host test that names DropIds. Also at 95: M6 (NetDevOverlay caches the session) + M8 (LocalLagNames read-only), and M2 (guest menu → neutral + held-across rule).
+- **94:** fix the handover dummy stage (store the stage on the dummy, or deactivate before Destroy, whichever reads cleaner), plus a guest-side dummy-ref check once stages stream.
+- The 96 / Plan 2 / M11 items are on the board.
+**Task 94 started (21:40):** premise check first.
+
+**94 premise check.** Found:
+- The plan's Step 4(a) redeclares `session` (CS0136).
+- Stale docs: `_replica`, the NetHost summary.
+- Nothing releases the stream when the launch hold clears (88 item 6).
+- HandOver is applied on arrival, ~6 steps before the picture reaches it.
+- The handover dummy-stage mislabel is live once the guest streams stages.
+- No guest-scene test.
+- The plan's "all nine" count is off again: EditMode 785, PlayMode 57, before my additions.
+
+**Extra spec** `<scratchpad>/tasks/task94_extra.md`:
+- Y1: rename the local to `launched`; fix the two docs.
+- Y2: `TrainingDummy.StageIndex` + `SetPlace(stage, prop)`, set by LoadedStage.SpawnProps; `CaptureReplica()`; NetHost's Capture/RefOf read the dummy's own stage. Plus a host test.
+- Y3: `_remote.Stream.Release()` when the hold clears. Test: after the hold, `Buffered <= InputBufferMax`.
+- Y4: NetGuest queues HandOver (stage, NewestFrame at arrival) and applies it when render ≥ that.
+- Y5: GuestStageSmokeTests (two-part recording; the second part is written after the guest loads stage 0, naming the real dummy prop and exit X). Tests: streams + hand-over timing + FixtureStage1 unloaded; the dummy moved by its (stage, prop) snapshot, a decoy of the same prop in stage 1 ignored, and only the stage-0 hit raised.
+
+Stages:
+- S1: codec test (red).
+- S2: codec.
+- S3: plan Steps 3–8 + Y1 + Y3's test lines + Y5's tests (red: Buffered; hand-over timing).
+- S4: Y2 + Y3's fix + Y4.
+
+**94 progress (21:55):**
+- **S1** compile red → **S2** StageCodec 1/1.
+- **S3** script-verified; EditMode 785/785. Reds as predicted:
+  - Guest hand-over at render 1153.5 (< 1160).
+  - Hold Buffered 31 (> 6).
+  - The guest dummy test passes: it streams stage 0 and resolves (stage, prop), and the decoy is ignored.
+- **Found a race in the plan's airlock test:** it scanned HeadlessGuest.Received for HandOver in the same frame the host handed over, before the guest's Update read its inbox. I added `Steps(2)` before the scan → it passes (report as a deviation).
+- **S4** dispatched.
+- **S4 done**, script-verified. GuestStage 2/2, LaunchHold 1/1, OnlineHost 18/18.
+- **Mutation:** SetPlace not storing the stage → the host dummy test fails ("expected 0, was −1").
+- **EditMode 785/785; full PlayMode 60/60** (the M7 airlock tests are unchanged offline). Review running.
+
+**94 review "Yes with fixes" — applied red-first (22:25):**
+- **1 (Important):** a LoadStage inside the ~6-step wait wiped the pending hand-over → guest stranded. NetGuest applies a pending hand-over before a non-launch load, drops it on a launch. Test `A_stage_load_hard_on_a_hand_over_does_not_strand_it` (red "expected 1, was 0").
+- **3:** HandOver carries the host's step (`WriteHandOver(w, stage, hostFrame)` / `ReadHandOver`; host sends `_driver.Frame - 1` — raised inside the step, clock already past). Guest test now loses the two snapshots round the hand-over (red: render 1157 < 1160).
+- **2:** the hold samples commands + raises MenuStepped, so the host's menus stay live (red: 0 menu steps).
+- **4 (half):** `_guestReady.Remove(stage)` on a non-launch re-request. **6:** RefreshBounds skips a Complete stage. Neither has a test (no fixture path re-requests mid-run; one-condition guard) — said so in the DONE.
+- **7–9:** airlock test waits for FixtureStage2 + checks the stage-1 LoadStage (not launch, FirstArenaMinX = exit X); guest test Assumes set-up beat the second half; HeadlessGuest keeps whole LoadStage messages.
+- **Proposed for the board:** 4's generation half (stale BeginLoad completion) → Plan 2; 5 (mid-match rejoin deadlocks the airlock) → Plan 2 + Task 96 step 7 note (relaunch, don't re-host in place); 10 accepted.
+- **Gates:** EditMode 785/785; full PlayMode **61/61**. Line endings held. **Task 94 DONE sent (22:30).**
 
 **Carried forward:**
 - **#2 (96):** the teleport threshold is fixed, so under loss a fast move over a wider pair snaps. Scale it by (to−from)/SnapshotEverySteps.
 - **#3 (96):** a host pause/menu stops snapshots, the guest's clock climbs to newest, and the jitter cushion is gone for ~0.4 s after resume; after a 7–30-step gap it catches up at 1.25×. Hold at newest−delay while newest isn't advancing.
 - **#4 (Plan 2):** DropIds is unread since X5 (~1 KB/snapshot, plus the sort). Remove it (a Version bump), or name the Plan 2 reader.
-- **#5 (94):** snapshot dummies take `_runner.StageIndex`, so at the handover old props destroyed at end of frame are captured as the new stage's. Store the stage on the dummy, or deactivate props before Destroy in Unload.
+- ~~**#5 (94):** snapshot dummies take `_runner.StageIndex`…~~ — done in 94 (Y2: the dummy stores its stage).
 - **Plan 2:** ApplyReplicaPlayerSide skips ScreenChanged.
 - **Cosmetic, for Michael's eye:** the guest's drop bounce starts from RestHeight.
 - **M11 (Endless):** the enemy absence rule would bite past 256 enemies.
@@ -876,6 +925,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-25 22:30 — **Task 94 complete** (guest streams stages; airlock + launch hold; review
+  fixes incl. hand-over carries the host's step and no stranding): EditMode 785/785, PlayMode
+  61/61. `DONE` sent; waiting for `COMMITTED`. Next: Task 95.
 - 2026-09-25 10:55 — **G14 sent** (D57 corrections ×3, GAME_DESIGN/CLAUDE/ROADMAP text, Michael's
   15-item checklist): final gates EditMode 680/680, PlayMode 28/28 at eb016a5. `DONE` sent —
   Groundwork built (56e4be5..527df2b); waiting for `COMMITTED` and Michael's pass. Next: F1–F3, F5.

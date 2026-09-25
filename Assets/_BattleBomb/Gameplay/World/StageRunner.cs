@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Spatial;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Combat;
@@ -124,8 +125,7 @@ namespace BattleBomb.Gameplay.World
         private bool _warnedCannotLeaveArena;
         private bool _warnedClampStuck;
 
-        /// <summary>The guest's runner (D58): it follows the host's stages and decides nothing.
-        /// Task 94 teaches it to follow; until then it simply does not run.</summary>
+        /// <summary>The guest's runner (D58): it streams the stages the host tells it to and runs none of its own.</summary>
         private bool _replica;
 
         /// <summary>Tests quiet the arena by turning this off: waves are announced and counted
@@ -178,6 +178,23 @@ namespace BattleBomb.Gameplay.World
         /// <summary>Raised when the chapter's last stage is left behind.</summary>
         public event Action ChapterCompleted;
 
+        /// <summary>
+        /// Raised when this runner asks for a stage scene — a launch (<c>isLaunch</c>, with its resume
+        /// point) or the preload behind the airlock (with the x its first arena is shifted to). The
+        /// host forwards it so the guest streams the same stage at the same place (M8).
+        /// </summary>
+        internal event Action<int, bool, float, int> StageLoadRequested;
+
+        /// <summary>Raised when the stage behind the airlock becomes the stage.</summary>
+        internal event Action<int> StageHandedOver;
+
+        /// <summary>Online: whether the guest has this stage loaded. Null — offline — is always yes.
+        /// The airlock opens only when both machines have the stage behind it (planning decision 10).</summary>
+        internal Func<int, bool> RemoteStageReady { get; set; }
+
+        /// <summary>The guest's runner: it loads what it is told and reports each stage as ready.</summary>
+        internal event Action<int> ReplicaStageReady;
+
         /// <summary>Starts a chapter at a stage, optionally resuming at a checkpoint room (D49's
         /// respawn rule doubles as the resume rule). Anything already running is unloaded first,
         /// including a scene still in flight.</summary>
@@ -205,6 +222,7 @@ namespace BattleBomb.Gameplay.World
                 new StageRun(definition.ToRuntime(), resumeCheckpointArena),
                 stageIndex,
                 _generation);
+            StageLoadRequested?.Invoke(stageIndex, true, 0f, resumeCheckpointArena);
             BeginLoad(_current, null);
         }
 
@@ -251,6 +269,18 @@ namespace BattleBomb.Gameplay.World
                 else
                 {
                     stage.Adopt(scene);
+                }
+
+                if (_replica)
+                {
+                    if (stage == _current)
+                    {
+                        _current.SpawnProps(_chestPrefab, _dummyPrefab, _shopkeeperPrefab);
+                        _driver.SetEncounter(EncounterInputs.From(_tier, _current.Run.Spec));
+                    }
+
+                    ReplicaStageReady?.Invoke(stage.StageIndex);
+                    return;
                 }
 
                 if (stage == _current)
@@ -468,6 +498,19 @@ namespace BattleBomb.Gameplay.World
             }
         }
 
+        private bool NextStageReady =>
+            _next != null && _next.IsReady && (RemoteStageReady == null || RemoteStageReady(_next.StageIndex));
+
+        /// <summary>The clamp again, when something outside the runner changed what it depends on — the
+        /// guest finishing a load.</summary>
+        internal void RefreshBounds()
+        {
+            if (_current != null && _current.IsReady && !_replica && _current.Run.Phase != StagePhase.Complete)
+            {
+                ApplyBounds();
+            }
+        }
+
         /// <summary>Cross the exit line once the stage behind it is ready — or, on the chapter's
         /// last stage, as soon as everyone is through.</summary>
         private void TryLeaveStage()
@@ -477,7 +520,7 @@ namespace BattleBomb.Gameplay.World
             // player on the line bit-for-bit. Pad one site and not the other and the clamp stops
             // short of the line this reads: the stage sticks shut at the door, or the overrun
             // this commit removed comes back to make it reachable.
-            bool ready = _next == null || _next.IsReady;
+            bool ready = _next == null || NextStageReady;
             if (ready && _current.Exit != null && AllLivingPlayersPastX(_current.Exit.X))
             {
                 FinishStage();
@@ -572,7 +615,7 @@ namespace BattleBomb.Gameplay.World
             // to move the clamp past the exit — and why the condition is the same
             // ExitIsNext the preload uses, so a final arena an author gave no room hands over as
             // smoothly as one that ends in a checkpoint.
-            if (ExitIsNext(run) && _next != null && _next.IsReady)
+            if (ExitIsNext(run) && NextStageReady)
             {
                 ArenaMarker landing = _next.Arena(0);
                 if (landing != null)
@@ -666,6 +709,7 @@ namespace BattleBomb.Gameplay.World
 
             _next = new LoadedStage(
                 next, new StageRun(next.ToRuntime()), _current.StageIndex + 1, _generation);
+            StageLoadRequested?.Invoke(_next.StageIndex, false, _current.Exit.X, -1);
             BeginLoad(_next, _current.Exit.X);
         }
 
@@ -697,6 +741,7 @@ namespace BattleBomb.Gameplay.World
             LoadedStage previous = _current;
             _current = _next;
             _next = null;
+            StageHandedOver?.Invoke(_current.StageIndex);
             _preloadRequested = false;
             _roomBehind = null;
             if (_spawner != null)
@@ -720,6 +765,47 @@ namespace BattleBomb.Gameplay.World
                     ? _current.Spawn.PositionFor(i)
                     : FallbackSpawn(i));
             }
+        }
+
+        /// <summary>The guest streams a stage the host asked for, at the same place.</summary>
+        internal void ReplicaLoad(in LoadStageMessage load)
+        {
+            StageDefinition definition = _chapter != null ? _chapter.StageAt(load.StageIndex) : null;
+            if (definition == null)
+            {
+                Debug.LogError($"{name}: the host streamed stage {load.StageIndex}, which this chapter does not have.", this);
+                return;
+            }
+
+            if (load.IsLaunch)
+            {
+                UnloadEverything();
+                _current = new LoadedStage(
+                    definition, new StageRun(definition.ToRuntime(), load.ResumeCheckpointArena), load.StageIndex, _generation);
+                BeginLoad(_current, null);
+                return;
+            }
+
+            _next?.Unload();
+            _next = new LoadedStage(definition, new StageRun(definition.ToRuntime()), load.StageIndex, _generation);
+            BeginLoad(_next, load.FirstArenaMinX);
+        }
+
+        /// <summary>The host walked through the airlock: the stage behind it becomes the guest's too.</summary>
+        internal void ReplicaHandOver(int stageIndex)
+        {
+            if (_next == null || _next.StageIndex != stageIndex || !_next.IsReady)
+            {
+                Debug.LogWarning($"{name}: the host handed over to stage {stageIndex}, which is not loaded here.", this);
+                return;
+            }
+
+            LoadedStage previous = _current;
+            _current = _next;
+            _next = null;
+            _current.SpawnProps(_chestPrefab, _dummyPrefab, _shopkeeperPrefab);
+            _driver.SetEncounter(EncounterInputs.From(_tier, _current.Run.Spec));
+            previous?.Unload();
         }
 
         // ── Wipes ────────────────────────────────────────────────────────────────────
@@ -772,6 +858,13 @@ namespace BattleBomb.Gameplay.World
             _replica = NetSession.RoleOf(Session.GameSession.Find()) == NetRole.Guest;
             if (_replica)
             {
+                // The guest runs no stage of its own: it takes the chapter and tier the host launched and
+                // waits to be told which stage scenes to stream (planning decision 10).
+                Session.GameSession launched = Session.GameSession.Find();
+                TierSpec[] tiers = TierDefinition.ToRuntime(_tiers);
+                _chapter = launched != null ? launched.Chapter : null;
+                _tierIndex = Mathf.Clamp(launched != null ? launched.TierIndex : 0, 0, Mathf.Max(0, tiers.Length - 1));
+                _tier = tiers[_tierIndex];
                 return;
             }
 

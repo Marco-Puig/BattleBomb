@@ -44,6 +44,22 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>False stops the command stream, as a frozen or hitching guest would.</summary>
         internal bool Sending { get; set; } = true;
 
+        /// <summary>Answer every <c>LoadStage</c> with <c>StageReady</c> at once — a guest with no scene
+        /// loads instantly. Off, the test decides when with <see cref="Ready"/>.</summary>
+        internal bool AutoReady { get; set; } = true;
+
+        internal List<int> LoadRequests { get; } = new List<int>();
+
+        /// <summary>Every <c>LoadStage</c> in full — where the host asked for each stage to go.</summary>
+        internal List<LoadStageMessage> LoadMessages { get; } = new List<LoadStageMessage>();
+
+        internal void Ready(int stage)
+        {
+            _writer.Reset();
+            StageCodec.WriteReady(_writer, stage);
+            _transport.Send(_host, NetChannel.Reliable, _writer.Buffer, _writer.Length);
+        }
+
         internal static HeadlessGuest Join(INetTransport transport)
         {
             var go = new GameObject("Headless Guest");
@@ -133,6 +149,18 @@ namespace BattleBomb.Tests.PlayMode
                     {
                         SessionEnded = true;
                         Received.Add(netEvent.Payload);
+                    }
+                    else if (kind == NetMessageKind.LoadStage)
+                    {
+                        LoadStageMessage load = StageCodec.ReadLoad(reader);
+                        int stage = load.StageIndex;
+                        LoadRequests.Add(stage);
+                        LoadMessages.Add(load);
+                        Received.Add(netEvent.Payload);
+                        if (AutoReady)
+                        {
+                            Ready(stage);
+                        }
                     }
                     else if (kind != NetMessageKind.KeepAlive)
                     {

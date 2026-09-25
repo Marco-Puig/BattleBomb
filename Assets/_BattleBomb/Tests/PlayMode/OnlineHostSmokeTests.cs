@@ -10,6 +10,7 @@ using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
+using BattleBomb.Gameplay.World.Markers;
 using BattleBomb.Platform;
 using BattleBomb.Platform.Net;
 using BattleBomb.UI.Chest;
@@ -88,6 +89,7 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             yield return UntilFrames(() => _runner.IsStageLoaded, "the stage never streamed in");
+            yield return UntilFrames(() => _driver.Frame > 5, "the launch hold never released — the host is still waiting for its guest");
 
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
             Assert.That(actors.Count, Is.EqualTo(2), "A connected guest must wake the second seat (D59).");
@@ -389,6 +391,113 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(RemovedDropIds(), Is.Empty, "A drop the snapshot only left out was announced as gone.");
         }
 
+        [UnityTest]
+        public IEnumerator The_airlock_waits_for_the_guest_to_have_the_next_stage()
+        {
+            _guest.AutoReady = false;
+            StageExitMarker exit = Object.FindObjectsByType<StageExitMarker>(FindObjectsInactive.Include)[0];
+            foreach (StageExitMarker candidate in Object.FindObjectsByType<StageExitMarker>(FindObjectsInactive.Include))
+            {
+                if (candidate.gameObject.scene == _runner.StageScene)
+                {
+                    exit = candidate;
+                }
+            }
+
+            yield return PushBothRight(() => _guest.LoadRequests.Contains(1) && _host.Position.x >= exit.X - 0.05f
+                && _guestBody.Position.x >= exit.X - 0.05f, 4000, "both players to stage one's exit");
+
+            // The host's own copy of the next stage must be in, or the wait below would prove nothing.
+            yield return UntilFrames(() => SceneIsLoaded("FixtureStage2"), "the host never streamed the next stage");
+            LoadStageMessage request = _guest.LoadMessages.Find(load => load.StageIndex == 1);
+            Assert.That(request.IsLaunch, Is.False);
+            Assert.That(request.FirstArenaMinX, Is.EqualTo(exit.X).Within(0.01f),
+                "The guest was not told to put the next stage where the host's exit line is.");
+
+            // At the line with the guest not ready: the clamp must not reach past it, and no hand-over.
+            yield return PushBothRight(() => false, 240, null);
+            Assert.That(_runner.StageIndex, Is.Zero, "The host walked through the airlock before the guest had the stage behind it.");
+            Assert.That(_host.Position.x, Is.LessThanOrEqualTo(exit.X + 0.01f),
+                "The clamp opened into a stage the guest had not loaded.");
+
+            _guest.Ready(1);
+            yield return PushBothRight(() => _runner.StageIndex == 1, 1200, "the hand-over once the guest was ready");
+
+            // The hand-over was sent this frame; the headless guest reads its inbox in its own Update,
+            // which may already have run.
+            yield return Steps(2);
+            bool handedOver = false;
+            foreach (byte[] message in _guest.Received)
+            {
+                var reader = new NetReader(message);
+                handedOver |= (NetMessageKind)reader.ReadByte() == NetMessageKind.HandOver && StageCodec.ReadStage(reader) == 1;
+            }
+
+            Assert.That(handedOver, Is.True, "The guest was never told the stage was handed over.");
+        }
+
+        [UnityTest]
+        public IEnumerator Every_dummy_names_the_stage_it_was_placed_in()
+        {
+            yield return Steps(4);
+            int dummies = 0;
+            foreach (TrainingDummy dummy in Object.FindObjectsByType<TrainingDummy>(FindObjectsInactive.Exclude))
+            {
+                if (dummy.PropIndex >= 0)
+                {
+                    dummies++;
+                    Assert.That(dummy.StageIndex, Is.EqualTo(_runner.StageIndex), "A dummy does not carry the stage it stands in.");
+                }
+            }
+
+            Assert.That(dummies, Is.GreaterThan(0), "The launch stage has no dummy to check.");
+            WorldSnapshot latest = LatestSnapshot();
+            Assert.That(latest.Dummies.Count, Is.EqualTo(dummies));
+            foreach (DummySnapshot dummy in latest.Dummies)
+            {
+                Assert.That(dummy.StageIndex, Is.EqualTo(_runner.StageIndex), "A snapshot named a dummy with a stage it does not stand in.");
+            }
+        }
+
+        private static bool SceneIsLoaded(string name)
+        {
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.name == name && scene.isLoaded)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Both players push right — the host by script, the guest over the wire — until done,
+        /// or the step budget runs out (null <paramref name="what"/> means running out is the point).</summary>
+        private IEnumerator PushBothRight(System.Func<bool> done, int steps, string what)
+        {
+            _guest.Move = Vector2.right;
+            _hostInput.Set(Vector2.right, CommandButtons.None);
+            int deadline = _driver.Frame + steps;
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < deadline; guard++)
+            {
+                if (done())
+                {
+                    break;
+                }
+
+                yield return null;
+            }
+
+            _guest.Move = Vector2.zero;
+            _hostInput.Release();
+            if (what != null && !done())
+            {
+                Assert.Fail($"Pushing right never reached {what} (host x={_host.Position.x:F2}, guest x={_guestBody.Position.x:F2}).");
+            }
+        }
+
         private List<int> PickupIdsOnTheHost()
         {
             var ids = new List<int>();
@@ -510,6 +619,89 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             Assert.Fail($"{failure} (waited {LoadFrameCeiling} frames).");
+        }
+    }
+
+    /// <summary>The host's first step waits for the guest (HANDOFF-M8 planning decision 10).</summary>
+    public sealed class OnlineLaunchHoldSmokeTests
+    {
+        [UnityTest]
+        public IEnumerator The_host_holds_its_first_step_until_the_guest_has_loaded()
+        {
+            GameSession stale = GameSession.Find();
+            if (stale != null)
+            {
+                Object.Destroy(stale.gameObject);
+                yield return null;
+            }
+
+            GameSession session = GameSession.FindOrCreate();
+            session.Store = new MemorySaveStore();
+            session.SaveName = "online-hold";
+            SceneManager.LoadScene("Frontend", LoadSceneMode.Single);
+            yield return null;
+            yield return null;
+
+            LoopbackTransport.CreatePair(out LoopbackTransport hostSide, out LoopbackTransport guestSide);
+            NetSession net = NetSession.FindOrCreate();
+            net.Host(hostSide);
+            HeadlessGuest guest = HeadlessGuest.Join(guestSide);
+            guest.AutoReady = false;
+            try
+            {
+                for (int i = 0; i < 300 && !(net.IsConnected && guest.IsWelcomed); i++)
+                {
+                    yield return null;
+                }
+
+                FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+                flow.State.Confirm(0);
+                flow.State.Confirm(0);
+                flow.State.Launch(flow.Selection.CanLaunch);
+                for (int i = 0; i < 1500 && SceneManager.GetActiveScene().name != "Gameplay"; i++)
+                {
+                    yield return null;
+                }
+
+                var driver = Object.FindAnyObjectByType<SimulationDriver>();
+                var runner = Object.FindAnyObjectByType<StageRunner>();
+                for (int i = 0; i < 1500 && !runner.IsStageLoaded; i++)
+                {
+                    yield return null;
+                }
+
+                int menuSteps = 0;
+                void CountMenuStep() => menuSteps++;
+                driver.MenuStepped += CountMenuStep;
+                for (int i = 0; i < 120; i++)
+                {
+                    yield return null;
+                }
+
+                driver.MenuStepped -= CountMenuStep;
+                Assert.That(driver.Frame, Is.Zero, "The host started the run without its guest.");
+                Assert.That(menuSteps, Is.GreaterThan(0),
+                    "The hold froze the host's menus too: a guest that never loads would leave no way out.");
+                Assert.That(guest.LoadRequests, Does.Contain(0), "The guest was never asked to load the launch stage.");
+
+                guest.Ready(0);
+                for (int i = 0; i < 600 && driver.Frame <= 10; i++)
+                {
+                    yield return null;
+                }
+
+                Assert.That(driver.Frame, Is.GreaterThan(10), "The guest reported ready and the host never started.");
+
+                RemoteCommandSource remote = Object.FindAnyObjectByType<RemoteCommandSource>();
+                Assert.That(remote, Is.Not.Null);
+                Assert.That(remote.Stream.Buffered, Is.LessThanOrEqualTo(NetProtocol.InputBufferMax),
+                    "What the guest sent during the hold is being replayed at double speed.");
+            }
+            finally
+            {
+                Object.Destroy(guest.gameObject);
+                Object.Destroy(GameSession.FindOrCreate().gameObject);
+            }
         }
     }
 }

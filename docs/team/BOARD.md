@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | F3 — every run rolls its own; then F5 | Pauses for Michael's Groundwork pass (QUIET) |
+| Builder | Builder | working | F5 — writing its plan for the orchestrator's approval | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -88,7 +88,7 @@ Builder runs it straight after Groundwork, before M8 Plan 1.
    collect the dead, then settle them, red-first; the tripwires stay as regression guards. **Done — F1, 15778dd.**
 2. ~~**The debug grant row ships in release builds** (§5.2).~~ **Done — F2, 724d44e.** Put it behind the same `#if` as the
    tier-overlay row.
-3. **Every run replays the same loot** (§7.1). The three seeds are constants 1/2/3. Seed from the
+3. ~~**Every run replays the same loot** (§7.1).~~ **Done — F3, 5abd671.** The three seeds are constants 1/2/3. Seed from the
    session at launch — *orchestrator's call, flagged to Michael*.
 
 **Candidate F4 — Netcode to assess when its lane reopens** (found in G4, pre-existing): a tap shorter
@@ -184,6 +184,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — F3 committed (5abd671): each launch draws its own seeds onto the session; the driver
+  takes them through `UseSeeds`, M8's host door. EditMode 689, PlayMode 34. F1–F3 done. The
+  Builder writes F5's plan (`2026-09-25-f5-chest-grid-scrolling.md`); Netcode to reopen for M8.
 - 2026-09-25 — F1 committed (15778dd): the death pass collects, then settles, so same-step deaths
   settle together in registry order. The plan's F1 carries a revision note.
 - 2026-09-25 — F2 committed (724d44e): the DEBUG grant row compiles out of a release (proven by a

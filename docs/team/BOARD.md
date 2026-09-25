@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Groundwork — G1–G8 committed; Task 9 (the button pictures) | — |
+| Builder | Builder | working | Groundwork — G1–G11 committed; Task 12 (every other prompt) | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | online | Waiting on Michael's images (31 prompts in `ArtSource/GPT_PROMPTS.md`) | Michael: images, bible review, music tool |
@@ -141,6 +141,8 @@ From Groundwork (G4's review):
   so if their pad dies the game stays paused; and the driver's catch-up loop does not re-check the
   pause, so a menu opened mid-frame lets a few more steps run (the same frame-step family as F1 and
   candidate F4 — Netcode to assess with them).
+- **Dead helpers in `ChestScreen`** — `DetailFor`, `AppendStat`, `Abbreviate`, `LabelFor` have no
+  callers (G11's review). Remove in a later tidy-up.
 - **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
   keyboard — cosmetic; it corrects on the first press.
 
@@ -154,6 +156,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — G10 (8502289), **G11 committed**: the chest and hero footers are badge rows in the player's
+  own buttons (keyboard caps and pad badges captured).
 - 2026-09-24 — G9 committed (61e5366). Art round 2: storybook fixture kit v2; terrier redo parked
   until Michael sets a pet direction.
 - 2026-09-24 — **G8 committed**: settings and results on the new map; Escape/Start never double-fire.

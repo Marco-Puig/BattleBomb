@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | G13b — the Hero-tab strip focus; the popover under the compare panel | — |
+| Builder | Builder | working | G14 — verify D57; Michael's checklist | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -127,6 +127,10 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
   Legendary); Settings and Quit on the title screen.
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
+- **The chest has no approved mockup** — `design/hud-menus/` covers everything else. When the HUD
+  plan reaches it, settle where the close ✕ lives: in couch co-op the Hero tab hides it with the
+  sack half, so a mouse or touch player has no visible way out (B, Esc and Start still work).
+  The strip's right end collides with the hero panel's LEVEL readout (G13b's review).
 
 ## Later — M13 and Early Access readiness
 
@@ -154,6 +158,8 @@ From Groundwork (G4's review):
 - **From G12 (for M9's HUD):** with both players at one drop, the loot card names only the first
   player's button; the front door's body text still draws in the built-in font (only its badge
   row uses the project fonts).
+- **Ultrawide couch co-op:** the doll columns run into the stats panel and now draw over it (G13b's
+  review) — outside the supported layouts; look again if ultrawide becomes one.
 
 ## Pending commits
 
@@ -165,6 +171,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — G13b committed (527df2b): the SACK/HERO strip stays up on the couch Hero tab with a
+  cursor; item menus draw over the panels they overhang; the couch worn-gear menu now shows
+  (A was spending coin on rows nobody could see). EditMode 680, PlayMode 28. Close ✕ → M9.
 - 2026-09-25 — G13 committed (7c3014f): the grid's top follows the filter chips (couch co-op);
   solo Up from the filter row stays put. EditMode 680, PlayMode 28. Its review found three
   pre-existing chest bugs: the Hero-tab strip focus and the popover under the compare panel

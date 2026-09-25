@@ -64,22 +64,19 @@ step 1 and grows with every brief.
 
 ## Current state
 
-**HUD and menus canvas v1 published** (private, owner Michael):
-https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj. It holds 11 artboards: HUD solo (Main), HUD couch
-with a partner down, loot card states, revive and wipe, damage numbers, title, character select,
-chapter select, results, pause, settings. The source files were built in the scratchpad
-`hudcanvas/project/`; **to revise, `read` each file from the artifact first** (users edit live),
-change it, and publish only the changed files. Uploaded assets: Title.png
-`/_blob/ede3cca206fb7ac3e28314e53f46a1b0`, HealthPotion `/_blob/23e9d76a1b6a0b7cf1fc9b779290f15e`,
-ManaPotion `/_blob/c07fecb1f8ae44295f397fd53df3532b`, Leather_Helmet
-`/_blob/966cafd657004345943c637ccbe6e728`.
-**Waiting on Michael's review** (comments on the canvas). Sharing with the collaborator is
-Michael's own step (the Share menu). On approval: save the HTML into `design/` for the
-Builder, then DONE.
-Additions beyond today's game, flagged to Michael: Settings and Quit on the title screen; a pause
-menu separate from settings; volume, damage-number and controls settings; ▲▼ on the loot card;
-sack full shown on the card (per GAME_DESIGN section 5.4) instead of over the player; crits
-white-hot.
+**Sent as DONE; do not touch until COMMITTED:** `design/hud-menus/` (11 standalone HTML exports
+plus README), `ArtSource/GPT_PROMPTS.md` (31 prompts in run order), `ArtSource/make_gpt_prompts.py`,
+`ArtSource/audio/music/brief.md` (7 temporary tracks), `ArtSource/weapons/brief.md` (+ heading),
+`docs/art/MANIFEST.csv` (42 rows), `docs/team/art.md`.
+
+**`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
+`python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
+save paths and attach overrides live in the script's `PHASES` list.
+
+**Now waiting on Michael to run the queue.** After SF1 and SF3 he shows them to me: review
+against bible section 10, adjust the style block if needed, and rebuild the file.
+HUD canvas: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj (approved direction; exported
+2026-09-24). To revise, `read` from the artifact first.
 
 **Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
 the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
@@ -143,14 +140,13 @@ Python (PIL) and sends back an assembled preview.
 
 ## Next steps
 
-1. When images land in `ArtSource/**/AI/_raw/`: review against bible section 10, then cut sheets
-   onto canvases with PIL (parts: HERO_TEMPLATE section 4; icons: 512 px; effects: EFFECTS section 6)
-   and send Michael an assembled preview or contact sheet.
-2. Proposed to the orchestrator: a **story-free environment kit brief for M9's fixture chapter**
-   (ROADMAP M9 "done when" needs drafted art on the fixture; SF3's generic meadow could be it).
-   Wait for its answer.
-3. On the music-tool answer: write the music briefs (menu, checkpoint room, stings) in
-   `ArtSource/audio/music/`.
+1. When images or music land in `ArtSource/**/AI/_raw/`: review against bible section 10, cut
+   sheets onto canvases with PIL (parts: HERO_TEMPLATE section 4; icons: 512 px; effects:
+   EFFECTS section 6; ground: measure brightness 55–85%), rename to `__ai_v1`, and update the
+   manifest rows (`ai-draft`, `ai_path`, `ai_tool`, `date`).
+2. If SF1 or SF3 needs a style change: edit the style block in the briefs (bible section 9 too),
+   rerun `make_gpt_prompts.py`, and tell Michael which steps changed.
+3. Music: once Michael picks a real tool, record `ai_tool`; loop-trim to WAV.
 
 ## Answers and decisions
 
@@ -159,6 +155,14 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Michael): **approved the HUD and menus canvas direction**: "you chose the right
+  directions... I really like the general style... we may change some colors slightly" once
+  everything is in place. Exported to `design/hud-menus/` for the Builder.
+- 2026-09-24 (Michael): **temporary music via "GPT"**, and a single GPT prompt file to feed.
+  Finding (web, 2026-09-24): **ChatGPT cannot generate audio**; OpenAI's music tool is
+  reported but unreleased. So the music prompts are tool-neutral (description + tags +
+  settings). Temporary options told to Michael: AIVA free (non-commercial, with credit, a few
+  downloads a month) or Suno Pro; ChatGPT if its music feature arrives.
 - 2026-09-24 (Michael): **HUD taste calls.** Player panels **along the top** (P1 top-left, P2
   next to them; the ground and its shadows fill the lower half). The **loot card gets ▲▼ vs worn
   plus the rank name.** Panel contents are the **Castle Crashers set**: portrait (an element
@@ -215,6 +219,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Canvas approved and exported to design/hud-menus/; GPT_PROMPTS.md (31 prompts) + generator; temporary music brief; DONE sent.
 - 2026-09-24 — HUD and menus canvas v1 published (11 artboards); waiting on Michael's review.
 - 2026-09-24 — Michael chose a Claude Design canvas for the HUD and menus; requirements survey started.
 - 2026-09-24 — COMMITTED 80b5030 (fixture kit).

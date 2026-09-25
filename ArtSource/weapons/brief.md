@@ -14,6 +14,8 @@ piece onto its canvas with the grip on the pivot, as `weapons/hunting-knife/AI/h
 
 ---
 
+## The weapon sheet
+
 **Attach, in this order:** (1) your approved SF1, (2) your approved icon Batch B.
 
 ```

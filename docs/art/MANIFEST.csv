@@ -34,3 +34,10 @@ effect/feedback,"Feedback kit (level-up, revive heart, mana fizzle)",effect,brie
 weapon/7,Hunting Knife (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.
 weapon/8,Hunting Bow and arrow (held),weapon,briefed,,,,,,,weapons/brief.md,Needs SF1 and icon Batch B approved first.
 environment/fixture,Fixture meadow kit (fixture-only),environment,briefed,,,,,,,environments/fixture/brief.md,Fixture-only: no region identity; replaced when regions exist; does not ship. Needs SF3 approved first.
+music/title-theme,Title theme (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/checkpoint-room,Checkpoint room (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/stage-fixture,Stage loop for the fixture chapter (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/boss-temp,Boss loop placeholder (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/sting-stage-clear,Sting: stage clear (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/sting-wipe,Sting: wipe (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.
+music/sting-level-up,Sting: level up (temporary),music,briefed,,,,,,,audio/music/brief.md,Temporary placeholder; remade in the final music tool before shipping.

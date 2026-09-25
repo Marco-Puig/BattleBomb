@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&amp;family=Passion+One:wght@400;700;900&amp;family=Space+Mono:wght@400;700&amp;display=swap">
+<style>
+body{margin:0;background:#1c1424;font-family:Archivo,sans-serif;color:#f6efe2}
+</style>
+</head>
+<body>
+<div style="width: 1920px; height: 1080px; box-sizing: border-box; padding: 56px 0px 44px 0px; background: #1c1424; display: flex; flex-direction: column; align-items: center; gap: 24px; font-family: Archivo, sans-serif; color: #f6efe2">
+<div style="width: 1100px; box-sizing: border-box; padding: 34px 48px 36px 48px; background: #2e2239; border: 2px solid #c9ab6a; border-radius: 22px; box-shadow: 0 6px 0 #120d18; display: flex; flex-direction: column; gap: 22px">
+<span style="font-family: 'Passion One', sans-serif; font-size: 64px; line-height: 1; color: #edc65a">SETTINGS</span>
+
+<span style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; color: #c9ab6a">GAMEPLAY</span>
+<div style="display: flex; align-items: center; padding: 14px 20px; border-radius: 14px; background: #1e1628; border: 2px solid #edc65a">
+<span style="flex-grow: 1; font-size: 22px; font-weight: 600">Auto-equip upgrades</span>
+<button type="button" aria-pressed="true" aria-label="Auto-equip upgrades" style="position: relative; width: 76px; height: 36px; border-radius: 18px; border: none; background: #63c96e; cursor: pointer"><span style="position: absolute; right: 4px; top: 4px; width: 28px; height: 28px; border-radius: 14px; background: #f6efe2"></span></button>
+</div>
+<div style="display: flex; align-items: center; padding: 14px 20px; border-radius: 14px; background: #1e1628; border: 2px solid #1e1628">
+<span style="flex-grow: 1; font-size: 22px; font-weight: 600">Auto-sell at the cap</span>
+<button type="button" aria-pressed="false" aria-label="Auto-sell at the cap" style="position: relative; width: 76px; height: 36px; border-radius: 18px; border: none; background: #4a3d58; cursor: pointer"><span style="position: absolute; left: 4px; top: 4px; width: 28px; height: 28px; border-radius: 14px; background: rgba(246,239,226,0.62)"></span></button>
+</div>
+
+<span style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; color: #c9ab6a">DAMAGE NUMBERS</span>
+<div style="display: flex; align-items: center; padding: 14px 20px; border-radius: 14px; background: #1e1628">
+<span style="flex-grow: 1; font-size: 22px; font-weight: 600">Show damage numbers</span>
+<button type="button" aria-pressed="true" aria-label="Show damage numbers" style="position: relative; width: 76px; height: 36px; border-radius: 18px; border: none; background: #63c96e; cursor: pointer"><span style="position: absolute; right: 4px; top: 4px; width: 28px; height: 28px; border-radius: 14px; background: #f6efe2"></span></button>
+</div>
+<div style="display: flex; align-items: center; padding: 14px 20px; border-radius: 14px; background: #1e1628">
+<span style="flex-grow: 1; font-size: 22px; font-weight: 600">Number size</span>
+<div role="group" aria-label="Number size" style="display: flex; gap: 6px; padding: 4px; border-radius: 12px; background: #120d18">
+<button type="button" aria-pressed="false" style="padding: 6px 18px; border-radius: 9px; border: none; background: rgba(0,0,0,0); color: rgba(246,239,226,0.62); font-weight: 600; font-size: 17px; cursor: pointer">Small</button>
+<button type="button" aria-pressed="true" style="padding: 6px 18px; border-radius: 9px; border: none; background: #c9ab6a; color: #231a2b; font-weight: 700; font-size: 17px; cursor: pointer">Medium</button>
+<button type="button" aria-pressed="false" style="padding: 6px 18px; border-radius: 9px; border: none; background: rgba(0,0,0,0); color: rgba(246,239,226,0.62); font-weight: 600; font-size: 17px; cursor: pointer">Large</button>
+</div>
+</div>
+
+<span style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; color: #c9ab6a">AUDIO</span>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; row-gap: 12px">
+<label style="display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-radius: 14px; background: #1e1628; font-size: 20px; font-weight: 600"><span style="width: 110px">Master</span><input type="range" min="0" max="100" value="80" style="flex-grow: 1; accent-color: #c9ab6a"><span style="width: 36px; text-align: right; font-family: 'Space Mono', monospace; font-size: 15px">80</span></label>
+<label style="display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-radius: 14px; background: #1e1628; font-size: 20px; font-weight: 600"><span style="width: 110px">Music</span><input type="range" min="0" max="100" value="70" style="flex-grow: 1; accent-color: #c9ab6a"><span style="width: 36px; text-align: right; font-family: 'Space Mono', monospace; font-size: 15px">70</span></label>
+<label style="display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-radius: 14px; background: #1e1628; font-size: 20px; font-weight: 600"><span style="width: 110px">Effects</span><input type="range" min="0" max="100" value="90" style="flex-grow: 1; accent-color: #c9ab6a"><span style="width: 36px; text-align: right; font-family: 'Space Mono', monospace; font-size: 15px">90</span></label>
+<label style="display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-radius: 14px; background: #1e1628; font-size: 20px; font-weight: 600"><span style="width: 110px">Interface</span><input type="range" min="0" max="100" value="60" style="flex-grow: 1; accent-color: #c9ab6a"><span style="width: 36px; text-align: right; font-family: 'Space Mono', monospace; font-size: 15px">60</span></label>
+</div>
+
+<span style="font-family: 'Space Mono', monospace; font-weight: 700; font-size: 14px; letter-spacing: 0.16em; color: #c9ab6a">CONTROLS</span>
+<div style="display: flex; align-items: center; padding: 14px 20px; border-radius: 14px; background: #1e1628">
+<span style="flex-grow: 1; font-size: 22px; font-weight: 600">Button layout</span>
+<button type="button" style="padding: 8px 22px; border-radius: 10px; border: 2px solid #7d6636; background: #2e2239; color: #f6efe2; font-weight: 600; font-size: 17px; cursor: pointer">View</button>
+</div>
+</div>
+
+<div style="width: 1100px; display: flex; justify-content: flex-end; align-items: center; gap: 28px; font-weight: 600; font-size: 18px">
+<div style="display: flex; align-items: center; gap: 10px"><span style="display: inline-flex; min-width: 40px; height: 26px; padding: 0 6px; box-sizing: border-box; border-radius: 8px; align-items: center; justify-content: center; background: #4a3d58; color: #f6efe2; font-size: 12px">▲ ▼</span><span>Move</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="display: inline-flex; min-width: 40px; height: 26px; padding: 0 6px; box-sizing: border-box; border-radius: 8px; align-items: center; justify-content: center; background: #4a3d58; color: #f6efe2; font-size: 12px">◀ ▶</span><span>Change</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="display: inline-flex; width: 26px; height: 26px; border-radius: 13px; align-items: center; justify-content: center; background: #4f9a3a; color: #ffffff; font-weight: 700; font-size: 14px">A</span><span>Toggle</span></div>
+<div style="display: flex; align-items: center; gap: 10px"><span style="display: inline-flex; width: 26px; height: 26px; border-radius: 13px; align-items: center; justify-content: center; background: #d0453c; color: #ffffff; font-weight: 700; font-size: 14px">B</span><span>Back</span></div>
+</div>
+</div>
+</body>
+</html>

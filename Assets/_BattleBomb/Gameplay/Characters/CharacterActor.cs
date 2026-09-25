@@ -54,6 +54,7 @@ namespace BattleBomb.Gameplay.Characters
         [SerializeField] private SimulationDriver _driver;
 
         private IPlayerCommandSource _source;
+        [System.NonSerialized] private bool _sourceBound;
         private MovementTuning _tuning;
         private CombatKit _kit;
         private MotorState _state;
@@ -101,6 +102,19 @@ namespace BattleBomb.Gameplay.Characters
         /// is only the fallback for an actor with no source.
         /// </summary>
         public PlayerId PlayerId => _source != null ? _source.PlayerId : new PlayerId(_playerIndex);
+
+        /// <summary>
+        /// Names the source this character answers to, overriding the <c>GetComponent</c> lookup in
+        /// <c>OnEnable</c>. Online, a player object can carry both a device source (disabled) and a
+        /// <see cref="Net.RemoteCommandSource"/>, and <c>GetComponent</c> would return whichever came
+        /// first; the binder decides instead (HANDOFF-M8 planning decision 18).
+        /// </summary>
+        internal void BindSource(IPlayerCommandSource source)
+        {
+            _source = source;
+            _sourceBound = source != null;
+        }
+
         public Vector3 Position => _state.Position;
         public Vector3 PreviousPosition => _previous.Position;
         public Facing Facing => _state.Facing;
@@ -947,7 +961,10 @@ namespace BattleBomb.Gameplay.Characters
             // Built in OnEnable, not Awake, so a domain reload mid-play rebuilds everything —
             // Awake does not re-run after a recompile, and the nulled kit was the M5 close-out's
             // wrong-turn debugging trap. SimulationDriver made the same move for the same reason.
-            _source = GetComponent<IPlayerCommandSource>();
+            if (!_sourceBound)
+            {
+                _source = GetComponent<IPlayerCommandSource>();
+            }
             ApplyDefinition();
             _activeKit = _kit;
             _activeMagic = _magic;

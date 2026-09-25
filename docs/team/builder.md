@@ -93,6 +93,35 @@ test `Listening_on_a_busy_port_throws_once_and_leaves_nothing_behind` (red: "Not
 723/723; socket tests stable 3 runs. **For Task 89 (finding 2, second half):** `NetSession.Host`
 must `Listen()` before committing `Role = Host`, or catch `SocketException` → `Close()` → "Port
 7777 is busy". **Task 87 DONE sent (19:00)** → waiting for COMMITTED.
+**Task 87 COMMITTED `4f42e0c`** (A–C accepted; skipping PlayMode OK). Orchestrator for 89: do
+**both halves** — `NetSession.Host` calls `Listen()` before committing `Role = Host`, and a
+`SocketException` closes cleanly + shows "Port 7777 is busy" on the dev panel.
+**Task 88 started (19:10):** premises checked — PlayerCommand/WireCommand shapes,
+`NetProtocol.InputBufferTarget/Max` (2/6), `PlayerRegistry.Register/Unregister(PlayerId)`,
+`CharacterActor.OnEnable` line 950 `_source = GetComponent<…>()` all as the plan quotes.
+CharacterActor.cs is CRLF. RemoteCommandSource looks up only SimulationDriver (the local source
+also falls back to CommandSampler — not needed on the host; verbatim). Phase 1 (tests) dispatched.
+Expect EditMode 723 + 10.
+**88 code in (18:00):** 5 new files byte-identical to the plan; CharacterActor (a)–(c) only, CRLF kept.
+Red = compile errors as planned. EditMode 733/733, PlayMode 35/35 (OnEnable changed → ran it).
+Review "Yes with fixes" → applied: 3 tests (overlapping redundancy dedupe; held-through-starvation
+not re-pressed; release re-primes + re-presses), **mutation-proved** (round 1: last-only dedupe /
+starvation clears held / Release keeps primed → exactly the 3 new tests fail, all plan tests pass;
+round 2: Release keeps held → the release test fails); `[System.NonSerialized]` on
+`RemoteCommandSource._bound` + `CharacterActor._sourceBound` (hot reload kept the bool but reset
+`_id` → remote would register as Player 1); blank lines round BindSource. EditMode 736/736.
+**Flagged, not built:** (1) buffer depth never drains back to target after a stall (+~83 ms for
+the session) → 96's lag pass or a decision; (2) a silently-dropped guest's body repeats its last
+stick for up to 10 s (DropAfterSeconds) → cap starved steps, or NetHost releases on HasProblem
+(89/Plan 2); (3) **89:** the driver's PausedForScreen branch samples every render frame → drains
+the remote stream while paused; (4) Plan 2: Unregister-by-id can remove a newer source (both
+source types) → unregister only if TryGet returns this; (5) **92:** flood path acks dropped frames
+(LastTakenFrame moves on drop; Add returns true for the dropped one); (6) **94:** HoldForPeer
+floods the buffer → Release when the hold clears; (7) merge starts at 8 buffered, not "past 6".
+**89 note:** SessionBinder.Awake already finds `_driver` (F3) before the guard — the plan's (c)
+repeat lookup is redundant; skip + report. Binder is DefaultExecutionOrder(-100), so UseSeat runs
+before the sources' OnEnable as the plan assumes.
+**Task 88 DONE sent (18:20)** → waiting for COMMITTED.
 
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,

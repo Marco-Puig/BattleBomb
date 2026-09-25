@@ -88,6 +88,7 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<bool> _playerDowned = new List<bool>();
         private readonly List<int> _attackTokens = new List<int>();
         private readonly List<ProjectileState> _projectiles = new List<ProjectileState>();
+        private readonly List<EnemyActor> _dying = new List<EnemyActor>();
 
         private SimulationClock _clock;
         private AttemptCountdown _attempt;
@@ -885,19 +886,26 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>
         /// Ends each finished dying beat: announce the death, roll D23's drop, spawn the token if
-        /// it paid out, despawn the corpse. Progress, difficulty, and multipliers hold their
-        /// paper value of 1 until M7 builds the systems behind those slots (decision 9).
+        /// it paid out, despawn the corpse. The dead are collected first and settled after: a
+        /// <c>Destroy</c> runs <c>OnDisable</c> at once, which leaves <see cref="Targets"/> — the
+        /// very list being walked — so settling mid-walk skipped the enemy behind each corpse to the
+        /// next step (F1). Settled in registry order, so the loot stream draws in that order.
         /// </summary>
         private void ResolveDeaths()
         {
+            _dying.Clear();
             IReadOnlyList<ISimTarget> targets = Targets.Ordered;
             for (int i = 0; i < targets.Count; i++)
             {
-                if (!(targets[i] is EnemyActor enemy) || !enemy.ConsumeDeath())
+                if (targets[i] is EnemyActor enemy && enemy.ConsumeDeath())
                 {
-                    continue;
+                    _dying.Add(enemy);
                 }
+            }
 
+            for (int d = 0; d < _dying.Count; d++)
+            {
+                EnemyActor enemy = _dying[d];
                 EnemySpec spec = enemy.Spec;
                 EnemyDied?.Invoke(new EnemyDeath(spec.Rank, spec.XpReward, enemy.IsElite, enemy.Position));
 
@@ -944,6 +952,8 @@ namespace BattleBomb.Gameplay.Simulation
 
                 Destroy(enemy.gameObject);
             }
+
+            _dying.Clear();
         }
 
         /// <summary>

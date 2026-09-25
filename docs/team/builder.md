@@ -38,9 +38,72 @@ tests in each.
 
 ## Waiting on
 
-Nothing (bridge restarted by Michael 2026-09-25 08:16).
+Nothing. (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
+`Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
+with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
+the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
+Netcode heads-up: this changes its read of candidate F4 and the catch-up-loop pause item.)
 
 ## Current state
+
+**Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
+applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,
+then F5 (grid scrolling; do not clamp). One `DONE` per task. **QUIET ON may come any time** for
+Michael's pass → reach a clean point (compiles, out of play mode, no half-written script under
+Assets/, finished work sent as `DONE`) and leave Unity alone until QUIET OFF — keep F-tasks small
+enough to stop between. Checklist item 12 (partner's sale slides an item under the cursor) is
+Michael's call; the orchestrator's recommendation (cursor follows its item + X ignores presses
+briefly after a partner-caused change) would ride F5 — **do not build until he says so**.
+Baseline: EditMode 680, PlayMode 28 (G14 gates; only docs changed since). Plan split into
+`<scratchpad>/tasks/f_preamble.md`, `taskF1.md`, `taskF2.md`, `taskF3.md`; briefing
+`f_context.md` (Groundwork's rules + "keep each file's line endings"). F1's quoted code verified
+against the tree (ResolveDeaths, ResetBrood, Unload — `_brood`/`_props` are `List<GameObject>`).
+**F1 phase 1 dispatched (11:10):** the tripwire `SameStepRemovalSmokeTests` (3 tests; expect all 3
+red with a "still a target" violation — if one passes, stop and report: premise wrong).
+**F1 STOPPED (11:40): premise wrong on Unity 6000.5.8f1.** Tripwire (verbatim, byte-checked) is
+3/3 GREEN on today's code; harness reaches 5 steps/frame (80/80 frames). `Object.Destroy(go)` runs
+OnDisable at once here: live, a destroyed dummy left TargetRegistry in the same eval
+(isActiveAndEnabled false, still non-null until frame end); the reset step's own Stepped already
+showed 0 of the old brood. **Real remaining bug (plan Step 4):** ResolveDeaths walks
+`Targets.Ordered` (the registry's own List) and Destroy removes each corpse mid-walk → the next
+enemy is skipped that step. Live: Grunt 001/002/003 killed in one step (ApplyStatusDamage via
+reflection) → deaths resolved 001+003 in one step, 002 the next. QUESTION sent (A/B/C).
+Tripwire file uncommitted under Assets/ (compiles, passes). Implementer agent paused at phase 1.
+**Trick:** `System.AppDomain.CurrentDomain.SetData/GetData` carries handlers/lists between evals.
+**F1 revised brief:** `<scratchpad>/tasks/taskF1_revised.md` (phase 1b = reworded class doc + new
+test `Every_corpse_whose_beat_ends_in_a_step_is_settled_in_that_step_in_order` + `Living()`;
+phase 2 = `_dying` + ResolveDeaths collect-then-settle with `Destroy` kept). F1 implementer on
+phase 1b. **F2:** phase 1a done — `SettingsMenuReleaseAcceptanceTests` byte-identical to the plan;
+recompile deferred until F1's phase 1b lands (never compile a half-written file). F2 notes:
+Repaint's `bool autoEquip/autoSell` originals (l.367–368) must go; release proof = compile player
+scripts in release (`PlayerBuildInterface.CompilePlayerScripts`, no DEVELOPMENT_BUILD) instead of a
+full build.
+**Reds confirmed (12:00):** F2 acceptance "SettingsMenu.cs:191 mentions GrantTestLoot( outside…";
+F1 fixture 3 guards green + new test red "settled across several steps … < 75, 75, 76 >".
+F1 phase 2 and F2 phase 1b+2 dispatched in parallel (disjoint files); recompile only after both
+report.
+**Code in (12:20):** F1 = `_dying` + collect-then-settle, `Destroy` kept (diff checked). F2 =
+SettingsRows.cs + SettingsRowsTests.cs byte-identical to the plan; SettingsMenu diff checked (bools
+once, Groundwork's prompt row untouched). Recompiled clean. F1 fixture 4/4; F2 tests 6/6 (the
+"Settings" name filter also caught 2 unrelated tests). EditMode 686/686 (680 + 6). PlayMode full
+running (expect 28 + 4 = 32). Then: F2 live check (Step 6) + release compile proof (Step 7 via
+CompilePlayerScripts), reviews, two DONEs.
+**F2 DONE sent (12:35):** PlayMode 32/32; live walk equip → sell → return → grant → overlay → wrap;
+release compile (StandaloneWindows64, options None) — Cecil read of the release UI.dll shows no
+GrantTestLoot/DebugGrantQuality/_overlay on SettingsMenu; review Yes. (Trap: `eval` has a 5 s
+main-thread limit — long work still finishes; check its output afterwards. Cecil is loaded twice —
+reach Mono.Cecil by reflection.) **F1:** review pending, then its DONE (with builder.md).
+**F2 COMMITTED `724d44e`** (A–C accepted). **F3 waits for F1's commit** — it edits
+SimulationDriver.cs too. F3 prep: quoted code verified (seeds l.40/43/47, OnEnable's three
+`new DeterministicRandom((uint)_…Seed)` l.586–588 after `_clock = …`; GameSession `LoadOutcome`
+l.54, no `using System;` yet; SessionBinder Awake guard l.42–45, `[DefaultExecutionOrder(-100)]`,
+`_driver` serialized; FrontendFlow `LaunchNow` l.272, LoadScene l.286).
+**F1 done (12:50):** review Ready: Yes; applied its low finding (the new test's corpse match skips
+already-settled corpses — Destroy leaves them non-null to frame end). Fixture 4/4 after.
+`DONE` sent with builder.md. **Next: F3 on `COMMITTED`** (brief: `taskF3.md`; its quotes verified).
+Board candidate from F1's review: `TargetRegistry.Ordered` hands out its live list — any future
+mid-walk despawn (self-destructing enemy, a reaction that despawns what it kills) brings the skip
+back in StepEnemies/StepStatuses.
 
 **Groundwork Task 14 — started (10:30, 2026-09-25).** G13b committed (`527df2b`), changes 1–5
 accepted; close ✕ on the couch Hero tab → M9 backlog; ultrawide → Later. Task 14 is text for the

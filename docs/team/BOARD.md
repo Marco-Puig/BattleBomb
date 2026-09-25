@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | **BLOCKED** | Reading the Groundwork plan (no writes) | Michael opening Unity with the MCP bridge |
-| Netcode | Netcode | online | The pre-M8 fixes plan (Plan 1 done) | — |
+| Netcode | Netcode | idle — available | Answers Builder questions; Plan 2 once Plan 1 is underway | Groundwork to start |
 | World | World | online | Drafting the question list, then the session at question 1 | Michael (+ collaborator) for the session |
 | Art | Art | online | HUD and menus canvas v1 up for review | Michael: canvas review, images, bible review, music tool |
 | Producer | — | starts at M9 | — | — |
@@ -70,8 +70,8 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
 ## Builder backlog — after Groundwork, before M8
 
 Found by the Netcode audit (`docs/team/netcode/readiness.md`), checked against the code by the
-orchestrator. The Netcode lane is writing them up as one small plan with tests
-(`docs/superpowers/plans/…-pre-m8-fixes.md`); the Builder takes it as one batch.
+orchestrator. **Planned:** `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, Tasks F1–F3 — the
+Builder runs it straight after Groundwork, before M8 Plan 1.
 
 1. **Destroyed enemies keep acting for the rest of the frame** (§4.3 item 1). `Destroy` lands at
    frame end, and the driver can run up to 5 steps a frame, so below 60 fps enemies removed by a
@@ -123,6 +123,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — Netcode `DONE`: pre-M8 fixes plan, F1–F3. The Builder's queue is fully planned:
+  Groundwork → F1–F3 → M8 Plan 1.
 - 2026-09-24 — Netcode `DONE`: M8 Plan 1, Tasks 86–96 (1a7fdac). Next for Netcode: the pre-M8 fixes plan.
 - 2026-09-24 — Art: fixture kit brief (80b5030); HUD and menus canvas v1 up for Michael's review.
 - 2026-09-24 — Art `DONE`: audio v0 (b144d79); first pass complete. Approved: a minimal story-free

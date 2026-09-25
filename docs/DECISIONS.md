@@ -339,6 +339,13 @@ carried by other means: palette and world identity, character design, UI, and ab
 environment system (§4 of the design doc), which Castle Crashers has no equivalent of. Revisit this
 if the game starts reading as a lookalike.
 
+**Direction made concrete (Michael, 2026-09-24, reviewing the first AI drafts):** Castle Crashers
+plus **Rayman Legends**, clean vector outlines. Heroes keep the **Templar Knight's proportions** —
+the head about two-thirds of the height, a short round body, stub legs. Environments are
+**storybook**: simplified, exaggerated shapes and rich, saturated colour — never semi-realistic, pale,
+or hazy. **Pets are simple**: a few chunky shapes in flat colour, as in Castle Crashers and Dungeon
+Defenders. The checkable rules live in `docs/art/ART_BIBLE.md`.
+
 ---
 
 ## D17 — Six-verb control scheme · **Locked**

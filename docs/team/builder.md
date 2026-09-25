@@ -69,6 +69,30 @@ WireCommand.Equals exact (`Move.Equals`); count-at-bound + buffer-reuse asserts.
 for **Task 92**: NetWriter has no MaxMessageBytes cap — an Events batch (≤512 events, ≤8 KB item
 JSON each) could exceed 256 KB; LocalSocketTransport drops it as Lost() silently while Loopback
 delivers it — split/limit batches there. EditMode 708/708 after.
+**Task 86 COMMITTED `5e586a4`** (A–C accepted). Orchestrator on the oversized batch: (1) in 87, the
+loopback enforces the socket's frame limit (Disconnect both sides, deliver nothing) so no test passes
+on loopback and fails on the socket; (2) at 92, bound/split the Events batch + a test that sends a
+batch past the limit and shows it arrives whole. **Leave NetWriter uncapped.**
+**Task 87 started (18:00):** addition spec `<scratchpad>/tasks/task87_extra.md` (loopback limit +
+3 tests: loopback past-limit drops / at-limit arrives / socket past-limit drops). Phase 1 dispatched.
+Expect EditMode 708 + plan's 11 + 3.
+**87 progress (18:25):** tests = plan + extra (script-verified); 8 Platform/Net files verbatim, compile.
+With the plan's loopback: loopback past-limit red as expected ("Data 262145B"). Socket past-limit
+first timed out — a **race**: the connect wait only checked the host's Connected; the guest's connect
+completes a pump later, so Send(guest.Peer) sent nothing → added `&& !guest.Peer.IsNone` to that wait
+AND to the plan's same wait in Two_sockets… (deviation). Socket tests 2/2 after. Phase 2b (section A)
+dispatched. Trap: run_tests testName filter is a substring, not a regex ("A|B" matches nothing).
+**87 code complete (18:35):** section A applied; Net fixtures 27/27; EditMode 721/721; socket tests
+stable 4 runs. Review running, then DONE.
+**87 review → 4 fixes applied (18:55):** (1) `SendTimeoutMs = 1000` on both sockets (a paused peer
+can't freeze a blocking Write); (2) `Listen` keeps the listener only once `Start` succeeds — red-first
+test `Listening_on_a_busy_port_throws_once_and_leaves_nothing_behind` (red: "Not listening…");
+(3) a second peer is accepted-and-closed at once, not left in the backlog as a phantom join;
+(4) loopback `Disconnect` ignores a peer it isn't talking to, as the socket does — red-first
+`Disconnecting_a_peer_that_is_not_there_does_nothing_as_on_the_socket`. Net 29/29; EditMode
+723/723; socket tests stable 3 runs. **For Task 89 (finding 2, second half):** `NetSession.Host`
+must `Listen()` before committing `Role = Host`, or catch `SocketException` → `Close()` → "Port
+7777 is busy". **Task 87 DONE sent (19:00)** → waiting for COMMITTED.
 
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,
@@ -559,16 +583,12 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Next steps
 
-1. **When the bridge is back:** recompile (FrontendFlow review fixes); find what dirtied Frontend
-   (`scene.isDirty`, Undo records via reflection on `UnityEditor.Undo.GetRecords`) — save nothing
-   unseen; three new tests green; EditMode 679 (filtered by assembly or async); PlayMode 28 (async);
-   delete `Assets/InitTestScene*`; Step 8 front-door capture + live font check (badge "Key" Text
-   font = PassionOne-Bold). Then G12 `DONE`.
-2. **Task 13** after `COMMITTED` — brief ready: `task13.md` + `task13_extra.md` (solo filter-row
-   guard + `Solo_nothing_sits_above_the_filter_row`). Expect EditMode 680.
-3. **Task 14** — `task14.md` matches the plan (checked 00:40). D57 re-read, shared-doc text to the
-   orchestrator, final gates, Michael's checklist (items listed under "For Michael's Task 14
-   checklist" plus: results dwell, Start on the title only, join line names only the free device).
+1. **Task 88** after 87's `COMMITTED` — brief `<scratchpad>/tasks/task88.md`. Expect EditMode 723 +
+   its new tests.
+2. **Task 89** — `NetSession`; apply the busy-port note above (Listen before `Role = Host`).
+3. **Task 90** — `QUIET REQUEST` before any two-editor run (Multiplayer Play Mode package).
+4. **Task 92** — bound/split the Events batch against `NetProtocol.MaxMessageBytes` + a test that
+   sends a batch past the limit and shows it arrives whole. NetWriter stays uncapped.
 
 ## Answers and decisions
 

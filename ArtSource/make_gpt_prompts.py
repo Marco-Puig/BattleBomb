@@ -49,11 +49,11 @@ PHASES = [
     ('Held weapons', 'Before the icons: M9 needs the knight holding his knife; the weapon icons are drawn from this sheet.', [
         ('weapons/brief.md', 'The weapon sheet', None, RAW.format('weapons', 'sheet.png')),
     ]),
-    ('Item icons', 'Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time.', [
+    ('Item icons', 'Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time. '
+     'The terrier redo is parked until you set a new pet direction.', [
         ('icons/items/brief.md', 'Batch A', None, RAW.format('icons/items', 'batch-a.png')),
         ('icons/items/brief.md', 'Batch B', None, RAW.format('icons/items', 'batch-b.png')),
         ('icons/items/brief.md', 'Batch C', None, RAW.format('icons/items', 'batch-c.png')),
-        ('icons/items/brief.md', 'Terrier redo', None, RAW.format('icons/items', 'terrier-v2.png')),
     ]),
     ('Temporary music', 'ChatGPT cannot make audio yet (September 2026). Paste these into the music tool you use; see the note in ArtSource/audio/music/brief.md.', [
         ('audio/music/brief.md', 'Title theme', 'nothing', 'ArtSource/audio/music/title-theme/AI/_raw/'),

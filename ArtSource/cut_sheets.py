@@ -59,8 +59,6 @@ JOBS += [
      ICON % 1, lambda piece: (512, 512)),
     ('icons/batch-c', 'icons/items/AI/_raw/batch-c.png', 3, 1, ['terrier', 'lucky-charm', 'ember-stone'],
      ICON % 1, lambda piece: (512, 512)),
-    ('icons/terrier-v2', 'icons/items/AI/_raw/terrier-v2.png', 1, 1, ['terrier'],
-     ICON % 2, lambda piece: (512, 512)),
 ]
 FILLS = {'icons': 0.80}
 

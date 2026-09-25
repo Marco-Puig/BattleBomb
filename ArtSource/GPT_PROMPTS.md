@@ -5,7 +5,7 @@ ask the Art lane to change a brief or to refresh your progress.**
 
 ## Where you are
 
-**Done: 19 of 33. Next: step 9, SF3b: the storybook world (round 2)** (Storybook world (round 2: test stage only, never ships)).
+**Done: 25 of 32. Next: step 26, Title theme (`music/title-theme`)** (Temporary music).
 
 **Save every result into one folder, `ArtSource/_raw/`,** named as the step says. A step is
 ticked ✓ once its file is there (or the Art lane has filed it). Progress as of 2026-09-24.
@@ -18,12 +18,12 @@ ticked ✓ once its file is there (or the Art lane has filed it). Progress as of
 - ✓ 6. SF6: the item icon style
 - ✓ 7. Sheet A: the 8 base parts
 - ✓ 8. Sheet B: the 7 variants
-- ▶ 9. SF3b: the storybook world (round 2)
--   10. Ground (square 1024×1024)
--   11. Backdrop far (landscape 1536×1024)
--   12. Backdrop mid (landscape 1536×1024)
--   13. Backdrop near (landscape 1536×1024)
--   14. Foreground frames (square 1024×1024)
+- ✓ 9. SF3b: the storybook world (round 2)
+- ✓ 10. Ground (square 1024×1024)
+- ✓ 11. Backdrop far (landscape 1536×1024)
+- ✓ 12. Backdrop mid (landscape 1536×1024)
+- ✓ 13. Backdrop near (landscape 1536×1024)
+- ✓ 14. Foreground frames (square 1024×1024)
 - ✓ 15. Fire (`effect/fire`, 7 pieces)
 - ✓ 16. Ice (`effect/ice`, 8 pieces)
 - ✓ 17. Earth (`effect/earth`, 8 pieces)
@@ -35,14 +35,13 @@ ticked ✓ once its file is there (or the Art lane has filed it). Progress as of
 - ✓ 23. Batch A: armour (6 icons, 5 kept)
 - ✓ 24. Batch B: weapons (2 icons)
 - ✓ 25. Batch C: pet and trinkets (3 icons)
--   26. Terrier redo (round 2)
--   27. Title theme (`music/title-theme`)
--   28. Checkpoint room (`music/checkpoint-room`)
--   29. Stage loop (`music/stage-fixture`)
--   30. Boss loop, placeholder (`music/boss-temp`)
--   31. Sting: stage clear (`music/sting-stage-clear`)
--   32. Sting: wipe (`music/sting-wipe`)
--   33. Sting: level up (`music/sting-level-up`)
+- ▶ 26. Title theme (`music/title-theme`)
+-   27. Checkpoint room (`music/checkpoint-room`)
+-   28. Stage loop (`music/stage-fixture`)
+-   29. Boss loop, placeholder (`music/boss-temp`)
+-   30. Sting: stage clear (`music/sting-stage-clear`)
+-   31. Sting: wipe (`music/sting-wipe`)
+-   32. Sting: level up (`music/sting-level-up`)
 
 How to use it:
 1. Go down the list in order. Later prompts attach images you approved earlier.
@@ -287,10 +286,10 @@ visible, no text, no labels, no watermark, no border.
 
 *Your call after round 1: a storybook world, not the semi-realistic first try. Make SF3b first; the five stage pieces attach it.*
 
-### ▶ NEXT: 9. SF3b: the storybook world (round 2)
+### ✓ 9. SF3b: the storybook world (round 2)
 
 - **Attach:** your approved SF1.
-- **Save as:** `sf3b.png` in `ArtSource/_raw/`
+- **Save as:** `sf3b.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/_style/brief.md`
 
 ```
@@ -325,10 +324,10 @@ shadows stand out.
 Output: a single image, landscape 1536x1024, no UI, no text, no watermark, no border.
 ```
 
-### 10. Ground (square 1024×1024)
+### ✓ 10. Ground (square 1024×1024)
 
 - **Attach:** your approved SF3b
-- **Save as:** `ground-v2.png` in `ArtSource/_raw/`
+- **Save as:** `ground-v2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -351,10 +350,10 @@ shadows stand out.
 Output: a single image, square 1024x1024, no text, no watermark, no border.
 ```
 
-### 11. Backdrop far (landscape 1536×1024)
+### ✓ 11. Backdrop far (landscape 1536×1024)
 
 - **Attach:** your approved SF3b
-- **Save as:** `backdrop-far-v2.png` in `ArtSource/_raw/`
+- **Save as:** `backdrop-far-v2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -376,10 +375,10 @@ shadows stand out.
 Output: a single image, landscape 1536x1024, no text, no watermark, no border.
 ```
 
-### 12. Backdrop mid (landscape 1536×1024)
+### ✓ 12. Backdrop mid (landscape 1536×1024)
 
 - **Attach:** your approved SF3b
-- **Save as:** `backdrop-mid-v2.png` in `ArtSource/_raw/`
+- **Save as:** `backdrop-mid-v2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -401,10 +400,10 @@ Output: a single image, landscape 1536x1024, transparent background above the hi
 watermark, no border.
 ```
 
-### 13. Backdrop near (landscape 1536×1024)
+### ✓ 13. Backdrop near (landscape 1536×1024)
 
 - **Attach:** your approved SF3b
-- **Save as:** `backdrop-near-v2.png` in `ArtSource/_raw/`
+- **Save as:** `backdrop-near-v2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -426,10 +425,10 @@ Output: a single image, landscape 1536x1024, transparent background, no text, no
 border.
 ```
 
-### 14. Foreground frames (square 1024×1024)
+### ✓ 14. Foreground frames (square 1024×1024)
 
 - **Attach:** your approved SF3b
-- **Save as:** `frames-v2.png` in `ArtSource/_raw/`
+- **Save as:** `frames-v2.png` in `ArtSource/_raw/`  (saved)
 - *Brief:* `ArtSource/environments/fixture/brief.md`
 
 ```
@@ -651,7 +650,7 @@ text, no labels, no watermark, no border.
 
 ## Item icons
 
-*Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time.*
+*Nothing in M9 waits on these; missing icons show a placeholder plate. Attach SF6 each time. The terrier redo is parked until you set a new pet direction.*
 
 ### ✓ 23. Batch A: armour (6 icons, 5 kept)
 
@@ -723,34 +722,13 @@ Output: a single image, landscape 1536x1024, transparent background, the three i
 spaced with clear margins, no text, no labels, no watermark, no border.
 ```
 
-### 26. Terrier redo (round 2)
-
-- **Attach:** (1) your approved SF6, (2) your Batch C result.
-- **Save as:** `terrier-v2.png` in `ArtSource/_raw/`
-- *Brief:* `ArtSource/icons/items/brief.md`
-
-```
-A single game item icon of a small terrier dog, a companion pet, drawn very simply: a compact
-body built from a few chunky rounded shapes, a big blocky head with a square muzzle, two small
-dot eyes, simple folded-over ears, tiny stubby legs and a short upright tail. Wiry grey-and-white
-coat shown only as flat colour areas, with a bright red collar, so it stands apart from brown
-leather items. Standing alert in three-quarter view, facing right. NO fur texture, no fine
-detail, no tongue, no big cute eyes.
-Style: match the outline weight, flat colours and single hard-edged shadow tone of the attached
-images exactly: bold smooth near-black (#1A1917) outline, one small highlight, light from
-directly above, no gradients, no texture. It must read clearly at 64 pixels.
-
-Output: a single image, square 1024x1024, transparent background, the dog centred with a clear
-margin, no text, no watermark, no border.
-```
-
 ---
 
 ## Temporary music
 
 *ChatGPT cannot make audio yet (September 2026). Paste these into the music tool you use; see the note in ArtSource/audio/music/brief.md.*
 
-### 27. Title theme (`music/title-theme`)
+### ▶ NEXT: 26. Title theme (`music/title-theme`)
 
 - **Attach:** nothing
 - **Save as:** `title-theme.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -767,7 +745,7 @@ Tags: orchestral folk, adventure, playful, heroic, fiddle, tin whistle, pizzicat
 Settings: D major · 112 BPM · 1:30 · loop
 ```
 
-### 28. Checkpoint room (`music/checkpoint-room`)
+### 27. Checkpoint room (`music/checkpoint-room`)
 
 - **Attach:** nothing
 - **Save as:** `checkpoint-room.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -783,7 +761,7 @@ Tags: cozy, calm, acoustic guitar, marimba, pizzicato, soft percussion, shop mus
 Settings: F major · 84 BPM · 2:00 · loop
 ```
 
-### 29. Stage loop (`music/stage-fixture`)
+### 28. Stage loop (`music/stage-fixture`)
 
 - **Attach:** nothing
 - **Save as:** `stage-fixture.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -800,7 +778,7 @@ Tags: energetic, adventure, battle, orchestral folk, fiddle, galloping strings, 
 Settings: E minor · 128 BPM · 2:30 · loop
 ```
 
-### 30. Boss loop, placeholder (`music/boss-temp`)
+### 29. Boss loop, placeholder (`music/boss-temp`)
 
 - **Attach:** nothing
 - **Save as:** `boss-temp.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -816,7 +794,7 @@ Tags: epic, intense, boss battle, big drums, brass, low strings, electric bass, 
 Settings: D minor · 140 BPM · 2:00 · loop
 ```
 
-### 31. Sting: stage clear (`music/sting-stage-clear`)
+### 30. Sting: stage clear (`music/sting-stage-clear`)
 
 - **Attach:** nothing
 - **Save as:** `sting-stage-clear.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -830,7 +808,7 @@ Tags: victory fanfare, short sting, brass, fiddle, drum roll, cheerful, video ga
 Settings: D major · about 5 seconds · no loop
 ```
 
-### 32. Sting: wipe (`music/sting-wipe`)
+### 31. Sting: wipe (`music/sting-wipe`)
 
 - **Attach:** nothing
 - **Save as:** `sting-wipe.mp3` (or `.wav`) in `ArtSource/_raw/`
@@ -844,7 +822,7 @@ Tags: game over, comic, sad trombone, pizzicato, short sting, video game
 Settings: D minor · about 4 seconds · no loop
 ```
 
-### 33. Sting: level up (`music/sting-level-up`)
+### 32. Sting: level up (`music/sting-level-up`)
 
 - **Attach:** nothing
 - **Save as:** `sting-level-up.mp3` (or `.wav`) in `ArtSource/_raw/`

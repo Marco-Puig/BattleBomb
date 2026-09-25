@@ -57,41 +57,34 @@ step 1 and grows with every brief.
 ## Waiting on
 
 - **The World lane's story bible:** for heroes, regions, enemies, and bosses.
-- **Michael's queue, not to be pressed:** item 6, licensed audio vs the public repo (the
-  collaborator owns the repo; the orchestrator recommended making it private); item 7, the
-  music tool (AIVA recommended); item 5, the bible sign-off (walk him through changes since v0:
-  Earth ground cracks dropped); the Fire colour change; running SF1–SF6.
+- **Michael's queue, not to be pressed:** licensed audio vs the public repo (the collaborator
+  owns the repo; the orchestrator recommended making it private); the music tool (ChatGPT can't
+  do audio: AIVA free or Suno Pro); the bible sign-off (walk him through changes since v0:
+  Templar proportions, storybook environments, Earth ground cracks dropped); the Fire colour
+  change; **a new pet art direction** (he raised it; he'll say when).
 
 ## Current state
 
-**Round 1 of the temporary art is done** (Michael, 2026-09-24): all image steps except the v1
-backdrop-mid. **No music**: ChatGPT can't make audio (the tool choice is still on his queue).
-**Michael's review:** most art is "spot on"; **the dog** is too detailed (he wants simple
-Castle Crashers / Dungeon Defenders-style pets), and **the backgrounds** are "not what was in my
-head; colours off". Asked which look: he picked **Rayman storybook**, i.e. simplified storybook
-shapes with rich colour, not semi-realistic anime with pale haze.
-**Round 2 queued in GPT_PROMPTS (19 of 33 done, next is step 9):** SF3b (storybook style frame),
-then 5 fixture pieces as `*-v2.png` (the fixture brief is rewritten with the storybook style
-block, which is also in bible sections 4 and 9), and the Terrier redo (`terrier-v2.png`).
-`prepare.py` picks v2 raws and writes `__ai_v2`. cut_sheets job `icons/terrier-v2` writes the
-terrier `__ai_v2`.
-**Cut this round:** 10 item icons (the Batch A leather helmet was a 'skip'), knife, bow and arrow
-on the section 9 canvases with grips on the pivots. The manifest marks 13 more rows ai-draft.
+**All image steps are done (round 1 + round 2).** GPT_PROMPTS shows 25 of 32, and the next step
+is 26, the music (which waits on his tool choice).
+**Round 2 (Michael, 2026-09-24):** the storybook redo landed: SF3b plus the 5 fixture pieces.
+He likes them more than v1. I reviewed them (SF3b is on target; ground mean 80%, p95 84%) and
+prepared them as `fixture-*__ai_v2` (6 files). `prepare.py` now **cuts each backdrop's repeat
+where its two edges already match**; the old edge-to-edge blend left half-transparent ghost trees
+at the join of see-through layers. The mid backdrop keeps 70% of its width, the far and near
+backdrops about 95%. The preview (a scratch file, not committed) stacks the layers with two SF1
+knights; greyscale shadows read.
+**The terrier redo is parked** (Michael): no attempt beat v1, so v1 stays, and he wants to change
+the pet art direction later. The step is removed from GPT_PROMPTS, the cut_sheets job is gone, and
+the brief section is marked parked.
 **Sent as DONE; do not touch until COMMITTED.**
 
 **`GPT_PROMPTS.md` is generated.** Edit the briefs, then run
-`python ArtSource/make_gpt_prompts.py`. Never hand-edit the output. The phase and step order,
-save paths and attach overrides live in the script's `PHASES` list.
-
-**Now waiting on Michael to run the queue.** After SF1 and SF3 he shows them to me: review
-against bible section 10, adjust the style block if needed, and rebuild the file.
+`python ArtSource/make_gpt_prompts.py [--sort]`. Never hand-edit the output. The phase and step
+order, save paths and attach overrides live in the script's `PHASES` list. Michael sometimes
+saves into `_style/AI/_raw/` rather than `ArtSource/_raw/`; `--sort` handles both.
 HUD canvas: https://claude.ai/artifact/Uk3zqg3FFVMfyH9JPDiaRj (approved direction; exported
 2026-09-24). To revise, `read` from the artifact first.
-
-**Waiting on Michael (no pressing; bible review is item 5 on his queue):** run SF1 to SF6, then
-the Sheet A and B parts prompts. When `sheet-a.png` or `sheet-b.png` land in
-`ArtSource/rig/hero-template/AI/_raw/`, **the Art lane cuts them** onto the section 4 canvases with
-Python (PIL) and sends back an assembled preview.
 
 **Provenance findings, 2026-09-24 (raised with Michael and the orchestrator):**
 - Michael answered: Low_Swordman, Templar Knight, the item icons, and the front-end art are
@@ -150,13 +143,13 @@ Python (PIL) and sends back an assembled preview.
 
 ## Next steps
 
-1. When images or music land in `ArtSource/**/AI/_raw/`: review against bible section 10, cut
-   sheets onto canvases with PIL (parts: HERO_TEMPLATE section 4; icons: 512 px; effects:
-   EFFECTS section 6; ground: measure brightness 55–85%), rename to `__ai_v1`, and update the
-   manifest rows (`ai-draft`, `ai_path`, `ai_tool`, `date`).
-2. If SF1 or SF3 needs a style change: edit the style block in the briefs (bible section 9 too),
-   rerun `make_gpt_prompts.py`, and tell Michael which steps changed.
-3. Music: once Michael picks a real tool, record `ai_tool`; loop-trim to WAV.
+1. Music: when Michael picks a tool and saves tracks, `--sort` them, loop-trim to WAV, and record
+   `ai_tool` in the manifest.
+2. Pets: when Michael is ready to set the new pet direction, bring him a few concrete options
+   (a style reference each), then write a new pet brief; the terrier gets `__ai_v2` from it.
+3. When images land: review against bible section 10, cut or prepare them (parts: HERO_TEMPLATE
+   section 4; icons: 512 px; effects: EFFECTS section 6; ground: 55–85% brightness), and update
+   the manifest.
 
 ## Answers and decisions
 
@@ -165,6 +158,10 @@ Python (PIL) and sends back an assembled preview.
   back-piece and waist-piece; weapon is an item, not in the skin. Fixed canvas and pivot per part
   (section 4). Head 0.39 H, root at hips 0.30 H. First skin = the SF1 knight (a stand-in, not a hero).
   Filenames `<asset>-<part>-<label>__ai_vN.png`.
+- 2026-09-24 (Michael): **round 2 accepted**: he likes the storybook backgrounds more than v1.
+  **The terrier stays at v1**: "the dog never came out better than the v1. lets leave it for now
+  but I will want to change the pet art direction". So the "simple, chunky pets" line below is
+  provisional until he sets the new direction.
 - 2026-09-24 (Michael): **environments = "Rayman storybook"**: painted and glowing, but with
   simplified storybook shapes and rich, bright colour, never semi-realistic or hazy (round-1
   review). **Pets = simple, like Castle Crashers / Dungeon Defenders pets**: few chunky shapes,
@@ -242,6 +239,7 @@ Python (PIL) and sends back an assembled preview.
 
 ## Log
 
+- 2026-09-24 — Round 2 in: storybook fixture v2 prepared (clean repeat joins); terrier redo parked, pet direction to be redone; DONE sent.
 - 2026-09-24 — Round 1 art finished; icons and weapons cut; review → storybook environments + simple pets; round 2 prompts queued; DONE sent.
 - 2026-09-24 — GPT steps 9–20 processed (step 11 missing): single inbox, sort, fixture prepare, 49 effect pieces; DONE sent.
 - 2026-09-24 — Reviewed GPT steps 1–8; the prompt file tracks progress; knight cut into 15 parts + preview; fixture backdrops made building-free; DONE sent.

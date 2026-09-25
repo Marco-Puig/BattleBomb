@@ -114,7 +114,11 @@ freely.*
 
 ---
 
-## Terrier redo (round 2)
+## Terrier redo (round 2): parked
+
+**Parked (Michael, 2026-09-24):** no attempt with this prompt beat the v1 dog, so the terrier
+stays at `__ai_v1` for now. He wants to change the pet art direction itself; pets get a new
+brief once he has set it. The prompt below is kept as the record of what was tried.
 
 **Why:** Michael, 2026-09-24: the Batch C dog is too detailed; he pictured "less detailed pets"
 like the classic co-op brawlers': a few chunky shapes, flat colour, no fur texture. The lucky

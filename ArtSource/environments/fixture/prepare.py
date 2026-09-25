@@ -10,6 +10,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 RAW = os.path.join(HERE, 'AI', '_raw')
 OUT = os.path.join(HERE, 'AI')
 BAND = 0.08
+JOIN = 0.04
+REACH = 0.3
+WIDTH_COST = 0.3
 MAX_P95 = 84.0
 
 
@@ -18,9 +21,9 @@ def brightness(rgb):
     return (0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]) * 100
 
 
-def seamless(a, axis):
+def seamless(a, axis, b=None):
     n = a.shape[axis]
-    b = int(n * BAND)
+    b = b or int(n * BAND)
     a = a.astype(float)
     head = np.take(a, range(b), axis=axis)
     tail = np.take(a, range(n - b, n), axis=axis)
@@ -30,6 +33,28 @@ def seamless(a, axis):
     blended = tail * (1 - t) + head * t
     rest = np.take(a, range(b, n - b), axis=axis)
     return np.concatenate([blended, rest], axis=axis)
+
+
+# A layer with a see-through sky cannot be blended edge to edge: a tree on one edge over sky on the
+# other leaves a half-transparent ghost. So the repeat is cut where two columns already match,
+# trading a little width for a clean join.
+def best_join(a):
+    w = a.shape[1]
+    b = int(w * JOIN)
+    reach = int(w * REACH)
+    small = np.array(Image.fromarray(a).resize((w, 128), Image.BILINEAR)).astype(float) / 255
+    cols = np.concatenate([small[..., :3] * small[..., 3:], small[..., 3:]], axis=2).transpose(1, 0, 2).reshape(w, -1)
+    left, right = cols[:reach + b], cols[w - reach:]
+    d = np.array([np.abs(left - c).mean(1) for c in right]).T
+    for r in range(1, d.shape[0]):
+        d[r, 1:] += d[r - 1, :-1]
+    d = np.pad(d, ((1, 0), (1, 0)))
+    i, j = np.meshgrid(np.arange(reach), np.arange(reach - b), indexing='ij')
+    x0, x1 = i, w - reach + j
+    score = (d[i + b, j + b] - d[i, j]) / b + WIDTH_COST * (1 - (x1 - x0) / w)
+    k = np.unravel_index(score.argmin(), score.shape)
+    x0, x1 = int(x0[k]), int(x1[k])
+    return a[:, x0:x1 + b], b, (x1 - x0) / w
 
 
 def latest(piece):
@@ -64,9 +89,9 @@ def strip(name):
     if not path:
         print('%s: not generated yet' % name)
         return
-    a = np.array(Image.open(path).convert('RGBA'))
-    save(seamless(a, 1), name, version)
-    print('%s v%d: made seamless left to right' % (name, version))
+    a, b, kept = best_join(np.array(Image.open(path).convert('RGBA')))
+    save(seamless(a, 1, b), name, version)
+    print('%s v%d: made seamless left to right, keeping %.0f%% of its width' % (name, version, kept * 100))
 
 
 def frames():

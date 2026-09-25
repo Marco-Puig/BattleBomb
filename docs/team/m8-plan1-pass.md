@@ -49,8 +49,11 @@ guest; what's left is what needs eyes.
 - [ ] **5.** Elite enemies are tinted the same in both windows. Drops appear and vanish the same in
       both, with the glow and bounce.
 
+- [ ] **6. Stages (Task 94).** At launch, the main window waits for Player 2 and then both start
+      together. Walk to an airlock: the next stage's geometry lines up in both windows, and the
+      hand-over looks clean in the Player 2 window — no pop, no double stage — also with Lag: Bad.
+
 **Known and expected — don't report these:**
-- Until Task 94 the Player 2 window shows the characters standing in empty space, with no stage.
 - A drop's bounce in the Player 2 window may start slightly higher (cosmetic).
 
 ## Verdicts

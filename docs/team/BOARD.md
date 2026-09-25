@@ -32,7 +32,7 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Groundwork pass + M8 online checks** (one sitting, ~30 min; Stage B is best after Task 94) — the 16-item controller checklist in
+1. **Groundwork pass + M8 online checks** (one sitting, ~30 min) — the 16-item controller checklist in
    `docs/team/groundwork-pass.md`, then Stages A and B in `docs/team/m8-plan1-pass.md`. Needs Unity in front and a pad or two; the
    orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
    another item under your cursor just before X. Recommended fix if it bothers him: the cursor
@@ -74,15 +74,10 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc).
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1).
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
-  - **94:** `HoldForPeer` floods the buffer while the guest keeps sending — release the stream when
-    the hold clears.
-    From 93: at the handover, old props (destroyed at frame end) can be captured under the new
-    stage — store the stage on the dummy or deactivate before Destroy; the guest-side dummy-ref
-    check lands once stages stream.
   - **95:** remove `DropIds` from snapshots (unread since DropRemoved; ~1 KB of ~3.5 KB), with a
     Version bump — and the drop cap and nearest-first sort if that leaves them dead.
     Also: the guest's own open menu drives Player 2 on the host (South is Confirm and Jump) —
@@ -107,6 +102,10 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     gates shut (D60/D61). **Task 103:** the drop-in baseline sends a `DropSpawned` for every drop
     still on the ground before the first snapshot.
     From 93: `ApplyReplicaPlayerSide` doesn't raise ScreenChanged (the guest's screens).
+    From 94: a stale `BeginLoad` completion can unload a stage requested again — add a load
+    generation. A guest who rejoins mid-match deadlocks the airlock (the host waits for a
+    StageReady the new guest was never asked for); until then, Task 96 tests a rejoin by
+    relaunching the run, not re-hosting in place.
   - **Plan 3 (Netcode):** `catch (SocketException)` sits in Gameplay and always names port 7777 —
     Listen should report failure through `INetTransport` when the Steam transport arrives. Decide
     whether delta snapshots are needed (the 96 bandwidth above). **Task 107:** a Jump landing in a
@@ -231,6 +230,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 94 committed (3d567b1): the guest streams the host's stages; the launch and the
+  airlock wait for it; hand-overs carry the host's step. EditMode 785, PlayMode 61.
 - 2026-09-25 — Task 93 committed (c8744bc): replica mode — the guest draws the host's world; drops
   leave on DropRemoved; PlaybackTransport (from 95) drives the first real guest-scene tests.
   EditMode 784, PlayMode 55. Michael's Stage B checks added.

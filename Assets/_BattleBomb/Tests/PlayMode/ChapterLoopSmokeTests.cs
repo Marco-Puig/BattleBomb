@@ -15,6 +15,7 @@ using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
 using BattleBomb.Gameplay.World.Markers;
 using BattleBomb.Platform;
+using BattleBomb.UI.Chest;
 using BattleBomb.UI.Frontend;
 using NUnit.Framework;
 using UnityEngine;
@@ -758,6 +759,46 @@ namespace BattleBomb.Tests.PlayMode
             yield return null;
             Assert.That(_driver.PausedForScreen, Is.True,
                 "The results screen came back up over a world nobody stopped.");
+
+            // Escape on the results is Back inside a menu (D57): it must not open the settings
+            // hidden behind them, where the next A would flip a setting on its way out.
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The machine has no SettingsMenu.");
+            yield return TapWhilePaused(CommandButtons.Back | CommandButtons.Pause);
+            Assert.That(settings.IsOpen, Is.False, "Escape on the results screen opened the settings under it.");
+
+            // A leaves once every hand is off the buttons — the only way out on a pad.
+            if (_partnerInput != null)
+            {
+                _partnerInput.Release();
+            }
+
+            yield return null;
+            yield return TapWhilePaused(CommandButtons.Confirm);
+            for (int guard = 0; guard < FrameCeiling && SceneManager.GetActiveScene().name != FrontendScene; guard++)
+            {
+                yield return null;
+            }
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(FrontendScene),
+                "A on the results screen did not go back to the front door.");
+        }
+
+        /// <summary>A press while a menu holds the world paused: the step clock is stopped, so it
+        /// is paced in rendered frames, during which the menus still sample every player.</summary>
+        private IEnumerator TapWhilePaused(CommandButtons button)
+        {
+            _input.Set(Vector2.zero, button);
+            for (int i = 0; i < 4; i++)
+            {
+                yield return null;
+            }
+
+            _input.Release();
+            for (int i = 0; i < 4; i++)
+            {
+                yield return null;
+            }
         }
 
         // ── The walk in ──────────────────────────────────────────────────────────────

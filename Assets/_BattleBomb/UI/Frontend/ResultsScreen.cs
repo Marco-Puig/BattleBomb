@@ -45,6 +45,7 @@ namespace BattleBomb.UI.Frontend
         private bool _open;
         private bool _holdingPause;
         private bool _leaving;
+        private bool _swallowUntilRelease;
 
         public bool IsOpen => _open;
 
@@ -112,6 +113,7 @@ namespace BattleBomb.UI.Frontend
 
             Build();
             _open = true;
+            _swallowUntilRelease = true;
             _panel.SetActive(true);
             HoldPause(true);
             Repaint();
@@ -127,9 +129,25 @@ namespace BattleBomb.UI.Frontend
             Repaint();
 
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
+
+            // A fight can end mid-mash, and A is Jump as well as Confirm: nobody leaves the
+            // results until every hand has come off the buttons once.
+            if (_swallowUntilRelease)
+            {
+                for (int i = 0; i < actors.Count; i++)
+                {
+                    if (MenuPress.AnyHeld(_driver.CommandFor(actors[i].PlayerId.Value)))
+                    {
+                        return;
+                    }
+                }
+
+                _swallowUntilRelease = false;
+            }
+
             for (int i = 0; i < actors.Count; i++)
             {
-                if (_driver.CommandFor(actors[i].PlayerId.Value).WasPressed(CommandButtons.Light))
+                if (MenuPress.From(_driver.CommandFor(actors[i].PlayerId.Value)).Confirm)
                 {
                     Leave();
                     return;

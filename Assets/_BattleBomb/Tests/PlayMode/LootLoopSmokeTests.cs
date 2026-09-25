@@ -8,6 +8,7 @@ using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
+using BattleBomb.UI.Chest;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -328,6 +329,102 @@ namespace BattleBomb.Tests.PlayMode
             yield return Press(CommandButtons.Pause);
             yield return Until(() => !_driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
                 "Start inside the knife's menu did not leave the chest");
+        }
+
+        [UnityTest]
+        public IEnumerator Escape_out_of_the_chest_does_not_open_the_settings()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            yield return Press(CommandButtons.Back | CommandButtons.Pause);
+            yield return Until(() => !_driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "Escape did not close the chest from its top level");
+            yield return SimulationFrames(5);
+
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The gameplay scene has no SettingsMenu.");
+            Assert.That(settings.IsOpen, Is.False,
+                "The Escape that closed the chest also opened the settings.");
+        }
+
+        [UnityTest]
+        public IEnumerator Start_out_of_the_chest_does_not_open_the_settings()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            yield return Press(CommandButtons.Pause);
+            yield return Until(() => !_driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "Start did not close the chest");
+            yield return SimulationFrames(5);
+
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The gameplay scene has no SettingsMenu.");
+            Assert.That(settings.IsOpen, Is.False,
+                "The Start that closed the chest also opened the settings.");
+        }
+
+        [UnityTest]
+        public IEnumerator Escape_outside_a_menu_opens_and_closes_the_settings()
+        {
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The gameplay scene has no SettingsMenu.");
+
+            yield return Press(CommandButtons.Back | CommandButtons.Pause);
+            Assert.That(settings.IsOpen, Is.True, "Escape in the world did not pause.");
+
+            yield return Press(CommandButtons.Back | CommandButtons.Pause);
+            Assert.That(settings.IsOpen, Is.False, "Escape did not back out of the settings.");
+        }
+
+        [UnityTest]
+        public IEnumerator Closing_the_settings_does_not_forget_a_player_still_at_a_chest()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            yield return Press(OpenPress);
+            yield return Until(() => _driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "the chest screen never opened");
+
+            // Player 2 opens the settings over the couch, then closes them again.
+            Assert.That(_driver.Characters.Ordered.Count, Is.GreaterThan(1), "This needs the partner.");
+            CharacterActor partner = _driver.Characters.Ordered[1];
+            _driver.Players.Unregister(partner.PlayerId);
+            var partnerInput = partner.gameObject.AddComponent<ScriptedCommandSource>();
+            partnerInput.Bind(partner.PlayerId.Value);
+            _driver.Players.Register(partnerInput);
+
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            Assert.That(settings, Is.Not.Null, "The gameplay scene has no SettingsMenu.");
+            partnerInput.Set(Vector2.zero, CommandButtons.Back | CommandButtons.Pause);
+            yield return Until(() => settings.IsOpen, "Player 2's Escape did not open the settings");
+            partnerInput.Release();
+            for (int i = 0; i < 4; i++)
+            {
+                yield return null;
+            }
+
+            partnerInput.Set(Vector2.zero, CommandButtons.Back | CommandButtons.Pause);
+            yield return Until(() => !settings.IsOpen, "Player 2's second Escape did not close the settings");
+            partnerInput.Release();
+
+            // On the very next step, Player 1's Escape closes the chest from its top level.
+            _input.Set(Vector2.zero, CommandButtons.Back | CommandButtons.Pause);
+            yield return Until(() => !_driver.TryGetOpenScreen(_player.PlayerId.Value, out _),
+                "Escape did not close the chest");
+            _input.Release();
+            yield return SimulationFrames(5);
+
+            Assert.That(settings.IsOpen, Is.False,
+                "Closing the settings forgot Player 1 was still at a chest, so the Escape that " +
+                "closed it opened the settings again.");
         }
 
         /// <summary>Drops the starter knife beside the player and grabs it, so the sack holds exactly

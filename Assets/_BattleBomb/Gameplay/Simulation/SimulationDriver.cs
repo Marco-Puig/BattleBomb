@@ -414,6 +414,10 @@ namespace BattleBomb.Gameplay.Simulation
 
         private int _menuPauseHolders;
 
+        /// <summary>A global menu has the screen and the pause — for another global menu, the
+        /// reason not to open underneath it.</summary>
+        public bool MenuPauseHeld => _menuPauseHolders > 0;
+
         /// <summary>
         /// A global menu (the settings screen) stops the world for everyone, unlike a chest,
         /// which only stops it when there is nobody left to keep playing. Held as a count so two

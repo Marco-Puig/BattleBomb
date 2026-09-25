@@ -33,6 +33,8 @@ namespace BattleBomb.UI.Chest
         private int _cursor;
         private int _owner = -1;
         private Vector2 _lastMove;
+        private readonly HashSet<int> _busy = new HashSet<int>();
+        private readonly HashSet<int> _busyBefore = new HashSet<int>();
 
         /// <summary>Open right now — the driver asks, because an open menu pauses a solo game.</summary>
         public bool IsOpen => _open;
@@ -72,18 +74,41 @@ namespace BattleBomb.UI.Chest
         {
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
 
+            // A player at a chest is busy, and so is one who was at it a step ago: Escape backs
+            // out of the chest's top level, and the press that closed it must not also open this
+            // (D57). Kept current while this menu is open too, so closing it cannot forget a
+            // player still standing at a chest.
+            _busyBefore.Clear();
+            _busyBefore.UnionWith(_busy);
+            _busy.Clear();
+            for (int i = 0; i < actors.Count; i++)
+            {
+                int id = actors[i].PlayerId.Value;
+                if (_driver.TryGetOpenScreen(id, out _))
+                {
+                    _busy.Add(id);
+                }
+            }
+
             if (!_open)
             {
+                // Another global menu — the results — already has the screen and the pause.
+                // Opened under it this would be hidden, and the next A would reach both.
+                if (_driver.MenuPauseHeld)
+                {
+                    return;
+                }
+
                 for (int i = 0; i < actors.Count; i++)
                 {
                     int id = actors[i].PlayerId.Value;
-
-                    // A player browsing a chest is busy; Pause belongs to whoever is playing.
-                    if (_driver.TryGetOpenScreen(id, out _))
+                    if (_busy.Contains(id) || _busyBefore.Contains(id))
                     {
                         continue;
                     }
 
+                    // The raw flag, not MenuPress: outside a menu Escape carries Back too, and
+                    // Back means nothing here. Escape is the keyboard's pause.
                     if (_driver.CommandFor(id).WasPressed(CommandButtons.Pause))
                     {
                         Open(id);
@@ -95,14 +120,15 @@ namespace BattleBomb.UI.Chest
             }
 
             PlayerCommand command = _driver.CommandFor(_owner);
-            if (command.WasPressed(CommandButtons.Pause) || command.WasPressed(CommandButtons.Heavy))
+            MenuPress press = MenuPress.From(command);
+            if (press.Back || press.Pause)
             {
                 Close();
                 return;
             }
 
             StepCursor(command);
-            if (command.WasPressed(CommandButtons.Light))
+            if (press.Confirm)
             {
                 Toggle();
             }

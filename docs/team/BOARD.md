@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | G14 — verify D57; Michael's checklist | — |
+| Builder | Builder | working | Pre-M8 fixes F1–F3, then F5 | Pauses for Michael's Groundwork pass (QUIET) |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -32,30 +32,34 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **The World session** — open in the World lane's session, at question 1 (the goal).
-2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+1. **Groundwork pass** — the 15-item controller checklist in `docs/team/groundwork-pass.md`. Needs Unity in front and a pad or two; the
+   orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
+   another item under your cursor just before X. Recommended fix if it bothers him: the cursor
+   follows its item and X pauses for a moment after a partner changes it — rides F5.
+2. **The World session** — open in the World lane's session, at question 1 (the goal).
+3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-3. **Run the ChatGPT image prompts** — all 31, in order, in `ArtSource/GPT_PROMPTS.md`; the Art lane
-   waits on them. Save outputs where each prompt says (raw output under `_raw/` stays out of git).
-4. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
+4. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
+   waits on the music tool below.
+5. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+6. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+7. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-7. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+8. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-8. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
+9. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+10. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
-10. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
+11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
 ## M8 — ready to build after Groundwork
@@ -171,6 +175,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — **Groundwork built** (G1–G13b, 56e4be5..527df2b); G14 applied D57's corrections and
+  the shared-doc updates (5f3799a). Michael's controller pass is queued. The Builder starts F1–F3.
 - 2026-09-25 — G13b committed (527df2b): the SACK/HERO strip stays up on the couch Hero tab with a
   cursor; item menus draw over the panels they overhang; the couch worn-gear menu now shows
   (A was spending coin on rows nobody could see). EditMode 680, PlayMode 28. Close ✕ → M9.

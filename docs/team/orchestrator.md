@@ -33,20 +33,19 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork Task 14 |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — pre-M8 fixes F1–F3 |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — restart from `PROMPTS.md` near M8 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)
 
-- **Groundwork:** G1–G13b committed (G13b = 527df2b). Task 14 in progress.
-- **Then:** G14 (verify D57 against what was built; Michael's fast-motion checklist — add: X sells
-  a whole stack; a partner's sale can slide an item under the cursor; nothing stays open after
-  combine-all; A can't skip the results for ~¾ s; Start does nothing at character or chapter
-  select; with Player 1 on the keyboard the join line says only A; G13b's couch Hero-tab strip
-  cursor, bottom-row Sell/Lock, the couch worn-gear menu).
-- **After Groundwork:** the pre-M8 fixes plan F1–F3, then F5 (chest grid scrolling past 40 stacks), then M8 Plan 1 (Tasks 86–96). Netcode writes
+- **Groundwork:** built — G1–G13b (56e4be5..527df2b); G14's docs 5f3799a. **Michael's pass pending**
+  (15 items, `docs/team/groundwork-pass.md`). On his go: QUIET ON to the
+  Builder (clean point, hands off Unity), he plays, QUIET OFF. Record his verdict in ROADMAP §4
+  (heading → complete), CLAUDE.md's progress row, and memory. Item 12 is his judgement; if he
+  wants the fix, it rides F5.
+- **Now:** the Builder runs the pre-M8 fixes plan F1–F3, then F5 (chest grid scrolling past 40 stacks), then M8 Plan 1 (Tasks 86–96). Netcode writes
   Plan 2 once Plan 1 is underway, Plan 3 after Michael's lag table (Task 96). Candidate **F4** (lost
   sub-update taps) and the catch-up-loop pause item wait for Netcode to assess.
 - **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's

@@ -104,6 +104,24 @@ namespace BattleBomb.Core.Combat
             return false;
         }
 
+        /// <summary>Every mark, in order — the first is the one presentation tints with.</summary>
+        public StatusInstance[] ToArray() => _active.ToArray();
+
+        /// <summary>Replaces every mark with another machine's (M8's replica), order kept.</summary>
+        public void Restore(IReadOnlyList<StatusInstance> statuses)
+        {
+            _active.Clear();
+            if (statuses == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < statuses.Count; i++)
+            {
+                _active.Add(statuses[i]);
+            }
+        }
+
         /// <summary>
         /// Marks the combatant, or renews an existing mark. Renewal never makes a mark worse: the
         /// longer remaining time and the stronger tick both survive, so a weak weapon infusion

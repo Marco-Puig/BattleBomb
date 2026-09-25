@@ -42,9 +42,12 @@ namespace BattleBomb.Gameplay.Loot
 
         public ItemInstance Item => _item;
 
+        /// <summary>This drop's id on the wire, unique for the launch (HANDOFF-M8 planning decision 8).</summary>
+        public int NetId { get; private set; }
+
         public Vector3 Position => _rest;
 
-        internal static DropPickup Spawn(Vector3 corpse, in ItemInstance item)
+        internal static DropPickup Spawn(Vector3 corpse, in ItemInstance item, int netId = 0)
         {
             // The root never moves: the driver grabs from here, and the HUD projects from here.
             // Only the token child bounces and spins, so the animation is pure decoration.
@@ -83,6 +86,7 @@ namespace BattleBomb.Gameplay.Loot
             pickup._from = new Vector3(corpse.x, corpse.y + 0.2f, corpse.z);
             pickup._token = token.transform;
             token.transform.position = pickup._from;
+            pickup.NetId = netId;
             return pickup;
         }
 

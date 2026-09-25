@@ -172,6 +172,7 @@ namespace BattleBomb.Gameplay.Simulation
             ItemSlot.Boots,
         };
         private readonly List<DropPickup> _pickups = new List<DropPickup>();
+        private int _nextPickupId;
         private readonly Dictionary<int, int> _grabCounts = new Dictionary<int, int>();
 
         /// <summary>Steps a refused grab stays worth showing — long enough to read, short
@@ -222,6 +223,9 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Raised inside the fixed step when an enemy's dying beat ends (task 36).</summary>
         public event Action<EnemyDeath> EnemyDied;
+
+        /// <summary>Raised inside the step when a drop appears — the host sends it, with its item (M8).</summary>
+        internal event Action<DropPickup> PickupSpawned;
 
         /// <summary>
         /// Debug only: rolls one authored definition at a quality floor, for the equip panel to
@@ -345,6 +349,15 @@ namespace BattleBomb.Gameplay.Simulation
             }
         }
 
+        /// <summary>Every drop enters the world here, with a launch-unique id, so the host can tell the
+        /// guest about it once and name it in every snapshot after.</summary>
+        private void SpawnPickup(Vector3 at, in ItemInstance item)
+        {
+            DropPickup pickup = DropPickup.Spawn(at, item, ++_nextPickupId);
+            _pickups.Add(pickup);
+            PickupSpawned?.Invoke(pickup);
+        }
+
         /// <summary>
         /// Debug and tests only: puts a drop on the ground without a kill behind it. The smoke
         /// suite (D45) needs a drop to exist deterministically — a real kill only drops on a
@@ -357,7 +370,7 @@ namespace BattleBomb.Gameplay.Simulation
                 return;
             }
 
-            _pickups.Add(DropPickup.Spawn(position, item));
+            SpawnPickup(position, item);
         }
 
         /// <summary>
@@ -987,7 +1000,7 @@ namespace BattleBomb.Gameplay.Simulation
                 {
                     // It drops what it wears (D22) — the piece was rolled at spawn and has been
                     // tinting its armor ever since, so the kill owes exactly that item.
-                    _pickups.Add(DropPickup.Spawn(enemy.Position, enemy.CarriedDrop));
+                    SpawnPickup(enemy.Position, enemy.CarriedDrop);
                 }
                 else
                 {
@@ -1002,7 +1015,7 @@ namespace BattleBomb.Gameplay.Simulation
                         _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance item);
                         if (!item.IsEmpty)
                         {
-                            _pickups.Add(DropPickup.Spawn(enemy.Position, item));
+                            SpawnPickup(enemy.Position, item);
                         }
                     }
                 }

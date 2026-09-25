@@ -23,6 +23,10 @@ namespace BattleBomb.Gameplay.Combat
         private readonly List<GameObject> _brood = new List<GameObject>();
         private int _serial;
 
+        /// <summary>Network ids. Unlike <see cref="_serial"/> this never resets: a wipe or an airlock
+        /// must not hand a new enemy an id an old one still holds on the guest's screen.</summary>
+        private int _nextNetId;
+
         /// <summary>
         /// Clears the arena: every enemy still standing goes, and the variation seed starts over.
         /// Called by the attempt reset (task 35) and by the stage runner at a launch and at every
@@ -50,7 +54,7 @@ namespace BattleBomb.Gameplay.Combat
         /// </summary>
         internal int SpawnWave(
             EnemyDefinition definition, int count, IReadOnlyList<Vector3> points,
-            float healthMultiplier, float damageMultiplier)
+            float healthMultiplier, float damageMultiplier, int stageIndex = -1, int rosterIndex = -1)
         {
             if (!enabled || definition == null || count <= 0 || points == null || points.Count == 0)
             {
@@ -88,6 +92,7 @@ namespace BattleBomb.Gameplay.Combat
                     // The elite draw happens here, before the body exists to be looked at (D22).
                     bool isElite = _driver.RollEliteSpawn(out Core.Items.ItemInstance carried);
                     actor.Configure(definition, _serial, isElite, carried, healthMultiplier, damageMultiplier);
+                    actor.SetOrigin(++_nextNetId, stageIndex, rosterIndex);
                     if (isElite)
                     {
                         go.name += " (Elite)";

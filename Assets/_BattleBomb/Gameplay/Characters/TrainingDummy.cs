@@ -37,6 +37,13 @@ namespace BattleBomb.Gameplay.Characters
         public Health Health => _health;
         public bool IsDepleted => _health.IsDepleted;
 
+        /// <summary>Which of its stage's props this dummy is — both machines place props from the same
+        /// markers in the same order, so the index names the same dummy on each (planning decision 8).
+        /// -1 for a dummy placed by hand in a scene.</summary>
+        public int PropIndex { get; private set; } = -1;
+
+        internal void SetPropIndex(int index) => PropIndex = index;
+
         internal void Step(int frame, in ArenaBounds bounds, float dt)
         {
             _previous = _state;

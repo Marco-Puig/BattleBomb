@@ -22,6 +22,10 @@ namespace BattleBomb.Core.Combat
             Current = max;
         }
 
+        /// <summary>A pool exactly as another machine had it (M8's wire). No clamping: the host's
+        /// numbers are the truth (D58).</summary>
+        public static Health FromValues(float max, float current) => new Health(max, current);
+
         private Health(float max, float current)
         {
             Max = max;

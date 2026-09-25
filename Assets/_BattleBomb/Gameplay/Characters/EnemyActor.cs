@@ -55,6 +55,23 @@ namespace BattleBomb.Gameplay.Characters
         /// <summary>D22's rare modifier: tougher, and it drops what it wears.</summary>
         public bool IsElite => _isElite;
 
+        /// <summary>This enemy's id on the wire: unique for the whole launch and never reused
+        /// (HANDOFF-M8 planning decision 8). Zero for an enemy placed by hand in a scene.</summary>
+        public int NetId { get; private set; }
+
+        /// <summary>The stage and roster slot this enemy was spawned from — how the guest finds the
+        /// same authored archetype.</summary>
+        internal int OriginStage { get; private set; } = -1;
+
+        internal int OriginRoster { get; private set; } = -1;
+
+        internal void SetOrigin(int netId, int stageIndex, int rosterIndex)
+        {
+            NetId = netId;
+            OriginStage = stageIndex;
+            OriginRoster = rosterIndex;
+        }
+
         /// <summary>The piece an elite is wearing — Presentation tints its armor this item's
         /// quality colour, and the kill hands over exactly this.</summary>
         public ItemInstance CarriedDrop => _carriedDrop;

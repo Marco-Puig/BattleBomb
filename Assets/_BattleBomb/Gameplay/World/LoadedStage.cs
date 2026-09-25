@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Data;
 using BattleBomb.Gameplay.World.Markers;
 using UnityEngine;
@@ -113,6 +114,17 @@ namespace BattleBomb.Gameplay.World
             return null;
         }
 
+        internal TrainingDummy DummyAt(int propIndex)
+        {
+            if (propIndex < 0 || propIndex >= _props.Count || _props[propIndex] == null)
+            {
+                return null;
+            }
+
+            TrainingDummy dummy = _props[propIndex].GetComponent<TrainingDummy>();
+            return dummy != null && dummy.PropIndex == propIndex ? dummy : null;
+        }
+
         /// <summary>Puts a chest, a dummy, and where the stage asks for one a shopkeeper into
         /// every checkpoint room this stage's arenas call for (D42/D43). The scene says where
         /// they would go; the stage asset says whether they do.</summary>
@@ -134,7 +146,12 @@ namespace BattleBomb.Gameplay.World
                 }
 
                 Place(chest, room.ChestPosition);
-                Place(dummy, room.DummyPosition);
+                GameObject placed = Place(dummy, room.DummyPosition);
+                TrainingDummy target = placed != null ? placed.GetComponent<TrainingDummy>() : null;
+                if (target != null)
+                {
+                    target.SetPropIndex(_props.Count - 1);
+                }
                 if (arena.ShopkeeperAfter)
                 {
                     Place(shopkeeper, room.ShopkeeperPosition);
@@ -209,17 +226,18 @@ namespace BattleBomb.Gameplay.World
         /// <summary>The marker says where on the floor a prop stands; the prefab's own Y says how
         /// far above that floor its body sits. Throwing the prefab's height away would bury a
         /// chest to its lid.</summary>
-        private void Place(GameObject prefab, Vector3 at)
+        private GameObject Place(GameObject prefab, Vector3 at)
         {
             if (prefab == null)
             {
-                return;
+                return null;
             }
 
             at.y += prefab.transform.localPosition.y;
             GameObject go = Object.Instantiate(prefab, at, Quaternion.identity);
             SceneManager.MoveGameObjectToScene(go, Scene);
             _props.Add(go);
+            return go;
         }
 
         private static T FindInScene<T>(Scene scene) where T : Component

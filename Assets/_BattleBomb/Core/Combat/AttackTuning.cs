@@ -48,6 +48,11 @@ namespace BattleBomb.Core.Combat
         /// </summary>
         public bool IsRadial => _radial || ResolvesOnLanding;
 
+        /// <summary>The authored radial flag alone — <see cref="IsRadial"/> also counts
+        /// <see cref="ResolvesOnLanding"/>. The wire needs this one to rebuild an equal tuning,
+        /// because equality is what tells a chain Light from any other attack.</summary>
+        public bool IsRadialAuthored => _radial;
+
         public AttackTuning(
             int startupSteps,
             int activeSteps,

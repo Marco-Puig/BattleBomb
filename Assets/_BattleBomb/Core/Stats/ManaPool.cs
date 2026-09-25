@@ -23,6 +23,9 @@ namespace BattleBomb.Core.Stats
             return new ManaPool(ceiling, ceiling);
         }
 
+        /// <summary>A pool exactly as another machine had it (M8's wire).</summary>
+        public static ManaPool FromValues(float max, float current) => new ManaPool(max, current);
+
         public float Fraction => Max > 0f ? Current / Max : 0f;
 
         /// <summary>One fixed step of regeneration; never overfills.</summary>

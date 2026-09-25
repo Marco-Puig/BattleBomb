@@ -369,7 +369,7 @@ namespace BattleBomb.Gameplay.World
 
             return _spawner.SpawnWave(
                 definition, wave.Count, arena.SpawnPoints,
-                _tier.HealthMultiplier, _tier.DamageMultiplier);
+                _tier.HealthMultiplier, _tier.DamageMultiplier, _current.StageIndex, wave.EnemyIndex);
         }
 
         private void StepPlayerPositions()

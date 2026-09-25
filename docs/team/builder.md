@@ -182,6 +182,35 @@ for COMMITTED. Next: Task 90 (two editors) — QUIET REQUEST before any two-edit
 - **Step 4 BLOCKED (19:15):** Join local exists only in the clone's window. The bridge reaches the main editor only, and Michael declined screen control of Unity (do not re-ask). I sent BLOCKED with (a) Michael clicks Join once, or (b) fold into his step 6 (recommended). Holding QUIET with Player 2 launched.
 **CONTINUE (b) (19:15):** I deactivated Player 2 (NotLaunched); the main editor never entered play mode. QUIET OFF sent. Activation created `ProjectSettings/VirtualProjectsConfig.json` (the player-tag list); it goes in the commit. **Task 90 DONE sent (19:20)** with step 6's checklist for Michael.
 **Standing rule, from the orchestrator:** Michael's "no" to screen control holds for this session; never reach the clone another way. For **93–95**, split the clone-side checks into (1) what a harness can prove (HeadlessGuest; 95's guest harness) and (2) what needs Michael's eyes or a click. Group 2 goes in that task's checklist; the orchestrator batches them (one pass at 95, the lag table at 96). If a task would block mid-build on a click, say so in its DONE rather than waiting in QUIET.
+**Task 90 COMMITTED `d00c552`** (A–C accepted). The orchestrator keeps clone-side checks in `docs/team/m8-plan1-pass.md` (theirs); I send each later task's checks in the same shape. A Stage A failure from Michael comes as a separate item; keep going unless 91 builds on it.
+**Task 91 started (19:25):** a read-only premise check (Steps 1, 3, 4, 6 anchors; every field of the travelling structs, against the field-coverage test) is running before the implementer is dispatched.
+**91 progress (19:30):**
+- **Premise check clean:** every anchor, member and field matches; no extra spec. The Step 3 Core files and all 7 Step 6 Gameplay files are CRLF.
+- **S1:** 4 test files byte-identical to the plan; compile red (WorldSnapshot).
+- **S2:** 5 Core/Net files byte-identical, Step 3 snippets present. Coverage 13/13, Snapshot 3/3, ItemWire 4/4.
+- **S3:** Step 6 snippets all present; the three pickup call sites now go through SpawnPickup; CRLF intact.
+- **EditMode 766/766.**
+- Full PlayMode and the review are running.
+
+**91 gates:** PlayMode 43/43.
+
+**Review "Yes with fixes" (19:40). Applied:**
+- **1 (Important).** FieldCoverage filled every bool `true` and every enum with its last value, so a codec swapping two same-typed fields passed; the named example is writing `IsRadial` for `IsRadialAuthored`.
+  - Bools: each takes a distinct 3-bit code (1–6) across seeds, read at bit (seed-1)%3. A seventh bool throws.
+  - Enums: each rotates through its non-zero values, per type.
+- **2 (Minor).** Fill now does arrays (length 2). New test `Every_entity_travels_whole_and_a_reused_snapshot_keeps_none_of_the_last` gives full coverage of 2 players, enemies, dummies and bolts, read twice into one snapshot.
+- **5 (Minor).** `Array.Empty` for zero statuses (StateCodec.ReadStatuses, 2 Snapshots ctors).
+- **6 (Minor).** Id docs say "launch", not "session".
+- **Mutation-proved:**
+  - Round 1: writing `IsRadial` fails `AttackTuning._radial` (and nested in CombatState); dropping `DropIds.Clear` fails only the new test.
+  - Round 2: swapping the cast fields fails `CombatState.BufferedCast`.
+  - Round 3: swapping GrabCount/RefusedSteps fails the new test and the plan's own round trip.
+- **EditMode 767/767; PlayMode 43/43** on the final code. **Task 91 DONE sent (19:50)** → waiting for COMMITTED.
+
+**Carried forward:**
+- **92:** SnapshotCodec throws on >256 inside the host's step; cap each list at the bound in Capture. DropIds can exceed 256 (drops outlive stages).
+- **93:** `EntityRef.Dummy(prop)` drops the stage, so dummy ids collide across stages; carry the stage (pack `stage << 16 | prop`).
+- **96:** the paper case is about 3.5 KB per snapshot (about 105 KB/s), not 2.5 KB.
 
 **Pre-M8 fixes — started (11:00, 2026-09-25).** G14 committed (`5f3799a`), every shared-doc change
 applied; **Groundwork built**. Plan: `docs/superpowers/plans/2026-09-24-pre-m8-fixes.md`, F1–F3,

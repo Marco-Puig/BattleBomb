@@ -97,7 +97,9 @@ namespace BattleBomb.UI.Chest
         private Text _tabSack;
         private Text _tabHero;
         private Text _sortText;
-        private Text _hint;
+        private PromptRow _promptRow;
+        private readonly List<Prompt> _prompts = new List<Prompt>();
+        private InputFamily _family;
         private readonly List<Image> _filterChips = new List<Image>();
         private readonly List<Text> _filterLabels = new List<Text>();
 
@@ -165,6 +167,7 @@ namespace BattleBomb.UI.Chest
                 _nav.SetMode(ShopMode.Buy, Layout());
             }
 
+            _family = Host != null ? Host.FamilyFor(playerId) : InputFamily.Keyboard;
             Build();
             Refresh();
         }
@@ -175,6 +178,15 @@ namespace BattleBomb.UI.Chest
             if (_bag == null)
             {
                 return;
+            }
+
+            // The icons follow the hands: a player who picks up a controller mid-menu sees A B X Y
+            // on the next step, even before pressing anything the screen reacts to.
+            InputFamily family = Host != null ? Host.FamilyFor(_playerId) : InputFamily.Keyboard;
+            if (family != _family)
+            {
+                _family = family;
+                Refresh();
             }
 
             // The press that opened this screen must not also act inside it. It matters more now

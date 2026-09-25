@@ -41,6 +41,10 @@ namespace BattleBomb.UI.Chest
 
         internal void RequestClose(int playerId) => _driver?.CloseScreen(playerId);
 
+        /// <summary>Which button pictures this player's screen shows (D57).</summary>
+        internal InputFamily FamilyFor(int playerId) =>
+            _driver != null ? _driver.Players.FamilyOf(new PlayerId(playerId)) : InputFamily.Keyboard;
+
         /// <summary>The shopkeeper's rack for one visit (D43) — the driver owns the generator.</summary>
         internal void RollStock(List<Core.Items.ItemInstance> stock, int count) =>
             _driver?.RollShopStock(stock, count);

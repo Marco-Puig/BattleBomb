@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using BattleBomb.Core.Items;
+using BattleBomb.Core.Players;
 using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.World;
@@ -115,32 +116,32 @@ namespace BattleBomb.UI.Chest
                 _junkBar = new JunkBar(_junkArea);
             }
 
-            _hint = UiBuild.Label("Hint", pad, string.Empty, 12, UiBuild.Muted,
-                TextAnchor.LowerLeft, UiBuild.Ui);
-            UiBuild.Stretch(_hint.rectTransform);
-
             // ── Hero ─────────────────────────────────────────────────────────────────
             // Not at a shopkeeper (Michael, 2026-08-23). The counter is about their rack, not
             // about the player's doll, so the free half is left to the world and the camera puts
             // the shopkeeper in it.
-            if (IsShop)
+            if (!IsShop)
             {
-                return;
+                _heroRoot = UiBuild.Place(
+                    UiBuild.Rect("Hero", root), _split ? 0f : 0.5f, 0f, 1f, 1f);
+
+                // Solo there is deliberately no backdrop at all (Michael, 2026-08-22): the camera
+                // frames the hero to fill this half, so there is little world left to dim and any
+                // scrim would only sit between the player and their own character. Split has no
+                // camera move to show through, so it keeps the board.
+                if (_split)
+                {
+                    UiBuild.Box("Board", _heroRoot, UiBuild.Board);
+                }
+
+                _heroPanel = new HeroPanel(_heroRoot);
             }
 
-            _heroRoot = UiBuild.Place(
-                UiBuild.Rect("Hero", root), _split ? 0f : 0.5f, 0f, 1f, 1f);
-
-            // Solo there is deliberately no backdrop at all (Michael, 2026-08-22): the camera
-            // frames the hero to fill this half, so there is little world left to dim and any
-            // scrim would only sit between the player and their own character. Split has no
-            // camera move to show through, so it keeps the board.
-            if (_split)
-            {
-                UiBuild.Box("Board", _heroRoot, UiBuild.Board);
-            }
-
-            _heroPanel = new HeroPanel(_heroRoot);
+            // The hint row belongs to the screen, not to a half: split co-op hides the sack half
+            // behind the hero tab, and the row has to stay up either way — so it is built last,
+            // over the hero's board rather than under it.
+            _promptRow = new PromptRow(root);
+            _promptRow.Place(0f, _split ? 1f : 0.5f, 30f, 26f, 27f);
         }
 
         /// <summary>Title, the wallet, and how full the sack is.</summary>
@@ -284,8 +285,6 @@ namespace BattleBomb.UI.Chest
         private const float ShopBodyBottom = 388f;
 
         private RectTransform _sackRoot;
-        private RectTransform _menuRoot;
-        private Text _menuText;
 
         /// <summary>The sack-versus-hero tab row exists only where there is a hero half to
         /// reach: local co-op, and never at a shopkeeper.</summary>
@@ -414,55 +413,137 @@ namespace BattleBomb.UI.Chest
                 RefreshHero();
             }
 
-            _hint.text = _flash.Length > 0 ? UiBuild.Tint(_flash, UiBuild.Gold) : HintLine();
+            if (_flash.Length > 0)
+            {
+                _promptRow.ShowText(_flash);
+            }
+            else
+            {
+                _promptRow.Show(Prompts(), _family);
+            }
         }
 
-        /// <summary>What Light does depends on where the cursor is, so the footer says so rather
-        /// than naming one verb and being wrong on three of the screen's four blocks.</summary>
-        private string HintLine()
+        /// <summary>
+        /// The hint row (UI Pass 01), in the buttons of the device this player last pressed. What
+        /// each button does depends on where the cursor is, so the row is rebuilt from the focus
+        /// every refresh rather than naming one verb and being wrong on three of four blocks.
+        /// </summary>
+        private IReadOnlyList<Prompt> Prompts()
         {
-            string leave = UiBuild.Tint(
-                IsShop ? "Esc / Start or ✕: leave" : "Esc / Start or ✕: leave the chest", UiBuild.Gold);
+            _prompts.Clear();
+            _prompts.Add(new Prompt(PromptKey.Move, "Move"));
 
-            // Mid-combine the screen is one question, so the footer answers only that one.
+            // Mid-combine the screen is one question, so the row answers only that one.
             if (_nav.PendingCombine >= 0)
             {
-                return "Stick: move    Light: combine with this    "
-                    + UiBuild.Tint("Magic: combine the whole pile", UiBuild.Gold)
-                    + "    Heavy: cancel";
+                _prompts.Add(new Prompt(PromptKey.Confirm, "Combine with this"));
+                _prompts.Add(new Prompt(PromptKey.Option, "Combine the whole pile", gold: true));
+                _prompts.Add(new Prompt(PromptKey.Back, "Cancel"));
+                return _prompts;
             }
 
-            if (_nav.Focus == ChestFocus.Upgrade)
+            switch (_nav.Focus)
             {
-                return "Stick: pick a stat    Light: spend    Heavy: back    " + leave;
+                case ChestFocus.Grid:
+                    // Only what would act: on an empty or filtered-empty sack A, X and Y do nothing.
+                    if (_visible.Count > 0)
+                    {
+                        _prompts.Add(new Prompt(PromptKey.Confirm, "Actions"));
+                        _prompts.Add(new Prompt(PromptKey.Option, "Sell"));
+                        _prompts.Add(new Prompt(PromptKey.Lock, "Lock"));
+                    }
+
+                    break;
+
+                case ChestFocus.Loadout:
+                    if (!WornItem.IsEmpty)
+                    {
+                        _prompts.Add(new Prompt(PromptKey.Confirm, "Upgrade / take off"));
+                        _prompts.Add(new Prompt(PromptKey.Lock, "Lock"));
+                    }
+
+                    break;
+
+                case ChestFocus.Stats:
+                    if (_bag.Ledger.UnspentPoints > 0)
+                    {
+                        _prompts.Add(new Prompt(PromptKey.Confirm, "Spend a point"));
+                    }
+
+                    break;
+
+                case ChestFocus.Upgrade:
+                    _prompts.Add(new Prompt(PromptKey.Confirm, "Spend"));
+                    break;
+
+                case ChestFocus.Stock:
+                    if (_stock.Count > 0)
+                    {
+                        _prompts.Add(new Prompt(PromptKey.Confirm, "Buy"));
+                    }
+
+                    break;
+
+                case ChestFocus.Junk:
+                    _prompts.Add(new Prompt(PromptKey.Confirm, "Clear the junk"));
+                    break;
+
+                default:
+                    _prompts.Add(new Prompt(PromptKey.Confirm, "Choose"));
+                    break;
             }
 
-            if (_nav.Focus == ChestFocus.Loadout)
+            string tab = TabCaption();
+            if (tab.Length > 0)
             {
-                return "Stick: move    Light: upgrade / take off    Heavy: back to the sack    "
-                    + leave;
+                // Gold solo, where the other half is easy to miss: the hero panel went a whole
+                // pass without anyone finding it (Michael, 2026-08-23).
+                _prompts.Add(new Prompt(PromptKey.Tabs, tab, gold: HeroBeside));
             }
 
-            if (_nav.Focus == ChestFocus.Stats)
+            string leave = IsShop ? "Leave" : "Leave the chest";
+            _prompts.Add(new Prompt(PromptKey.Back, BackLeaves ? leave : "Back"));
+            if (!BackLeaves)
             {
-                return "Stick: move    Light: spend a point    Heavy: back    " + leave;
+                _prompts.Add(new Prompt(PromptKey.Pause, leave));
             }
 
-            if (!IsShop)
+            return _prompts;
+        }
+
+        /// <summary>Whether B here closes the screen: the top level, where
+        /// <see cref="ChestNavigation.Cancel"/> has nothing left to back out of.</summary>
+        private bool BackLeaves =>
+            _nav.PendingCombine < 0
+            && (_nav.Focus == ChestFocus.Grid
+                || _nav.Focus == ChestFocus.Filters
+                || _nav.Focus == ChestFocus.Tabs
+                || (_nav.Focus == ChestFocus.Stock && Buying));
+
+        /// <summary>What LB / RB would switch to here, or nothing where there is one half.</summary>
+        private string TabCaption()
+        {
+            if (_nav.Focus == ChestFocus.Menu || _nav.Focus == ChestFocus.Upgrade)
             {
-                // Only advertise the crossing when the cursor is actually free to make it.
-                string across = _nav.Focus == ChestFocus.Grid && HeroBeside
-                    ? UiBuild.Tint("Right: your gear", UiBuild.Gold) + "    "
-                    : string.Empty;
-                return "Stick: move    Light: actions    " + across + "Heavy: back    " + leave;
+                return string.Empty;
             }
 
-            string light = _nav.Focus == ChestFocus.Junk
-                ? "Light: clear the junk"
-                : Buying ? "Light: buy" : "Light: actions";
+            if (IsShop)
+            {
+                return Buying ? "Sell side" : "Buy side";
+            }
 
-            return $"Stick: move    {light}    Magic: {(Buying ? "sell side" : "buy side")}"
-                + "    Heavy: back    " + leave;
+            if (HasTabs)
+            {
+                return _nav.Tab == ChestTab.Hero ? "Sack" : "Hero";
+            }
+
+            if (HeroBeside)
+            {
+                return OnLoadout || _nav.Focus == ChestFocus.Stats ? "Your sack" : "Your gear";
+            }
+
+            return string.Empty;
         }
 
         private void SetTab(Text tab, bool on)
@@ -478,47 +559,6 @@ namespace BattleBomb.UI.Chest
             {
                 back.color = on ? UiBuild.Brass : UiBuild.BoardDeep;
             }
-        }
-
-        private string TabLine()
-        {
-            string sack = _nav.Tab == ChestTab.ItemSack ? "[ ITEM SACK ]" : "  Item Sack  ";
-            string hero = _nav.Tab == ChestTab.Hero ? "[ HERO ]" : "  Hero  ";
-            if (_nav.Focus == ChestFocus.Tabs)
-            {
-                sack = UiBuild.Tint(sack, UiBuild.Focus);
-                hero = UiBuild.Tint(hero, UiBuild.Focus);
-            }
-
-            return sack + "   " + hero;
-        }
-
-        /// <summary>
-        /// The row above the grid. Normally the six category filters; mid-combine it says what
-        /// the grid has become instead, because the filters are neither what is being asked nor
-        /// reachable while the pick is open.
-        /// </summary>
-        private string FilterLine(IReadOnlyList<ItemStack> items)
-        {
-            int pending = _nav.PendingCombine;
-            if (pending >= 0 && pending < items.Count)
-            {
-                return UiBuild.Tint(
-                    "COMBINING " + items[pending].Item.DisplayName
-                        + " — pick a duplicate, or Magic for the whole pile.   Heavy: cancel",
-                    UiBuild.Coin);
-            }
-
-            _text.Clear();
-            for (int i = 0; i < FilterNames.Length; i++)
-            {
-                string name = i == _nav.Filter ? $"[{FilterNames[i]}]" : $" {FilterNames[i]} ";
-                _text.Append(_nav.Focus == ChestFocus.Filters && i == _nav.Filter
-                    ? UiBuild.Tint(name, UiBuild.Focus)
-                    : name);
-            }
-
-            return _text.ToString();
         }
 
         private void RefreshSack()
@@ -773,37 +813,6 @@ namespace BattleBomb.UI.Chest
             }
 
             _sortText.text = combining ? "combining" : "Quality";
-        }
-
-        /// <summary>
-        /// The right panel while deepening: every stat this item can raise, the cursor on one of
-        /// them, and the price. The choice is made looking at the numbers it changes.
-        /// </summary>
-        private string UpgradePanelFor(in ItemInstance item)
-        {
-            _text.Clear();
-            _text.Append(UiBuild.Tint(item.DisplayName, QualityColors.For(item.Quality))).Append('\n');
-            _text.Append("Capacity ").Append(item.UpgradesSpent).Append('/').Append(item.UpgradeCapacity);
-            _text.Append("   next point ")
-                .Append(UiBuild.Tint(_bag.Inventory.Prices.UpgradeCost(item).ToString(), UiBuild.Coin));
-            _text.Append("\n   you have ")
-                .Append(UiBuild.Tint(_bag.Wallet.Balance.ToString(), UiBuild.Coin));
-            _text.Append("\n\nDEEPEN WHICH STAT\n\n");
-
-            for (int i = 0; i < _upgradeTargets.Count; i++)
-            {
-                string name = NameOf(item, _upgradeTargets[i]);
-                float current = ValueOf(item, _upgradeTargets[i]);
-                float raised = current * (1f + ItemUpgrade.StepFraction);
-                string line = $"{(i == _nav.UpgradeCursor ? ">" : " ")} {name}  {current:F2}  "
-                    + $"→ {raised:F2}";
-                _text.Append(i == _nav.UpgradeCursor
-                    ? UiBuild.Tint(line, UiBuild.Focus)
-                    : line).Append('\n');
-            }
-
-            _text.Append("\nLight: spend a point   Heavy: back");
-            return _text.ToString();
         }
 
         /// <summary>What a target's stat currently reads, so the panel can show the step.</summary>

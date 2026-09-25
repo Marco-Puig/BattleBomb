@@ -94,7 +94,6 @@ namespace BattleBomb.UI.Chest
         private readonly List<Image> _statRow = new List<Image>();
         private readonly List<Text> _totalName = new List<Text>();
         private readonly List<Text> _totalValue = new List<Text>();
-        private readonly Text _hints;
 
         internal HeroPanel(RectTransform parent)
         {
@@ -240,10 +239,6 @@ namespace BattleBomb.UI.Chest
                 UiBuild.Stretch(value.rectTransform);
                 _totalValue.Add(value);
             }
-
-            _hints = UiBuild.Legible(UiBuild.Label("Hints", pad, string.Empty, 12, UiBuild.Muted,
-                TextAnchor.LowerLeft, UiBuild.Ui));
-            UiBuild.Stretch(_hints.rectTransform);
         }
 
         /// <summary>The verb list that floats over a worn slot.</summary>
@@ -387,8 +382,6 @@ namespace BattleBomb.UI.Chest
             SetTotal(3, "Swing", "×" + sheet.SwingSpeedMultiplier.ToString("F2"));
             SetTotal(4, "Speed", "×" + sheet.NetMoveSpeedMultiplier.ToString("F2"));
             SetTotal(5, "Mana", sheet.MaxMana.ToString("F0"));
-
-            _hints.text = "Stick: move    Light: open the slot    Heavy: back    Esc: leave";
         }
 
         private void FillColumn(PlayerInventory bag, Slot[] slots, ChestScreenHost host, ref int index)

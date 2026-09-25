@@ -156,6 +156,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — PROTOCOL rule 11 (Michael): blocked or out-of-work lanes, the orchestrator included, are
+  readied to compact (`PREPARE TO COMPACT` → `READY TO COMPACT`). Orchestrator lane file added.
 - 2026-09-25 — Michael restarted the Unity bridge; the Builder continues Task 12.
 - 2026-09-25 — Task 12 code in; the Unity bridge jammed after a synchronous test run timed out.
   Waiting on Michael to restart it.

@@ -14,7 +14,7 @@ context reset.**
 
 | Lane | Job | Priority | May write |
 |---|---|---|---|
-| **Orchestrator** | Plans, answers, commits, pushes, hands out the sim, keeps shared docs | — | `docs/team/BOARD.md`, `PROTOCOL.md`, `PROMPTS.md`, the shared docs below, git, memory |
+| **Orchestrator** | Plans, answers, commits, pushes, hands out the sim, keeps shared docs, gets lanes ready to compact | — | `docs/team/BOARD.md`, `PROTOCOL.md`, `PROMPTS.md`, `docs/team/orchestrator.md`, the shared docs below, git, memory |
 | **Builder** | Builds engineering milestones in Unity — Groundwork now | 1 | `Assets/`, `Packages/`, `ProjectSettings/` **while holding the sim**; `docs/team/builder.md` |
 | **Netcode** | Gets M8 (online co-op) designed and planned; the pre-M8 fixes plan | 2 | `docs/team/netcode/`, `docs/HANDOFF-M8.md`, M8 and pre-M8 plan files under `docs/superpowers/plans/`, `docs/team/netcode.md` |
 | **World** | Runs the World session; writes the story bible (D56) | 3 | `docs/world/`, `docs/team/world.md` |
@@ -91,6 +91,7 @@ files for detail.
 | `LOCK REQUEST` / `LOCK RELEASED` | The sim, rule 4 |
 | `QUIET REQUEST` | Rule 5 |
 | `STATUS` | Answering the orchestrator, or a milestone reached |
+| `READY TO COMPACT` | Rule 11: your lane file holds everything; Michael may compact you |
 
 | The orchestrator sends | Meaning |
 |---|---|
@@ -100,6 +101,7 @@ files for detail.
 | `COMMITTED <hash>` | Your `DONE` is in git (and pushed); you may touch those files again |
 | `LOCK GRANTED` / `LOCK BACK` | You have the sim / please reach a clean point and release it |
 | `QUIET ON` / `QUIET OFF` | Rule 5 |
+| `PREPARE TO COMPACT` | Rule 11: make your lane file complete, then reply `READY TO COMPACT` |
 
 ### 7. Who you ask
 - **Creative or taste questions about your own lane's work** (World asking about the heroes, Art
@@ -142,6 +144,23 @@ something that must not be lost (an answer, a decision, a trap). Keep these sect
 
 The orchestrator seeds each lane file, reads them when committing, and corrects them if they
 drift from the board.
+
+---
+
+### 11. Getting ready to compact (Michael, 2026-09-25)
+Whenever a lane is **blocked**, or has **finished all the work available to it**, the orchestrator
+sends `PREPARE TO COMPACT`. The lane then:
+
+1. Brings its lane file fully up to date — **Waiting on**, **Current state**, **Next steps**,
+   **Answers and decisions**, **Log** — and moves into it anything that lives only in the
+   conversation or in the session's scratchpad and would be needed to resume (addresses, half-made
+   decisions, traps learned, where a file on disk stands).
+2. Makes sure every change it made is either committed or listed in a sent `DONE`.
+3. Replies **`READY TO COMPACT`** with one line saying what it will do first when it resumes.
+
+The orchestrator then tells Michael the lane is safe to `/compact`. After compacting, the lane
+re-reads the protocol, the board, and its lane file (rule 10), and carries on. The orchestrator does
+the same for itself, using `docs/team/orchestrator.md`.
 
 ---
 

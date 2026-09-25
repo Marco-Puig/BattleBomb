@@ -42,7 +42,10 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-Nothing.
+- **Orchestrator: COMMITTED for the Plan 1 DONE** (sent 2026-09-24; mirrored here in case it was
+  held). Paths: `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md` (new),
+  `docs/team/netcode.md`. Subject: "M8 Plan 1: the wire and the mirror (Tasks 86–96)". Do not edit
+  the plan until COMMITTED.
 
 ## Current state
 
@@ -51,8 +54,13 @@ Michael, in this session, one decision at a time, recommendation first. Agenda o
 netcode layer + Steam wrapper (Claude recommends, Michael agrees) → how couch and online mix →
 join point → screens online → saves online (who holds guest gear / what guest keeps / leaving) →
 feel → test tooling + Steamworks account timing. Record each answer below as it lands.
-**Session place: decisions recorded as D58–D62. Design presentation: §1 (player experience)
-approved; §2 (build order) approved; §3 (testing) approved.** `docs/HANDOFF-M8.md` written and
+**All four steps of the lane's brief are done: audit, options, design session (D58–D62),
+spec (HANDOFF-M8, approved) and Plan 1.** Remaining lane work waits on execution: Plan 2 once
+Plan 1 is underway; Plan 3 after Michael's Stage B lag table. Until then: answer the Builder's
+questions about Plan 1, and review its commits against the plan if the orchestrator asks.
+
+(History: design presentation §1 (player experience) approved; §2 (build order) approved; §3
+(testing) approved.) `docs/HANDOFF-M8.md` written and
 self-reviewed (20 planning decisions; tasks 86–114 across stages A–F + close-out — renumbered from 84–112 because 84/85 were taken by M7-era commits). Also corrected
 `options.md` (bandwidth ~2.5 KB/snapshot ~75 KB/s; local transport is TCP). **Michael approved the
 written spec (2026-09-24); DONE sent** (HANDOFF-M8 + options.md + this file — do not touch
@@ -70,6 +78,49 @@ NGO 2.11 has no full prediction/reconciliation ("client anticipation" only), own
 CustomMessagingManager for raw messages, Steam only via community transports; Multiplayer Play Mode
 2.0.x on Unity 6000.4+, up to 4 editor instances (needs a non-Steam transport); ISteamNetworkingMessages
 is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (Spacewar).
+
+### Plan 1 — WRITTEN (2026-09-24)
+
+`docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md` — Tasks 86–96, ~8,000 lines, full
+code, self-reviewed (placeholder scan clean; type-consistency list at its end). DONE sent to the
+orchestrator. Executed by the sim holder after Groundwork + the Builder's pre-M8 batch. Plan 2
+(97–105) is written when Plan 1 is underway; Plan 3 (106–114) after Michael's Stage B lag table.
+
+### Plan 1 working notes (kept for Plan 2/3 context)
+
+Progress: part0 (header, file map), part1 (Tasks 86–88), part2 (Tasks 89–90), part3 (91–92)
+written in `<scratchpad>/plan1/`; part4 (93–94: SnapshotBuffer/RenderClock/ReplicaWorld, drops
+removed only if born before the snapshot, NetSession holds messages until NetGuest.Start; stage
+hooks StageLoadRequested/StageHandedOver/RemoteStageReady + HoldForPeer), part5 (95–96 +
+self-review) to go. If the
+scratchpad is lost after a reset, re-derive from these notes. Being written in parts under the
+scratchpad, then concatenated to
+`docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`. Settled shapes:
+- Core/Net: `NetWriter`/`NetReader` (LE, `NetFormatException`), `NetQuantize` (16-bit axis),
+  `NetProtocol` consts, `NetMessageKind` byte enum (Hello, Welcome, Refuse, Commands, Launch,
+  Snapshot, Events, LoadStage, StageReady, HandOver, KeepAlive, SessionEnd, Bye), `WireCommand`,
+  `CommandCodec`, `InputBuffer` + `RemoteCommandStream` (edges re-derived; starved = repeat held,
+  never press; catch-up merges two), `HandshakeCodec`, snapshot structs + `StateCodec` +
+  `SnapshotCodec`, `ItemWire` (ItemSave JSON via SaveMapper — drops are rare), `SnapshotBuffer`,
+  `RenderClock`. Core additions: `Health.FromValues`, `ManaPool.FromValues`,
+  `AttackTuning.IsRadialAuthored`, `StatusTrack.Restore`.
+- Platform/Net: `INetTransport` (Listen, Connect(address), Send(peer, channel, bytes, len),
+  Update(now), TryReceive, Disconnect), `LoopbackTransport.CreatePair`, `LagSimulator` (send-side
+  delay, seeded, loss on unreliable only), `LagProfile` None/Normal/Bad, `LocalSocketTransport`
+  (TCP loopback, length-prefixed frames). No PlatformRegistry until Plan 3 (YAGNI).
+- Gameplay/Net: `NetSession` on the GameSession object (role, handshake, keepalive, timeouts,
+  `MessageReceived`); `NetHost`/`NetGuest` added at runtime by `SessionBinder` (no scene edits);
+  `RemoteCommandSource`; `CharacterActor.BindSource`; Groundwork's `InputSystemCommandSource` gains
+  `UseSeat(seat, speakAs)` so the guest's slot 1 owns all devices but speaks as P2.
+- Dev join: `UI/Debug/NetDevOverlay` (IMGUI, dev builds only) — Host local / Join local / lag
+  profile / status; no FrontendFlow logic change except one line `_session.Roster = _roster`.
+  Plan 1 dev simplification: the guest plays the host's hero if slot 1 is empty (Plan 2's lobby
+  replaces it); a guest connected at launch takes slot 1 over any local P2 join.
+- Guest guards in Plan 1: driver replica (sample + send + apply, no RunStep), StageRunner (no own
+  launch/waves; follows LoadStage/HandOver), SaveService (no writes), SessionBinder.Start (no
+  restore), `SimulationDriver.MayOpenScreen` (remote players cannot open screens until Plan 2).
+- Tests can use only public API (no InternalsVisibleTo in the repo). PlayMode tests use a
+  `HeadlessGuest` test helper over `LoopbackTransport`; replay proof records host→guest messages.
 
 ## Next steps
 
@@ -160,6 +211,13 @@ is connectionless P2P to a SteamID over Valve's relay. `steam_appid.txt` = 480 (
 
 ## Log
 
+- 2026-09-24 — Plan 1 written (Tasks 86–96) and DONE sent. Design choices worth remembering:
+  dev host/join is a self-installing IMGUI panel (no scene edits, UI stays off Platform); NetHost/
+  NetGuest are added at runtime by SessionBinder.Awake (order -100 is load-bearing); the guest
+  plays the host's hero until Plan 2's lobby; `MayOpenScreen` keeps remote players out of screens
+  until Plan 2; the replay proof records host→guest messages + truth and compares the replica.
+- 2026-09-24 — HANDOFF-M8 approved by Michael; tasks renumbered 86–114 (COMMITTED 524042f).
+- 2026-09-24 — Design session done; D58–D62 recorded by the orchestrator (8959474, 5758b03).
 - 2026-09-24 — readiness.md complete; DONE sent. Flagged out-of-lane: deferred-Destroy multi-step
   bug (enemies act after a wipe below 60 fps), DEBUG grant in release, shop rack rolled in the UI,
   constant RNG seeds (+ same-hero couch save collision).

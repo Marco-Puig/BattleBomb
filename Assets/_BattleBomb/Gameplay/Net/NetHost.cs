@@ -30,7 +30,6 @@ namespace BattleBomb.Gameplay.Net
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
         private readonly List<ReplicatedEvent> _stamped = new List<ReplicatedEvent>();
         private readonly WorldSnapshot _snapshot = new WorldSnapshot();
-        private readonly List<DropPickup> _drops = new List<DropPickup>();
         private readonly HashSet<int> _guestReady = new HashSet<int>();
         private NetSession _net;
         private GameSession _session;
@@ -214,48 +213,6 @@ namespace BattleBomb.Gameplay.Net
             {
                 _snapshot.Projectiles.Add(bolts[i]);
             }
-
-            CaptureDrops();
-        }
-
-        /// <summary>Every drop's id — or, past what one snapshot may name, the ones nearest the players: a
-        /// guest must never lose the drop at their feet to one left three stages back.</summary>
-        private void CaptureDrops()
-        {
-            _drops.Clear();
-            IReadOnlyList<DropPickup> pickups = _driver.Pickups;
-            for (int i = 0; i < pickups.Count; i++)
-            {
-                if (pickups[i] != null)
-                {
-                    _drops.Add(pickups[i]);
-                }
-            }
-
-            if (_drops.Count > NetProtocol.MaxEntities)
-            {
-                _drops.Sort(NearestFirst);
-                _drops.RemoveRange(NetProtocol.MaxEntities, _drops.Count - NetProtocol.MaxEntities);
-            }
-
-            for (int i = 0; i < _drops.Count; i++)
-            {
-                _snapshot.DropIds.Add(_drops[i].NetId);
-            }
-        }
-
-        private int NearestFirst(DropPickup a, DropPickup b) =>
-            DistanceToNearestPlayer(a).CompareTo(DistanceToNearestPlayer(b));
-
-        private float DistanceToNearestPlayer(DropPickup drop)
-        {
-            float nearest = float.MaxValue;
-            for (int i = 0; i < _snapshot.Players.Count; i++)
-            {
-                nearest = Mathf.Min(nearest, (_snapshot.Players[i].Motor.Position - drop.Position).sqrMagnitude);
-            }
-
-            return nearest;
         }
 
         private EntityRef RefOf(Component component)

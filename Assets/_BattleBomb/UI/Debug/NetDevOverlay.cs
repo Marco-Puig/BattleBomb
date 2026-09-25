@@ -16,6 +16,7 @@ namespace BattleBomb.UI.Debug
         private int _lag;
         private bool _folded;
         private GUIStyle _style;
+        private GameSession _session;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -38,7 +39,12 @@ namespace BattleBomb.UI.Debug
             var area = new Rect(Screen.width - width - 8f, Screen.height - row * 5f - 8f, width, row * 5f);
             GUILayout.BeginArea(area, GUI.skin.box);
 
-            GameSession session = GameSession.Find();
+            if (_session == null)
+            {
+                _session = FindAnyObjectByType<GameSession>();
+            }
+
+            GameSession session = _session;
             NetSession net = session != null ? session.Net : null;
             NetRole role = net != null ? net.Role : NetRole.Offline;
 
@@ -54,7 +60,7 @@ namespace BattleBomb.UI.Debug
                 {
                     if (GUILayout.Button($"Lag: {NetSession.LocalLagNames[_lag]}", _style))
                     {
-                        _lag = (_lag + 1) % NetSession.LocalLagNames.Length;
+                        _lag = (_lag + 1) % NetSession.LocalLagNames.Count;
                     }
 
                     GUILayout.BeginHorizontal();

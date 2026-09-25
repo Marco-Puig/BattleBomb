@@ -35,7 +35,6 @@ namespace BattleBomb.Tests.EditMode.Net
             FieldCoverage.AssertSame(sent.Enemies[0], received.Enemies[0], "Enemies[0]");
             FieldCoverage.AssertSame(sent.Dummies[0], received.Dummies[0], "Dummies[0]");
             FieldCoverage.AssertSame(sent.Projectiles[1], received.Projectiles[1], "Projectiles[1]");
-            Assert.That(received.DropIds, Is.EqualTo(sent.DropIds));
             Assert.That(reader.Remaining, Is.Zero);
         }
 
@@ -71,7 +70,6 @@ namespace BattleBomb.Tests.EditMode.Net
                     sent.Enemies.Add(FieldCoverage.Filled<EnemySnapshot>(s));
                     sent.Dummies.Add(FieldCoverage.Filled<DummySnapshot>(s));
                     sent.Projectiles.Add(FieldCoverage.Filled<ProjectileState>(s));
-                    sent.DropIds.Add(100 * seed + i);
                 }
 
                 var writer = new NetWriter();
@@ -88,7 +86,6 @@ namespace BattleBomb.Tests.EditMode.Net
                 Assert.That(received.HostFrame, Is.EqualTo(sent.HostFrame));
                 Assert.That(received.AckGuestFrame, Is.EqualTo(sent.AckGuestFrame));
                 Assert.That(received.AttemptStepsAllDown, Is.EqualTo(sent.AttemptStepsAllDown));
-                Assert.That(received.DropIds, Is.EqualTo(sent.DropIds));
                 Assert.That(received.Players.Count, Is.EqualTo(2), "Stale players survived a read.");
                 Assert.That(received.Enemies.Count, Is.EqualTo(2), "Stale enemies survived a read.");
                 Assert.That(received.Dummies.Count, Is.EqualTo(2), "Stale dummies survived a read.");
@@ -152,8 +149,6 @@ namespace BattleBomb.Tests.EditMode.Net
             world.Dummies.Add(new DummySnapshot(0, 3, FieldCoverage.Filled<MotorState>(80), FieldCoverage.Filled<Health>(81)));
             world.Projectiles.Add(FieldCoverage.Filled<ProjectileState>(90));
             world.Projectiles.Add(FieldCoverage.Filled<ProjectileState>(91));
-            world.DropIds.Add(4);
-            world.DropIds.Add(9);
             return world;
         }
     }

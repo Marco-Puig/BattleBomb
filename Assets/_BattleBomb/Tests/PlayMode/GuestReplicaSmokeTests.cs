@@ -5,10 +5,13 @@ using BattleBomb.Core.Enemies;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Movement;
 using BattleBomb.Core.Net;
+using BattleBomb.Core.Players;
 using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Characters;
+using BattleBomb.Gameplay.Data;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Net;
+using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Platform;
@@ -23,8 +26,8 @@ namespace BattleBomb.Tests.PlayMode
     /// A real guest machine fed a hand-built host (Task 93, ahead of Task 95's recorded one): a launch,
     /// snapshots in which two players and an enemy move on known straight paths, and a few events — two
     /// drops announced while the guest is still loading, one of them later taken away, and a partner
-    /// hit. The picture must follow the snapshots; a drop no snapshot names must stay, because since
-    /// Task 92's caps only a DropRemoved says a drop is gone.
+    /// hit. The picture must follow the snapshots; a drop stays until a DropRemoved says otherwise,
+    /// because snapshots carry no drops at all.
     /// </summary>
     public sealed class GuestReplicaSmokeTests
     {
@@ -43,9 +46,14 @@ namespace BattleBomb.Tests.PlayMode
         private const float TeleportJump = 10f;
         private const float Tolerance = 0.05f;
 
+        /// <summary>The seat a guest plays in — the one NetGuest sends for.</summary>
+        private static int GuestOwnPlayerId => GameSession.Find().Net.GuestPlayerId.Value;
+
         private PlaybackTransport _playback;
         private NetGuest _guest;
         private SimulationDriver _driver;
+        private MemorySaveStore _store;
+        private CharacterDefinition[] _couch;
 
         [UnitySetUp]
         public IEnumerator JoinAHandBuiltHost()
@@ -58,11 +66,18 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             GameSession session = GameSession.FindOrCreate();
-            session.Store = new MemorySaveStore();
+            _store = new MemorySaveStore();
+            session.Store = _store;
             session.SaveName = "guest-replica";
             SceneManager.LoadScene("Frontend", LoadSceneMode.Single);
             yield return null;
             yield return null;
+
+            // The recording's launch picks roster entry 0 for both seats, so the couch holds a copy of
+            // it: a distinct reference is the only way to tell the couch came back.
+            _couch = new CharacterDefinition[] { Object.Instantiate(session.Roster[0]), null };
+            session.Characters[0] = _couch[0];
+            session.Characters[1] = _couch[1];
 
             _playback = new PlaybackTransport(Recording());
             NetSession.FindOrCreate().Join(_playback, "playback");
@@ -85,16 +100,21 @@ namespace BattleBomb.Tests.PlayMode
                 Object.Destroy(session.gameObject);
             }
 
+            if (_couch != null && _couch[0] != null)
+            {
+                Object.Destroy(_couch[0]);
+            }
+
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator A_drop_no_snapshot_names_stays_and_a_removed_one_goes()
+        public IEnumerator A_drop_stays_until_the_host_says_it_is_gone()
         {
             yield return PlayToTheEnd();
 
             Assert.That(PickupIds(), Does.Contain(KeptDrop),
-                "A drop no snapshot named was deleted: since the snapshot caps, being left out is not being gone.");
+                "A drop the host never removed was deleted — snapshots carry no drops at all.");
             Assert.That(PickupIds(), Has.No.Member(RemovedDrop), "A drop the host said had gone is still drawn.");
         }
 
@@ -192,6 +212,198 @@ namespace BattleBomb.Tests.PlayMode
                 $"Player 1 was drawn sliding {widest:F2} between two steps across a teleport.");
         }
 
+        [UnityTest]
+        public IEnumerator A_guest_who_leaves_mid_match_writes_no_save()
+        {
+            yield return AdvanceUntil(() => _guest.RenderFrame >= Start, "The guest never started drawing.");
+
+            GameSession.Find().Net.Leave();
+            yield return null;
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(NetSession.GameplayScene),
+                "A guest who left mid-match was pulled out of the replica scene.");
+
+            Object.FindAnyObjectByType<SaveService>().SaveNow();
+            Assert.That(_store.Names(), Is.Empty,
+                "A guest who left mid-match wrote the replica's empty stash over their save.");
+        }
+
+        [UnityTest]
+        public IEnumerator The_guests_couch_comes_back_after_the_match()
+        {
+            GameSession session = GameSession.Find();
+            Assert.That(session.Characters, Is.Not.EqualTo(_couch),
+                "The launch never replaced the couch — this case proves nothing.");
+
+            _playback.Disconnect(default);
+            yield return AdvanceUntil(() => SceneManager.GetActiveScene().name == NetSession.FrontendScene,
+                "The guest never returned to the front door once the host vanished.");
+
+            Assert.That(session.Characters, Is.EqualTo(_couch),
+                "The guest's front door lost its couch to the host's picks.");
+        }
+
+        [UnityTest]
+        public IEnumerator The_guests_own_menu_never_reaches_the_host()
+        {
+            const CommandButtons South = CommandButtons.Jump | CommandButtons.Confirm;
+
+            CharacterActor own = null;
+            foreach (CharacterActor actor in _driver.Characters.Ordered)
+            {
+                if (actor.PlayerId.Value == GuestOwnPlayerId)
+                {
+                    own = actor;
+                }
+            }
+
+            Assert.That(own, Is.Not.Null, $"Player {GuestOwnPlayerId} — the launch's guest seat — never spawned.");
+            foreach (InputSystemCommandSource device in
+                Object.FindObjectsByType<InputSystemCommandSource>(FindObjectsInactive.Include))
+            {
+                device.enabled = false;
+            }
+
+            _driver.Players.Unregister(own.PlayerId);
+            var source = own.gameObject.AddComponent<ScriptedCommandSource>();
+            source.Bind(own.PlayerId.Value);
+            _driver.Players.Register(source);
+
+            yield return AdvanceUntil(() => _guest.RenderFrame >= Start, "The guest never started drawing.");
+
+            // Stepped fires after SettingsMenu has ticked (it subscribed first, in its own OnEnable),
+            // so sampling here catches the menu's state and this step's own raw buttons exactly —
+            // unlike reading _driver.Frame between yields, which the editor can advance by more than
+            // one step per render frame.
+            var openAfter = new Dictionary<int, bool>();
+            var raw = new Dictionary<int, CommandButtons>();
+            void RecordStep(int frame)
+            {
+                openAfter[frame] = _driver.MenuPauseHeld;
+                raw[frame] = _driver.CommandFor(GuestOwnPlayerId).Held;
+            }
+
+            _driver.Stepped += RecordStep;
+            try
+            {
+                // Pause opens the guest's own settings menu the same step it is pressed, and that step
+                // has already sent — the send that must go out neutral starts the step after.
+                source.Set(Vector2.zero, CommandButtons.Pause);
+                yield return AdvanceSteps(1);
+                source.Release();
+                yield return AdvanceUntil(() => _driver.MenuPauseHeld, "Pause never opened the guest's own settings menu.");
+
+                // AutoEquip is the first row, so a fresh Confirm here only toggles it — Back is what closes.
+                source.Set(Vector2.right, South);
+                yield return AdvanceSteps(3);
+                source.Set(Vector2.right, South | CommandButtons.Back);
+                yield return AdvanceSteps(1);
+                Assert.That(_driver.MenuPauseHeld, Is.False, "Back never closed the guest's own settings menu.");
+
+                // South stays held across the close (D57's held-across rule) before being let go and pressed fresh.
+                source.Set(Vector2.zero, South);
+                yield return AdvanceSteps(10);
+                source.Release();
+                yield return AdvanceSteps(5);
+                source.Set(Vector2.zero, CommandButtons.Jump);
+                yield return AdvanceSteps(5);
+                source.Release();
+            }
+            finally
+            {
+                _driver.Stepped -= RecordStep;
+            }
+
+            var sent = new Dictionary<int, WireCommand>();
+            var batch = new List<WireCommand>();
+            foreach (byte[] message in _playback.Sent)
+            {
+                var reader = new NetReader(message);
+                if ((NetMessageKind)reader.ReadByte() != NetMessageKind.Commands)
+                {
+                    continue;
+                }
+
+                CommandCodec.Read(reader, batch);
+                foreach (WireCommand command in batch)
+                {
+                    sent[command.Frame] = command;
+                }
+            }
+
+            var frames = new List<int>(sent.Keys);
+            frames.Sort();
+
+            bool sawDuringOpen = false;
+            bool sawBetween = false;
+            bool sawFreshJump = false;
+            bool inBetweenRun = false;
+            foreach (int frame in frames)
+            {
+                // The send for frame f went out before f's own menu tick, so it saw the menu as it
+                // stood after f - 1's tick.
+                if (!openAfter.TryGetValue(frame - 1, out bool openAtSend))
+                {
+                    continue;
+                }
+
+                WireCommand command = sent[frame];
+                if (openAtSend)
+                {
+                    sawDuringOpen = true;
+                    inBetweenRun = true;
+                    Assert.That(command.Held, Is.EqualTo(CommandButtons.None),
+                        $"Frame {frame}: the guest's own menu was open and a held button reached the host.");
+                    Assert.That(command.Move, Is.EqualTo(Vector2.zero),
+                        $"Frame {frame}: the guest's own menu was open and its stick reached the host.");
+                    continue;
+                }
+
+                if (inBetweenRun)
+                {
+                    bool rawStillHasJump = raw.TryGetValue(frame, out CommandButtons rawHeld)
+                        && (rawHeld & CommandButtons.Jump) != CommandButtons.None;
+                    if (rawStillHasJump)
+                    {
+                        sawBetween = true;
+                        Assert.That(command.Held & CommandButtons.Jump, Is.EqualTo(CommandButtons.None),
+                            $"Frame {frame}: South held across the menu's close reached the host as a jump.");
+                        continue;
+                    }
+
+                    inBetweenRun = false;
+                }
+
+                if ((command.Held & CommandButtons.Jump) != CommandButtons.None)
+                {
+                    sawFreshJump = true;
+                }
+            }
+
+            Assert.That(sawDuringOpen, Is.True, "Nothing was sent while the guest's own menu was open — the case proves nothing.");
+            Assert.That(sawBetween, Is.True, "Nothing was sent between the close and the release — the case proves nothing.");
+            Assert.That(sawFreshJump, Is.True, "Jump never reached the host once South was fully let go and pressed again.");
+        }
+
+        private IEnumerator AdvanceSteps(int steps)
+        {
+            int target = _driver.Frame + steps;
+            for (int guard = 0; guard < 6000 && _driver.Frame < target; guard++)
+            {
+                yield return null;
+            }
+        }
+
+        private IEnumerator AdvanceUntil(System.Func<bool> condition, string failure)
+        {
+            for (int guard = 0; guard < 6000 && !condition(); guard++)
+            {
+                yield return null;
+            }
+
+            Assert.That(condition(), Is.True, failure);
+        }
+
         private IEnumerator PlayToTheEnd()
         {
             for (int guard = 0; guard < 6000 && !Finished(); guard++)
@@ -242,7 +454,7 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>
         /// What a host would have sent, in the order it would have sent it: the launch; both drops
         /// announced at once, so they arrive while the guest is still loading (and must be held); a
-        /// snapshot every second step that never names the kept drop, as though a cap left it out; the
+        /// snapshot every second step, which never names either drop — snapshots carry no drops; the
         /// removal of the other; and a partner hit.
         /// </summary>
         private static List<(int Frame, byte[] Payload)> Recording()
@@ -276,10 +488,6 @@ namespace BattleBomb.Tests.PlayMode
                 world.Enemies.Add(new EnemySnapshot(
                     EnemyNetId, 0, 0, false, -1, MotorState.AtRest(new Vector3(EnemyX(frame), 0f, 2f)), EnemyState.Fresh,
                     Health.FromValues(30f, 30f), -1, 0, null));
-                if (frame < RemovedAt)
-                {
-                    world.DropIds.Add(RemovedDrop);
-                }
 
                 writer.Reset();
                 SnapshotCodec.Write(writer, world);

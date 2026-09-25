@@ -36,7 +36,7 @@ namespace BattleBomb.Core.Net
         }
     }
 
-    /// <summary>A drop appearing, with the item it carries — sent once; snapshots name it by id after.</summary>
+    /// <summary>A drop appearing, with the item it carries — sent once; snapshots carry no drops.</summary>
     public readonly struct DropRecord
     {
         public readonly int NetId;

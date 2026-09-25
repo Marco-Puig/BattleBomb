@@ -124,7 +124,6 @@ namespace BattleBomb.Core.Net
         public readonly List<EnemySnapshot> Enemies = new List<EnemySnapshot>(32);
         public readonly List<DummySnapshot> Dummies = new List<DummySnapshot>(4);
         public readonly List<ProjectileState> Projectiles = new List<ProjectileState>(32);
-        public readonly List<int> DropIds = new List<int>(16);
 
         public void Clear()
         {
@@ -136,7 +135,6 @@ namespace BattleBomb.Core.Net
             Enemies.Clear();
             Dummies.Clear();
             Projectiles.Clear();
-            DropIds.Clear();
         }
 
         public bool TryGetPlayer(int playerId, out PlayerSnapshot player)

@@ -9,7 +9,7 @@ namespace BattleBomb.Core.Net
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 1;
+        public const int Version = 2;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>

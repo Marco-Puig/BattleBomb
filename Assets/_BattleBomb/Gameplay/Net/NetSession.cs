@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
@@ -113,7 +114,7 @@ namespace BattleBomb.Gameplay.Net
         }
 
         /// <summary>The lag profiles the development panel cycles through, by index.</summary>
-        public static readonly string[] LocalLagNames = { "None", "Normal", "Bad" };
+        public static readonly IReadOnlyList<string> LocalLagNames = Array.AsReadOnly(new[] { "None", "Normal", "Bad" });
 
         /// <summary>Development: host on this machine's local socket (two editors, HANDOFF-M8 Task 90).</summary>
         public void HostLocal(int lagIndex) =>

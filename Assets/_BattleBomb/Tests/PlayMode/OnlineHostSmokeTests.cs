@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
@@ -278,7 +279,7 @@ namespace BattleBomb.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator A_drop_reaches_the_guest_with_its_item_and_is_named_after()
+        public IEnumerator A_drop_reaches_the_guest_with_its_item()
         {
             ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
             int spawnedAt = _driver.Frame;
@@ -299,37 +300,6 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(drop.Drop.NetId, Is.GreaterThan(0));
             Assert.That(drop.HostFrame, Is.EqualTo(spawnedAt),
                 "The drop crossed without the step it appeared in; the guest would place it against the wrong snapshot.");
-            Assert.That(LatestSnapshot().DropIds, Does.Contain(drop.Drop.NetId),
-                "Snapshots do not name the drop the guest was told about.");
-        }
-
-        [UnityTest]
-        public IEnumerator Past_the_snapshot_bound_the_drops_nearest_the_players_are_the_ones_named()
-        {
-            // One at the guest's feet before the far ones and one after, so keeping the oldest or the
-            // newest cuts one of them, and only keeping the nearest names both.
-            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
-            _driver.SpawnDebugDrop(_guestBody.Position, knife);
-            int firstAtTheirFeet = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
-            Vector3 away = _host.Position + new Vector3(8f, 0f, 0f);
-            for (int i = 0; i < NetProtocol.MaxEntities + 20; i++)
-            {
-                _driver.SpawnDebugDrop(away + new Vector3(0f, 0f, (i % 5) * 0.2f), knife);
-            }
-
-            _driver.SpawnDebugDrop(_guestBody.Position, knife);
-            int lastAtTheirFeet = _driver.Pickups[_driver.Pickups.Count - 1].NetId;
-            int spawnedAt = _driver.Frame;
-            yield return Steps(6);
-
-            WorldSnapshot latest = LatestSnapshot();
-            Assert.That(latest.HostFrame, Is.GreaterThan(spawnedAt),
-                "The host stopped sending snapshots past the bound: a Stepped subscriber threw.");
-            Assert.That(latest.DropIds.Count, Is.EqualTo(NetProtocol.MaxEntities));
-            Assert.That(latest.DropIds, Does.Contain(firstAtTheirFeet),
-                "The oldest drop at the guest's feet was cut to name one farther away.");
-            Assert.That(latest.DropIds, Does.Contain(lastAtTheirFeet),
-                "The newest drop at the guest's feet was cut to name one farther away.");
         }
 
         [UnityTest]
@@ -378,7 +348,7 @@ namespace BattleBomb.Tests.PlayMode
         }
 
         [UnityTest]
-        public IEnumerator A_drop_left_out_of_a_full_snapshot_is_never_announced_gone()
+        public IEnumerator Hundreds_of_drops_keep_the_host_sending_and_none_is_announced_gone()
         {
             ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 1f);
             for (int i = 0; i < NetProtocol.MaxEntities + 20; i++)
@@ -386,9 +356,12 @@ namespace BattleBomb.Tests.PlayMode
                 _driver.SpawnDebugDrop(_host.Position + new Vector3(8f, 0f, (i % 5) * 0.2f), knife);
             }
 
+            int spawnedAt = _driver.Frame;
             yield return Steps(10);
 
-            Assert.That(RemovedDropIds(), Is.Empty, "A drop the snapshot only left out was announced as gone.");
+            Assert.That(LatestSnapshot().HostFrame, Is.GreaterThan(spawnedAt),
+                "The host stopped sending snapshots past hundreds of drops: a Stepped subscriber threw.");
+            Assert.That(RemovedDropIds(), Is.Empty, "A drop never removed was announced as gone.");
         }
 
         [UnityTest]
@@ -457,6 +430,19 @@ namespace BattleBomb.Tests.PlayMode
             {
                 Assert.That(dummy.StageIndex, Is.EqualTo(_runner.StageIndex), "A snapshot named a dummy with a stage it does not stand in.");
             }
+        }
+
+        [UnityTest]
+        public IEnumerator A_remote_player_two_walks_the_fixture_chapter_to_its_end()
+        {
+            yield return PushBothRight(() => _runner.StageIndex == 1, 5000, "stage two, through the airlock");
+            yield return PushBothRight(() => _runner.Phase == StagePhase.Complete, 5000, "the end of the chapter");
+
+            Assert.That(_guest.LoadRequests, Is.EqualTo(new[] { 0, 1 }),
+                "The guest was not asked to stream exactly the chapter's two stages.");
+            Assert.That(_guest.Received.Exists(m => new NetReader(m).ReadByte() == (byte)NetMessageKind.HandOver), Is.True,
+                "The guest was never told about the hand-over.");
+            Assert.That(_driver.Characters.Ordered.Count, Is.EqualTo(2), "Player 2 did not finish the chapter with the host.");
         }
 
         private static bool SceneIsLoaded(string name)

@@ -38,7 +38,7 @@ tests in each.
 
 ## Waiting on
 
-**`COMMITTED` for Task 94** (DONE sent 22:30); then Task 95. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
+**`COMMITTED` for Task 95** (DONE sent 23:45); then Task 96. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
 `Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
 with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
 the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
@@ -365,11 +365,33 @@ Stages:
 - **7–9:** airlock test waits for FixtureStage2 + checks the stage-1 LoadStage (not launch, FirstArenaMinX = exit X); guest test Assumes set-up beat the second half; HeadlessGuest keeps whole LoadStage messages.
 - **Proposed for the board:** 4's generation half (stale BeginLoad completion) → Plan 2; 5 (mid-match rejoin deadlocks the airlock) → Plan 2 + Task 96 step 7 note (relaunch, don't re-host in place); 10 accepted.
 - **Gates:** EditMode 785/785; full PlayMode **61/61**. Line endings held. **Task 94 DONE sent (22:30).**
+**Task 94 COMMITTED `3d567b1`** (Y1–Y5 + fixes 1–9 accepted; the two Plan 2 items are on the board; the 96 step 7 note goes in 96's checklist; (a)–(c) join Stage B in `m8-plan1-pass.md`).
+**Task 95 started (22:40).** Scope = plan Steps 1–5 (record/replay + whole chapter; Step 2 already present) **plus** the board's carried items: DropIds out + Version bump (+ dead cap/NearestFirst and their tests); M2 (guest screen open → neutral; held-across after close), red-first; the two 89 tests (a leaving guest writes no save; the couch comes back); M6 (dev panel caches the session); M8 (LocalLagNames read-only). **Tell the orchestrator before any two-editor run**; the DONE says what's left for Michael's pass. Premise checks running.
+**95 premise checks (22:55):** plan holds — PlaybackTransport identical (skip Step 2); vetted Stepped list = exactly the guest's subscribers; snapshot HostFrame = Stepped's frame; whole chapter needs no kills (spawns off). Risks: Record() has spawns on → a respawn teleport breaks the 0.3 tolerance (Z1: skip frames near a truth jump); D57's rule is about scene changes (the menu extension is the orchestrator's). Extra spec `<scratchpad>/tasks/task95_extra.md`: Z1 teleport skip; Z2 M2 = Core `MenuGate` (neutral while `MenuPauseHeld`; held-across after) + 5 EditMode tests + a PlayMode wire check (PlaybackTransport keeps `Sent`); Z3 the two 89 tests (mutation-proved); Z4 DropIds out, Version 2, cap/sort + test edits; Z5 M6/M8. Stages S1–S4.
+**95 S1 (23:10):** Steps 1, 3+Z1, 4 script-verified. Replay 1/1 — worst player 0.023 (tol 0.3), enemy 0.007 (0.5), 2377 frames compared, 0 jumps, 315 messages; whole chapter 1/1. S2 dispatched.
+**95 S2–S3 (23:15):**
+- M2 test's boundaries rewritten per step (Stepped recorder: `openAfter[f-1]` = menu state at f's send), since the editor can run 2 steps per render frame.
+- Reds (stub): MenuGateTests 3 fail / 2 pass as predicted; PlayMode "Frame 119: the guest's own menu was open and a held button reached the host… Jump, Confirm".
+- S3 → MenuGateTests 5/5; M2 PlayMode green.
+- Deviation: the Frontend roster has one entry, so the couch is a throwaway `CharacterDefinition`.
+- **Mutations** (restored, `git status` clean on all three):
+  - SaveService's IsReplica guard gone → "wrote the replica's empty stash… But was: guest-replica".
+  - RestoreCouch no-op → "lost its couch".
+  - ReplicaWorld skips ApplyPlayers → replay "A replica player was 6.71 from the truth".
+- S4 dispatched (+ ReplicaWorld's stale drop comment).
+**95 S4 (23:25):** DropIds out (Snapshots, codec, NetHost's `_drops`/CaptureDrops/NearestFirst/DistanceToNearestPlayer — 43 lines), Version 2; `Past_the_snapshot_bound…` deleted, its keeps-sending check merged into `Hundreds_of_drops_keep_the_host_sending_and_none_is_announced_gone`; `A_drop_reaches_the_guest_with_its_item`; `A_drop_stays_until_the_host_says_it_is_gone`; stale drop comments reworded (ReplicaWorld, DropRecord). M6 overlay caches via FindAnyObjectByType; M8 IReadOnlyList. `DropIds` etc. → 0 hits. Gates: EditMode 790/790, PlayMode 65/65.
+**95 review "Yes with fixes" (23:30), applied:**
+- 1 (Important): replay could pass on a stalled render clock → asserts it drew the end + ≥ RecordSteps/4 distinct steps. **Mutation:** NetGuest render clock capped at host step 300 → "The replica never drew the end of the recording…" (restored; NetGuest diff = the 2 wiring lines).
+- 2: `enemiesCompared > 0`, 2 players. 3: jump threshold = the tolerances (a 0.6–3 u respawn would have flaked). 4: Stepped check repeated after the loop.
+- 5: SimulationDriver.PickupRemoved doc reworded. 8: couch = `Instantiate(Roster[0])`. 9: guest seat from `NetSession.GuestPlayerId`.
+- Nit: MenuGate re-normalised the stick → explicit edges; red-first `With_no_menu_the_stick_goes_out_exactly_as_it_came` (red: "(0.80, 0.60) vs (0.80, 0.60)").
+- **To the board:** 6 — D60 makes HoldMenuPause a no-op online → keep a menu-open count apart from the world pause (the M2 test will catch it); 7 — pre-existing: the host's results screen waits on a remote P2's frozen held buttons (only the pointer leaves).
+- **Final gates:** EditMode **791/791**, PlayMode **65/65** (61 + 5 new − 1 deleted). Line endings held; no InitTestScene. **Task 95 DONE sent (23:45)** — with HANDOFF-M8 :104/:105/:133 text, a D57 amendment offer, and Stage A check 9 for `m8-plan1-pass.md`.
 
 **Carried forward:**
 - **#2 (96):** the teleport threshold is fixed, so under loss a fast move over a wider pair snaps. Scale it by (to−from)/SnapshotEverySteps.
 - **#3 (96):** a host pause/menu stops snapshots, the guest's clock climbs to newest, and the jitter cushion is gone for ~0.4 s after resume; after a 7–30-step gap it catches up at 1.25×. Hold at newest−delay while newest isn't advancing.
-- **#4 (Plan 2):** DropIds is unread since X5 (~1 KB/snapshot, plus the sort). Remove it (a Version bump), or name the Plan 2 reader.
+- ~~**#4 (Plan 2):** DropIds is unread since X5…~~ — done in 95 (Version 2).
 - ~~**#5 (94):** snapshot dummies take `_runner.StageIndex`…~~ — done in 94 (Y2: the dummy stores its stage).
 - **Plan 2:** ApplyReplicaPlayerSide skips ScreenChanged.
 - **Cosmetic, for Michael's eye:** the guest's drop bounce starts from RestHeight.
@@ -925,6 +947,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## Log
 
+- 2026-09-25 23:45 — **Task 95 complete** (replay + whole-chapter proofs; M2 MenuGate; the two 89
+  tests; DropIds out, Version 2; M6/M8; review fixes): EditMode 791/791, PlayMode 65/65. `DONE`
+  sent; waiting for `COMMITTED`. Next: Task 96.
 - 2026-09-25 22:30 — **Task 94 complete** (guest streams stages; airlock + launch hold; review
   fixes incl. hand-over carries the host's step and no stranding): EditMode 785/785, PlayMode
   61/61. `DONE` sent; waiting for `COMMITTED`. Next: Task 95.

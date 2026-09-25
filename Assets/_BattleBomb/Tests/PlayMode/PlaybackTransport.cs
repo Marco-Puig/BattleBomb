@@ -7,7 +7,8 @@ namespace BattleBomb.Tests.PlayMode
     /// <summary>
     /// A host that is a recording: it welcomes whoever connects, then plays back what a real host
     /// sent, each message on the step it originally went out, at 60 steps a second of real time.
-    /// What the guest sends back is ignored — the recording cannot answer, and does not need to.
+    /// What the guest sends back is kept in <see cref="Sent"/> for a test to read; the recording
+    /// itself cannot answer, and does not need to.
     /// </summary>
     internal sealed class PlaybackTransport : INetTransport
     {
@@ -28,6 +29,9 @@ namespace BattleBomb.Tests.PlayMode
 
         internal bool Finished => _next >= _recording.Count;
 
+        /// <summary>Everything the guest sent, in order — the recording cannot answer, but a test can read.</summary>
+        internal List<byte[]> Sent { get; } = new List<byte[]>();
+
         public void Listen()
         {
         }
@@ -43,6 +47,9 @@ namespace BattleBomb.Tests.PlayMode
 
         public void Send(NetPeer peer, NetChannel channel, byte[] payload, int length)
         {
+            var copy = new byte[length];
+            System.Array.Copy(payload, copy, length);
+            Sent.Add(copy);
         }
 
         public void Update(double nowSeconds)

@@ -53,6 +53,12 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>Every <c>LoadStage</c> in full — where the host asked for each stage to go.</summary>
         internal List<LoadStageMessage> LoadMessages { get; } = new List<LoadStageMessage>();
 
+        /// <summary>Where the host's clock was when each message arrived — set by a recording test.</summary>
+        internal System.Func<int> Clock { get; set; }
+
+        /// <summary>Every message after the handshake, with the host step it arrived on, for playback.</summary>
+        internal List<(int Frame, byte[] Payload)> Recorded { get; } = new List<(int Frame, byte[] Payload)>();
+
         internal void Ready(int stage)
         {
             _writer.Reset();
@@ -134,6 +140,11 @@ namespace BattleBomb.Tests.PlayMode
                     break;
 
                 case NetEventKind.Data:
+                    if (IsWelcomed)
+                    {
+                        Recorded.Add((Clock != null ? Clock() : 0, netEvent.Payload));
+                    }
+
                     var reader = new NetReader(netEvent.Payload);
                     var kind = (NetMessageKind)reader.ReadByte();
                     if (kind == NetMessageKind.Welcome)

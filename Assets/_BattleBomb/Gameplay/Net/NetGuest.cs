@@ -24,6 +24,7 @@ namespace BattleBomb.Gameplay.Net
         private readonly RenderClock _clock = new RenderClock();
         private readonly List<ReplicatedEvent> _incoming = new List<ReplicatedEvent>();
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
+        private readonly MenuGate _menu = new MenuGate();
         private NetSession _net;
         private SimulationDriver _driver;
         private StageRunner _runner;
@@ -56,7 +57,7 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnLocalStep(int frame)
         {
-            PlayerCommand command = CommandCodec.Quantized(_driver.CommandFor(_local.Value));
+            PlayerCommand command = CommandCodec.Quantized(_menu.Filter(_driver.CommandFor(_local.Value), _driver.MenuPauseHeld));
             _recent.Add(WireCommand.From(command));
             if (_recent.Count > NetProtocol.CommandRedundancy)
             {

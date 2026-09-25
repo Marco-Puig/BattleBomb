@@ -63,12 +63,6 @@ namespace BattleBomb.Core.Net
             {
                 StateCodec.Write(w, s.Projectiles[i]);
             }
-
-            w.WriteCount(s.DropIds.Count, NetProtocol.MaxEntities);
-            for (int i = 0; i < s.DropIds.Count; i++)
-            {
-                w.WriteInt(s.DropIds[i]);
-            }
         }
 
         /// <summary>Reads into <paramref name="into"/>, clearing it first. The reader sits after the kind byte.</summary>
@@ -108,12 +102,6 @@ namespace BattleBomb.Core.Net
             for (int i = 0; i < projectiles; i++)
             {
                 into.Projectiles.Add(StateCodec.ReadProjectile(r));
-            }
-
-            int drops = r.ReadCount(NetProtocol.MaxEntities);
-            for (int i = 0; i < drops; i++)
-            {
-                into.DropIds.Add(r.ReadInt());
             }
         }
     }

@@ -236,8 +236,8 @@ namespace BattleBomb.Gameplay.Simulation
         internal event Action<DropPickup> PickupSpawned;
 
         /// <summary>Raised inside the step when a drop leaves the world — grabbed, swept, or cleared by a
-        /// wipe — so the host can tell the guest it is gone rather than the guest guessing from a snapshot
-        /// that may only have left it out (Task 92's caps). The drop may already be destroyed.</summary>
+        /// wipe — so the host can tell the guest it is gone: snapshots carry no drops. The drop may
+        /// already be destroyed.</summary>
         internal event Action<DropPickup> PickupRemoved;
 
         /// <summary>

@@ -51,8 +51,7 @@ namespace BattleBomb.Gameplay.Net
         /// <summary>A drop the host announced, placed when the picture reaches the step it appeared in.</summary>
         internal void SpawnDrop(in DropRecord drop) => _driver.ApplyReplicaPickup(drop.NetId, drop.Position, drop.Item);
 
-        /// <summary>A drop the host says has gone. Removal is only ever told, never inferred from a
-        /// snapshot leaving it out — since Task 92's caps, that need not mean it is gone.</summary>
+        /// <summary>A drop the host says has gone. Removal is only ever told: snapshots carry no drops.</summary>
         internal void RemoveDrop(int netId) => _driver.RemoveReplicaPickup(netId);
 
         internal EnemyActor EnemyByNetId(int netId) =>

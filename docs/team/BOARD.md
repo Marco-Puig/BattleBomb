@@ -32,8 +32,8 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **Groundwork pass + M8 Stage A** (one sitting, ~25 min) — the 16-item controller checklist in
-   `docs/team/groundwork-pass.md`, then the 8-step online check in `docs/team/m8-plan1-pass.md`. Needs Unity in front and a pad or two; the
+1. **Groundwork pass + M8 online checks** (one sitting, ~30 min; Stage B is best after Task 94) — the 16-item controller checklist in
+   `docs/team/groundwork-pass.md`, then Stages A and B in `docs/team/m8-plan1-pass.md`. Needs Unity in front and a pad or two; the
    orchestrator calls QUIET ON first. Includes item 12, a judgement: a partner's sale can slide
    another item under your cursor just before X. Recommended fix if it bothers him: the cursor
    follows its item and X pauses for a moment after a partner changes it — rides F5.
@@ -74,16 +74,18 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
 - **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64).
+- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc).
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
-  - **93:** carry the stage in `EntityRef.Dummy` (every stage's first dummy collides; planning
-    decision 8). Drops get a reliable `DropRemoved` event (grab and despawn) and the absence rule
-    goes — since 92's caps, absence no longer means "gone".
   - **94:** `HoldForPeer` floods the buffer while the guest keeps sending — release the stream when
     the hold clears.
-  - **95:** the guest's own open menu drives Player 2 on the host (South is Confirm and Jump) —
+    From 93: at the handover, old props (destroyed at frame end) can be captured under the new
+    stage — store the stage on the dummy or deactivate before Destroy; the guest-side dummy-ref
+    check lands once stages stream.
+  - **95:** remove `DropIds` from snapshots (unread since DropRemoved; ~1 KB of ~3.5 KB), with a
+    Version bump — and the drop cap and nearest-first sort if that leaves them dead.
+    Also: the guest's own open menu drives Player 2 on the host (South is Confirm and Jump) —
     while a guest screen is open NetGuest sends neutral; after it closes, held buttons count only
     once released (D57). Tests carried from 89: a guest who leaves mid-match writes no save; the
     guest's front door gets its own couch back. In the next task touching them: the dev panel
@@ -93,6 +95,9 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     — by design; tune `StarvedRepeatSteps`. Bandwidth measured at 91: ~3.5 KB/snapshot, ~105 KB/s
     for the paper case (2 players, 20 enemies, 20 bolts) against the paper's 2.5 KB; worst case
     ~147 KB (under the 256 KB frame).
+    From 93: the teleport threshold should scale with the gap between the snapshots around the
+    render frame; a host pause stops snapshots and the guest's clock climbs to the newest, losing
+    the jitter cushion ~0.4 s after resume — hold at newest − delay while the newest isn't advancing.
   - **Plan 2 (Netcode):** unregistering a source by id can remove a newer source under the same id
     (both `RemoteCommandSource` and `InputSystemCommandSource`) — bites on D61's solo carry-on and
     rejoin; unregister only when `TryGet` returns this source. The refusal reason is lost (the
@@ -101,6 +106,7 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     guest's own front door stays live while connected, and the guest's abandoned body still holds
     gates shut (D60/D61). **Task 103:** the drop-in baseline sends a `DropSpawned` for every drop
     still on the ground before the first snapshot.
+    From 93: `ApplyReplicaPlayerSide` doesn't raise ScreenChanged (the guest's screens).
   - **Plan 3 (Netcode):** `catch (SocketException)` sits in Gameplay and always names port 7777 —
     Listen should report failure through `INetTransport` when the Steam transport arrives. Decide
     whether delta snapshots are needed (the 96 bandwidth above). **Task 107:** a Jump landing in a
@@ -207,6 +213,9 @@ From Groundwork (G4's review):
   land by M10) — brings F1's skip back in `StepEnemies` or `StepStatuses`. Collect first, or walk a
   snapshot. Also: an `EnemyDied` handler that throws would consume a step's corpses unsettled (only
   StageRunner's counter listens today). Netcode: both matter to M8's exact-order host.
+- **M11 (Endless), from M8 Task 93:** the guest removes an enemy when it's absent from a snapshot;
+  past 256 live enemies (the list cap) that would delete living ones. Give enemies an explicit
+  removal event, as drops got, if Endless can pass the cap.
 - **Chest scrolling by mouse wheel or touch drag** (F5's not-done list) — with M13's pointer work:
   whether the view detaches from the cursor or drags it along is that work's design call.
 - **Ultrawide couch co-op:** the doll columns run into the stats panel and now draw over it (G13b's
@@ -222,6 +231,9 @@ None.
 
 ## Log
 
+- 2026-09-25 — Task 93 committed (c8744bc): replica mode — the guest draws the host's world; drops
+  leave on DropRemoved; PlaybackTransport (from 95) drives the first real guest-scene tests.
+  EditMode 784, PlayMode 55. Michael's Stage B checks added.
 - 2026-09-25 — Task 92 committed (07a8c64): the host sends 30 Hz snapshots and step-stamped reliable
   events; bursts split across messages; lists capped (nearest drops kept). EditMode 772, PlayMode 47.
 - 2026-09-25 — Task 91 committed (5be281c): ids and the snapshot model; every travelling struct

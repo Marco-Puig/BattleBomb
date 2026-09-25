@@ -32,6 +32,27 @@ Unity must be open with the project.
   window (being fixed in Task 95).
 - Player 2 plays the host's own hero until the lobby (Plan 2).
 
+## Stage B — the mirror (Task 93, 2026-09-25) · about 5 minutes
+
+Most of this is already proven by an automated test that replays a recorded host into a real
+guest; what's left is what needs eyes.
+
+- [ ] **1.** Two windows as in Stage A: **Host local** in the main window, **Join local** in
+      Player 2, launch from the main window. Before hosting, try it once with **Lag: Normal** and
+      once with **Lag: Bad** from the Net panel.
+- [ ] **2.** Watch the Player 2 window while Player 1 walks, jumps and attacks in the main one:
+      movement looks smooth, about a tenth of a second behind, with no stutter.
+- [ ] **3.** Get knocked down, or wipe on purpose: the respawn snaps into place rather than sliding
+      across the arena.
+- [ ] **4.** Hit an enemy: the hit spark and damage number appear in the Player 2 window at the
+      moment of the hit, on the right target.
+- [ ] **5.** Elite enemies are tinted the same in both windows. Drops appear and vanish the same in
+      both, with the glow and bounce.
+
+**Known and expected — don't report these:**
+- Until Task 94 the Player 2 window shows the characters standing in empty space, with no stage.
+- A drop's bounce in the Player 2 window may start slightly higher (cosmetic).
+
 ## Verdicts
 
 *(The orchestrator records them here and on the board.)*

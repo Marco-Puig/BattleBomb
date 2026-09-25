@@ -33,20 +33,19 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork Task 12 |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | running — Groundwork G13 |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — restart from `PROMPTS.md` near M8 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)
 
-- **Groundwork:** G1–G11 committed. Task 12 in progress — it also carries: the results screen's
-  ~0.75 s minimum time on screen (unscaled), Start confirming on the title only (D57), Frontend
-  calling `UseFonts`, and stripping `<color>` tags from the IMGUI shadow pass. The Builder was
-  checking why `Frontend.unity` went dirty during a test run (it cancelled the save prompt).
-- **Then:** G13 (filter/grid spacing **plus** the solo filter-row guard `&& !layout.HeroBeside`),
-  G14 (verify D57 against what was built; Michael's fast-motion checklist — add: X sells a whole
-  stack; a partner's sale can slide an item under the cursor; nothing stays open after combine-all).
+- **Groundwork:** G1–G12 committed (G12 = ad189cb). G13 in progress: filter/grid spacing **plus**
+  the solo filter-row guard `&& !layout.HeroBeside`.
+- **Then:** G14 (verify D57 against what was built; Michael's fast-motion checklist — add: X sells
+  a whole stack; a partner's sale can slide an item under the cursor; nothing stays open after
+  combine-all; A can't skip the results for ~¾ s; Start does nothing at character or chapter
+  select; with Player 1 on the keyboard the join line says only A).
 - **After Groundwork:** the pre-M8 fixes plan F1–F3, then M8 Plan 1 (Tasks 86–96). Netcode writes
   Plan 2 once Plan 1 is underway, Plan 3 after Michael's lag table (Task 96). Candidate **F4** (lost
   sub-update taps) and the catch-up-loop pause item wait for Netcode to assess.
@@ -58,7 +57,10 @@ address (the address changes when this app restarts).
 ## Traps learned
 
 - **Unity bridge wedge:** a synchronous `run_tests` that times out holds the bridge's slot forever.
-  Only Michael can clear it: Window → Pipeline → Stop Server, then Start Server.
+  Only Michael can clear it: Window → Pipeline → Stop Server, then Start Server. (Cause, per the
+  Builder: the timeout cancels the run but never releases `BasePipelineServer.m_ExecGate`.)
+- **A scene goes dirty after a save** when a property edit is recorded in the same `eval` as the
+  `SaveScene` call. Save in its own eval and check `isDirty` before any sync run.
 - **`.gitignore`'s macOS `Icon?`** matched any folder named `icons` on Windows; `![Ii]cons` fixes it.
 - **Task numbers 84–85 are M7's.** M8 runs 86–114; Groundwork is G1–G14; the pre-M8 fixes F1–F3.
 

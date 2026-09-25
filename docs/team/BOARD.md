@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Task 12 — gates after the bridge restart | — |
+| Builder | Builder | working | G13 — filter and grid spacing, the solo filter-row guard | — |
 | Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -145,6 +145,9 @@ From Groundwork (G4's review):
   callers (G11's review). Remove in a later tidy-up.
 - **Before any press, the prompt guess prefers a PlayStation pad** (it streams reports) over an idle
   keyboard — cosmetic; it corrects on the first press.
+- **From G12 (for M9's HUD):** with both players at one drop, the loot card names only the first
+  player's button; the front door's body text still draws in the built-in font (only its badge
+  row uses the project fonts).
 
 ## Pending commits
 
@@ -156,6 +159,10 @@ None.
 
 ## Log
 
+- 2026-09-25 — G12 committed (ad189cb): every other prompt in the player's own buttons;
+  Start on the title only; results dwell 0.75 s; the front door loads its fonts. EditMode 679,
+  PlayMode 28. G14's checklist gains: A can't skip the results for ~¾ s; Start does nothing at
+  character or chapter select; with Player 1 on the keyboard the join line says only A.
 - 2026-09-25 — Art `READY TO COMPACT`; its lane file committed (9902064). Netcode and World
   lane files as they closed, committed (35f5441).
 - 2026-09-25 — PROTOCOL rule 11 (Michael): blocked or out-of-work lanes, the orchestrator included, are

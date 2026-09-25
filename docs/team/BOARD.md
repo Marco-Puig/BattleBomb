@@ -50,12 +50,14 @@ What is waiting on Michael, in priority order:
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-8. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio) — Art's research (`AUDIO.md`): AIVA Pro grants
+8. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
 9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
 
+10. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
+   at its v1 draft until then.
 ## M8 — ready to build after Groundwork
 
 Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one
@@ -152,6 +154,8 @@ None.
 
 ## Log
 
+- 2026-09-24 — G9 committed (61e5366). Art round 2: storybook fixture kit v2; terrier redo parked
+  until Michael sets a pet direction.
 - 2026-09-24 — **G8 committed**: settings and results on the new map; Escape/Start never double-fire.
   PlayMode 27. Results gets a short minimum time on screen in Task 12. Art round 1 done; D16 gains
   Michael's look (storybook world, simple pets).

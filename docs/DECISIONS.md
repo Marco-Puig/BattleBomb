@@ -344,7 +344,8 @@ plus **Rayman Legends**, clean vector outlines. Heroes keep the **Templar Knight
 the head about two-thirds of the height, a short round body, stub legs. Environments are
 **storybook**: simplified, exaggerated shapes and rich, saturated colour — never semi-realistic, pale,
 or hazy. **Pets are simple**: a few chunky shapes in flat colour, as in Castle Crashers and Dungeon
-Defenders. The checkable rules live in `docs/art/ART_BIBLE.md`.
+Defenders — *provisional: Michael will set a new pet direction.* The checkable rules live in
+`docs/art/ART_BIBLE.md`.
 
 ---
 

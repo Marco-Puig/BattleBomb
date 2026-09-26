@@ -122,7 +122,7 @@ Tuned live; recorded here so the first build has somewhere to start.
 | Command packets | every step, carrying the last 4 commands | One lost packet costs nothing |
 | Stick quantisation | 16 bits per axis, **applied on the guest before it predicts** | The host and the guest's prediction see the same number |
 | Snapshot rate | every 2nd step — 30 Hz | Combat reads at 30 Hz with 100 ms of interpolation |
-| Snapshot size | ~2.5 KB with 2 players, 20 enemies, 20 bolts, no compression → ~75 KB/s | Fine for Steam's relay; **delta compression is the lever if it is not** |
+| Snapshot size | ~2.5 KB with 2 players, 20 enemies, 20 bolts, no compression → ~75 KB/s. **Measured at 96:** 2.9 KB with no statuses (86 KB/s), 3.9 KB with two statuses each (117 KB/s); worst 56 KB at four statuses each (129 KB at the codec's cap of 16) | Fine for Steam's relay; **delta compression is the lever if it is not** — Plan 3's call |
 | Guest interpolation delay | 6 steps (100 ms), adaptive to measured jitter | Two snapshots plus margin |
 | Host input buffer | target 2 commands deep, adaptive to 6 | Absorbs jitter without adding much delay |
 | Starved input | repeat the last *held* buttons and stick; never repeat a press | A lost packet must not become a double jump |
@@ -326,6 +326,172 @@ Task numbers start at 86: 84 and 85 were taken by M7-era commits (`43cdef5`, `ae
   paperwork started early enough not to block this); the collaborator plays the fixture chapter start
   to finish from both homes — fight, revive, grab, chest, shop, wipe, results, save — with a
   checklist from each end; the couch replayed exactly as before; both gates green; close-out notes.
+
+---
+
+## Build log — Plan 1 (Tasks 86–96)
+
+*Written at Task 96 from the Builder's close-out (2026-09-26). Plan 1 built Stages A and B; Michael's
+pass is `docs/team/m8-plan1-pass.md`. Plan: `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md`.*
+
+### Tasks
+
+| Task | Commit | What landed |
+|---|---|---|
+| 86 | `5e586a4` | **The wire (Core/Net).** NetWriter/NetReader, quantisation (NetQuantize), WireCommand, CommandCodec (the command packet, last 4 commands for redundancy), NetProtocol, NetFormatException. |
+| 87 | `4f42e0c` | **The seam (Platform/Net).** INetTransport; LoopbackTransport (enforces the socket's frame limit); LagProfile/LagSimulator; LocalSocketTransport (one peer, send timeout, a busy port throws and leaves nothing behind). |
+| 88 | `5fd0920` | **The host plays a remote Player 2.** InputBuffer, RemoteCommandStream, RemoteCommandSource; CharacterActor binds to whatever source its seat has. |
+| 89 | `fd33bea` | **Session and handshake.** NetSession (Host/Join, "Port 7777 is busy"), HandshakeCodec (Hello/Welcome/Refuse/Launch/SessionEnd, version check), NetHost/NetGuest halves, NetSeats. The stream got drain-to-target, let-go after 15 starved steps, and "a repeated frame consumes nothing". SaveService never writes from a replica. The guest's couch is restored. Also the dev panel (NetDevOverlay), plus HeadlessGuest and OnlineHostSmokeTests. |
+| 90 | `d00c552` | **Two editors.** Multiplayer Play Mode 2.0.2, runInBackground, VirtualProjectsConfig; Host local / Join local on the dev panel. |
+| 91 | `5be281c` | **Ids and the snapshot.** Net ids for enemies and pickups; EntityRef; ItemWire; WorldSnapshot with StateCodec/SnapshotCodec for every travelling struct; a field-coverage test that gives every field a distinct value. |
+| 92 | `07a8c64` | **The host speaks.** 30 Hz snapshots on the unreliable channel. Events are stamped with their step on the reliable channel, split into batches under the frame limit (EventCodec.WriteBatches). Each list is capped in Capture. The flood-ack fix. |
+| 93 | `c8744bc` | **Replica mode.** The guest draws the host's world from snapshots, 6 steps behind (RenderClock, SnapshotBuffer, ReplicaWorld). Hits are raised at their step, and teleports snap. DropRemoved replaces the absence rule. `EntityRef.Dummy(stage, prop)`. PlaybackTransport and GuestReplicaSmokeTests (pulled forward from 95). |
+| 94 | `3d567b1` | **The stage follows.** StageCodec (LoadStage/StageReady/HandOver), and the launch hold and the airlock wait for the guest. HandOver carries the host's step, and a load right behind a hand-over no longer strands the guest. The host's menus stay live during the hold, and dummies know their stage. GuestStageSmokeTests. |
+| 95 | `f393d98` | **Proof.** Record a hosted fight, replay it into a real guest, and compare with the truth frame by frame; a remote Player 2 walks the whole chapter. MenuGate keeps the guest's own menu off the wire. The two tests carried from 89. DropIds are out (protocol v2). The dev panel caches its session, and the lag names are read-only. |
+| 96 | `96-HASH` | **Close-out.** Gates at `f393d98`; Michael's pass (Stages A and B pass) and the lag table; bandwidth re-measured; two bugs from the pass (96a, 96b) raised as inserted tasks. |
+
+Replay numbers at 95: worst player error 0.023 (tolerance 0.3), worst enemy error 0.007 (tolerance 0.5),
+2377 frames compared.
+
+### Where the plan was wrong
+
+M7's close-out warned that plans are more often wrong than right about the hard parts. This one was
+wrong in three recurring ways.
+
+**It was stale.** It was written before Groundwork and F1–F5 landed, so every task began with a
+premise check, and most checks found something.
+- The header's premise, "destroyed enemies unregistered immediately", holds because Unity 6.5 runs
+  `OnDisable` inside `Destroy`, not because of a Despawn helper. F1 never built one.
+- Whole-file replacement blocks silently reverted later work. 92's NetHost brought back the pre-89
+  SendLaunch loop, and 93's NetGuest dropped 89's RestoreCouch.
+- Small slips: 94 Step 4(a) redeclared `session` (CS0136), and "all nine" test counts were off
+  (twelve at 92).
+
+**Its own tests were wrong or racy.**
+- 93's RenderClock "ahead" test moved the newest snapshot backwards. The clock's never-past-newest
+  rule rightly won, so the test was wrong, not the clock.
+- 87's socket test waited only for the host's Connected, but the guest connects a pump later.
+- 94's airlock test scanned the headless guest's inbox in the same frame the host sent.
+- 91's field-coverage fill set every bool true and every enum to its last value, so two swapped
+  fields of the same type passed.
+- 95's replay test could pass on a stalled render clock, or with no enemy ever compared.
+
+**It inferred what should have been told.** Twice the design deduced an event from absence or
+arrival order, and both broke:
+- **Drop removal** was read from a drop missing in a snapshot. Once 92 capped the lists, missing
+  meant either "gone" or "left out". DropRemoved became a reliable event at 93, and DropIds were
+  deleted at 95.
+- **The hand-over step** was taken from when the message arrived, which is wrong when snapshots are
+  lost. From 94 it carries the host's step.
+
+The rule now: anything that happens is told, with its step.
+
+**Smaller gaps, by task:**
+- **Ids.** `EntityRef.Dummy(prop)` had no stage, so dummy ids collided across stages. At the
+  hand-over, dummies were captured with the runner's stage and not their own.
+- **Frame limits.** NetWriter was uncapped, so an Events batch could pass the socket's 256 KB frame.
+  The socket would drop it silently while the loopback delivered it. SnapshotCodec threw past 256
+  entries inside the host's step.
+- **89.** Role was committed before Listen (the busy port). SaveService's guard read the live role, so
+  a guest who pressed Leave could write the replica's empty stash over their real save. The stand-in
+  hero leaked into the guest's session. The guest's own menu drove Player 2 on the host (fixed at 95).
+- **88.** Buffer semantics were under-specified:
+  - no drain back to target after a stall;
+  - a dropped guest's body repeated its last stick for 10 s;
+  - the paused-for-screen branch drained the remote stream;
+  - the launch hold flooded the buffer;
+  - the merge threshold was off by one;
+  - InputBuffer.Add reported a command dropped by a flood as kept.
+- **94.** The hold froze the host's menus. A LoadStage arriving inside the hand-over delay wiped the
+  pending hand-over, stranding the guest on the old stage.
+- **Checks in the Player 2 window.** 90 Step 4 and 93 Step 11 asked for clicks or eval there, which the
+  bridge cannot reach. Screen control was declined. From 90 on, every such check was split into what
+  a harness proves and what needs Michael's eyes.
+
+### What felt wrong to build
+
+- **Players on the clone were out of reach.** Only harnesses could prove guest-side behaviour.
+  HeadlessGuest arrived at 89, and PlaybackTransport was pulled from 95 to 93. Building the
+  PlaybackTransport harness two tasks early paid off immediately. Guest code before that point was
+  proven only in EditMode.
+- **Timing in PlayMode tests.** The editor runs several steps in one render frame. Any test that
+  decides per-step facts by reading `Frame` between yields is flaky. 95's menu test records from
+  `Stepped` instead, and 94's airlock test waits two steps.
+- **Mixed line endings.** Working copies mix CRLF and LF, so every edit needed a byte-level check.
+- **Plan and code drifting in parallel.** Nearly every task needed an "extra spec" on top of the plan.
+  The plan was a direction, not a script. Whole-file replacement is the riskiest shape a plan step can
+  take.
+
+### Deferred
+
+Everything deferred is on the board, under "Carried into later tasks". The main items:
+
+- **Task 96 / Plan 3 (feel):**
+  - scale the teleport threshold by the gap between snapshots;
+  - hold the render clock at newest − delay while a host pause stops snapshots;
+  - tune the let-go and drain numbers, including StarvedRepeatSteps (a Heavy charged through a stall
+    fires on let-go, by design);
+  - bandwidth: re-measured at 96 (below). Whether snapshots need deltas is Plan 3's call.
+- **Plan 2:**
+  - a load generation, so a stale BeginLoad can't unload a stage asked for again;
+  - a guest who rejoins mid-match deadlocks the airlock;
+  - unregistering a source by id can remove a newer source;
+  - the refusal reason is lost;
+  - UseSeat assumes Player 2 is active;
+  - ApplyReplicaPlayerSide skips ScreenChanged;
+  - D60's `HoldMenuPause` no-op would switch MenuGate off, so keep a "menu open" count apart from the
+    world pause;
+  - the host's results screen waits on a remote Player 2's frozen held buttons;
+  - Task 103: the drop-in baseline;
+  - Task 107: a press in a skipped frame.
+- **M11:** the enemy absence rule bites past 256 enemies.
+- **Cosmetic:** the guest's drop bounce starts from RestHeight.
+
+### Michael's verdicts and the lag table
+
+**Michael, 2026-09-26, in one sitting from `docs/team/m8-plan1-pass.md`: Stages A and B pass**
+(A1–A4 and B1–B6, with B2 and B6 also at Bad). The Groundwork pass passed in the same sitting; its
+item 7 is untested, because there is only one pad.
+
+| Lag | Moving feels | Attacking feels |
+|---|---|---|
+| None | fine | fine |
+| Normal (100 ms) | noticeable but OK | noticeable but OK |
+| Bad (200 ms, 2 % loss) | too late | too late |
+
+At Bad the guest's own hero is unplayable without Plan 3's prediction, so prediction is a must. It
+was not an optional polish.
+
+**Two bugs found in the pass**, raised as inserted tasks:
+- **96a — hosting at the title.**
+  - The bug: clicking Host local / Join local before Continue on the title screen starts the game
+    with the wrong players or controls. Pressing Continue first in both windows works.
+  - The dev panel is meant to be used at the title, and Plan 2's pass D1 hosts there.
+  - Fix before Task 102, the first task that edits FrontendFlow, unless 102 provably removes the cause.
+- **96b — the arrow keys cross windows.** In the two-window test, the arrow keys in one window moved
+  the other window's player. Find whether the rig or the game causes it. Plan 2's pass is keyboard-only
+  in both windows, so it must be fixed or explained, with a workaround, before 105.
+
+**Bandwidth, re-measured 2026-09-26** at `f6fb6b0` (protocol v2):
+- Method: SnapshotCodec is fixed-size, so a snapshot's bytes depend only on how many of each thing it
+  holds. Encoding one of each gives the table below.
+- Bytes per piece: header 33; player 186; enemy 86; bolt 40; dummy 50; each status on a player or
+  enemy 24.
+- **The paper case** (2 players, 20 enemies, 20 bolts), at 30 Hz:
+
+  | Statuses | Per snapshot | Per second |
+  |---|---|---|
+  | none | 2,925 B (2.9 KB) | 86 KB/s |
+  | one on every player and enemy | 3,453 B (3.4 KB) | 101 KB/s |
+  | two on every player and enemy | 3,981 B (3.9 KB) | 117 KB/s |
+
+  The paper said 2.5 KB and 75 KB/s. Enemies are 60 % of the no-status figure.
+- **Drop ids didn't affect the paper case**, which has no drops. They cost 4 B for each drop on the
+  ground, up to 1 KB. Task 91's "~3.5 KB" matches about one status each.
+- **Worst case**, with every list at its 256 cap and 4 dummies:
+  - 56 KB with the game's real ceiling of four statuses each (one mark per element);
+  - 129 KB (131,933 B) at the codec's cap of 16 statuses each.
+  Both are under the 256 KB frame.
 
 ---
 

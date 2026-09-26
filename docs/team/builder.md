@@ -49,20 +49,29 @@ committed; 96 stays open for Michael's pass.
 
 ## Waiting on
 
-**The Unity editor** — closed when Plan 2 started (`editor_status` can't reach 127.0.0.1:7800; no
-editor process). `BLOCKED` sent 2026-09-25; the orchestrator is asking Michael to open it and will
-wake me. Until then: read-only prep only, nothing under `Assets/`; if the prep runs out, bring this
-file up to date and send `READY TO COMPACT`.
-**Michael's Plan 1 pass** (96, still open) — his verdicts fill the close-out draft below; a failed
-check comes back as a 96x task. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
-`Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
-with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
-the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
-Netcode heads-up: this changes its read of candidate F4 and the catch-up-loop pause item.)
+`COMMITTED` for Task 96's close-out (`DONE` sent 2026-09-26). Nothing blocks 97. Earlier waits, now
+cleared: Unity was closed until 2026-09-26, and Michael's Plan 1 pass came in the same day.
 
 ## Current state
 
-**Now (2026-09-25): M8 Plan 2 started — Task 97 (the requests seam), prep only; Unity is closed.**
+**Now (2026-09-26): Unity is open, and Michael's Plan 1 pass is in (Stages A and B pass). 96's
+close-out is final, and its `DONE` is sent. Next come the baseline and Task 97 as staged. The two
+inserted bugs, 96a and 96b, get their root causes read between 97's stages.**
+- **96a — hosting at the title.** Host local / Join local clicked before Continue gives the wrong
+  players or controls. Fix before 102, unless 102 provably removes the cause.
+  - Netcode's read (2026-09-26): on the guest side, 102's lobby likely removes it, because a
+    connected guest's front door stops moving its own FrontendState and seats. On the host side,
+    102 changes nothing.
+  - A third suspect: the IMGUI dev panel overlaps the front door's uGUI pointer buttons in the small
+    clone window, so one click lands on both. A title advanced by the mouse homes nobody (G6).
+  - A cheap check: log `FrontendState.Screen` right after clicking Host/Join local at the title.
+- **96b — the arrow keys cross windows** (MPPM, two editors, one keyboard). Is it the rig or the
+  game? Suspects: runInBackground=1 since Task 90, and no InputSystem settings asset, so background
+  behaviour is at its defaults. Fix or explain, and give a workaround in the pass sheet, before 105.
+- Bandwidth re-measured (in the close-out): paper case 2.9 KB, 86 KB/s with no statuses, up to 3.9 KB
+  / 117 KB/s with two statuses each; worst 56 KB (129 KB at the codec's status cap). Sent to Netcode.
+
+**Earlier (2026-09-25): M8 Plan 2 started — Task 97 prepped while Unity was closed.**
 - The plan is split into `<scratchpad>/tasks/p2_preamble.md`, `task97.md`…`task105.md` and
   `p2_tail.md` (Michael's checks, the self-review, the test-count table). The implementer briefing
   is `<scratchpad>/tasks/p2_context.md`.
@@ -976,9 +985,9 @@ TestFramework.dll` already compiled). `.cs` files are LF/no BOM; the `.inputacti
 
 ## M8 Plan 1 close-out draft
 
-*For Task 96 Step 3. HANDOFF-M8 is the orchestrator's to write. It applies this draft together with
-Michael's Stage A/B verdicts and the lag table from `docs/team/m8-plan1-pass.md` once he has done his pass.
-Step 1 gates (2026-09-25, at `f393d98`): EditMode 791/791, PlayMode 65/65, tree clean under `Assets/`.*
+*Task 96 Step 3 — final, with Michael's pass of 2026-09-26. HANDOFF-M8 is the orchestrator's to
+write, from this. Step 1 gates (2026-09-25, at `f393d98`): EditMode 791/791, PlayMode 65/65, tree
+clean under `Assets/`.*
 
 ### Build log
 
@@ -994,7 +1003,7 @@ Step 1 gates (2026-09-25, at `f393d98`): EditMode 791/791, PlayMode 65/65, tree 
 | 93 | `c8744bc` | **Replica mode.** The guest draws the host's world from snapshots, 6 steps behind (RenderClock, SnapshotBuffer, ReplicaWorld). Hits are raised at their step, and teleports snap. DropRemoved replaces the absence rule. `EntityRef.Dummy(stage, prop)`. PlaybackTransport and GuestReplicaSmokeTests (pulled forward from 95). |
 | 94 | `3d567b1` | **The stage follows.** StageCodec (LoadStage/StageReady/HandOver), and the launch hold and the airlock wait for the guest. HandOver carries the host's step, and a load right behind a hand-over no longer strands the guest. The host's menus stay live during the hold, and dummies know their stage. GuestStageSmokeTests. |
 | 95 | `f393d98` | **Proof.** Record a hosted fight, replay it into a real guest, and compare with the truth frame by frame; a remote Player 2 walks the whole chapter. MenuGate keeps the guest's own menu off the wire. The two tests carried from 89. DropIds are out (protocol v2). The dev panel caches its session, and the lag names are read-only. |
-| 96 | — | Gates, Michael's pass and lag table, this close-out. |
+| 96 | *this commit* | **Close-out.** Gates at `f393d98`; Michael's pass (Stages A and B pass) and the lag table; bandwidth re-measured; two bugs from the pass (96a, 96b) raised as inserted tasks. |
 
 Replay numbers at 95: worst player error 0.023 (tolerance 0.3), worst enemy error 0.007 (tolerance 0.5),
 2377 frames compared.
@@ -1077,8 +1086,7 @@ Everything deferred is on the board, under "Carried into later tasks". The main 
   - hold the render clock at newest − delay while a host pause stops snapshots;
   - tune the let-go and drain numbers, including StarvedRepeatSteps (a Heavy charged through a stall
     fires on let-go, by design);
-  - re-measure bandwidth now that DropIds are gone (it was ~3.5 KB per snapshot, ~105 KB/s in the
-    paper case).
+  - bandwidth: re-measured at 96 (below). Whether snapshots need deltas is Plan 3's call.
 - **Plan 2:**
   - a load generation, so a stale BeginLoad can't unload a stage asked for again;
   - a guest who rejoins mid-match deadlocks the airlock;
@@ -1096,16 +1104,57 @@ Everything deferred is on the board, under "Carried into later tasks". The main 
 
 ### Michael's verdicts and the lag table
 
-*Pending his single sitting, `docs/team/m8-plan1-pass.md` (Stage A, Stage B, and 96's lag table: moving
-and attacking at None / Normal / Bad).*
+**Michael, 2026-09-26, in one sitting from `docs/team/m8-plan1-pass.md`: Stages A and B pass**
+(A1–A4 and B1–B6, with B2 and B6 also at Bad). The Groundwork pass passed in the same sitting; its
+item 7 is untested, because there is only one pad.
+
+| Lag | Moving feels | Attacking feels |
+|---|---|---|
+| None | fine | fine |
+| Normal (100 ms) | noticeable but OK | noticeable but OK |
+| Bad (200 ms, 2 % loss) | too late | too late |
+
+At Bad the guest's own hero is unplayable without Plan 3's prediction, so prediction is a must. It
+was not an optional polish.
+
+**Two bugs found in the pass**, raised as inserted tasks:
+- **96a — hosting at the title.**
+  - The bug: clicking Host local / Join local before Continue on the title screen starts the game
+    with the wrong players or controls. Pressing Continue first in both windows works.
+  - The dev panel is meant to be used at the title, and Plan 2's pass D1 hosts there.
+  - Fix before Task 102, the first task that edits FrontendFlow, unless 102 provably removes the cause.
+- **96b — the arrow keys cross windows.** In the two-window test, the arrow keys in one window moved
+  the other window's player. Find whether the rig or the game causes it. Plan 2's pass is keyboard-only
+  in both windows, so it must be fixed or explained, with a workaround, before 105.
+
+**Bandwidth, re-measured 2026-09-26** at `f6fb6b0` (protocol v2):
+- Method: SnapshotCodec is fixed-size, so a snapshot's bytes depend only on how many of each thing it
+  holds. Encoding one of each gives the table below.
+- Bytes per piece: header 33; player 186; enemy 86; bolt 40; dummy 50; each status on a player or
+  enemy 24.
+- **The paper case** (2 players, 20 enemies, 20 bolts), at 30 Hz:
+
+  | Statuses | Per snapshot | Per second |
+  |---|---|---|
+  | none | 2,925 B (2.9 KB) | 86 KB/s |
+  | one on every player and enemy | 3,453 B (3.4 KB) | 101 KB/s |
+  | two on every player and enemy | 3,981 B (3.9 KB) | 117 KB/s |
+
+  The paper said 2.5 KB and 75 KB/s. Enemies are 60 % of the no-status figure.
+- **Drop ids didn't affect the paper case**, which has no drops. They cost 4 B for each drop on the
+  ground, up to 1 KB. Task 91's "~3.5 KB" matches about one status each.
+- **Worst case**, with every list at its 256 cap and 4 dummies:
+  - 56 KB with the game's real ceiling of four statuses each (one mark per element);
+  - 129 KB (131,933 B) at the codec's cap of 16 statuses each.
+  Both are under the 256 KB frame.
 
 ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller, the mirror) complete —
-`5e586a4`..`<96's commit>`.*
+`5e586a4`..`<96's commit>`; Michael's pass 2026-09-26 (prediction is a must at Bad).*
 
 ## Next steps
 
-1. **Task 97** once Unity is open:
-   - Run `editor_status` and take the baseline: EditMode 791, PlayMode 65, async.
+1. **Task 97:**
+   - Take the baseline: EditMode 791, PlayMode 65, async.
    - The premise check is done and clean, so there is no extra spec.
    - Stage it from `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\tasks\task97_stages.md`.
      The implementer briefing is `p2_context.md` in the same folder. If the scratchpad is gone,
@@ -1122,19 +1171,29 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
      - Line endings: CRLF are Sack, Inventory, SaveMapper, SimulationDriver, ChestScreen and
        ChestScreenHost; LF are NetMessageKind, NetProtocol, NetHost, NetGuest and HeadlessGuest.
    - Then the review and the `DONE`.
-2. **Tasks 98–104** in order, one `DONE` each. Premise-check each task on the tree its predecessor
+2. **96a and 96b: root cause first** (systematic debugging: evidence before any fix), read between
+   97's stages.
+   - The clone side goes to harnesses, the code, settings reads, or a precise one-minute check put to
+     Michael as a `QUESTION` (he declined screen control).
+   - 96a lands before 102, and 96b before 105, each as its own `DONE`.
+3. **Tasks 98–104** in order, one `DONE` each. Premise-check each task on the tree its predecessor
    left, and run `anchors.py` first. Task 105 needs `QUIET`: it's Michael's pass and the close-out.
-3. **When the orchestrator wakes me with Michael's Plan 1 report (Task 96, Steps 2–4):**
-   - Fill in "Michael's verdicts and the lag table" in the close-out draft above: each Stage A/B item,
-     plus moving and attacking at None / Normal / Bad.
-   - A failed item becomes a 96x task, built before the first Plan 2 task that touches its file.
-   - The orchestrator writes HANDOFF-M8's Build log and close-out, and the ROADMAP §4 M8 line, from
-     the draft.
-   - Send `DONE` for 96: builder.md only, nothing under `Assets/`. Its subject is
-     `96: M8 stages A–B — Michael's pass and Plan 1's close-out`.
 
 ## Answers and decisions
 
+- 2026-09-26 (Netcode, orchestrator copied): **96a against 102.**
+  - Guest window: 102 likely removes the cause, because a connected guest goes straight to
+    `UpdateAsGuest` and never touches its own title state or seats.
+  - Host window: 102 doesn't change it.
+  - A third suspect: the IMGUI dev panel overlapping the front door's uGUI buttons in the clone
+    window. Check `FrontendState.Screen` just after Host/Join local.
+- 2026-09-26 (Orchestrator): **CONTINUE — Unity is open, and Michael's Plan 1 pass is in.**
+  - The pass: Stages A and B pass; the lag table is None fine/fine, Normal noticeable-but-OK, Bad too
+    late; Groundwork passed (item 7 untested, one pad).
+  - Order of work: 96's close-out, with bandwidth re-measured and sent to Netcode too, then 96's
+    `DONE`; then the baseline and 97; then 96a (before 102) and 96b (before 105) as inserted tasks,
+    root cause first.
+  - QUIET is off.
 - 2026-09-25 (Orchestrator): **CONTINUE — M8 Plan 2 committed (`5bba6ed`); start at 97 without 96.**
   96 stays open, and a finding from Michael's Plan 1 pass arrives as 96a, 96b… before the first Plan 2
   task touching the same file. Edits are anchored only. Only 105 needs `QUIET`. The couch change is
@@ -1189,6 +1248,8 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Log
 
+- 2026-09-26 — Unity open; Michael's Plan 1 pass in. Bandwidth re-measured; 96's close-out final and
+  `DONE` sent. Next: baseline, then 97's S1.
 - 2026-09-25 — **M8 Plan 2 started** (CONTINUE, `5bba6ed`). The Unity editor is closed, so I sent
   `BLOCKED`. The plan is split and the briefing written; Task 97's anchors all hold, and its premise
   check is running.

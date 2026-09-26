@@ -146,6 +146,10 @@ following each player separately, and two players on different devices at once.
 Evidence: `docs/team/netcode/readiness.md`, `docs/team/netcode/options.md`. Spec and plan:
 `docs/HANDOFF-M8.md` and its implementation plan (Netcode lane, in progress).
 
+**Progress:** Stages A–B (the remote controller, the mirror) complete — `5e586a4`..`96-HASH`;
+Michael's pass 2026-09-26 (prediction is a must at Bad). Plan 2 (Stages C–D, Tasks 97–105)
+building; Plan 3 (E–F, 106–114) being written.
+
 **Delivers:** a real `IPlatformServices` for Steam, with `NullPlatformServices` still the default
 (rule 6); the host / invite / join flow in the front end, including drop-in at checkpoint rooms
 (D59); remote players as command sources; state sync and the guest's prediction; the online rules

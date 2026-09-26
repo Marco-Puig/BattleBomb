@@ -33,7 +33,7 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | building M8 Plan 2 from 97 (woken 2026-09-25); 96 open — on Michael's pass, fill the close-out draft and send 96's DONE; findings become inserted 96a… tasks |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | idle — READY TO COMPACT (acf3c65), blocked on Unity; 97 prepped. Wake when Unity opens → baseline → 97. 96 open — on Michael's pass, fill the close-out draft, send 96's DONE; findings become 96a… |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | idle — READY TO COMPACT (Plan 2 5bba6ed); answers the Builder's Plan 2 questions; wake for Plan 3 with the lag table |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
@@ -74,6 +74,8 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-25 — Builder BLOCKED on Unity closed → prepped 97 → READY TO COMPACT (acf3c65). Netcode
+  READY TO COMPACT (3cc4c48). All lanes idle; Michael to open Unity.
 - 2026-09-25 — Plan 2 committed (5bba6ed). Builder woken on 97 (start without 96). Netcode told
   PREPARE TO COMPACT.
 - 2026-09-25 — Netcode reopened; writing Plan 2. Sent it the board's Plan 2 carry-forward, the shop

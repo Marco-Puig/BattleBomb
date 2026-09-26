@@ -74,6 +74,7 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-26 — 96 committed (b87a21d); HANDOFF-M8 Plan 1 build log applied.
 - 2026-09-26 — Michael's passes in: Groundwork complete (item 7 carried), M8 Plan 1 passed, lag table
   (Normal noticeable, Bad too late). Bugs 96a/96b to the Builder. On 96's DONE: apply the close-out
   to HANDOFF-M8 (Build log after "The build — stages and tasks") and ROADMAP §4's M8 line; commit 96.

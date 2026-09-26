@@ -86,11 +86,13 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   - **96b — the arrow keys cross windows.** In the two-window test, the arrow keys in one window
     moved the other window's player. Likely the test rig (two editors, one keyboard), but find it:
     Plan 2's pass is keyboard-only in both windows. Fixed or explained before 105.
-- **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98). **96 is Michael's pass + the close-out.**
+- **Plan 1 done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98), 96 (b87a21d, the close-out — HANDOFF-M8's Plan 1 build log).
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
 - **Carried into later tasks** (found while building; the orchestrator's calls, 2026-09-25):
-  - **96:** re-measure bandwidth (the 3.5 KB figure included ~1 KB of drop ids, now gone).
+  - **96 (done):** bandwidth re-measured — paper case 2.9 KB/snapshot (86 KB/s) with no statuses,
+    3.9 KB (117 KB/s) with two each; worst 56 KB at the real four-status ceiling. Drop ids never
+    counted in the paper case. What follows moves to **Plan 3**:
     Also: a starved remote lets go with a release, so a Heavy charged through a 250 ms stall fires
     — by design; tune `StarvedRepeatSteps`. Bandwidth measured at 91: ~3.5 KB/snapshot, ~105 KB/s
     for the paper case (2 players, 20 enemies, 20 bolts) against the paper's 2.5 KB; worst case
@@ -243,6 +245,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — **Task 96 committed (b87a21d): M8 Plan 1 closed.** HANDOFF-M8 has its build log; ROADMAP §4
+  its progress line. Bandwidth re-measured (paper case 2.9–3.9 KB). The Builder is on 97.
 - 2026-09-26 — **Groundwork complete** (Michael's pass; item 7 carried, one pad on hand). **M8 Plan 1
   passed**: lag table in, bugs 96a (hosting at the title) and 96b (arrow keys cross windows). The
   Builder closes 96 then builds Plan 2; Netcode writes Plan 3.

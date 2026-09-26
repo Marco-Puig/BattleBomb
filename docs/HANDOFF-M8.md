@@ -348,7 +348,7 @@ pass is `docs/team/m8-plan1-pass.md`. Plan: `docs/superpowers/plans/2026-09-24-m
 | 93 | `c8744bc` | **Replica mode.** The guest draws the host's world from snapshots, 6 steps behind (RenderClock, SnapshotBuffer, ReplicaWorld). Hits are raised at their step, and teleports snap. DropRemoved replaces the absence rule. `EntityRef.Dummy(stage, prop)`. PlaybackTransport and GuestReplicaSmokeTests (pulled forward from 95). |
 | 94 | `3d567b1` | **The stage follows.** StageCodec (LoadStage/StageReady/HandOver), and the launch hold and the airlock wait for the guest. HandOver carries the host's step, and a load right behind a hand-over no longer strands the guest. The host's menus stay live during the hold, and dummies know their stage. GuestStageSmokeTests. |
 | 95 | `f393d98` | **Proof.** Record a hosted fight, replay it into a real guest, and compare with the truth frame by frame; a remote Player 2 walks the whole chapter. MenuGate keeps the guest's own menu off the wire. The two tests carried from 89. DropIds are out (protocol v2). The dev panel caches its session, and the lag names are read-only. |
-| 96 | `96-HASH` | **Close-out.** Gates at `f393d98`; Michael's pass (Stages A and B pass) and the lag table; bandwidth re-measured; two bugs from the pass (96a, 96b) raised as inserted tasks. |
+| 96 | `b87a21d` | **Close-out.** Gates at `f393d98`; Michael's pass (Stages A and B pass) and the lag table; bandwidth re-measured; two bugs from the pass (96a, 96b) raised as inserted tasks. |
 
 Replay numbers at 95: worst player error 0.023 (tolerance 0.3), worst enemy error 0.007 (tolerance 0.5),
 2377 frames compared.

@@ -1106,11 +1106,21 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 1. **Task 97** once Unity is open:
    - Run `editor_status` and take the baseline: EditMode 791, PlayMode 65, async.
-   - Finish the premise check and write the extra spec if one is needed.
-   - Stage it: S1 is Step 1, then red; S2 is Steps 3–4, then the Core tests go green; S3 is Step 6,
-     then red; S4 is Step 8, then the runner goes green; S5 is Step 10, then both suites with
-     LootLoopSmokeTests unchanged; S6 is Steps 12–14, then OnlineMenuSmokeTests 4/4 and both suites
-     (806 / 69).
+   - The premise check is done and clean, so there is no extra spec.
+   - Stage it from `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\tasks\task97_stages.md`.
+     The implementer briefing is `p2_context.md` in the same folder. If the scratchpad is gone,
+     re-split the plan at its `### Task NN:` headings. The staging, in short:
+     - **S1:** Step 1 tests, the `Sack.cs` insertion only, and Step 4 whole. Expected: RequestCodec
+       5/5; SackRevision 2 pass, 2 fail ("Adding a knife…" and the restore test).
+     - **S2:** the nine `Inventory.cs` Touch insertions and the `SaveMapper` one. Expected: 4/4.
+     - **S3:** Steps 6 and 8. Expected: the runner 6/6, then mutate out the NoScreen check and the
+       stale check in turn.
+     - **S4:** Step 10. Expected: EditMode 806, PlayMode 65, LootLoop unchanged.
+     - **S5:** Steps 13–14 with the host unwired. Expected: OnlineMenuSmokeTests 0/4 ("never
+       answered").
+     - **S6:** Step 12. Expected: 4/4; EditMode 806, PlayMode 69.
+     - Line endings: CRLF are Sack, Inventory, SaveMapper, SimulationDriver, ChestScreen and
+       ChestScreenHost; LF are NetMessageKind, NetProtocol, NetHost, NetGuest and HeadlessGuest.
    - Then the review and the `DONE`.
 2. **Tasks 98–104** in order, one `DONE` each. Premise-check each task on the tree its predecessor
    left, and run `anchors.py` first. Task 105 needs `QUIET`: it's Michael's pass and the close-out.

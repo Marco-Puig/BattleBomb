@@ -16,5 +16,7 @@ namespace BattleBomb.Core.Net
         KeepAlive = 11,
         SessionEnd = 12,
         Bye = 13,
+        Request = 14,
+        RequestResult = 15,
     }
 }

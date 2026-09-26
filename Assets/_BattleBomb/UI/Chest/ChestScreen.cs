@@ -74,6 +74,10 @@ namespace BattleBomb.UI.Chest
 
         private readonly ChestNavigation _nav = new ChestNavigation();
 
+        /// <summary>This player's menu actions (HANDOFF-M8 planning decision 11) — the screen asks, it never
+        /// calls the bag itself.</summary>
+        private IPlayerRequests _requests;
+
         /// <summary>Ignore input until every menu button has been let go at least once.</summary>
         private bool _swallowUntilRelease = true;
         private string _flash = string.Empty;
@@ -159,6 +163,7 @@ namespace BattleBomb.UI.Chest
             _playerId = playerId;
             _kind = kind;
             _split = split;
+            _requests = Host != null ? Host.RequestsFor(playerId) : null;
             if (kind == InteractionKind.Shopkeeper)
             {
                 // Rolled once per visit, so coming back later is worth doing (D43).
@@ -225,21 +230,25 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
-            if (press.Option)
+            // A guest's last action is still on its way to the host and back (D61): A, X and Y wait for
+            // its answer, so no second action is aimed at a bag that is about to change under it.
+            bool actionsWait = Waiting;
+
+            if (press.Option && !actionsWait)
             {
                 RunOption();
                 Refresh();
                 return;
             }
 
-            if (press.Lock)
+            if (press.Lock && !actionsWait)
             {
                 RunLock();
                 Refresh();
                 return;
             }
 
-            if (press.Confirm)
+            if (press.Confirm && !actionsWait)
             {
                 Confirm();
             }
@@ -323,6 +332,39 @@ namespace BattleBomb.UI.Chest
         /// <summary>The X in the corner, and any other pointer route out.</summary>
         internal void CloseFromPointer() => Host?.RequestClose(_playerId);
 
+        /// <summary>A guest's action still waiting for the host's answer.</summary>
+        private bool Waiting => _requests != null && _requests.Pending;
+
+        /// <summary>
+        /// Hands an action to this player's requests (HANDOFF-M8 planning decision 11) and runs
+        /// <paramref name="answered"/> with what happened. On the couch that is now, inside this call, so
+        /// the code after it reads exactly as it did when the screen called the bag itself; on a guest it
+        /// is a round trip later, after the host's copy of the bag has arrived — so an answer reads the bag
+        /// as it now is, never as it was when the button went down.
+        /// </summary>
+        private void Send(PlayerRequest request, System.Action<RequestOutcome> answered)
+        {
+            if (_requests == null)
+            {
+                return;
+            }
+
+            _requests.Send(request, outcome =>
+            {
+                // A guest's screen can close while its request is on the wire.
+                if (this == null || _bag == null)
+                {
+                    return;
+                }
+
+                answered?.Invoke(outcome);
+                if (outcome.Refusal == RequestRefusal.StaleSack)
+                {
+                    Flash("The sack moved — try again.");
+                }
+            });
+        }
+
         /// <summary>
         /// The bag moved — possibly under the partner's hand (D51). Repaint from the new truth,
         /// and drop any combine in progress: the pick is a bag index, and selling or equipping
@@ -350,8 +392,8 @@ namespace BattleBomb.UI.Chest
             {
                 case ChestOutcome.AllocateStat:
                     StatId[] stats = { StatId.Strength, StatId.Hp, StatId.Mana, StatId.Speed };
-                    Flash(_bag.RequestAllocate(stats[_nav.StatCursor])
-                        ? "Point spent." : "No points to spend.");
+                    Send(PlayerRequest.Allocate(stats[_nav.StatCursor]),
+                        outcome => Flash(outcome.Ok ? "Point spent." : "No points to spend."));
                     break;
 
                 case ChestOutcome.MenuOpened:
@@ -397,16 +439,19 @@ namespace BattleBomb.UI.Chest
         /// </summary>
         private void RunSellJunk()
         {
-            JunkSale sale = _bag.RequestSellJunk(JunkThreshold);
-            if (sale.IsEmpty)
+            QualityRank below = JunkThreshold;
+            Send(PlayerRequest.SellJunk(below), outcome =>
             {
-                Flash($"Nothing below {JunkThreshold}.");
-                return;
-            }
+                if (!outcome.Ok)
+                {
+                    Flash($"Nothing below {below}.");
+                    return;
+                }
 
-            CollectVisible();
-            _nav.ClampCursor(_visible.Count);
-            Flash($"Cleared {sale.Pieces} for {sale.Coins}.");
+                CollectVisible();
+                _nav.ClampCursor(_visible.Count);
+                Flash($"Cleared {outcome.B} for {outcome.C}.");
+            });
         }
 
         private void RunMenuAction()
@@ -429,12 +474,13 @@ namespace BattleBomb.UI.Chest
             switch (_menu[_nav.Action])
             {
                 case ItemAction.Equip:
-                    Flash(_bag.RequestEquip(bagIndex) ? "Equipped." : "Cannot equip — check the level.");
+                    Send(PlayerRequest.Equip(bagIndex),
+                        outcome => Flash(outcome.Ok ? "Equipped." : "Cannot equip — check the level."));
                     break;
 
                 case ItemAction.QuickUse:
-                    Flash(_bag.RequestQuickConsumable(item.DefinitionId)
-                        ? "Quick-use set." : "Cannot set.");
+                    Send(PlayerRequest.QuickConsumable(item.DefinitionId),
+                        outcome => Flash(outcome.Ok ? "Quick-use set." : "Cannot set."));
                     break;
 
                 case ItemAction.Upgrade:
@@ -463,15 +509,14 @@ namespace BattleBomb.UI.Chest
 
         private void SellAt(int bagIndex)
         {
-            int coins = _bag.RequestSell(bagIndex);
-            Flash(coins > 0 ? $"Sold for {coins}." : "Locked — release it first.");
+            Send(PlayerRequest.Sell(bagIndex),
+                outcome => Flash(outcome.Ok ? $"Sold for {outcome.A}." : "Locked — release it first."));
         }
 
         private void ToggleLockAt(int bagIndex)
         {
-            ItemInstance item = _bag.Inventory.Items[bagIndex].Item;
-            _bag.RequestLock(bagIndex, !item.Locked);
-            Flash(item.Locked ? "Released." : "Locked.");
+            bool wasLocked = _bag.Inventory.Items[bagIndex].Item.Locked;
+            Send(PlayerRequest.Lock(bagIndex, !wasLocked), _ => Flash(wasLocked ? "Released." : "Locked."));
         }
 
         private void ToggleWornLock()
@@ -484,8 +529,9 @@ namespace BattleBomb.UI.Chest
             }
 
             HeroPanel.Slot slot = WornSlot;
-            _bag.RequestLockWorn(slot.Which, slot.EquipmentIndex, !worn.Locked);
-            Flash(worn.Locked ? "Released." : "Locked.");
+            bool wasLocked = worn.Locked;
+            Send(PlayerRequest.LockWorn(slot.Which, slot.EquipmentIndex, !wasLocked),
+                _ => Flash(wasLocked ? "Released." : "Locked."));
         }
 
         /// <summary>
@@ -585,8 +631,8 @@ namespace BattleBomb.UI.Chest
                     return;
 
                 case ItemAction.Unequip:
-                    Flash(_bag.RequestUnequip(slot.Which, slot.EquipmentIndex)
-                        ? "Taken off." : "The sack is full.");
+                    Send(PlayerRequest.Unequip(slot.Which, slot.EquipmentIndex),
+                        outcome => Flash(outcome.Ok ? "Taken off." : "The sack is full."));
                     break;
 
                 default:
@@ -638,17 +684,20 @@ namespace BattleBomb.UI.Chest
             // Changed, and OnBagChanged reads a still-pending index as a sack that shifted.
             _nav.CancelCombine();
 
-            if (!_bag.RequestCombineAll(anchor, out CombineRun run))
+            Send(PlayerRequest.CombineAll(anchor), outcome =>
             {
-                RecollectOnto(anchor);
-                Flash("Nothing left to combine.");
-                return;
-            }
+                if (!outcome.Ok)
+                {
+                    RecollectOnto(anchor);
+                    Flash("Nothing left to combine.");
+                    return;
+                }
 
-            RecollectOnto(_bag.Inventory.Items.Count - 1);
-            Flash(run.Promotions > 0
-                ? $"Combined {run.Combines} — {run.Promotions} UPGRADED!"
-                : $"Combined {run.Combines}.");
+                RecollectOnto(_bag.Inventory.Items.Count - 1);
+                Flash(outcome.B > 0
+                    ? $"Combined {outcome.A} — {outcome.B} UPGRADED!"
+                    : $"Combined {outcome.A}.");
+            });
         }
 
         private void RunCombine(int bagIndex)
@@ -679,19 +728,22 @@ namespace BattleBomb.UI.Chest
             int first = _nav.PendingCombine;
             _nav.CancelCombine();
 
-            if (_bag.RequestCombine(first, bagIndex, out CombineResult result))
+            Send(PlayerRequest.Combine(first, bagIndex), outcome =>
             {
-                // The reroll lands at the end of the bag; the cursor follows it, since seeing
-                // what the gamble returned is the whole reason the gamble was taken.
-                RecollectOnto(_bag.Inventory.Items.Count - 1);
-                Flash(result.Promoted
-                    ? $"UPGRADED! {result.Item.DisplayName}"
-                    : $"Rerolled: {result.Item.DisplayName}");
-                return;
-            }
+                if (outcome.Ok)
+                {
+                    // The reroll lands at the end of the bag; the cursor follows it, since seeing
+                    // what the gamble returned is the whole reason the gamble was taken.
+                    int landed = _bag.Inventory.Items.Count - 1;
+                    RecollectOnto(landed);
+                    string name = landed >= 0 ? _bag.Inventory.Items[landed].Item.DisplayName : string.Empty;
+                    Flash(outcome.A != 0 ? $"UPGRADED! {name}" : $"Rerolled: {name}");
+                    return;
+                }
 
-            RecollectOnto(bagIndex);
-            Flash("These two cannot combine.");
+                RecollectOnto(bagIndex);
+                Flash("These two cannot combine.");
+            });
         }
 
         /// <summary>Rebuilds the grid and puts the cursor back on a known bag index — where the
@@ -729,17 +781,20 @@ namespace BattleBomb.UI.Chest
             int bagIndex = _visible[_nav.Cursor];
             int price = _bag.Inventory.Prices.UpgradeCost(_bag.Inventory.Items[bagIndex].Item);
 
-            if (_bag.RequestUpgrade(bagIndex, _upgradeTargets[_nav.UpgradeCursor]))
+            Send(PlayerRequest.Upgrade(bagIndex, _upgradeTargets[_nav.UpgradeCursor]), outcome =>
             {
-                Flash($"Deepened for {price}.");
-                ItemUpgrade.Targets(_bag.Inventory.Items[bagIndex].Item, _upgradeTargets);
-                _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(_bag.Inventory.Items[bagIndex].Item));
-                return;
-            }
+                if (outcome.Ok && bagIndex < _bag.Inventory.Items.Count)
+                {
+                    Flash($"Deepened for {price}.");
+                    ItemUpgrade.Targets(_bag.Inventory.Items[bagIndex].Item, _upgradeTargets);
+                    _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(_bag.Inventory.Items[bagIndex].Item));
+                    return;
+                }
 
-            Flash(_bag.Wallet.CanAfford(price)
-                ? "The capacity is spent."
-                : $"Not enough coin ({price}).");
+                Flash(_bag.Wallet.CanAfford(price)
+                    ? "The capacity is spent."
+                    : $"Not enough coin ({price}).");
+            });
         }
 
         /// <summary>The same spend, against the piece the player is wearing.</summary>
@@ -754,18 +809,21 @@ namespace BattleBomb.UI.Chest
             HeroPanel.Slot slot = WornSlot;
             int price = _bag.Inventory.Prices.UpgradeCost(worn);
 
-            if (_bag.RequestUpgradeWorn(slot.Which, slot.EquipmentIndex, _upgradeTargets[_nav.UpgradeCursor]))
+            Send(PlayerRequest.UpgradeWorn(slot.Which, slot.EquipmentIndex, _upgradeTargets[_nav.UpgradeCursor]), outcome =>
             {
-                Flash($"Deepened for {price}.");
-                ItemInstance next = WornItem;
-                ItemUpgrade.Targets(next, _upgradeTargets);
-                _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(next));
-                return;
-            }
+                if (outcome.Ok)
+                {
+                    Flash($"Deepened for {price}.");
+                    ItemInstance next = WornItem;
+                    ItemUpgrade.Targets(next, _upgradeTargets);
+                    _nav.FinishUpgrade(ItemUpgrade.CanUpgrade(next));
+                    return;
+                }
 
-            Flash(_bag.Wallet.CanAfford(price)
-                ? "The capacity is spent."
-                : $"Not enough coin ({price}).");
+                Flash(_bag.Wallet.CanAfford(price)
+                    ? "The capacity is spent."
+                    : $"Not enough coin ({price}).");
+            });
         }
 
         private void Flash(string message)

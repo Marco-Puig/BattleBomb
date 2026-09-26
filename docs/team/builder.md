@@ -49,8 +49,9 @@ committed; 96 stays open for Michael's pass.
 
 ## Waiting on
 
-`COMMITTED` for Task 96's close-out (`DONE` sent 2026-09-26). Nothing blocks 97. Earlier waits, now
-cleared: Unity was closed until 2026-09-26, and Michael's Plan 1 pass came in the same day.
+`COMMITTED` for Task 97 (`DONE` sent 2026-09-26). Then Michael's five-minute sitting for 96a/96b,
+which the orchestrator schedules with QUIET: the steps are in `<scratchpad>/t96ab_steps.md`, sent as
+a QUESTION. Task 96 committed `b87a21d` (M8 Plan 1 closed).
 
 ## Current state
 
@@ -70,6 +71,32 @@ inserted bugs, 96a and 96b, get their root causes read between 97's stages.**
   behaviour is at its defaults. Fix or explain, and give a workaround in the pass sheet, before 105.
 - Bandwidth re-measured (in the close-out): paper case 2.9 KB, 86 KB/s with no statuses, up to 3.9 KB
   / 117 KB/s with two statuses each; worst 56 KB (129 KB at the codec's status cap). Sent to Netcode.
+
+**Task 97 progress (2026-09-26):**
+- **Baseline:** EditMode 791, PlayMode 65.
+- **S1–S6 are byte-identical** to the plan (`<scratchpad>/blocks.py 97`), and every file kept its line
+  endings.
+- **Reds were as predicted:**
+  - SackRevision: 2 fail on behaviour until the Touch calls go in.
+  - OnlineMenuSmokeTests: 0/4 ("host never answered") until the host is wired.
+- **Mutations** (all restored):
+  - Removing the runner's NoScreen check fails 2 tests, and removing its stale check fails 1.
+  - Removing NetHost's `.For(guest)` fails all 4 hosted tests: an unstamped request is never answered.
+- **Gates:** EditMode 806/806; PlayMode 69/69, with LootLoop unchanged at S4.
+- **Review "Yes with fixes"** (spec: `<scratchpad>/tasks/task97_fixes.md`):
+  - A real-guest test of `RemotePlayerRequests` over PlaybackTransport, which gained `Deliver`.
+  - A close lets go of what was out, and a setting nobody waits on isn't held up. Red first for both.
+  - The verb table test, the worn-slot test and the act-as-itself `Ok` assert, pinned by mutation.
+  - Final gates: EditMode **808**, PlayMode **70**.
+  - **`DONE` sent.** The carried items (blind press at 99; request queue and route at 103/104) are in
+    the `DONE` and go on the board.
+- **96a/96b:**
+  - Michael's answers: the "wrong hero" is a hero, and only the arrows misbehave (WASD is right).
+  - The roster has one hero and there's no per-seat tint, so the stand-in is invisible and can't be
+    what he saw.
+  - His sitting is drafted in `<scratchpad>/t96ab_steps.md`, to send after 97's `DONE`. The logger
+    is `t96b_record.cs` and its reader `t96b_read.cs`; both compile-checked, run with `eval_file`.
+  - Correction: runInBackground has been 1 since the first commit, not since Task 90.
 
 **Earlier (2026-09-25): M8 Plan 2 started — Task 97 prepped while Unity was closed.**
 - The plan is split into `<scratchpad>/tasks/p2_preamble.md`, `task97.md`…`task105.md` and
@@ -1153,7 +1180,8 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Next steps
 
-1. **Task 97:**
+1. **Task 97 — done; `DONE` sent. Task 98 next**, on `COMMITTED`: run `anchors.py 98`, then the
+   staging (tests red, then the rack), then the live check (Step 6). Task 97's notes:
    - Take the baseline: EditMode 791, PlayMode 65, async.
    - The premise check is done and clean, so there is no extra spec.
    - Stage it from `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\tasks\task97_stages.md`.
@@ -1248,6 +1276,8 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Log
 
+- 2026-09-26 — **Task 97 complete:** requests seam plus review fixes; EditMode 808, PlayMode 70. `DONE`
+  sent, and 96a/96b's sitting steps sent as a QUESTION. Next: Task 98 on `COMMITTED`.
 - 2026-09-26 — Unity open; Michael's Plan 1 pass in. Bandwidth re-measured; 96's close-out final and
   `DONE` sent. Next: baseline, then 97's S1.
 - 2026-09-25 — **M8 Plan 2 started** (CONTINUE, `5bba6ed`). The Unity editor is closed, so I sent

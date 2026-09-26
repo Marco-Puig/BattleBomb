@@ -35,5 +35,19 @@ namespace BattleBomb.Core.Items
         public int SlotsUsed => Entries.Count;
 
         public bool IsFull => Entries.Count >= Rules.Capacity;
+
+        /// <summary>
+        /// Moves every time what the sack holds changes — a stack added, removed, split, locked or
+        /// deepened. A menu action that names a place in the sack carries the number its player was
+        /// looking at, so the host can refuse one aimed at a sack that has changed since (HANDOFF-M8
+        /// planning decision 11). The auto flags do not move it: they change no place.
+        /// </summary>
+        public int Revision { get; private set; }
+
+        internal void Touch() => Revision++;
+
+        /// <summary>The guest's copy of its sack takes the host's number (Task 99), so what it asks for
+        /// names the sack the host holds.</summary>
+        internal void AdoptRevision(int revision) => Revision = revision;
     }
 }

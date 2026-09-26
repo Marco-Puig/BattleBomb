@@ -9,6 +9,7 @@ using BattleBomb.Core.Players;
 using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Net;
 using BattleBomb.Gameplay.Players;
@@ -385,6 +386,55 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(sawFreshJump, Is.True, "Jump never reached the host once South was fully let go and pressed again.");
         }
 
+        [UnityTest]
+        public IEnumerator A_guests_action_waits_for_its_own_answer_and_a_close_lets_it_go()
+        {
+            yield return AdvanceUntil(() => _guest.RenderFrame >= Start, "The guest never started drawing.");
+            IPlayerRequests requests = _driver.RequestsFor(GuestOwnPlayerId);
+            Assert.That(requests.Pending, Is.False);
+
+            int answered = 0;
+            RequestOutcome heard = default;
+            requests.Send(PlayerRequest.Sell(0), outcome =>
+            {
+                answered++;
+                heard = outcome;
+            });
+            Assert.That(requests.Pending, Is.True, "An action sent to the host is not waiting for its answer.");
+            Assert.That(SentRequests().Count, Is.EqualTo(1));
+            int first = SentRequests()[0].Sequence;
+
+            RequestOutcome busy = default;
+            requests.Send(PlayerRequest.Equip(0), outcome => busy = outcome);
+            Assert.That(busy.Refusal, Is.EqualTo(RequestRefusal.Busy), "A second action was not turned away while the first was on the wire.");
+            Assert.That(SentRequests().Count, Is.EqualTo(1), "A second action went out while the first was on the wire.");
+
+            requests.Send(PlayerRequest.SetAutoSell(true), null);
+            Assert.That(SentRequests().Count, Is.EqualTo(2), "A setting nobody waits on was held up by the action on the wire.");
+            Assert.That(requests.Pending, Is.True);
+
+            Answer(first + 100, RequestOutcome.Done(9));
+            yield return AdvanceSteps(2);
+            Assert.That(answered, Is.Zero, "An answer to another request was taken for this one.");
+            Assert.That(requests.Pending, Is.True);
+
+            Answer(first, RequestOutcome.Done(7));
+            yield return AdvanceSteps(2);
+            Assert.That(answered, Is.EqualTo(1), "The answer was not heard exactly once.");
+            Assert.That(heard.A, Is.EqualTo(7));
+            Assert.That(requests.Pending, Is.False, "The answer came and the screen still waits.");
+
+            requests.Send(PlayerRequest.Sell(0), outcome => answered++);
+            Assert.That(requests.Pending, Is.True);
+            int second = SentRequests()[SentRequests().Count - 1].Sequence;
+            requests.Send(PlayerRequest.CloseScreen(), null);
+            Assert.That(requests.Pending, Is.False, "A closed screen still waits for an answer that may never come.");
+
+            Answer(second, RequestOutcome.Done());
+            yield return AdvanceSteps(2);
+            Assert.That(answered, Is.EqualTo(1), "An answer reached a screen that had closed.");
+        }
+
         private IEnumerator AdvanceSteps(int steps)
         {
             int target = _driver.Frame + steps;
@@ -402,6 +452,30 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             Assert.That(condition(), Is.True, failure);
+        }
+
+        /// <summary>Every menu action the guest sent, in order.</summary>
+        private List<PlayerRequest> SentRequests()
+        {
+            var requests = new List<PlayerRequest>();
+            foreach (byte[] message in _playback.Sent)
+            {
+                var reader = new NetReader(message);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Request)
+                {
+                    requests.Add(RequestCodec.ReadRequest(reader));
+                }
+            }
+
+            return requests;
+        }
+
+        /// <summary>The host's answer to one of the guest's actions, delivered now.</summary>
+        private void Answer(int sequence, in RequestOutcome outcome)
+        {
+            var writer = new NetWriter();
+            RequestCodec.WriteResult(writer, sequence, outcome);
+            _playback.Deliver(writer.ToArray());
         }
 
         private IEnumerator PlayToTheEnd()

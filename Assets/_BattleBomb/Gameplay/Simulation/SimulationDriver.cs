@@ -88,6 +88,9 @@ namespace BattleBomb.Gameplay.Simulation
         private readonly List<int> _attackTokens = new List<int>();
         private readonly List<ProjectileState> _projectiles = new List<ProjectileState>();
         private readonly List<EnemyActor> _dying = new List<EnemyActor>();
+        private readonly Dictionary<int, LocalPlayerRequests> _localRequests = new Dictionary<int, LocalPlayerRequests>();
+        private readonly List<PlayerRequest> _remoteRequests = new List<PlayerRequest>();
+        private readonly List<PlayerRequest> _requestScratch = new List<PlayerRequest>();
 
         private SimulationClock _clock;
 
@@ -239,6 +242,65 @@ namespace BattleBomb.Gameplay.Simulation
         /// wipe — so the host can tell the guest it is gone: snapshots carry no drops. The drop may
         /// already be destroyed.</summary>
         internal event Action<DropPickup> PickupRemoved;
+
+        /// <summary>
+        /// Where a player's menu actions go on this machine (HANDOFF-M8 planning decision 11). The guest's
+        /// half sets it so its own player's requests cross the wire; null — everywhere else — runs them
+        /// here, now.
+        /// </summary>
+        internal Func<int, IPlayerRequests> RequestRoute { get; set; }
+
+        /// <summary>Raised inside the host's step for every remote request it ran, with what happened.</summary>
+        internal event Action<PlayerRequest, RequestOutcome> RemoteRequestAnswered;
+
+        /// <summary>This player's menu actions: run here and now, or — a guest's own player — sent to the host.</summary>
+        public IPlayerRequests RequestsFor(int playerIdValue)
+        {
+            IPlayerRequests routed = RequestRoute?.Invoke(playerIdValue);
+            if (routed != null)
+            {
+                return routed;
+            }
+
+            if (!_localRequests.TryGetValue(playerIdValue, out LocalPlayerRequests local))
+            {
+                local = new LocalPlayerRequests(this, playerIdValue);
+                _localRequests[playerIdValue] = local;
+            }
+
+            return local;
+        }
+
+        /// <summary>
+        /// A screen's way out — B, Start, the pointer's close. It closes here at once; on a guest the host is
+        /// told as well, because the host's copy of the screen is what keeps the body standing idle (D42).
+        /// </summary>
+        public void RequestClose(int playerIdValue)
+        {
+            CloseScreen(playerIdValue);
+            if (_replica)
+            {
+                RequestsFor(playerIdValue).Send(PlayerRequest.CloseScreen(), null);
+            }
+        }
+
+        /// <summary>This player's bag, or null when nobody by that id is in the world.</summary>
+        public PlayerInventory InventoryOf(int playerIdValue)
+        {
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                if (actors[i].PlayerId.Value == playerIdValue)
+                {
+                    return actors[i].GetComponent<PlayerInventory>();
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>A remote player's request, for the host's next step to run.</summary>
+        internal void QueueRemoteRequest(in PlayerRequest request) => _remoteRequests.Add(request);
 
         /// <summary>
         /// Debug only: rolls one authored definition at a quality floor, for the equip panel to
@@ -746,6 +808,7 @@ namespace BattleBomb.Gameplay.Simulation
             ArenaBounds bounds = Bounds;
 
             SampleCommands(frame);
+            ApplyRemoteRequests();
             StepPlayers(frame, actors, bounds);
             CapturePlayerSnapshot(actors);
             StepEnemies(frame, actors, bounds);
@@ -760,6 +823,29 @@ namespace BattleBomb.Gameplay.Simulation
 
         /// <summary>Every player's intent for this step — commands, never polling (D10).</summary>
         private void SampleCommands(int frame) => _players.SampleAll(frame, _commands);
+
+        /// <summary>
+        /// What a remote player's menus asked for, run first thing in the host's step — after intent is
+        /// sampled and before anything moves (planning decision 11) — so a sale lands before a grab in the
+        /// same step, exactly as the couch's press in the step before would have.
+        /// </summary>
+        private void ApplyRemoteRequests()
+        {
+            if (_remoteRequests.Count == 0)
+            {
+                return;
+            }
+
+            _requestScratch.Clear();
+            _requestScratch.AddRange(_remoteRequests);
+            _remoteRequests.Clear();
+            for (int i = 0; i < _requestScratch.Count; i++)
+            {
+                PlayerRequest request = _requestScratch[i];
+                RequestOutcome outcome = PlayerRequestRunner.Run(request, InventoryOf(request.PlayerId), this);
+                RemoteRequestAnswered?.Invoke(request, outcome);
+            }
+        }
 
         /// <summary>
         /// Each player acts on their command, in registry order (D10). Contextual Light is resolved

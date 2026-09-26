@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BattleBomb.Core.Combat;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Data;
@@ -26,6 +27,7 @@ namespace BattleBomb.Gameplay.Net
     {
         private readonly NetWriter _writer = new NetWriter(4096);
         private readonly NetWriter _scratch = new NetWriter(4096);
+        private readonly NetWriter _answer = new NetWriter(64);
         private readonly List<WireCommand> _commands = new List<WireCommand>(NetProtocol.CommandRedundancy);
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
         private readonly List<ReplicatedEvent> _stamped = new List<ReplicatedEvent>();
@@ -53,6 +55,7 @@ namespace BattleBomb.Gameplay.Net
             _driver.HitLanded += OnHit;
             _driver.PickupSpawned += OnPickup;
             _driver.PickupRemoved += OnPickupRemoved;
+            _driver.RemoteRequestAnswered += OnRequestAnswered;
             _driver.MayOpenScreen = id => id != _net.GuestPlayerId.Value;
             if (_runner != null)
             {
@@ -107,6 +110,14 @@ namespace BattleBomb.Gameplay.Net
                 return;
             }
 
+            if (kind == NetMessageKind.Request)
+            {
+                // A guest can only ever act as itself, whatever id it wrote (planning decision 11). Run in
+                // the next step's first phase, never here: this is the session's pump, outside the step.
+                _driver.QueueRemoteRequest(RequestCodec.ReadRequest(reader).For(_net.GuestPlayerId.Value));
+                return;
+            }
+
             if (kind != NetMessageKind.Commands || _remote == null)
             {
                 return;
@@ -137,6 +148,18 @@ namespace BattleBomb.Gameplay.Net
             {
                 _pending.Add(ReplicatedEvent.OfDropRemoved(pickup.NetId));
             }
+        }
+
+        private void OnRequestAnswered(PlayerRequest request, RequestOutcome outcome)
+        {
+            if (!_net.IsConnected || request.PlayerId != _net.GuestPlayerId.Value)
+            {
+                return;
+            }
+
+            _answer.Reset();
+            RequestCodec.WriteResult(_answer, request.Sequence, outcome);
+            _net.Send(NetChannel.Reliable, _answer);
         }
 
         /// <summary>After every host step: this step's events, then — every second step — the world.</summary>
@@ -296,6 +319,7 @@ namespace BattleBomb.Gameplay.Net
                 _driver.HitLanded -= OnHit;
                 _driver.PickupSpawned -= OnPickup;
                 _driver.PickupRemoved -= OnPickupRemoved;
+                _driver.RemoteRequestAnswered -= OnRequestAnswered;
                 _driver.MayOpenScreen = null;
                 _driver.HoldForPeer = false;
             }

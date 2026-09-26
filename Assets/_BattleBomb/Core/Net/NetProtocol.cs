@@ -5,11 +5,12 @@ namespace BattleBomb.Core.Net
     /// <summary>
     /// The protocol version and HANDOFF-M8's paper numbers, in one place. Tuned live; a change to
     /// anything that alters the bytes on the wire bumps <see cref="Version"/>.
+    /// 3: menu requests (Plan 2, Task 97).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 2;
+        public const int Version = 3;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>

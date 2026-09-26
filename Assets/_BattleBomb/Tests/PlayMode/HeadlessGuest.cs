@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Core.Simulation;
@@ -52,6 +53,16 @@ namespace BattleBomb.Tests.PlayMode
 
         /// <summary>Every <c>LoadStage</c> in full — where the host asked for each stage to go.</summary>
         internal List<LoadStageMessage> LoadMessages { get; } = new List<LoadStageMessage>();
+
+        /// <summary>Every answer the host sent to a request, in order.</summary>
+        internal List<(int Sequence, RequestOutcome Outcome)> Results { get; } = new List<(int Sequence, RequestOutcome Outcome)>();
+
+        internal void SendRequest(in PlayerRequest request)
+        {
+            _writer.Reset();
+            RequestCodec.WriteRequest(_writer, request);
+            _transport.Send(_host, NetChannel.Reliable, _writer.Buffer, _writer.Length);
+        }
 
         /// <summary>Where the host's clock was when each message arrived — set by a recording test.</summary>
         internal System.Func<int> Clock { get; set; }
@@ -154,6 +165,12 @@ namespace BattleBomb.Tests.PlayMode
                     else if (kind == NetMessageKind.Launch)
                     {
                         Launch = HandshakeCodec.ReadLaunch(reader);
+                        Received.Add(netEvent.Payload);
+                    }
+                    else if (kind == NetMessageKind.RequestResult)
+                    {
+                        RequestOutcome outcome = RequestCodec.ReadResult(reader, out int sequence);
+                        Results.Add((sequence, outcome));
                         Received.Add(netEvent.Payload);
                     }
                     else if (kind == NetMessageKind.SessionEnd)

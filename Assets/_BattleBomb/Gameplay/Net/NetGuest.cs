@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Combat;
@@ -25,6 +26,7 @@ namespace BattleBomb.Gameplay.Net
         private readonly List<ReplicatedEvent> _incoming = new List<ReplicatedEvent>();
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
         private readonly MenuGate _menu = new MenuGate();
+        private RemotePlayerRequests _requests;
         private NetSession _net;
         private SimulationDriver _driver;
         private StageRunner _runner;
@@ -45,6 +47,8 @@ namespace BattleBomb.Gameplay.Net
             _local = local;
             _runner = FindAnyObjectByType<StageRunner>();
             _world = new ReplicaWorld(_driver, _runner, FindAnyObjectByType<EnemySpawner>(), GameSession.Find());
+            _requests = new RemotePlayerRequests(_net, () => _driver.InventoryOf(_local.Value));
+            _driver.RequestRoute = id => id == _local.Value ? _requests : null;
             _driver.ReplicaStepping += OnLocalStep;
             _net.MessageReceived += OnMessage;
             if (_runner != null)
@@ -102,6 +106,11 @@ namespace BattleBomb.Gameplay.Net
                 case NetMessageKind.Events:
                     EventCodec.Read(reader, _driver.ItemSpecs, _incoming);
                     _pending.AddRange(_incoming);
+                    break;
+
+                case NetMessageKind.RequestResult:
+                    RequestOutcome outcome = RequestCodec.ReadResult(reader, out int sequence);
+                    _requests.Answer(sequence, outcome);
                     break;
 
                 case NetMessageKind.LoadStage:
@@ -188,7 +197,10 @@ namespace BattleBomb.Gameplay.Net
             if (_driver != null)
             {
                 _driver.ReplicaStepping -= OnLocalStep;
+                _driver.RequestRoute = null;
             }
+
+            _requests?.Abandon();
 
             if (_runner != null)
             {

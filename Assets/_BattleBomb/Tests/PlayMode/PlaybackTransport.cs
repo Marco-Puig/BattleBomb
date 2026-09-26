@@ -32,6 +32,9 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>Everything the guest sent, in order — the recording cannot answer, but a test can read.</summary>
         internal List<byte[]> Sent { get; } = new List<byte[]>();
 
+        /// <summary>A message the test puts in as the host's, now — an answer a recording cannot know.</summary>
+        internal void Deliver(byte[] payload) => _inbox.Enqueue(NetEvent.Data(Host, NetChannel.Reliable, payload));
+
         public void Listen()
         {
         }

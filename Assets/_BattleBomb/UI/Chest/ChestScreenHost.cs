@@ -39,7 +39,11 @@ namespace BattleBomb.UI.Chest
         private readonly List<int> _scratch = new List<int>();
         private Canvas _canvas;
 
-        internal void RequestClose(int playerId) => _driver?.CloseScreen(playerId);
+        internal void RequestClose(int playerId) => _driver?.RequestClose(playerId);
+
+        /// <summary>Where this player's menu actions go: here and now on the couch, across the wire on a
+        /// guest (HANDOFF-M8 planning decision 11).</summary>
+        internal IPlayerRequests RequestsFor(int playerId) => _driver != null ? _driver.RequestsFor(playerId) : null;
 
         /// <summary>Which button pictures this player's screen shows (D57).</summary>
         internal InputFamily FamilyFor(int playerId) =>

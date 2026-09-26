@@ -173,6 +173,8 @@ namespace BattleBomb.Core.Saves
 
                 sack.Entries.Add(new ItemStack(ToInstance(stacks[i].Item, catalog), stacks[i].Count));
             }
+
+            sack.Touch();
         }
 
         public static Wallet RestoreWallet(SaveGame save) => new Wallet(save.Coins);

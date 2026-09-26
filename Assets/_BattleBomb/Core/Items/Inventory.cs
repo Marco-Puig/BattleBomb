@@ -113,6 +113,7 @@ namespace BattleBomb.Core.Items
                     }
 
                     _items[stack] = new ItemStack(_items[stack].Item, _items[stack].Count + 1);
+                    _sack.Touch();
                     return new AddResult(true, false, 0);
                 }
             }
@@ -124,6 +125,7 @@ namespace BattleBomb.Core.Items
             }
 
             _items.Add(new ItemStack(item, 1));
+            _sack.Touch();
 
             if (!item.IsConsumable && AutoEquip && item.RequiredLevel <= currentLevel)
             {
@@ -152,6 +154,7 @@ namespace BattleBomb.Core.Items
 
             ItemStack stack = _items[bagIndex];
             _items.RemoveAt(bagIndex);
+            _sack.Touch();
             if (stack.Item.IsConsumable && _quickKind == QuickSlotKind.Consumable
                 && _quickConsumableId == stack.Item.DefinitionId
                 && FindConsumableStack(_quickConsumableId) < 0)
@@ -227,6 +230,7 @@ namespace BattleBomb.Core.Items
 
             ItemStack stack = _items[bagIndex];
             _items[bagIndex] = new ItemStack(stack.Item.WithLock(locked), stack.Count);
+            _sack.Touch();
             return true;
         }
 
@@ -248,6 +252,7 @@ namespace BattleBomb.Core.Items
             }
 
             _items[bagIndex] = new ItemStack(upgraded, stack.Count);
+            _sack.Touch();
             return true;
         }
 
@@ -317,6 +322,7 @@ namespace BattleBomb.Core.Items
             RemoveOne(high);
             RemoveOne(low);
             _items.Add(new ItemStack(result.Item, 1));
+            _sack.Touch();
             return next;
         }
 
@@ -554,6 +560,7 @@ namespace BattleBomb.Core.Items
                 _items.Add(new ItemStack(previous, 1));
             }
 
+            _sack.Touch();
             if (item.Slot == ItemSlot.Equipment && _quickKind == QuickSlotKind.EquipmentActive
                 && _quickEquipmentIndex == equipmentIndex)
             {
@@ -580,6 +587,7 @@ namespace BattleBomb.Core.Items
 
             Loadout.Swap(slot, equipmentIndex, default);
             _items.Add(new ItemStack(worn, 1));
+            _sack.Touch();
 
             if (slot == ItemSlot.Equipment && _quickKind == QuickSlotKind.EquipmentActive
                 && _quickEquipmentIndex == equipmentIndex)
@@ -710,6 +718,7 @@ namespace BattleBomb.Core.Items
                 }
             }
 
+            _sack.Touch();
             _quickCooldown = Mathf.Max(0, cooldownSteps);
             return new QuickUseResult(true, heal, restores);
         }

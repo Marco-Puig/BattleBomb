@@ -11,7 +11,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | M8 Plan 2 from Task 97 (96 open: close-out drafted in builder.md) | Michael's Plan 1 pass (96) |
+| Builder | Builder | **blocked** — Unity closed; read-only prep for 97 meanwhile | M8 Plan 2 from Task 97 (96 open: close-out drafted in builder.md) | Michael: open BattleBomb in Unity; his Plan 1 pass (96) |
 | Netcode | Netcode | idle — ready to compact; the Builder's reference for Plan 2 | Plan 3 (106–114) next | Michael's lag table (96) |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
@@ -32,6 +32,8 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
+0. **Open BattleBomb in Unity** (6000.5.8f1, from the Hub) — the Builder is blocked on Plan 2 until
+   the editor's bridge answers.
 1. **Groundwork pass + M8 online checks and the lag table** (~35 min; can be two sittings) — the
    16 controller checks in `docs/team/groundwork-pass.md`, then `docs/team/m8-plan1-pass.md`
    (Stages A and B plus Task 96's lag table, which Plan 3 is written from). Item 12 in the
@@ -234,6 +236,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Builder `BLOCKED`: Unity is closed. Anchors for 97 checked (40, verbatim); read-only prep
+  continues. Asked Michael to open the project.
 - 2026-09-25 — Netcode `READY TO COMPACT` (lane file committed); wakes for Plan 3 on the lag table.
 - 2026-09-25 — **M8 Plan 2 committed** (5bba6ed): Tasks 97–105, anchored edits only, every carried item
   placed; Michael's Plan 2 sheet for Task 105. The Builder starts 97; Netcode prepares to compact.

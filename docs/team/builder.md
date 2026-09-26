@@ -9,9 +9,9 @@ the only lane that writes under `Assets/` unless the orchestrator lends it out.
 **Read first (in order):** `CLAUDE.md` · `docs/team/PROTOCOL.md` · `docs/team/BOARD.md` · this file
 · `docs/ROADMAP.md` §4 M8 · `docs/HANDOFF-M8.md` · the plan below.
 
-**The plan:** `docs/superpowers/plans/2026-09-24-m8-plan1-wire-and-mirror.md` — M8 Plan 1, Tasks
-86–96. 86–95 are committed; 96 waits on Michael's pass. Next: Plan 2 (Tasks 97–105), written by the
-Netcode lane.
+**The plan:** `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md` — M8 Plan 2, Tasks
+97–105 (committed `5bba6ed`). Plan 1 (`2026-09-24-m8-plan1-wire-and-mirror.md`, 86–96): 86–95
+committed; 96 stays open for Michael's pass.
 
 ---
 
@@ -32,22 +32,60 @@ Netcode lane.
 - **Shared docs in Task 14** (`DECISIONS.md` D57, `GAME_DESIGN.md` §3.1, `CLAUDE.md`,
   `ARCHITECTURE.md`, `ROADMAP.md`) belong to the orchestrator: send the plan's text for those steps
   in your `DONE`, and the orchestrator applies it.
-- After M8 Plan 1: Plan 2 (Tasks 97–105) is written by the Netcode lane; the orchestrator points
-  me at it.
+- **Plan 2's rules (orchestrator, 2026-09-25):**
+  - Started without 96. A finding from Michael's Plan 1 pass arrives as a small inserted task (96a,
+    96b…), built before the first Plan 2 task that touches the same file (the plan's header table).
+  - Edits are anchored only. If an anchor isn't there verbatim, stop and re-read; keep the change,
+    apply the plan's intent on top, and say so in the `DONE`.
+  - Only Task 105 needs `QUIET`. Everything else goes through HeadlessGuest and PlaybackTransport.
+    PlayMode is always async.
+  - The couch change is accepted: from 99, a combine in progress cancels only when the sack itself
+    moves (`Sack.Revision`). List it in 105's close-out.
+  - Netcode (the plan's author) answers plan questions at
+    `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050`. Copy the orchestrator on
+    anything that changes scope. One `DONE` per task.
 
 ---
 
 ## Waiting on
 
-**Michael's pass** — one sitting from `docs/team/m8-plan1-pass.md` (Stage A, Stage B, 96's lag
-table); the orchestrator wakes me to record it and commit 96 — and **Plan 2**, which Netcode writes.
-Task 95 COMMITTED `f393d98`. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
+**The Unity editor** — closed when Plan 2 started (`editor_status` can't reach 127.0.0.1:7800; no
+editor process). `BLOCKED` sent 2026-09-25; the orchestrator is asking Michael to open it and will
+wake me. Until then: read-only prep only, nothing under `Assets/`; if the prep runs out, bring this
+file up to date and send `READY TO COMPACT`.
+**Michael's Plan 1 pass** (96, still open) — his verdicts fill the close-out draft below; a failed
+check comes back as a 96x task. Earlier: (11:50 ANSWER from the orchestrator: **F1 = option A** — collect-then-settle, keep
 `Destroy`, no Despawn helper, ResetBrood/Unload unchanged; tripwires stay as regression guards
 with reworded docs; new red-first test (3 same-step deaths → one step, registry order). DONE lists
 the tripwire file + one line per skipped plan step (3, 5). F2 in parallel OK, one DONE per task.
 Netcode heads-up: this changes its read of candidate F4 and the catch-up-loop pause item.)
 
 ## Current state
+
+**Now (2026-09-25): M8 Plan 2 started — Task 97 (the requests seam), prep only; Unity is closed.**
+- The plan is split into `<scratchpad>/tasks/p2_preamble.md`, `task97.md`…`task105.md` and
+  `p2_tail.md` (Michael's checks, the self-review, the test-count table). The implementer briefing
+  is `<scratchpad>/tasks/p2_context.md`.
+- `<scratchpad>/anchors.py <task>` checks every anchor a task quotes against the current tree; it
+  flags method-scoped "from X to the end of the method" anchors that also occur elsewhere, so check
+  those by hand. At `5bba6ed`, 97's 40 anchors are all verbatim.
+- **Task 97's premise check is clean.** Every API it uses exists as the plan assumes, the nine Touch
+  calls cover every change to the sack in Core, and the couch sees no difference in the chest
+  screen: same flashes and cursor moves. No extra spec is needed. The staging (behavioural reds:
+  Touch calls held back to S2, the host unwired until S6) is in `<scratchpad>/tasks/task97_stages.md`.
+  Mutations to run after S3: remove the runner's NoScreen check, then its stale-sack check.
+- **Task 98 pre-checked** (the parts 97 doesn't touch):
+  - RollRack makes the same draws as today's `RollShopStock` (SimulationDriver :348).
+  - The only `RequestBuy` caller is ChestScreenHost :54, so making it internal is safe.
+  - No EditMode or PlayMode test opens a shop today, so rolling on open can't hit a bare driver's null
+    fields.
+  - Every member the task uses exists: ChestScreenHost `_screens`/`OnScreenChanged`/`MenuStepped`,
+    ChestScreen `IsShop`/`OnBagChanged`/`FinishBuy`/`StockCursor`, the LootLoopSmokeTests helpers,
+    `GrantCoins`, `BuyPrice`.
+  - Run `anchors.py 98` after 97 lands. Step 6 is a settled-state live check I drive myself, with no
+    QUIET.
+- Baseline to take once Unity is open: EditMode 791, PlayMode 65. Plan 2's expected counts per task
+  are at the end of `p2_tail.md` (97 → 806 / 69).
 
 **Now (2026-09-26 00:05): M8 Plan 1 built through 95 and committed (`5e586a4`..`f393d98`).**
 - Task 96 Step 1 is done at `f393d98`: EditMode 791/791, PlayMode 65/65; nothing uncommitted under
@@ -1066,23 +1104,32 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Next steps
 
-1. **When the orchestrator wakes me with Michael's report (Task 96, Steps 2–4):**
+1. **Task 97** once Unity is open:
+   - Run `editor_status` and take the baseline: EditMode 791, PlayMode 65, async.
+   - Finish the premise check and write the extra spec if one is needed.
+   - Stage it: S1 is Step 1, then red; S2 is Steps 3–4, then the Core tests go green; S3 is Step 6,
+     then red; S4 is Step 8, then the runner goes green; S5 is Step 10, then both suites with
+     LootLoopSmokeTests unchanged; S6 is Steps 12–14, then OnlineMenuSmokeTests 4/4 and both suites
+     (806 / 69).
+   - Then the review and the `DONE`.
+2. **Tasks 98–104** in order, one `DONE` each. Premise-check each task on the tree its predecessor
+   left, and run `anchors.py` first. Task 105 needs `QUIET`: it's Michael's pass and the close-out.
+3. **When the orchestrator wakes me with Michael's Plan 1 report (Task 96, Steps 2–4):**
    - Fill in "Michael's verdicts and the lag table" in the close-out draft above: each Stage A/B item,
      plus moving and attacking at None / Normal / Bad.
-   - If an item failed, triage it as a fix task before 96 closes.
+   - A failed item becomes a 96x task, built before the first Plan 2 task that touches its file.
    - The orchestrator writes HANDOFF-M8's Build log and close-out, and the ROADMAP §4 M8 line, from
      the draft.
    - Send `DONE` for 96: builder.md only, nothing under `Assets/`. Its subject is
-     `96: M8 stages A–B — Michael's pass and Plan 1's close-out`. The orchestrator then tells Netcode
-     that Plan 2 can be written.
-2. **Plan 2 (Tasks 97–105), when the orchestrator points me at it:**
-   - Split it into `<scratchpad>/tasks/` and write a new implementer briefing.
-   - Premise-check every task: the plan will predate 93–95. MenuGate, DropIds gone (protocol v2),
-     HandOver carrying the host's step, and `PlaybackTransport.Sent` are all newer.
-   - Fold in the board's Plan 2 carry-forward items (see "Deferred" in the close-out draft).
+     `96: M8 stages A–B — Michael's pass and Plan 1's close-out`.
 
 ## Answers and decisions
 
+- 2026-09-25 (Orchestrator): **CONTINUE — M8 Plan 2 committed (`5bba6ed`); start at 97 without 96.**
+  96 stays open, and a finding from Michael's Plan 1 pass arrives as 96a, 96b… before the first Plan 2
+  task touching the same file. Edits are anchored only. Only 105 needs `QUIET`. The couch change is
+  accepted: a combine cancels only when the sack itself moves. Netcode answers plan questions (copy
+  the orchestrator on scope). The sim is mine; one `DONE` per task.
 - 2026-09-25 23:50 (Orchestrator): **COMMITTED `f393d98` — Task 95.** Everything accepted (Z1,
   review 1–9). HANDOFF-M8 rows (protocol v2) and a D57 amendment for the guest's menu applied; the
   Stage A check is in `m8-plan1-pass.md`. **Task 96:** Step 1, the close-out draft here, then
@@ -1132,6 +1179,9 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Log
 
+- 2026-09-25 — **M8 Plan 2 started** (CONTINUE, `5bba6ed`). The Unity editor is closed, so I sent
+  `BLOCKED`. The plan is split and the briefing written; Task 97's anchors all hold, and its premise
+  check is running.
 - 2026-09-26 00:05 — **Task 96 Step 1:** EditMode 791/791, PlayMode 65/65, tree clean at `f393d98`.
   The close-out is drafted here, and the lane file is complete under rule 11. `DONE` for builder.md
   plus `READY TO COMPACT` sent. Blocked on Michael's pass and on Plan 2.

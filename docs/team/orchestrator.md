@@ -35,7 +35,7 @@ address (the address changes when this app restarts).
 |---|---|---|
 | Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | idle — READY TO COMPACT (924c362); wake with Michael's pass (fill the close-out draft, send 96's DONE) or Plan 2 |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
-| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-8ad7c204f7e01241eec33845b5cce519` | closed — asked Michael to reopen it from `PROMPTS.md` (2026-09-25) for M8 Plan 1 |
+| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | writing M8 Plan 2 (97–105) → `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md`; reopened 2026-09-25 |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)
@@ -50,7 +50,8 @@ address (the address changes when this app restarts).
   drafts the build log and close-out notes in builder.md, then compacts; on Michael's verdicts
   and lag table, wake the Builder, apply the draft to HANDOFF-M8 (Build log section after "The
   build — stages and tasks"), add ROADMAP §4 M8's line, commit 96. Plan 2 needs Netcode reopened
-  (Michael's queue item 2); Plan 3 waits on the lag table.
+  (reopened 2026-09-25 — writing it; Michael said carry on before his pass); Plan 3 waits on the
+  lag table. On Plan 2's DONE: review, commit, wake the Builder with it.
 - **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's
   music tool (GPT steps 26–32), a pet direction, and the World bible.
 - **Michael's queue:** see the board — top items are the World session, the same-hero save call,
@@ -72,6 +73,9 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-25 — Netcode reopened; writing Plan 2. Sent it the board's Plan 2 carry-forward, the shop
+  rack, F4 and G8's catch-up pause (reassess apart), the TargetRegistry watch, and the same-hero
+  save question (ask, don't pick).
 - 2026-09-25 — M8 Plan 1 code complete (86–95). Builder READY TO COMPACT (924c362), close-out drafted
   in builder.md. Waiting on Michael (one-sitting checks; reopen Netcode for Plan 2).
 - 2026-09-25 — Art READY TO COMPACT (9902064); Netcode and World lane files committed as they

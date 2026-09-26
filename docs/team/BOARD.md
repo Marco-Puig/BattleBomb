@@ -3,7 +3,7 @@
 Kept by the orchestrator (currently named "Battlebomb"). The live state of the team: who is doing what,
 who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
-**Updated:** 2026-09-24
+**Updated:** 2026-09-25
 
 ---
 
@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | idle — ready to compact (close-out drafted) | M8 Plan 1 built (86–95) | Michael's pass (96); Plan 2 from Netcode |
-| Netcode | — | not running (session closed) | Standby: Builder's reference; Plan 2 once Plan 1 is underway | Groundwork + F1–F3 |
+| Netcode | Netcode | working | M8 Plan 2 (97–105): `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md` | — |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -36,33 +36,30 @@ What is waiting on Michael, in priority order:
    16 controller checks in `docs/team/groundwork-pass.md`, then `docs/team/m8-plan1-pass.md`
    (Stages A and B plus Task 96's lag table, which Plan 3 is written from). Item 12 in the
    Groundwork list is his judgement call.
-2. **Reopen the Netcode session** (paste its prompt from `docs/team/PROMPTS.md`) — **now on the
-   critical path:** Plan 1 is built, and Plan 2 (97–105) needs writing before the Builder has
-   more M8 work.
-3. **The World session** — open in the World lane's session, at question 1 (the goal).
-4. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+2. **The World session** — open in the World lane's session, at question 1 (the goal).
+3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-5. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
+4. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
    waits on the music tool below.
-6. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
+5. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-7. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+6. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-8. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+7. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-9. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+8. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-10. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
+9. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-11. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+10. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
-12. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
+11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
 ## M8 — Plan 1 underway
@@ -75,7 +72,8 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   Tasks 90, 93, 94, 95, 96 need **quiet** (two-editor Multiplayer Play Mode runs). Task 90 adds the
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
-- **Plan 2** (97–105) is written once Plan 1 is underway; **Plan 3** (106–114) after Task 96.
+- **Plan 2** (97–105) — Netcode writing it (reopened 2026-09-25; Michael: go ahead before his pass).
+  **Plan 3** (106–114) after Task 96's lag table.
 - **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98). **96 is Michael's pass + the close-out.**
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
@@ -230,6 +228,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — Netcode reopened; writing M8 Plan 2 (97–105) against f393d98. Michael's pass can come
+  later; a finding from it lands in Plan 2 as a small inserted fix.
 - 2026-09-25 — Task 96 Step 1: EditMode 791, PlayMode 65 at f393d98. The Builder drafted Plan 1's
   build log and close-out notes (builder.md) and is ready to compact.
 - 2026-09-25 — Task 95 committed (f393d98): a recorded fight replays into a real guest frame by

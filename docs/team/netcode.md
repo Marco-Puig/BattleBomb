@@ -243,6 +243,18 @@ versions with Context7 before writing Plan 3.
 
 ## Answers and decisions
 
+- 2026-09-26 (me → Builder, orchestrator copied): **Task 99's participant copies — inserted 101a**
+  (after 101, before 102). The guest's whole sack travels only when its print — `Inventory.Sack.Revision`,
+  `Wallet.Balance`, `Sack.AutoEquip`, `Sack.AutoSell` (exactly what `SaveMapper.Capture` adds beyond the
+  character) — differs from the last full copy sent; otherwise `full: false`. `Watched` keeps the last full
+  print + a has-full bool; a new `Watched` (every bind/rejoin/new NetHost) sends full first. Force still
+  means "send now" (screen opening, answers, SendMoment) — the print picks the form. Wire unchanged, no
+  protocol bump; D61 saves unaffected (sack from the last full = current by construction). Tests: 99's
+  chest test and 101's moment test loosen to "a P2 copy precedes it, and the newest full one carries the
+  current revision"; new: XP change → `full:false`, sale → `full:true`; mutation "always full" reddens the
+  XP test. Accepted: rapid selling = one full per sale (if 105's D6 shows sluggish menus at Bad lag, a
+  sack delta joins M11's snapshot deltas). Builder's measured sizes: 200-stack sack ~172 KB JSON, 1.5–17 KB
+  deflated.
 - 2026-09-26 (orchestrator, COMMITTED 5db14e6): Plan 3, the pass sheet, the how-to-run sheet and this
   file, pushed. **Accepted:** no delta snapshots in M8 (parked for M11); rich presence instead of lobby
   objects; the other departures as listed — the orchestrator applies them to HANDOFF-M8 at 114.
@@ -338,6 +350,8 @@ versions with Context7 before writing Plan 3.
 
 ## Log
 
+- 2026-09-26 — Builder QUESTION (99: full sack re-sent on every XP change) answered: inserted 101a,
+  full only when the sack print moved; orchestrator copied.
 - 2026-09-26 — Plan 3 COMMITTED 5db14e6 (departures accepted). PREPARE TO COMPACT: lane file brought
   current; READY TO COMPACT sent. All three M8 plans written; on call for the Builder.
 - 2026-09-26 — **M8 Plan 3 written** (F4, 106–114) with the pass sheet and the how-to-run sheet;

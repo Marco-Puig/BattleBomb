@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
@@ -293,6 +294,129 @@ namespace BattleBomb.Tests.PlayMode
             reader.ReadByte();
             Assert.That(ParticipantCodec.Read(reader).Revision, Is.EqualTo(bag.Inventory.Sack.Revision),
                 "The guest's copy is of the bag from before the drink.");
+        }
+
+        [UnityTest]
+        public IEnumerator Online_the_hosts_menu_stands_the_host_still_and_the_world_runs_on()
+        {
+            _driver.HoldMenuPause(true);
+            try
+            {
+                int from = _driver.Frame;
+                Vector3 host = _host.Position;
+                Vector3 guest = _guestBody.Position;
+                _hostInput.Set(Vector2.left, CommandButtons.None);
+                _guest.Move = Vector2.left;
+                // Bounded by render frames generously: the editor may draw several frames per step, and a
+                // paused world never reaches from + 40 however long it is given.
+                for (int i = 0; i < 600 && _driver.Frame < from + 40; i++)
+                {
+                    yield return null;
+                }
+
+                _hostInput.Release();
+                _guest.Move = Vector2.zero;
+                Assert.That(_driver.Frame, Is.GreaterThan(from + 30), "The host's menu paused an online game (D60).");
+                Assert.That(_driver.PausedForScreen, Is.False);
+                Assert.That(_driver.MenuPauseHeld, Is.True, "The menu count must survive: the guest's gate and the settings menu read it.");
+                Assert.That(Vector3.Distance(_host.Position, host), Is.LessThan(0.05f), "The host walked while its own menu was open.");
+                Assert.That(Vector3.Distance(_guestBody.Position, guest), Is.GreaterThan(0.5f), "The guest was frozen by the host's menu.");
+            }
+            finally
+            {
+                _driver.HoldMenuPause(false);
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator Online_the_camera_frames_the_hosts_own_chest()
+        {
+            yield return WalkHostTo(_chest.Position + new Vector3(-0.5f, 0f, 0f), "the chest");
+            _driver.OpenScreen(0, InteractionKind.Chest);
+            yield return Steps(3);
+
+            Presentation.Cameras.CameraRig rig = Object.FindAnyObjectByType<Presentation.Cameras.CameraRig>();
+            Assert.That(rig, Is.Not.Null);
+            Assert.That(rig.FramingOneScreen, Is.True,
+                "Online the host is the only player on its display, and its camera must frame its own chest.");
+        }
+
+        [UnityTest]
+        public IEnumerator At_the_chapters_end_the_guest_is_told_and_the_hosts_results_hear_only_the_host()
+        {
+            // The guest leans on Jump the whole way: a remote Player 2's held buttons used to hold the host's results shut.
+            _guest.Held = CommandButtons.Jump;
+            StageRunner runner = _runner;
+            yield return PushBothRight(() => runner.StageIndex == 1, 5000, "stage two, through the airlock");
+            yield return PushBothRight(() => runner.Phase == StagePhase.Complete, 5000, "the end of the chapter");
+            _guest.Held = CommandButtons.Jump;
+
+            ResultsScreen results = Object.FindAnyObjectByType<ResultsScreen>();
+            yield return Until(() => results.IsOpen, "the results never opened");
+            yield return Steps(4);
+            Assert.That(ReceivedMoment(MomentKind.ChapterCompleted), Is.True, "The guest was never told the chapter ended.");
+
+            yield return Steps(90);
+            _hostInput.Set(Vector2.zero, CommandButtons.Confirm | CommandButtons.Jump);
+            for (int i = 0; i < 600 && SceneManager.GetActiveScene().name == "Gameplay"; i++)
+            {
+                yield return null;
+            }
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo("Frontend"),
+                "The host's A never left its results while the guest held its buttons.");
+        }
+
+        private bool ReceivedMoment(MomentKind moment)
+        {
+            foreach (byte[] message in _guest.Received)
+            {
+                var reader = new NetReader(message);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Moment && SessionCodec.ReadMoment(reader) == moment)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private IEnumerator WalkHostTo(Vector3 target, string what)
+        {
+            int deadline = _driver.Frame + 5000;
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < deadline; guard++)
+            {
+                Vector3 to = target - _host.Position;
+                to.y = 0f;
+                if (to.magnitude <= 0.8f)
+                {
+                    _hostInput.Release();
+                    yield return Steps(4);
+                    yield break;
+                }
+
+                _hostInput.Set(new Vector2(Mathf.Clamp(to.x, -1f, 1f), Mathf.Clamp(to.z, -1f, 1f)), CommandButtons.None);
+                yield return null;
+            }
+
+            _hostInput.Release();
+            Assert.Fail($"The host never reached {what} — stopped {Vector3.Distance(target, _host.Position):F2} away.");
+        }
+
+        /// <summary>Both players push right — the host by script, the guest over the wire — until done.</summary>
+        private IEnumerator PushBothRight(System.Func<bool> done, int steps, string what)
+        {
+            _guest.Move = Vector2.right;
+            _hostInput.Set(Vector2.right, CommandButtons.None);
+            int deadline = _driver.Frame + steps;
+            for (int guard = 0; guard < FrameCeiling && _driver.Frame < deadline && !done(); guard++)
+            {
+                yield return null;
+            }
+
+            _guest.Move = Vector2.zero;
+            _hostInput.Release();
+            Assert.That(done(), Is.True, $"Pushing right never reached {what}.");
         }
 
         private int IndexOf(int from, System.Func<byte[], bool> match)

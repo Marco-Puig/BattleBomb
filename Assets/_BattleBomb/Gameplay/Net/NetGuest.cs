@@ -50,6 +50,7 @@ namespace BattleBomb.Gameplay.Net
             _world = new ReplicaWorld(_driver, _runner, FindAnyObjectByType<EnemySpawner>(), GameSession.Find());
             _requests = new RemotePlayerRequests(_net, () => _driver.InventoryOf(_local.Value));
             _driver.RequestRoute = id => id == _local.Value ? _requests : null;
+            _driver.IsOnline = true;
             _driver.ReplicaStepping += OnLocalStep;
             _net.MessageReceived += OnMessage;
             if (_runner != null)
@@ -138,6 +139,10 @@ namespace BattleBomb.Gameplay.Net
                     _requests.Answer(sequence, outcome);
                     break;
 
+                case NetMessageKind.Moment:
+                    OnMoment(SessionCodec.ReadMoment(reader));
+                    break;
+
                 case NetMessageKind.LoadStage:
                     LoadStageMessage load = StageCodec.ReadLoad(reader);
                     if (_handOverStage >= 0)
@@ -186,6 +191,15 @@ namespace BattleBomb.Gameplay.Net
                 case ReplicatedEventKind.RackChanged:
                     _driver.ApplyReplicaRack(e.Rack.PlayerId, e.Rack.Pieces);
                     break;
+            }
+        }
+
+        /// <summary>A moment in the host's run. The chapter's end opens the guest's results; the others are Task 101's.</summary>
+        private void OnMoment(MomentKind moment)
+        {
+            if (moment == MomentKind.ChapterCompleted)
+            {
+                _runner?.ReplicaChapterCompleted();
             }
         }
 
@@ -242,6 +256,7 @@ namespace BattleBomb.Gameplay.Net
             {
                 _driver.ReplicaStepping -= OnLocalStep;
                 _driver.RequestRoute = null;
+                _driver.IsOnline = false;
             }
 
             _requests?.Abandon();

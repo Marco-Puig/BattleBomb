@@ -32,6 +32,7 @@ namespace BattleBomb.Gameplay.Net
         private readonly NetWriter _scratch = new NetWriter(4096);
         private readonly NetWriter _answer = new NetWriter(64);
         private readonly NetWriter _participant = new NetWriter(16 * 1024);
+        private readonly NetWriter _moment = new NetWriter(16);
         private readonly List<(int Sequence, RequestOutcome Outcome)> _answers = new List<(int Sequence, RequestOutcome Outcome)>();
         private readonly Dictionary<int, Watched> _watched = new Dictionary<int, Watched>();
         private readonly List<int> _unwatch = new List<int>();
@@ -76,11 +77,13 @@ namespace BattleBomb.Gameplay.Net
             _driver.RemoteRequestAnswered += OnRequestAnswered;
             _driver.ScreenChanged += OnScreenChanged;
             _driver.RackChanged += OnRackChanged;
+            _driver.IsOnline = _net.IsConnected;
             if (_runner != null)
             {
                 _runner.StageLoadRequested += OnStageLoadRequested;
                 _runner.StageHandedOver += OnStageHandedOver;
                 _runner.RemoteStageReady = stage => !_net.IsConnected || _guestReady.Contains(stage);
+                _runner.ChapterCompleted += OnChapterCompleted;
             }
 
             SendLaunch();
@@ -310,6 +313,28 @@ namespace BattleBomb.Gameplay.Net
             _answers.Clear();
         }
 
+        /// <summary>The run's end reaches the guest at once, after its bag: its results open, and its own save records
+        /// the chapter (D61). The host's own results are already opening from the same event.</summary>
+        private void OnChapterCompleted()
+        {
+            if (!_net.IsConnected)
+            {
+                return;
+            }
+
+            if (_watched.TryGetValue(_net.GuestPlayerId.Value, out Watched guest))
+            {
+                SendParticipant(_net.GuestPlayerId.Value, guest);
+                guest.Dirty = false;
+                guest.Forced = false;
+                guest.SentAt = _driver.Frame;
+            }
+
+            _moment.Reset();
+            SessionCodec.WriteMoment(_moment, MomentKind.ChapterCompleted);
+            _net.Send(NetChannel.Reliable, _moment);
+        }
+
         /// <summary>After every host step: this step's events, then — every second step — the world.</summary>
         private void OnStepped(int frame)
         {
@@ -463,6 +488,7 @@ namespace BattleBomb.Gameplay.Net
             }
 
             _driver.HoldForPeer = false;
+            _driver.IsOnline = false;
             _runner?.RefreshBounds();
         }
 
@@ -478,6 +504,7 @@ namespace BattleBomb.Gameplay.Net
                 _driver.ScreenChanged -= OnScreenChanged;
                 _driver.RackChanged -= OnRackChanged;
                 _driver.HoldForPeer = false;
+                _driver.IsOnline = false;
             }
 
             if (_runner != null)
@@ -485,6 +512,7 @@ namespace BattleBomb.Gameplay.Net
                 _runner.StageLoadRequested -= OnStageLoadRequested;
                 _runner.StageHandedOver -= OnStageHandedOver;
                 _runner.RemoteStageReady = null;
+                _runner.ChapterCompleted -= OnChapterCompleted;
             }
 
             foreach (int id in new List<int>(_watched.Keys))

@@ -74,6 +74,22 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void The_sweep_never_reaches_past_Clean_whatever_it_is_asked()
+        {
+            Inventory inventory = Sack();
+            inventory.Add(Gear(1, quality: QualityRank.Torn), currentLevel: 99);
+            inventory.Add(Gear(2, quality: QualityRank.Shiny), currentLevel: 99);
+
+            Assert.That(inventory.PreviewJunk(QualityRank.Legendary).Pieces, Is.EqualTo(1),
+                "The preview reached past Clean (D43): one press must never sell a Legendary.");
+            JunkSale sale = inventory.SellJunk(QualityRank.Legendary);
+
+            Assert.That(sale.Pieces, Is.EqualTo(1));
+            Assert.That(inventory.Items.Count, Is.EqualTo(1), "The sweep sold a piece at or above Clean.");
+            Assert.That(inventory.Items[0].Item.Quality, Is.EqualTo(QualityRank.Shiny));
+        }
+
+        [Test]
         public void A_locked_piece_below_the_threshold_is_never_sold()
         {
             Inventory inventory = Sack();

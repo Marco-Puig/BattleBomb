@@ -77,7 +77,7 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (see Log).
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (see Log).
 - **Rule until 101 lands: no online play on a real save.** Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
   Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
@@ -108,8 +108,18 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   - **101 (from 99):** tie `SaveCodec.CurrentVersion` to `NetProtocol.Version` (a save-format bump
     without a protocol bump drops an older guest as "malformed"). `ParticipantMinSteps`' doc claims
     an autosave forces a send — true only once 100/101's SendMoment exists.
-  - **100 (from 99):** transitional — an online host's chest is wide ("local players > 1") until
-    CameraRig makes room. Cosmetic.
+  - **Closed at 100:** the online host's wide chest (CameraRig), the junk sweep's Clean ceiling (now
+    in Core), G8's catch-up re-check.
+  - **101 (from 100):** on a guest, `SaveService.OnChapterCompleted` → `Progress.RecordCompletion`
+    clears the guest's own resume point (D61: the resume is the host's) — record the credit only;
+    the checkpoint and stage handlers would `SetResume` the host's position into the guest's save.
+    Until 101 both players share one sack and flags on the host, so a guest's auto-flag toggle and
+    debug grant also hit the host's.
+  - **103 (from 100):** `IsOnline` is set only in `NetHost.Begin`; a late bind or rejoin must set it.
+  - **104 (from 100):** a guest at its results has no way out while the host stays on its own (Leave
+    is a no-op on a replica; settings won't open under results) — only the dev panel's Leave works.
+  - Cosmetic (100): the Moment is taken on arrival, so the guest's results can open ~0.1 s before
+    its picture reaches the exit.
   - **103/104:** the host's request queue outlives the guest who filled it (clear on leave/unbind);
     NetGuest clears `RequestRoute` without checking it's its own; a close is refused when the body
     is gone.
@@ -287,6 +297,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 100 committed: online, nothing pauses (D60) — a menu idles its own player; camera
+  and chest follow the one local player; the host's chapter end drives the guest's results;
+  G8's catch-up fixed; Clean ceiling in Core. Protocol 5. EditMode 824, PlayMode 96.
 - 2026-09-26 — World session under way with Michael and Marco: prelude recorded (3bbdcd7). **D56 amended**
   (Michael): the prelude's story beats are scripted stage events played through, not cutscenes or
   storybook pages; the prelude is built in M10 as the opening and tutorial; new characters (king,

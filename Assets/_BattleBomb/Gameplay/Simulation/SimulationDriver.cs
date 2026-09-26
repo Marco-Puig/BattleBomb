@@ -209,7 +209,16 @@ namespace BattleBomb.Gameplay.Simulation
         /// what the host sent.</summary>
         internal event Action<int> ReplicaStepping;
 
-        internal bool IsReplica => _replica;
+        /// <summary>This machine draws the host's world and simulates none of it (D58). Read from what the scene was
+        /// built as, not from the connection: a guest who leaves mid-match still stands in a picture.</summary>
+        public bool IsReplica => _replica;
+
+        /// <summary>
+        /// Online (D60): a guest is in the world with the host — the host's half sets it while one is bound, the
+        /// guest's half for the guest's own machine. Nothing pauses; a menu stands its own player idle instead. A solo
+        /// host whose game is open to friends, with nobody joined yet, is not online.
+        /// </summary>
+        public bool IsOnline { get; internal set; }
 
         /// <summary>Set by the binder in <c>Awake</c>, before the first frame.</summary>
         internal void EnterReplicaMode() => _replica = true;
@@ -604,10 +613,10 @@ namespace BattleBomb.Gameplay.Simulation
         /// <summary>
         /// D42's per-mode rule: alone, opening a chest pauses the world, because there is nobody
         /// left to play it. In couch co-op it never pauses — the partner is still fighting, and
-        /// the player at the chest simply stands there taking no orders.
+        /// the player at the chest simply stands there taking no orders. Online nothing pauses (D60).
         /// </summary>
         public bool PausedForScreen =>
-            _menuPauseHolders > 0 || (Characters.Ordered.Count <= 1 && _openScreens.Count > 0);
+            !IsOnline && (_menuPauseHolders > 0 || (Characters.Ordered.Count <= 1 && _openScreens.Count > 0));
 
         private int _menuPauseHolders;
 
@@ -860,6 +869,15 @@ namespace BattleBomb.Gameplay.Simulation
             while (_clock.TryConsumeStep(out int frame))
             {
                 RunStep(frame);
+
+                // A menu opened inside that step stops the world now, not after the frame's other steps have
+                // run under it (G8's review). What the frame had banked is dropped, as the paused branch drops
+                // time: nothing is owed to a world that was stopped.
+                if (PausedForScreen || HoldForPeer)
+                {
+                    _clock.Reset();
+                    break;
+                }
             }
         }
 
@@ -946,6 +964,13 @@ namespace BattleBomb.Gameplay.Simulation
                         CloseScreen(playerId);
                         screenOpen = false;
                     }
+                }
+
+                if (!screenOpen && IsOnline && _menuPauseHolders > 0 && _players.IsLocal(actor.PlayerId))
+                {
+                    // Online nothing pauses (D60): a menu on this display stands this display's player idle
+                    // instead, exactly as a chest does — the partner on the other machine plays on.
+                    command = PlayerCommand.Idle(frame);
                 }
 
                 int grabTarget = FindGrabTarget(actor);

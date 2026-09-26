@@ -198,7 +198,7 @@ namespace BattleBomb.Tests.PlayMode
             yield return Steps(4);
 
             Assert.That(settings.IsOpen, Is.False, "The guest's Start opened the host's settings.");
-            Assert.That(_driver.PausedForScreen, Is.False, "The guest's Start paused the host's world.");
+            Assert.That(_driver.MenuPauseHeld, Is.False, "The guest's Start opened a menu on the host.");
         }
 
         [UnityTest]

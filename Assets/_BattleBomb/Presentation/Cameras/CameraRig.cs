@@ -36,6 +36,10 @@ namespace BattleBomb.Presentation.Cameras
         [Tooltip("Pull in on the player when they open a screen and hold the display alone.")]
         [SerializeField] private bool _frameOnScreens = true;
 
+        /// <summary>The camera is holding one player's screen subject in the half the panel leaves free — read by the
+        /// smoke suite; nothing in the game depends on it.</summary>
+        public bool FramingOneScreen { get; private set; }
+
         [Tooltip("Share of the screen's height the framed character should fill. The distance is "
             + "derived from this and the character's own size, so it stays right when a capsule "
             + "is replaced by a sprite of a different height.")]
@@ -99,7 +103,8 @@ namespace BattleBomb.Presentation.Cameras
             }
 
             CameraTuning tuning = Tuning;
-            CameraFrame frame = TryFrameOnScreen(actors, tuning, out CameraFrame framed)
+            FramingOneScreen = TryFrameOnScreen(actors, tuning, out CameraFrame framed);
+            CameraFrame frame = FramingOneScreen
                 ? framed
                 : CameraFraming.Compute(_targets, tuning, _driver.Bounds);
             Vector3 target = frame.PositionFor(tuning);
@@ -125,26 +130,47 @@ namespace BattleBomb.Presentation.Cameras
         /// This is read off the driver rather than pushed in by the UI: rule 2 has presentation
         /// observing simulation state, and the UI assembly cannot see this one anyway. The
         /// condition is deliberately the same one the chest screen uses to decide its own layout —
-        /// a single character means a single player holds the display, so the camera is theirs to
+        /// a single local player means a single player holds the display, so the camera is theirs to
         /// take. In local co-op it belongs to both and nothing moves.
         /// </summary>
         private bool TryFrameOnScreen(
             IReadOnlyList<CharacterActor> actors, in CameraTuning tuning, out CameraFrame frame)
         {
             frame = default;
-            if (!_frameOnScreens || actors.Count != 1 || actors[0] == null)
+            CharacterActor local = SoleLocalPlayer(actors);
+            if (!_frameOnScreens || local == null)
             {
                 return false;
             }
 
-            int playerId = actors[0].PlayerId.Value;
+            int playerId = local.PlayerId.Value;
             if (!_driver.TryGetOpenScreen(playerId, out InteractionKind kind))
             {
                 return false;
             }
 
-            frame = FrameOnSubject(SubjectOf(playerId, kind, actors[0]), tuning);
+            frame = FrameOnSubject(SubjectOf(playerId, kind, local), tuning);
             return true;
+        }
+
+        /// <summary>The one player this display is for — alone, or online where the partner has a display of their own
+        /// (HANDOFF-M8 planning decision 15) — or null on the couch, where the camera belongs to both.</summary>
+        private CharacterActor SoleLocalPlayer(IReadOnlyList<CharacterActor> actors)
+        {
+            if (_driver.Players.LocalCount != 1)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < actors.Count; i++)
+            {
+                if (actors[i] != null && _driver.Players.IsLocal(actors[i].PlayerId))
+                {
+                    return actors[i];
+                }
+            }
+
+            return null;
         }
 
         /// <summary>

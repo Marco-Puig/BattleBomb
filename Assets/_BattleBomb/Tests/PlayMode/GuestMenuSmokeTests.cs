@@ -17,6 +17,8 @@ using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
 using BattleBomb.Platform;
+using BattleBomb.UI.Chest;
+using BattleBomb.UI.Frontend;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -230,6 +232,135 @@ namespace BattleBomb.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator The_hosts_chapter_end_opens_the_guests_results_which_only_the_host_can_end()
+        {
+            var extra = new List<(int, byte[])>();
+            var writer = new NetWriter();
+            SessionCodec.WriteMoment(writer, MomentKind.ChapterCompleted);
+            extra.Add((Start + 20, writer.ToArray()));
+            yield return Join(Recording(extra));
+            ScriptedCommandSource hands = TakeTheGuestsHands();
+            ResultsScreen results = Object.FindAnyObjectByType<ResultsScreen>();
+            yield return AdvanceUntil(() => results.IsOpen, "The host's chapter ended and the guest's results never opened.");
+            Assert.That(GameObject.Find("Continue"), Is.Null, "The guest's results offer a Continue only the host may press.");
+
+            // Past the dwell, then the guest's A.
+            yield return AdvanceSteps(90);
+            hands.Set(Vector2.zero, CommandButtons.Confirm | CommandButtons.Jump);
+            yield return AdvanceSteps(3);
+            hands.Release();
+            yield return AdvanceSteps(10);
+
+            Assert.That(SceneManager.GetActiveScene().name, Is.EqualTo(NetSession.GameplayScene),
+                "The guest's A ended the host's results; only the host's may (D60).");
+            Assert.That(results.IsOpen, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator The_hosts_chapter_end_closes_the_guests_settings_before_its_results_take_the_screen()
+        {
+            // Online the world no longer pauses under the settings (D60), so the chapter can end beneath them.
+            var extra = new List<(int, byte[])>();
+            var writer = new NetWriter();
+            SessionCodec.WriteMoment(writer, MomentKind.ChapterCompleted);
+            extra.Add((Start + 150, writer.ToArray()));
+            yield return Join(Recording(extra));
+            ScriptedCommandSource hands = TakeTheGuestsHands();
+            SettingsMenu settings = Object.FindAnyObjectByType<SettingsMenu>();
+            ResultsScreen results = Object.FindAnyObjectByType<ResultsScreen>();
+            yield return OpenSettings(hands);
+            Assert.That(settings.IsOpen, Is.True, "The guest's settings never opened, so the case proves nothing.");
+            Assert.That(results.IsOpen, Is.False, "The results opened before the settings, so the case proves nothing.");
+
+            yield return AdvanceUntil(() => results.IsOpen, "The host's chapter ended and the guest's results never opened.");
+            Assert.That(settings.IsOpen, Is.False, "The results opened over the guest's settings menu, which still listens to A.");
+
+            int sentBefore = _playback.Sent.Count;
+            hands.Set(Vector2.zero, CommandButtons.Confirm);
+            yield return AdvanceSteps(3);
+            hands.Release();
+            yield return AdvanceSteps(3);
+            for (int i = sentBefore; i < _playback.Sent.Count; i++)
+            {
+                var reader = new NetReader(_playback.Sent[i]);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Request)
+                {
+                    Assert.That(RequestCodec.ReadRequest(reader).Kind, Is.Not.EqualTo(PlayerRequestKind.SetAutoEquip),
+                        "An A pressed at the results toggled a setting hidden behind them.");
+                }
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator On_a_guest_the_auto_flags_are_the_hosts_to_change()
+        {
+            yield return Join(Recording(new List<(int, byte[])>()));
+            ScriptedCommandSource hands = TakeTheGuestsHands();
+            yield return OpenSettings(hands);
+
+            hands.Set(Vector2.zero, CommandButtons.Confirm);
+            yield return AdvanceSteps(2);
+            hands.Release();
+            yield return AdvanceSteps(2);
+
+            bool asked = false;
+            foreach (byte[] message in _playback.Sent)
+            {
+                var reader = new NetReader(message);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.Request)
+                {
+                    PlayerRequest request = RequestCodec.ReadRequest(reader);
+                    asked |= request.Kind == PlayerRequestKind.SetAutoEquip && request.A == 1;
+                }
+            }
+
+            Assert.That(asked, Is.True, "Toggling auto-equip on a guest never asked the host.");
+            Assert.That(_driver.InventoryOf(1).Inventory.AutoEquip, Is.False,
+                "The guest changed its own copy; only the host's answer may.");
+        }
+
+        [UnityTest]
+        public IEnumerator On_a_guest_the_session_row_leaves_the_game()
+        {
+            yield return Join(Recording(new List<(int, byte[])>()));
+            ScriptedCommandSource hands = TakeTheGuestsHands();
+            yield return OpenSettings(hands);
+
+            // AutoEquip, AutoSell, then the session row.
+            for (int i = 0; i < 2; i++)
+            {
+                hands.Set(new Vector2(0f, -1f), CommandButtons.None);
+                yield return AdvanceSteps(2);
+                hands.Release();
+                yield return AdvanceSteps(2);
+            }
+
+            hands.Set(Vector2.zero, CommandButtons.Confirm);
+            yield return AdvanceSteps(2);
+            hands.Release();
+            yield return AdvanceUntil(() => SceneManager.GetActiveScene().name == NetSession.FrontendScene,
+                "The guest's session row never took it out of the game.");
+
+            Assert.That(GameSession.Find().Net.Role, Is.EqualTo(NetRole.Offline), "The guest left the picture but not the game.");
+            bool bye = false;
+            foreach (byte[] message in _playback.Sent)
+            {
+                bye |= message.Length > 0 && (NetMessageKind)message[0] == NetMessageKind.Bye;
+            }
+
+            Assert.That(bye, Is.True, "The host was never told the guest left.");
+        }
+
+        private IEnumerator OpenSettings(ScriptedCommandSource hands)
+        {
+            hands.Set(Vector2.zero, CommandButtons.Pause);
+            yield return AdvanceSteps(1);
+            hands.Release();
+            yield return AdvanceUntil(() => _driver.MenuPauseHeld, "Pause never opened the guest's own settings.");
+            yield return AdvanceSteps(2);
+        }
+
         private IEnumerator Join(List<(int Frame, byte[] Payload)> recording)
         {
             _playback = new PlaybackTransport(recording);
@@ -274,7 +405,8 @@ namespace BattleBomb.Tests.PlayMode
         private IEnumerator AdvanceSteps(int steps)
         {
             int target = _driver.Frame + steps;
-            for (int guard = 0; guard < 6000 && _driver.Frame < target; guard++)
+            // A guest that has left its picture has no driver to step; waiting on one only burns the guard.
+            for (int guard = 0; guard < 6000 && _driver != null && _driver.Frame < target; guard++)
             {
                 yield return null;
             }

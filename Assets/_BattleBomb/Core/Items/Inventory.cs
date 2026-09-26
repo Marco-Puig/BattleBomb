@@ -166,6 +166,13 @@ namespace BattleBomb.Core.Items
         }
 
         /// <summary>
+        /// The highest threshold the junk sweep takes (D43): everything below Clean and no further — the sweep has
+        /// no confirmation step, and one press must never sell a Legendary. Enforced here, where every sweep runs,
+        /// so a threshold that arrives over the wire cannot reach past it.
+        /// </summary>
+        public const QualityRank JunkCeiling = QualityRank.Clean;
+
+        /// <summary>
         /// What "clear the junk" would sell, without selling it: every unlocked, non-consumable
         /// stack below <paramref name="below"/> — a potion stack is not "a piece" here, mirroring
         /// <see cref="FindAutoSellTarget"/> preferring gear over consumables. Worn gear is never
@@ -174,6 +181,7 @@ namespace BattleBomb.Core.Items
         /// </summary>
         public JunkSale PreviewJunk(QualityRank below)
         {
+            below = below > JunkCeiling ? JunkCeiling : below;
             int stacks = 0;
             int pieces = 0;
             int coins = 0;
@@ -201,6 +209,7 @@ namespace BattleBomb.Core.Items
         /// </summary>
         public JunkSale SellJunk(QualityRank below)
         {
+            below = below > JunkCeiling ? JunkCeiling : below;
             int stacks = 0;
             int pieces = 0;
             int coins = 0;

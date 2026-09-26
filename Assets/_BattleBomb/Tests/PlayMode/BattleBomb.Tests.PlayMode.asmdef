@@ -8,6 +8,7 @@
         "BattleBomb.Platform",
         "BattleBomb.Gameplay",
         "BattleBomb.UI",
+        "BattleBomb.Presentation",
         "Unity.InputSystem",
         "Unity.InputSystem.TestFramework",
         "UnityEngine.UI"

@@ -49,8 +49,9 @@ committed; 96 stays open for Michael's pass.
 
 ## Waiting on
 
-Nothing blocks the work. Build straight through 99–104, with no QUIET until 105 (orchestrator,
-2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`.
+Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
+(orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
+99 `9cc67b8`. Board rule: no online play on a real save until 101 lands.
 
 **96a/96b — no separate sitting** (orchestrator, 2026-09-26). Michael and Marco (his collaborator)
 test together at 105.
@@ -109,6 +110,54 @@ inserted bugs, 96a and 96b, get their root causes read between 97's stages.**
   - His sitting is drafted in `<scratchpad>/t96ab_steps.md`, to send after 97's `DONE`. The logger
     is `t96b_record.cs` and its reader `t96b_read.cs`; both compile-checked, run with `eval_file`.
   - Correction: runInBackground has been 1 since the first commit, not since Task 90.
+
+**Task 100 (2026-09-26), started:**
+- `anchors.py 100`: every anchor holds except CameraRig's summary sentence, which is wrapped across two
+  `///` lines. The change is only "a single character" → "a single local player" at CameraRig :128.
+- **Carried in:** D43's Clean ceiling on the junk sweep, enforced in Core's `Inventory.PreviewJunk` and
+  `SellJunk`, with ChestScreen's `JunkRankCeiling` reading the Core constant. Red first in
+  JunkSaleTests. My 98 runner test `At_the_shopkeeper_the_sweep_runs…` sweeps a Shiny helmet with
+  `Legendary` and must change: a Torn piece goes and the Shiny one stays.
+- **Premise check clean.** Extra spec: `<scratchpad>/tasks/task100_extra.md`.
+  - Y1: the wrapped CameraRig line.
+  - Y2: the Clean ceiling in Core, red first.
+  - Y3: OnlineHostSmokeTests' `PausedForScreen` assert goes vacuous online, so it asserts `MenuPauseHeld`.
+  - Stages S1–S6. Targets: EditMode 824, PlayMode 95.
+- **Built:** S1–S6, byte-checked.
+- **Reds seen first:**
+  - catch-up: "Steps ran after a menu paused… extra 151, 152, 153";
+  - ceiling ×2;
+  - with Steps 6 and 8 still out: chapter-end, world-runs-on (IsOnline is set in Step 6), guest results,
+    auto-flags, session row.
+- **Mutation:** narrowing the runner grant's `#if` fails the new release test.
+- **Two timing fixes to the plan's own tests:**
+  - "world runs on" had a 120-render-frame bound that was only borderline for 30 steps; it is now 600.
+  - GuestMenuSmokeTests' `AdvanceSteps` stops once its driver is gone. The session-row test went from
+    28 s to 3 s.
+- **Gates:** EditMode 824/824; PlayMode 95/95.
+- **Review "Yes with fixes"** (spec: `<scratchpad>/tasks/task100_fixes.md`):
+  - **F1 (Important):** online, the chapter can end under an open settings menu, and the results
+    covered it while it still took A. On a guest that sent SetAutoEquip, or even "Leave the game".
+    `ResultsScreen.Open` now dismisses the settings (`SettingsMenu.Dismiss`). Red: "The results opened
+    over the guest's settings menu…".
+  - **F2:** the guest's dead Continue button is hidden. Red: "…offer a Continue…".
+  - **F5:** ResultsScreen's comments now say the pause is offline only.
+  - **F4:** four tests were never seen failing for their feature. Mutation-proved:
+    - `SoleLocalPlayer` → `Count == 1` fails the camera test;
+    - dropping the idle block fails "the host walked 2.2";
+    - dropping the results' IsLocal skip fails "the host's A never left";
+    - dropping `!IsOnline` fails "the host's menu paused an online game".
+  - **F3 → 101:** on a replica, `RecordCompletion` clears the guest's own resume point (D61: the
+    resume stays the host's). Record the credit only. The checkpoint and stage handlers would also
+    `SetResume` the host's position into the guest's save.
+- **For the board, in 100's `DONE`:**
+  - On the host both players still share one sack until 101, so the guest's auto-flag toggle and its
+    debug grant also hit the host's flags and sack.
+  - A guest at its results has no way out while the host stays on its own results (Leave is a no-op on
+    a replica, and settings won't open under MenuPauseHeld). This is for 104.
+  - `IsOnline` is set only in `NetHost.Begin`; 103 must set it on a late bind or rejoin.
+  - `SaveService.OnChapterCompleted` mutates in-memory progress on the guest; this is for 101.
+  - The guest's pointer "Continue" still shows on its results.
 
 **Task 99 (2026-09-26), started:**
 - **Premise check:** anchors all hold; Core's asmdef allows `System.IO.Compression` (.NET Standard 2.1).

@@ -808,6 +808,16 @@ namespace BattleBomb.Gameplay.World
             previous?.Unload();
         }
 
+        /// <summary>The host's chapter ended (HANDOFF-M8 Task 100): the guest's results — and its own save's credit for
+        /// the chapter — follow it, through the same event the host's own results and save hear.</summary>
+        internal void ReplicaChapterCompleted()
+        {
+            if (_replica)
+            {
+                ChapterCompleted?.Invoke();
+            }
+        }
+
         // ── Wipes ────────────────────────────────────────────────────────────────────
 
         /// <summary>The driver already stood everyone back up at their spawn point (the last

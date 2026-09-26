@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using BattleBomb.Core.Items;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Items;
@@ -25,6 +26,7 @@ namespace BattleBomb.UI.Chest
 
         private readonly StringBuilder _text = new StringBuilder();
         private readonly List<PlayerInventory> _bags = new List<PlayerInventory>();
+        private readonly List<int> _bagOwners = new List<int>();
         private readonly List<Prompt> _prompts = new List<Prompt>();
 
         private PromptRow _promptRow;
@@ -159,7 +161,15 @@ namespace BattleBomb.UI.Chest
                 // Ahead of the bag check: leaving the run is the one row that has nothing to do with
                 // an inventory, and a machine with no bags is exactly when you most want a way out.
                 case SettingsRow.ReturnToChapters:
-                    ReturnToChapters();
+                    if (_driver.IsReplica)
+                    {
+                        LeaveTheGame();
+                    }
+                    else
+                    {
+                        ReturnToChapters();
+                    }
+
                     return;
 
                 case SettingsRow.AutoEquip:
@@ -200,52 +210,25 @@ namespace BattleBomb.UI.Chest
             bool current = autoSell ? _bags[0].Inventory.AutoSell : _bags[0].Inventory.AutoEquip;
             for (int i = 0; i < _bags.Count; i++)
             {
-                PlayerInventory bag = _bags[i];
-                if (autoSell)
-                {
-                    bag.SetAutoSell(!current);
-                }
-                else
-                {
-                    bag.SetAutoEquip(!current);
-                }
+                // Through each player's requests (HANDOFF-M8 planning decision 11): on the couch it lands now; on a
+                // guest the host changes the setting in the guest's own save, and the copy comes back.
+                _driver.RequestsFor(_bagOwners[i]).Send(
+                    autoSell ? PlayerRequest.SetAutoSell(!current) : PlayerRequest.SetAutoEquip(!current), null);
             }
         }
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         /// <summary>
-        /// Debug only, and it dies when real content arrives: hands every player one of each
-        /// starter definition *twice* plus spending money. Combining (D44) needs two identical
-        /// items at the same rank, which random drops almost never hand you — without this the
-        /// gamble is untestable by hand, which is exactly how the reaction table ended up
-        /// shipping unexercised in M5.
+        /// Debug only: every player on this display is handed test loot — the grant itself is the request runner's
+        /// since the settings went online (HANDOFF-M8 Task 100), so a guest's runs on the host, into its own bag.
         /// </summary>
         private void GrantTestLoot()
         {
-            int[] definitions = { 7, 8, 9, 12, 13, 1, 2, 3 };
-            for (int b = 0; b < _bags.Count; b++)
+            for (int b = 0; b < _bagOwners.Count; b++)
             {
-                for (int i = 0; i < definitions.Length; i++)
-                {
-                    // Twice each, at a fixed quality, so the pair really is combinable.
-                    for (int copy = 0; copy < 2; copy++)
-                    {
-                        Core.Items.ItemInstance item =
-                            _driver.RollDebugItem(definitions[i], DebugGrantQuality);
-                        if (!item.IsEmpty)
-                        {
-                            _bags[b].Take(item);
-                        }
-                    }
-                }
-
-                _bags[b].GrantCoins(5000);
-                _bags[b].Earn(2000f);
+                _driver.RequestsFor(_bagOwners[b]).Send(PlayerRequest.DebugGrant(), null);
             }
         }
-
-        /// <summary>Mid-ladder, so a feel judgement is never about an absurd item.</summary>
-        private const float DebugGrantQuality = 2.2f;
 
         private Debug.TierOverlay _overlay;
 
@@ -272,16 +255,44 @@ namespace BattleBomb.UI.Chest
                 "Frontend", UnityEngine.SceneManagement.LoadSceneMode.Single);
         }
 
+        /// <summary>
+        /// On a guest the session's moments are the host's (D60): the row that returns a run to chapter select leaves
+        /// the game instead. The host hears it at once and carries on solo (D61); this machine goes back to its own
+        /// front door. Task 101 saves the guest's latest copy of itself on the way out.
+        /// </summary>
+        private void LeaveTheGame()
+        {
+            Close();
+            Gameplay.Session.GameSession session = Gameplay.Session.GameSession.Find();
+            Gameplay.Net.NetSession net = session != null ? session.Net : null;
+            if (net != null)
+            {
+                net.Leave();
+            }
+
+            UnityEngine.SceneManagement.SceneManager.LoadScene(
+                "Frontend", UnityEngine.SceneManagement.LoadSceneMode.Single);
+        }
+
         private void CollectBags()
         {
             _bags.Clear();
+            _bagOwners.Clear();
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
             for (int i = 0; i < actors.Count; i++)
             {
+                // This display's players only (HANDOFF-M8 planning decision 15): online, the partner's settings are
+                // on their own machine and in their own save.
+                if (!_driver.Players.IsLocal(actors[i].PlayerId))
+                {
+                    continue;
+                }
+
                 PlayerInventory bag = actors[i].GetComponent<PlayerInventory>();
                 if (bag != null)
                 {
                     _bags.Add(bag);
+                    _bagOwners.Add(actors[i].PlayerId.Value);
                 }
             }
         }
@@ -296,6 +307,10 @@ namespace BattleBomb.UI.Chest
             _driver.HoldMenuPause(true);
             Repaint();
         }
+
+        /// <summary>The results take the screen: online the chapter can end under an open settings menu, which no
+        /// longer pauses the world (D60), so it closes first and no press reaches a menu hidden behind them.</summary>
+        internal void Dismiss() => Close();
 
         private void Close()
         {
@@ -380,7 +395,7 @@ namespace BattleBomb.UI.Chest
                         break;
 
                     case SettingsRow.ReturnToChapters:
-                        AppendLine(row, "Return to chapter select", UiBuild.Focus);
+                        AppendLine(row, _driver.IsReplica ? "Leave the game" : "Return to chapter select", UiBuild.Focus);
                         break;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR

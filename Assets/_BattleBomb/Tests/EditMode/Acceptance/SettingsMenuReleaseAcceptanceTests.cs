@@ -19,9 +19,20 @@ namespace BattleBomb.Tests.EditMode.Acceptance
         };
 
         [Test]
-        public void Every_debug_member_is_inside_a_development_only_region()
+        public void Every_debug_member_is_inside_a_development_only_region() =>
+            AssertDevelopmentOnly(MenuPath, DebugOnly);
+
+        /// <summary>The grant itself moved into the request runner with the settings online (HANDOFF-M8 Task 100),
+        /// so a guest's grant runs on the host — and it must stay out of a release there too.</summary>
+        [Test]
+        public void The_runners_debug_grant_is_inside_a_development_only_region() =>
+            AssertDevelopmentOnly(
+                "Assets/_BattleBomb/Gameplay/Items/PlayerRequestRunner.cs",
+                new[] { "RollDebugItem(", "GrantCoins(", "DebugGrantQuality" });
+
+        private static void AssertDevelopmentOnly(string path, string[] members)
         {
-            string[] lines = File.ReadAllLines(MenuPath);
+            string[] lines = File.ReadAllLines(path);
             int developmentDepth = 0;
             int depth = 0;
             for (int i = 0; i < lines.Length; i++)
@@ -60,10 +71,10 @@ namespace BattleBomb.Tests.EditMode.Acceptance
                     continue;
                 }
 
-                foreach (string member in DebugOnly)
+                foreach (string member in members)
                 {
                     Assert.That(developmentDepth > 0 || !lines[i].Contains(member), Is.True,
-                        $"{MenuPath}:{i + 1} mentions {member} outside a DEVELOPMENT_BUILD || UNITY_EDITOR region, " +
+                        $"{path}:{i + 1} mentions {member} outside a DEVELOPMENT_BUILD || UNITY_EDITOR region, " +
                         "so it compiles into a release.");
                 }
             }

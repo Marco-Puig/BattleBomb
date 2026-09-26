@@ -155,8 +155,12 @@ namespace BattleBomb.Tests.EditMode
 
             Assert.That(Run(PlayerRequest.Buy(0)).Refusal, Is.EqualTo(RequestRefusal.Refused));
             Assert.That(Run(PlayerRequest.Buy(-1)).Refusal, Is.EqualTo(RequestRefusal.Refused));
+            _bag.Take(new ItemInstance(
+                new ItemIdentity(3, "Helm 3", ItemSlot.Helmet), QualityRank.Torn,
+                new GearContribution(defence: 3f), new AffixRoll[0], requiredLevel: 1));
             Assert.That(Run(PlayerRequest.SellJunk(QualityRank.Legendary)).Ok, Is.True, "The sweep no longer runs at the shopkeeper.");
-            Assert.That(_bag.Inventory.Items.Count, Is.Zero, "The sweep left the junk behind.");
+            Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(1), "The sweep left the Torn piece, or took the Shiny one past Clean (D43).");
+            Assert.That(_bag.Inventory.Items[0].Item.Quality, Is.EqualTo(QualityRank.Shiny));
         }
     }
 }

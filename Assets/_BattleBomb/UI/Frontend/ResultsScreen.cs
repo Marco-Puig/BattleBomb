@@ -17,7 +17,8 @@ namespace BattleBomb.UI.Frontend
     /// Chapter complete (D49's end of the line): what each player grabbed and reached, what the
     /// clear just unlocked (D50), and one button back to chapter select. Holds the world paused
     /// while it is up, because the chapter's last stage is still under the players' feet and
-    /// nothing else is going to stop them walking around in it.
+    /// nothing else is going to stop them walking around in it. Offline only: online nothing pauses (D60)
+    /// and the results stand this display's player still instead.
     /// </summary>
     /// <remarks>
     /// It repaints every step rather than once at open, and that is deliberate: the unlock lines
@@ -49,7 +50,7 @@ namespace BattleBomb.UI.Frontend
         private bool _leaving;
         private bool _swallowUntilRelease;
 
-        /// <summary>How long the results stay up before A can leave, in real time — the world is
+        /// <summary>How long the results stay up before A can leave, in real time — offline the world is
         /// paused. Letting go and pressing again takes a blink, so the swallow alone would let a
         /// mashed A skip the lines, a NOT SAVED warning among them.</summary>
         private const float MinimumDwell = 0.75f;
@@ -120,6 +121,12 @@ namespace BattleBomb.UI.Frontend
                 return;
             }
 
+            SettingsMenu settings = FindAnyObjectByType<SettingsMenu>();
+            if (settings != null && settings.IsOpen)
+            {
+                settings.Dismiss();
+            }
+
             Build();
             _open = true;
             _swallowUntilRelease = true;
@@ -138,6 +145,13 @@ namespace BattleBomb.UI.Frontend
 
             Repaint();
 
+            // A guest's results follow the host's (D60): its hands never end the host's run's last screen. When
+            // the host leaves the results the guest's machine follows it to the front door.
+            if (_driver.IsReplica)
+            {
+                return;
+            }
+
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
 
             // A fight can end mid-mash, and A is Jump as well as Confirm: nobody leaves the
@@ -146,6 +160,13 @@ namespace BattleBomb.UI.Frontend
             {
                 for (int i = 0; i < actors.Count; i++)
                 {
+                    // This display's hands only: a remote player's last buttons stay held on the host while their
+                    // own machine shows its own results, and used to hold these shut.
+                    if (!_driver.Players.IsLocal(actors[i].PlayerId))
+                    {
+                        continue;
+                    }
+
                     if (MenuPress.AnyHeld(_driver.CommandFor(actors[i].PlayerId.Value)))
                     {
                         return;
@@ -162,7 +183,8 @@ namespace BattleBomb.UI.Frontend
 
             for (int i = 0; i < actors.Count; i++)
             {
-                if (MenuPress.From(_driver.CommandFor(actors[i].PlayerId.Value)).Confirm)
+                if (_driver.Players.IsLocal(actors[i].PlayerId)
+                    && MenuPress.From(_driver.CommandFor(actors[i].PlayerId.Value)).Confirm)
                 {
                     Leave();
                     return;
@@ -172,6 +194,11 @@ namespace BattleBomb.UI.Frontend
 
         private void Leave()
         {
+            if (_driver != null && _driver.IsReplica)
+            {
+                return;
+            }
+
             if (_leaving)
             {
                 return;
@@ -240,6 +267,9 @@ namespace BattleBomb.UI.Frontend
             leave.onClick.AddListener(Leave);
             UiBuild.PointerOnly(leave);
             UiBuild.Label("Label", box.transform, "Continue", 16, UiBuild.Ink, TextAnchor.MiddleCenter);
+
+            // A guest's results follow the host's (D60): there is nothing on them for its hands to press.
+            box.gameObject.SetActive(!_driver.IsReplica);
             _panel = panel.gameObject;
         }
 
@@ -294,7 +324,16 @@ namespace BattleBomb.UI.Frontend
                 ? _driver.Players.FamilyOf(actors[0].PlayerId)
                 : InputFamily.Keyboard;
             _prompts.Clear();
-            _prompts.Add(new Prompt(PromptKey.Confirm, "Back to chapters"));
+            if (_driver.IsReplica)
+            {
+                _text.Append("\n\n").Append(UiBuild.Tint("Waiting for the host.", UiBuild.InkDim));
+                _body.text = _text.ToString();
+            }
+            else
+            {
+                _prompts.Add(new Prompt(PromptKey.Confirm, "Back to chapters"));
+            }
+
             _promptRow.Show(_prompts, family);
         }
     }

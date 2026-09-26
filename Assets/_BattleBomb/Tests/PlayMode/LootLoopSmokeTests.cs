@@ -281,6 +281,46 @@ namespace BattleBomb.Tests.PlayMode
         }
 
         [UnityTest]
+        public IEnumerator A_menu_opened_inside_a_step_stops_the_world_before_the_frames_next_step()
+        {
+            // G8's review: the catch-up loop ran the frame's remaining steps under a menu opened in its first.
+            var stepped = new List<int>();
+            int heldAt = -1;
+            void OnStep(int frame)
+            {
+                stepped.Add(frame);
+                if (heldAt < 0)
+                {
+                    heldAt = frame;
+                    _driver.HoldMenuPause(true);
+                }
+            }
+
+            Time.captureDeltaTime = 5f / 60f;
+            _driver.Stepped += OnStep;
+            try
+            {
+                for (int i = 0; i < 10; i++)
+                {
+                    yield return null;
+                }
+            }
+            finally
+            {
+                _driver.Stepped -= OnStep;
+                Time.captureDeltaTime = 0f;
+                if (heldAt >= 0)
+                {
+                    _driver.HoldMenuPause(false);
+                }
+            }
+
+            Assert.That(heldAt, Is.GreaterThanOrEqualTo(0), "No step ran — the case proves nothing.");
+            Assert.That(stepped, Is.EqualTo(new List<int> { heldAt }),
+                "Steps ran after a menu paused the world inside the frame's first step.");
+        }
+
+        [UnityTest]
         public IEnumerator Each_player_has_their_own_rack()
         {
             // Everything after the walk runs inside one frame: Player 2 is out of any chest's reach, so a

@@ -7,11 +7,12 @@ namespace BattleBomb.Core.Net
     /// anything that alters the bytes on the wire bumps <see cref="Version"/>.
     /// 3: menu requests (Plan 2, Task 97).
     /// 4: the guest's screens, racks and inventory (Task 99).
+    /// 5: the host's session moments (Task 100).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 4;
+        public const int Version = 5;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>

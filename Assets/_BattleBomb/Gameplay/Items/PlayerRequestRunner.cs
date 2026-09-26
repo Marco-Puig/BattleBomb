@@ -34,6 +34,9 @@ namespace BattleBomb.Gameplay.Items
                 case PlayerRequestKind.SetAutoSell:
                     bag.SetAutoSell(request.A != 0);
                     return RequestOutcome.Done();
+
+                case PlayerRequestKind.DebugGrant:
+                    return DebugGrant(bag, driver);
             }
 
             if (!driver.TryGetOpenScreen(request.PlayerId, out InteractionKind screen))
@@ -103,7 +106,7 @@ namespace BattleBomb.Gameplay.Items
                         : RequestOutcome.No(RequestRefusal.NoScreen);
 
                 default:
-                    // DebugGrant arrives with the settings online (Task 100). Until then the host does nothing.
+                    // Nothing else is a verb a screen can ask for.
                     return RequestOutcome.No(RequestRefusal.Refused);
             }
         }
@@ -131,5 +134,40 @@ namespace BattleBomb.Gameplay.Items
                 ? RequestOutcome.Done(price)
                 : RequestOutcome.No(RequestRefusal.Refused);
         }
+
+        /// <summary>
+        /// Debug only, and it dies when real content arrives: one of each starter definition twice, spending money
+        /// and XP — combining (D44) needs two identical items, which random drops almost never hand you. Here rather
+        /// than in the settings menu since the settings went online (HANDOFF-M8 Task 100): a guest's grant runs on
+        /// the host, into the guest's own bag. Compiles out of a release (F2), and a release host refuses it.
+        /// </summary>
+        private static RequestOutcome DebugGrant(PlayerInventory bag, SimulationDriver driver)
+        {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            int[] definitions = { 7, 8, 9, 12, 13, 1, 2, 3 };
+            for (int i = 0; i < definitions.Length; i++)
+            {
+                for (int copy = 0; copy < 2; copy++)
+                {
+                    ItemInstance item = driver.RollDebugItem(definitions[i], DebugGrantQuality);
+                    if (!item.IsEmpty)
+                    {
+                        bag.Take(item);
+                    }
+                }
+            }
+
+            bag.GrantCoins(5000);
+            bag.Earn(2000f);
+            return RequestOutcome.Done();
+#else
+            return RequestOutcome.No(RequestRefusal.Refused);
+#endif
+        }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        /// <summary>Mid-ladder, so a feel judgement is never about an absurd item.</summary>
+        private const float DebugGrantQuality = 2.2f;
+#endif
     }
 }

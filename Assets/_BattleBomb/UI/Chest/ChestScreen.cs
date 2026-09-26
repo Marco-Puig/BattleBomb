@@ -46,9 +46,9 @@ namespace BattleBomb.UI.Chest
         /// The highest rung the junk sweep's threshold may be pushed to, so the sweep can clear
         /// everything below Clean and no further. The design draws the stepper without a confirm
         /// step, and one press that could sell a Legendary is a different feature from one that
-        /// clears trash. Raising this is a single edit if Michael wants a longer reach.
+        /// clears trash. The rule itself is <see cref="Inventory.JunkCeiling"/>, where every sweep runs.
         /// </summary>
-        private const int JunkRankCeiling = (int)QualityRank.Clean;
+        private const int JunkRankCeiling = (int)Inventory.JunkCeiling;
 
         /// <summary>Frames a held stick waits before it starts repeating, and between repeats.</summary>
         private const float RepeatDelay = 0.32f;

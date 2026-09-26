@@ -21,6 +21,10 @@ Consequences worth knowing before building (surface them in Task 105's close-out
 3. **The guest's front door is a lobby while connected.** A guest chooses a hero from their own save and readies; the host chooses the chapter. The guest cannot launch anything of their own while connected — the "front door stays live" item from Plan 1 closes here.
 4. **Development transport only.** Hosting and joining still go through the development panel's local socket; "open to friends by default" is built as a setting plus a transport factory that Plan 3's Steam lobby fills. In a release build without Steam there is no transport, so nothing opens (rule 6).
 5. **Two stashes online, one on the couch.** Online, each player's sack and wallet are their own save's; on the host the guest's live in a second `SharedStash`. The couch keeps its one shared stash (D51).
+6. **Each guest sale sends the guest's whole sack once** (inserted Task 101a, 2026-09-26). The guest's copy travels whole only when the sack, the coin or the auto flags moved; the fight's XP sends the character alone.
+   - Every sale moves the sack, so rapid selling costs one whole copy per sale on the ordered channel: up to ~17 KB deflated for a full, varied 200-stack sack.
+   - Accepted for M8: the guest isn't fighting while in the chest.
+   - If D6 in Michael's pass (C2 and D2 at Bad lag) finds the guest's menus sluggish, this is the first suspect. The next lever is a stack-level sack delta, parked with the snapshot deltas for M11.
 
 **Where this plan departs from HANDOFF-M8 (send the orchestrator this text for the spec's planning decisions — Task 105 Step 4):**
 

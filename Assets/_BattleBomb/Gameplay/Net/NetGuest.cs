@@ -28,6 +28,7 @@ namespace BattleBomb.Gameplay.Net
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
         private readonly MenuGate _menu = new MenuGate();
         private RemotePlayerRequests _requests;
+        private SaveService _saves;
         private NetSession _net;
         private SimulationDriver _driver;
         private StageRunner _runner;
@@ -47,6 +48,7 @@ namespace BattleBomb.Gameplay.Net
             _driver = driver;
             _local = local;
             _runner = FindAnyObjectByType<StageRunner>();
+            _saves = FindAnyObjectByType<SaveService>();
             _world = new ReplicaWorld(_driver, _runner, FindAnyObjectByType<EnemySpawner>(), GameSession.Find());
             _requests = new RemotePlayerRequests(_net, () => _driver.InventoryOf(_local.Value));
             _driver.RequestRoute = id => id == _local.Value ? _requests : null;
@@ -185,7 +187,15 @@ namespace BattleBomb.Gameplay.Net
                     break;
 
                 case ReplicatedEventKind.ScreenClosed:
+                    // The guest closed its own chest at once and saved then, perhaps before the host had answered its
+                    // last press; the host's close comes right behind the copy it answered into, so it saves again (D52).
+                    bool closedHere = e.Screen.PlayerId == _local.Value && !_driver.TryGetOpenScreen(_local.Value, out _);
                     _driver.ApplyReplicaScreen(e.Screen.PlayerId, (InteractionKind)e.Screen.Kind, false);
+                    if (closedHere && _saves != null)
+                    {
+                        _saves.SaveNow();
+                    }
+
                     break;
 
                 case ReplicatedEventKind.RackChanged:
@@ -194,12 +204,20 @@ namespace BattleBomb.Gameplay.Net
             }
         }
 
-        /// <summary>A moment in the host's run. The chapter's end opens the guest's results; the others are Task 101's.</summary>
+        /// <summary>A moment in the host's run (D61). The chapter's end opens the guest's results and records the
+        /// credit through the runner's own event; the others write the guest's own save from its latest copy, which
+        /// the host sent just before.</summary>
         private void OnMoment(MomentKind moment)
         {
             if (moment == MomentKind.ChapterCompleted)
             {
                 _runner?.ReplicaChapterCompleted();
+                return;
+            }
+
+            if (_saves != null)
+            {
+                _saves.SaveNow();
             }
         }
 

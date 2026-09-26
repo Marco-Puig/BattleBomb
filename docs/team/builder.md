@@ -51,7 +51,49 @@ committed; 96 stays open for Michael's pass.
 
 Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
 (orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
-99 `9cc67b8`. Board rule: no online play on a real save until 101 lands.
+99 `9cc67b8`, 100 `9dafe93`. Board rule: no online play on a real save until 101 lands.
+**Task 101: DONE sent (2026-09-26), waiting for COMMITTED.** Final gates: EditMode 831/831, PlayMode 103/103.
+Next is 101a (the participant fingerprint), then 102.
+
+**Task 101, as built:** every anchor holds, and the premise check is in. The extra spec is
+`scratchpad/tasks/task101_extra.md`, in four stages. It folds in:
+- **Z1:** the guest records the chapter's credit only (`StoryProgress.RecordCredit`), so its own resume point
+  survives;
+- **Z2:** the save version is tied to the protocol (a tripwire test, and a doc line);
+- **Z3:** the host's bags are pinned to the couch stash before the Guest Stash exists. `FindAnyObjectByType`
+  could otherwise hand the host the guest's sack;
+- **Z4:** the guest saves again when the host's close arrives. Its own close saved before the host's answer,
+  so it could miss the last sale. The host already forces a copy on every answer, the close's included.
+  This makes the `ParticipantMinSteps` doc true;
+- **Z5:** the plan's resume tests seed a guest resume, so they can fail.
+
+Deferred to 102, which closes both (its lobby gates the launch on a ready pick, and re-sends the pick from a
+freshly re-read save whenever the front door comes back):
+- a guest who brought nothing (the host launched first) would have an empty stash saved over them;
+- a second match on one connection restores from the join-time save.
+
+Nobody plays between 101 and 102. **Targets: EditMode 831, PlayMode 103.** 101a follows (the participant
+fingerprint).
+
+**101 stages, all built (2026-09-26):** EditMode 831/831 and PlayMode 103/103.
+- Z1's and Z4's tests were red before their fixes and green after.
+- **Z6, found at S3:** the plan's checkpoint test assumed the set-up's walk to the chest banks a checkpoint. It
+  doesn't: no Moment was ever sent. The test now pushes both players on to a real checkpoint and asserts the copy
+  is directly before the moment.
+- **Mutation-proved:** without `SendMoment`'s copy, the test fails.
+
+**Opus review: approve** (no bug in 101's scope). Fixes applied, each mutation-proved:
+- F1: the not-ready pick test now carries a real save.
+- F2: the guest's hero is restored at level 5 wearing a knife.
+- F3: "Leave the game" saves first.
+- F4: on a guest, the HUD reads no numbers from a sack it doesn't hold (the potion count and the refused-grab slots). This was a 101 regression. The HUD is OnGUI with no test seam.
+- F5: SharedStash's summary names the second stash.
+
+Not changed: SaveService's `_stash` fallback lookup (wired in Gameplay.unity; noted for the board).
+
+**Carried to 102, red first:**
+- **(a) A guest who brought nothing:** 102's ready gate closes it.
+- **(b) Relaunch race:** `GuestReady` and `GuestBrought` survive the match's end. The host's front door comes back on Chapters, so one Confirm can launch match 2 from match 1's starting save before the guest's fresh pick arrives. Fix: un-ready the guest (keeping the pick) beside NetHost's SessionEnd send.
 
 **96a/96b — no separate sitting** (orchestrator, 2026-09-26). Michael and Marco (his collaborator)
 test together at 105.

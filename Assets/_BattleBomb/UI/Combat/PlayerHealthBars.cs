@@ -134,7 +134,9 @@ namespace BattleBomb.UI.Combat
                     label += $"   loot {grabs}";
                 }
 
-                if (ledgerBag != null && ledgerBag.Inventory.QuickKind == QuickSlotKind.Consumable)
+                // A guest holds its own sack only (D61): its partner's potions are in the host's.
+                if (ledgerBag != null && ledgerBag.Inventory.QuickKind == QuickSlotKind.Consumable
+                    && (!_driver.IsReplica || _driver.Players.IsLocal(players[i].PlayerId)))
                 {
                     int potions = 0;
                     IReadOnlyList<ItemStack> items = ledgerBag.Inventory.Items;

@@ -77,8 +77,9 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (see Log).
-- **Rule until 101 lands: no online play on a real save.** Since 99 a guest can equip from the shared
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (see Log).
+- **Rule until 102 lands: no online play on a real save** (extended at 101 — a second match on one
+  connection can launch from match 1's starting save and overwrite what the guest earned). Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
   Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
 - **Michael and Marco run Plan 2's pass together (Task 105)** once 97–104 are built — with the
@@ -115,6 +116,14 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     the checkpoint and stage handlers would `SetResume` the host's position into the guest's save.
     Until 101 both players share one sack and flags on the host, so a guest's auto-flag toggle and
     debug grant also hit the host's.
+  - **Closed at 101:** the guest's resume kept (RecordCredit); the host's position never enters the
+    guest's save; the save version tied to the protocol; the shared flags and sack.
+  - **102 (from 101, red first):** (a) a guest who brought nothing — launch only on a ready pick;
+    (b) a second match on one connection — un-ready the guest (clear `GuestReady`/`GuestBrought`,
+    keep the pick) when the host's match ends, beside the SessionEnd send, and re-send the pick
+    when the front door returns. 96a's fix is 102's lobby.
+  - Watch (101): SaveService's `_stash` fallback lookup has Z3's shape; safe while Gameplay.unity
+    wires it.
   - **103 (from 100):** `IsOnline` is set only in `NetHost.Begin`; a late bind or rejoin must set it.
   - **104 (from 100):** a guest at its results has no way out while the host stays on its own (Leave
     is a no-op on a replica; settings won't open under results) — only the dev panel's Leave works.
@@ -297,6 +306,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 101 committed: two stashes, two saves — the guest brings its own hero and save,
+  keeps what it earns, saves at the host's moments and its own exits; the chapter credit lands
+  without touching its resume. Protocol 6. EditMode 831, PlayMode 103. No online play until 102.
 - 2026-09-26 — Task 100 committed: online, nothing pauses (D60) — a menu idles its own player; camera
   and chest follow the one local player; the host's chapter end drives the guest's results;
   G8's catch-up fixed; Clean ceiling in Core. Protocol 5. EditMode 824, PlayMode 96.

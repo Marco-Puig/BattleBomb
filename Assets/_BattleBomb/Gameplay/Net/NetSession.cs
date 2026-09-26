@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
+using BattleBomb.Core.Saves;
 using BattleBomb.Gameplay.Data;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.Platform.Net;
@@ -52,6 +53,19 @@ namespace BattleBomb.Gameplay.Net
         public string Status { get; private set; } = "Offline";
 
         public string LastRefusal { get; private set; }
+
+        /// <summary>Host: the hero the guest picked, by roster index, or -1 before a pick has arrived (D59).</summary>
+        public int GuestPick { get; private set; } = -1;
+
+        /// <summary>Host: the guest has readied at character select.</summary>
+        public bool GuestReady { get; private set; }
+
+        /// <summary>Host: the guest's own save cut down to their hero — what their stash and body are restored from
+        /// (D61). Null until they ready. Never written into this machine's save or session.</summary>
+        public SaveGame GuestBrought { get; private set; }
+
+        /// <summary>Host: the guest's pick or readiness changed.</summary>
+        public event Action GuestLobbyChanged;
 
         /// <summary>Nothing heard for a second — the "connection problem" banner's condition.</summary>
         public bool HasProblem => IsConnected && Now - _lastReceived > NetProtocol.ProblemAfterSeconds;
@@ -123,6 +137,49 @@ namespace BattleBomb.Gameplay.Net
         /// <summary>Development: join a host on this machine's local socket.</summary>
         public void JoinLocal(int lagIndex) =>
             Join(WrapLocal(new LocalSocketTransport(0), lagIndex), $"127.0.0.1:{NetProtocol.DevPort}");
+
+        /// <summary>
+        /// Guest: tells the host which hero this machine's player picked and whether they are ready. Ready, it brings
+        /// their own save cut down to that hero (D61) — the host restores the guest's stash and body from it.
+        /// </summary>
+        public void SendLobbyPick(int rosterIndex, bool ready)
+        {
+            if (Role != NetRole.Guest)
+            {
+                return;
+            }
+
+            GameSession session = GetComponent<GameSession>();
+            CharacterDefinition hero = session != null && rosterIndex >= 0 && rosterIndex < session.Roster.Length
+                ? session.Roster[rosterIndex]
+                : null;
+            SaveGame brought = ready && hero != null
+                ? SaveMapper.ParticipantFrom(session.LoadedSave, hero.Element.Value)
+                : null;
+            _writer.Reset();
+            LobbyCodec.WritePick(_writer, new LobbyPick(rosterIndex, ready && hero != null, brought));
+            Send(NetChannel.Reliable, _writer);
+        }
+
+        /// <summary>The hero this machine's own couch last sat Player 1 as, or the roster's first.</summary>
+        private int StandInPick()
+        {
+            GameSession session = GetComponent<GameSession>();
+            if (session == null || session.Characters.Length == 0 || session.Characters[0] == null)
+            {
+                return 0;
+            }
+
+            for (int i = 0; i < session.Roster.Length; i++)
+            {
+                if (session.Roster[i] == session.Characters[0])
+                {
+                    return i;
+                }
+            }
+
+            return 0;
+        }
 
         private static INetTransport WrapLocal(INetTransport transport, int lagIndex)
         {
@@ -249,12 +306,24 @@ namespace BattleBomb.Gameplay.Net
                         _welcomed = true;
                         Status = "Joined — waiting for the host to launch";
                         PeerJoined?.Invoke();
+
+                        // Until the lobby's screens (Task 102), the guest's machine picks for its player: the hero
+                        // they last sat as on their own couch, ready at once.
+                        SendLobbyPick(StandInPick(), true);
                         return;
 
                     case NetMessageKind.Refuse when Role == NetRole.Guest:
                         LastRefusal = HandshakeCodec.ReadRefuse(reader);
                         Close();
                         Status = $"Refused: {LastRefusal}";
+                        return;
+
+                    case NetMessageKind.LobbyPick when Role == NetRole.Host && _welcomed:
+                        LobbyPick pick = LobbyCodec.ReadPick(reader);
+                        GuestPick = pick.RosterIndex;
+                        GuestReady = pick.Ready;
+                        GuestBrought = pick.Brought;
+                        GuestLobbyChanged?.Invoke();
                         return;
 
                     case NetMessageKind.KeepAlive:
@@ -420,6 +489,7 @@ namespace BattleBomb.Gameplay.Net
                 return;
             }
 
+            ForgetGuest();
             Status = $"Hosting — the guest {why}; waiting for another";
             if (wasJoined)
             {
@@ -436,7 +506,15 @@ namespace BattleBomb.Gameplay.Net
             Role = NetRole.Offline;
             Peer = NetPeer.None;
             _welcomed = false;
+            ForgetGuest();
             Status = "Offline";
+        }
+
+        private void ForgetGuest()
+        {
+            GuestPick = -1;
+            GuestReady = false;
+            GuestBrought = null;
         }
 
         private void OnDestroy() => Leave();

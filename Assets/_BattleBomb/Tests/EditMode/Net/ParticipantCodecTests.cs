@@ -138,6 +138,15 @@ namespace BattleBomb.Tests.EditMode.Net
         }
 
         [Test]
+        public void The_save_on_the_wire_is_the_save_on_disk()
+        {
+            // A participant copy and a lobby pick carry a save in SaveCodec's format: a new save version changes the
+            // bytes on the wire, and two machines on different ones would drop each other as malformed.
+            Assert.That(SaveCodec.CurrentVersion, Is.EqualTo(2),
+                "The save format moved: bump NetProtocol.Version with it, then this number.");
+        }
+
+        [Test]
         public void A_blob_longer_than_it_may_be_is_refused_before_it_is_read()
         {
             var writer = new NetWriter();

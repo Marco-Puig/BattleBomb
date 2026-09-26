@@ -263,6 +263,14 @@ namespace BattleBomb.UI.Chest
         private void LeaveTheGame()
         {
             Close();
+
+            // Leaving deliberately is a clean exit (D52): the guest's latest copy of itself is saved first.
+            Gameplay.Session.SaveService saves = FindAnyObjectByType<Gameplay.Session.SaveService>();
+            if (saves != null)
+            {
+                saves.SaveNow();
+            }
+
             Gameplay.Session.GameSession session = Gameplay.Session.GameSession.Find();
             Gameplay.Net.NetSession net = session != null ? session.Net : null;
             if (net != null)

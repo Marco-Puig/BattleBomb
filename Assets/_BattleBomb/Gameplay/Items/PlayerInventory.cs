@@ -80,6 +80,36 @@ namespace BattleBomb.Gameplay.Items
             }
         }
 
+        /// <summary>
+        /// Online (HANDOFF-M8 planning decision 13): the binder gives a player whose inventory comes from another save
+        /// a stash of their own. Before <c>OnEnable</c> it is simply kept; after, the bag is rebuilt over it — the
+        /// binder calls this before anything is restored, so nothing is lost.
+        /// </summary>
+        internal void UseStash(SharedStash stash)
+        {
+            if (stash == null || stash == _stash)
+            {
+                return;
+            }
+
+            if (isActiveAndEnabled && _stash != null)
+            {
+                _stash.Changed -= OnStashChanged;
+            }
+
+            _stash = stash;
+            _inventory = new Inventory(stash.Sack);
+            if (isActiveAndEnabled)
+            {
+                _stash.Changed += OnStashChanged;
+                Changed?.Invoke();
+            }
+        }
+
+        /// <summary>The guest's copy of its own player has arrived from the host at least once (Task 101) — the
+        /// guest's save may be written from it only after that.</summary>
+        internal bool MirroredFromHost { get; private set; }
+
         public XpCurve Curve => new XpCurve(
             _xpBase, _xpExponent, _prestigeCostMultiplier, _maxLevel, _pointsPerLevel);
 
@@ -406,6 +436,7 @@ namespace BattleBomb.Gameplay.Items
             _ledger = SaveMapper.RestoreCharacter(character, Inventory, catalog);
             if (full)
             {
+                MirroredFromHost = true;
                 SaveMapper.RestoreSack(state, Stash.Sack, catalog, revision);
 
                 // Raises the stash's Changed, which this bag passes on as its own.

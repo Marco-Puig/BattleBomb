@@ -10,6 +10,7 @@ namespace BattleBomb.Gameplay.Items
     /// <see cref="PlayerInventory"/> builds its loadout over this sack and spends from this
     /// wallet. It raises <see cref="Changed"/> for anything money- or bag-shaped so both chest
     /// screens repaint when either player sells — the partner's sale is a change to your view.
+    /// Online, the host gives a guest a second one of their own (D61, <see cref="Session.SessionBinder"/>).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class SharedStash : MonoBehaviour

@@ -4,15 +4,17 @@ namespace BattleBomb.Core.Net
 {
     /// <summary>
     /// The protocol version and HANDOFF-M8's paper numbers, in one place. Tuned live; a change to
-    /// anything that alters the bytes on the wire bumps <see cref="Version"/>.
+    /// anything that alters the bytes on the wire bumps <see cref="Version"/> — a new
+    /// <c>SaveCodec.CurrentVersion</c> too, since a save rides inside Participant and LobbyPick.
     /// 3: menu requests (Plan 2, Task 97).
     /// 4: the guest's screens, racks and inventory (Task 99).
     /// 5: the host's session moments (Task 100).
+    /// 6: the guest's pick and what it brings (Task 101).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 5;
+        public const int Version = 6;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>
@@ -65,7 +67,7 @@ namespace BattleBomb.Core.Net
         /// <summary>
         /// Steps between two sends of one player's inventory when nothing forces it: a kill's XP changes the
         /// bag's owner every few seconds in a fight, and a quarter of a second is quick enough for an XP bar.
-        /// A request's answer, a screen opening and an autosave send it at once.
+        /// A request's answer (a close is one), a screen opening and the host's moments send it at once.
         /// </summary>
         public const int ParticipantMinSteps = 15;
 

@@ -61,6 +61,21 @@ namespace BattleBomb.Tests.EditMode
         }
 
         [Test]
+        public void A_credit_alone_leaves_the_resume_point_where_it_was()
+        {
+            // A guest finishes the host's run of a chapter they have a run of their own in (D61): the tier is
+            // theirs, and their resume point stays where their own run left it.
+            var progress = new StoryProgress();
+            progress.SetResume("c1", 2, 1);
+            progress.RecordCredit("c1", 0);
+
+            Assert.That(progress.HighestTierBeaten("c1"), Is.EqualTo(1));
+            Assert.That(progress.ResumeChapterId, Is.EqualTo("c1"));
+            Assert.That(progress.ResumeStageIndex, Is.EqualTo(2));
+            Assert.That(progress.ResumeCheckpointArena, Is.EqualTo(1));
+        }
+
+        [Test]
         public void Nothing_outside_the_catalog_is_ever_unlocked()
         {
             var progress = new StoryProgress();

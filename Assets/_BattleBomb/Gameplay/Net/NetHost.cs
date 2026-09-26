@@ -84,6 +84,8 @@ namespace BattleBomb.Gameplay.Net
                 _runner.StageHandedOver += OnStageHandedOver;
                 _runner.RemoteStageReady = stage => !_net.IsConnected || _guestReady.Contains(stage);
                 _runner.ChapterCompleted += OnChapterCompleted;
+                _runner.CheckpointReached += OnCheckpointReached;
+                _runner.StageCompleted += OnStageCompleted;
             }
 
             SendLaunch();
@@ -94,8 +96,7 @@ namespace BattleBomb.Gameplay.Net
             var picks = new int[_session.Characters.Length];
             for (int i = 0; i < picks.Length; i++)
             {
-                // The guest's seat is the host's own hero until the lobby (SessionBinder's stand-in).
-                picks[i] = IndexInRoster(_session.Characters[i == _net.GuestPlayerId.Value ? 0 : i]);
+                picks[i] = i == _net.GuestPlayerId.Value ? GuestPick() : IndexInRoster(_session.Characters[i]);
             }
 
             _writer.Reset();
@@ -123,6 +124,12 @@ namespace BattleBomb.Gameplay.Net
 
             return -1;
         }
+
+        /// <summary>The guest's own pick (D59), or the host's hero if none has arrived (SessionBinder's fallback).</summary>
+        private int GuestPick() =>
+            _net.GuestPick >= 0 && _net.GuestPick < _session.Roster.Length
+                ? _net.GuestPick
+                : IndexInRoster(_session.Characters[0]);
 
         private void OnMessage(NetMessageKind kind, NetReader reader)
         {
@@ -313,9 +320,18 @@ namespace BattleBomb.Gameplay.Net
             _answers.Clear();
         }
 
-        /// <summary>The run's end reaches the guest at once, after its bag: its results open, and its own save records
-        /// the chapter (D61). The host's own results are already opening from the same event.</summary>
-        private void OnChapterCompleted()
+        private void OnChapterCompleted() => SendMoment(MomentKind.ChapterCompleted);
+
+        private void OnCheckpointReached(int stage, int arena) => SendMoment(MomentKind.CheckpointReached);
+
+        private void OnStageCompleted(int stage) => SendMoment(MomentKind.StageCompleted);
+
+        /// <summary>
+        /// A moment in the host's run reaches the guest at once, after the guest's latest copy of itself (D61): at
+        /// the chapter's end its results open and its own save records the credit; at the others its own save writes.
+        /// The resume point never travels — it is the host's alone.
+        /// </summary>
+        private void SendMoment(MomentKind moment)
         {
             if (!_net.IsConnected)
             {
@@ -331,7 +347,7 @@ namespace BattleBomb.Gameplay.Net
             }
 
             _moment.Reset();
-            SessionCodec.WriteMoment(_moment, MomentKind.ChapterCompleted);
+            SessionCodec.WriteMoment(_moment, moment);
             _net.Send(NetChannel.Reliable, _moment);
         }
 
@@ -513,6 +529,8 @@ namespace BattleBomb.Gameplay.Net
                 _runner.StageHandedOver -= OnStageHandedOver;
                 _runner.RemoteStageReady = null;
                 _runner.ChapterCompleted -= OnChapterCompleted;
+                _runner.CheckpointReached -= OnCheckpointReached;
+                _runner.StageCompleted -= OnStageCompleted;
             }
 
             foreach (int id in new List<int>(_watched.Keys))

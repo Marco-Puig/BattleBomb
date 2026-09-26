@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
+using BattleBomb.Core.Saves;
 using BattleBomb.Core.Simulation;
 using BattleBomb.Platform.Net;
 using UnityEngine;
@@ -41,6 +42,22 @@ namespace BattleBomb.Tests.PlayMode
         internal Vector2 Move { get; set; }
 
         internal CommandButtons Held { get; set; }
+
+        /// <summary>The hero this guest picks, by roster index, sent ready the moment it is welcomed.</summary>
+        internal int Pick { get; set; }
+
+        /// <summary>What it brings — its own save cut down to that hero. Null brings an empty one.</summary>
+        internal SaveGame Bring { get; set; }
+
+        /// <summary>False: welcomed, it sends no pick at all (a test that picks by hand).</summary>
+        internal bool AutoPick { get; set; } = true;
+
+        internal void SendPick(int rosterIndex, bool ready, SaveGame brought)
+        {
+            _writer.Reset();
+            LobbyCodec.WritePick(_writer, new LobbyPick(rosterIndex, ready, brought ?? SaveGame.Fresh()));
+            _transport.Send(_host, NetChannel.Reliable, _writer.Buffer, _writer.Length);
+        }
 
         /// <summary>False stops the command stream, as a frozen or hitching guest would.</summary>
         internal bool Sending { get; set; } = true;
@@ -161,6 +178,10 @@ namespace BattleBomb.Tests.PlayMode
                     if (kind == NetMessageKind.Welcome)
                     {
                         IsWelcomed = true;
+                        if (AutoPick)
+                        {
+                            SendPick(Pick, true, Bring);
+                        }
                     }
                     else if (kind == NetMessageKind.Launch)
                     {

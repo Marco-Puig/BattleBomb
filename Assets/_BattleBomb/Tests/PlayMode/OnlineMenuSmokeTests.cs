@@ -1,9 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
+using BattleBomb.Core.Progression;
+using BattleBomb.Core.Saves;
 using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Items;
@@ -65,7 +68,9 @@ namespace BattleBomb.Tests.PlayMode
             NetSession net = NetSession.FindOrCreate();
             net.Host(hostSide);
             _guest = HeadlessGuest.Join(guestSide);
+            _guest.Bring = GuestSave(session.Roster[0].Element);
             yield return UntilFrames(() => net.IsConnected && _guest.IsWelcomed, "the handshake never finished");
+            yield return UntilFrames(() => net.GuestBrought != null, "the guest's pick never reached the host");
 
             FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
             flow.State.Confirm(0);
@@ -482,6 +487,84 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             return false;
+        }
+
+        [UnityTest]
+        public IEnumerator The_guest_plays_from_the_bag_they_brought_and_the_hosts_is_their_own()
+        {
+            PlayerInventory guestBag = _guestBody.GetComponent<PlayerInventory>();
+            PlayerInventory hostBag = _host.GetComponent<PlayerInventory>();
+
+            Assert.That(guestBag.Stash, Is.Not.SameAs(hostBag.Stash), "Online the guest's sack is the host's (D61).");
+            Assert.That(guestBag.Inventory.Items.Count, Is.EqualTo(2), "The guest's own knives never arrived.");
+            Assert.That(guestBag.Wallet.Balance, Is.EqualTo(300));
+            Assert.That(guestBag.Level, Is.EqualTo(5), "The guest's hero did not come back at the level they brought.");
+            Assert.That(guestBag.Inventory.Loadout.Weapon.IsEmpty, Is.False, "The guest's hero came without the knife they wore.");
+            Assert.That(guestBag.Inventory.Loadout.Weapon.DefinitionId, Is.EqualTo(KnifeDefinitionId));
+            Assert.That(hostBag.Inventory.Loadout.Weapon.IsEmpty || hostBag.Inventory.Loadout.Weapon.DefinitionId != KnifeDefinitionId,
+                Is.True, "The guest's worn knife landed on the host's hero.");
+            Assert.That(hostBag.Inventory.Items.Count, Is.Zero, "The guest's knives landed in the host's sack.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator The_host_saves_only_its_own_player()
+        {
+            SaveService saves = Object.FindAnyObjectByType<SaveService>();
+            saves.SaveNow();
+            GameSession session = GameSession.Find();
+            Assert.That(session.Store.TryRead(session.SaveName, out string text), Is.True, "The host wrote nothing.");
+            SaveGame written = SaveCodec.Decode(text).Save;
+
+            Assert.That(written.Sack, Is.Empty, "The guest's knives went into the host's save.");
+            Assert.That(written.Coins, Is.Zero, "The guest's coins went into the host's save.");
+
+            // Both seats picked roster 0 here, so the heroes cannot be told apart by element: the count is the proof.
+            Assert.That(written.Characters.Length, Is.EqualTo(1), "The guest's player was captured into the host's save.");
+            yield break;
+        }
+
+        [UnityTest]
+        public IEnumerator A_checkpoint_reaches_the_guest_as_a_moment_after_its_copy()
+        {
+            // The set-up's walk to the first chest banks no checkpoint: both push on until the run does.
+            int checkpoints = 0;
+            System.Action<int, int> count = (stage, arena) => checkpoints++;
+            _runner.CheckpointReached += count;
+            yield return PushBothRight(() => checkpoints > 0, 5000, "a checkpoint room");
+            _runner.CheckpointReached -= count;
+            yield return Steps(2);
+
+            int moment = IndexOf(0, m => (NetMessageKind)m[0] == NetMessageKind.Moment
+                && SessionCodec.ReadMoment(Skip(m)) == MomentKind.CheckpointReached);
+            Assert.That(moment, Is.GreaterThanOrEqualTo(0), "The run reached a checkpoint and the guest was never told.");
+            Assert.That(IsParticipant(_guest.Received[moment - 1], PlayerId.Two.Value, full: true), Is.True,
+                "The moment did not come right behind the guest's latest copy of itself, which its save is taken from.");
+        }
+
+        private static NetReader Skip(byte[] message)
+        {
+            var reader = new NetReader(message);
+            reader.ReadByte();
+            return reader;
+        }
+
+        /// <summary>Two knives and three hundred coins, as the guest's own save would carry them, and the seat's
+        /// hero at level five wearing a third.</summary>
+        private static SaveGame GuestSave(ElementId hero)
+        {
+            var inventory = new Inventory();
+            var worn = new Inventory();
+            for (int i = 0; i < 3; i++)
+            {
+                (i < 2 ? inventory : worn).Add(new ItemInstance(
+                    new ItemIdentity(KnifeDefinitionId, "Knife", ItemSlot.Weapon, WeaponClass.Sword), QualityRank.Shiny,
+                    new GearContribution(weaponDamage: 9f), new AffixRoll[0], requiredLevel: 1, new ItemInvestment(3)), 99);
+            }
+
+            worn.TryEquip(0, 99);
+            return SaveMapper.Participant(inventory.Sack, new Wallet(300),
+                new CharacterState(hero, new XpLedger(5, 0f, 0, BaseStats.Zero, 0), worn), withSack: true);
         }
 
         private WorldInteractable FirstChest()

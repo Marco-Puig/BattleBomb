@@ -138,8 +138,9 @@ namespace BattleBomb.UI.Combat
                     "✕", refused);
 
                 _style.fontSize = Mathf.Max(10, _fontSize + 2);
+                // A guest holds its own sack only (D61): its partner's is the host's.
                 PlayerInventory bag = players[i].GetComponent<PlayerInventory>();
-                if (bag != null)
+                if (bag != null && (!_driver.IsReplica || _driver.Players.IsLocal(players[i].PlayerId)))
                 {
                     DrawLine(new Rect(screen.x - 80f, Screen.height - screen.y + 6f, 160f, 22f),
                         $"{bag.Inventory.SlotsUsed}/{bag.Inventory.Rules.Capacity}", refused);

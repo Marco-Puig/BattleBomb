@@ -246,6 +246,29 @@ namespace BattleBomb.Core.Saves
                 : Capture(new Sack(), Wallet.Empty, roster, new StoryProgress());
         }
 
+        /// <summary>
+        /// A player's own save cut down to the hero they chose (HANDOFF-M8 Task 101): the sack, wallet and auto
+        /// flags, and that hero's character if they have ever played it. What a guest brings to the host's game. The
+        /// story does not come: the resume point and the unlocks are the guest's own, and stay home.
+        /// </summary>
+        public static SaveGame ParticipantFrom(SaveGame save, int elementId)
+        {
+            SaveGame source = save ?? SaveGame.Fresh();
+            CharacterSave hero = null;
+            CharacterSave[] characters = source.Characters;
+            for (int i = 0; i < characters.Length; i++)
+            {
+                if (characters[i] != null && characters[i].ElementId == elementId)
+                {
+                    hero = characters[i];
+                }
+            }
+
+            return new SaveGame(
+                SaveCodec.CurrentVersion, source.Coins, source.AutoEquip, source.AutoSell, source.Sack,
+                hero != null ? new[] { hero } : System.Array.Empty<CharacterSave>(), new StoryProgressSave());
+        }
+
         public static StoryProgress RestoreProgress(SaveGame save)
         {
             var progress = new StoryProgress();

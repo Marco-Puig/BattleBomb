@@ -25,6 +25,17 @@ namespace BattleBomb.Core.Chapters
 
         public void RecordCompletion(string chapterId, int tierIndex)
         {
+            RecordCredit(chapterId, tierIndex);
+            if (!string.IsNullOrEmpty(chapterId) && ResumeChapterId == chapterId)
+            {
+                ClearResume();
+            }
+        }
+
+        /// <summary>The tier's credit alone: a guest's finish of the host's run (D61) leaves the guest's own
+        /// resume point where their own run left it.</summary>
+        public void RecordCredit(string chapterId, int tierIndex)
+        {
             if (string.IsNullOrEmpty(chapterId))
             {
                 return;
@@ -34,11 +45,6 @@ namespace BattleBomb.Core.Chapters
             if (beaten > HighestTierBeaten(chapterId))
             {
                 _tiersBeaten[chapterId] = beaten;
-            }
-
-            if (ResumeChapterId == chapterId)
-            {
-                ClearResume();
             }
         }
 

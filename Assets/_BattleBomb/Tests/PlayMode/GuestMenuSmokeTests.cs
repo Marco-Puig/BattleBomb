@@ -43,6 +43,7 @@ namespace BattleBomb.Tests.PlayMode
         private PlaybackTransport _playback;
         private NetGuest _guest;
         private SimulationDriver _driver;
+        private MemorySaveStore _store;
 
         [UnitySetUp]
         public IEnumerator OpenTheFrontDoor()
@@ -55,7 +56,8 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             GameSession session = GameSession.FindOrCreate();
-            session.Store = new MemorySaveStore();
+            _store = new MemorySaveStore();
+            session.Store = _store;
             session.SaveName = "guest-menu";
             SceneManager.LoadScene("Frontend", LoadSceneMode.Single);
             yield return null;
@@ -323,8 +325,17 @@ namespace BattleBomb.Tests.PlayMode
         [UnityTest]
         public IEnumerator On_a_guest_the_session_row_leaves_the_game()
         {
-            yield return Join(Recording(new List<(int, byte[])>()));
+            // The guest's own copy, and nothing that would write it: leaving is the clean exit that saves (D52).
+            var extra = new List<(int, byte[])>();
+            var bag = new Inventory();
+            bag.Add(Knife(), 99);
+            var writer = new NetWriter();
+            ParticipantCodec.Write(writer, 1, GuestRevision, true, SaveMapper.Participant(
+                bag.Sack, new Wallet(100), new CharacterState(ElementId.None, XpLedger.Fresh, bag), withSack: true));
+            extra.Add((Start + 10, writer.ToArray()));
+            yield return Join(Recording(extra));
             ScriptedCommandSource hands = TakeTheGuestsHands();
+            yield return AdvanceUntil(() => _driver.InventoryOf(1).Wallet.Balance == 100, "The guest's copy of itself never arrived.");
             yield return OpenSettings(hands);
 
             // AutoEquip, AutoSell, then the session row.
@@ -350,6 +361,8 @@ namespace BattleBomb.Tests.PlayMode
             }
 
             Assert.That(bye, Is.True, "The host was never told the guest left.");
+            Assert.That(_store.TryRead("guest-menu", out string text), Is.True, "Leaving the game did not save the guest first (D52).");
+            Assert.That(SaveCodec.Decode(text).Save.Coins, Is.EqualTo(100));
         }
 
         private IEnumerator OpenSettings(ScriptedCommandSource hands)
@@ -359,6 +372,99 @@ namespace BattleBomb.Tests.PlayMode
             hands.Release();
             yield return AdvanceUntil(() => _driver.MenuPauseHeld, "Pause never opened the guest's own settings.");
             yield return AdvanceSteps(2);
+        }
+
+        [UnityTest]
+        public IEnumerator When_the_host_says_so_the_guest_saves_its_own_copy_and_not_the_resume_point()
+        {
+            List<(int, byte[])> extra = ChestOpens();
+            var writer = new NetWriter();
+            SessionCodec.WriteMoment(writer, MomentKind.CheckpointReached);
+            extra.Add((Start + 40, writer.ToArray()));
+
+            // The guest's own run of this chapter, a stage further on than the host's.
+            GameSession.Find().Progress.SetResume("fixture", 1, 0);
+            yield return Join(Recording(extra));
+            yield return AdvanceUntil(() => _store.Names().Count > 0, "The host's checkpoint never wrote the guest's save.");
+
+            Assert.That(_store.TryRead("guest-menu", out string text), Is.True);
+            SaveGame written = SaveCodec.Decode(text).Save;
+            Assert.That(written.Coins, Is.EqualTo(100), "The guest's save is not its copy from the host.");
+            Assert.That(written.Sack.Length, Is.EqualTo(2));
+            Assert.That(written.Story.ResumeChapterId, Is.EqualTo("fixture"), "The guest's own resume point was lost.");
+            Assert.That(written.Story.ResumeStageIndex, Is.EqualTo(1), "The host's position was written over the guest's own resume point.");
+            Assert.That(written.Story.ResumeCheckpointArena, Is.EqualTo(0));
+        }
+
+        [UnityTest]
+        public IEnumerator Before_its_copy_arrives_the_guest_writes_nothing()
+        {
+            var extra = new List<(int, byte[])>();
+            var writer = new NetWriter();
+            SessionCodec.WriteMoment(writer, MomentKind.CheckpointReached);
+            extra.Add((Start + 20, writer.ToArray()));
+            yield return Join(Recording(extra));
+            yield return AdvanceSteps(60);
+
+            Assert.That(_store.Names(), Is.Empty,
+                "The guest wrote a save before the host had sent it anything of its own — an empty stash over its file.");
+        }
+
+        [UnityTest]
+        public IEnumerator The_chapters_credit_goes_into_the_guests_own_save()
+        {
+            List<(int, byte[])> extra = ChestOpens();
+            var writer = new NetWriter();
+            SessionCodec.WriteMoment(writer, MomentKind.ChapterCompleted);
+            extra.Add((Start + 40, writer.ToArray()));
+
+            // The guest's own run of this chapter, a stage further on than the host's.
+            GameSession.Find().Progress.SetResume("fixture", 1, 0);
+            yield return Join(Recording(extra));
+            yield return AdvanceUntil(() => _store.Names().Count > 0, "The chapter's end never wrote the guest's save.");
+
+            _store.TryRead("guest-menu", out string text);
+            SaveGame written = SaveCodec.Decode(text).Save;
+            Assert.That(SaveMapper.RestoreProgress(written).HighestTierBeaten("fixture"), Is.GreaterThan(0),
+                "The chapter the guest finished with the host is not in the guest's own save (D61).");
+            Assert.That(written.Story.ResumeChapterId, Is.EqualTo("fixture"),
+                "Finishing the host's run cleared the guest's own resume point in that chapter; only the credit is theirs (D61).");
+            Assert.That(written.Story.ResumeStageIndex, Is.EqualTo(1));
+        }
+
+        [UnityTest]
+        public IEnumerator A_chest_the_guest_closes_is_saved_again_from_the_copy_the_host_closes_it_behind()
+        {
+            // The guest closes at once and saves then, before the host has answered the close (and perhaps its last
+            // press); the host's close arrives right behind the copy that answer forced, and is saved from.
+            const int ClosedAt = OpenAt + 120;
+            List<(int, byte[])> extra = ChestOpens();
+            var sold = new Inventory();
+            sold.Add(Knife(), 99);
+            var writer = new NetWriter();
+            ParticipantCodec.Write(writer, 1, GuestRevision + 1, true, SaveMapper.Participant(
+                sold.Sack, new Wallet(160), new CharacterState(ElementId.None, XpLedger.Fresh, sold), withSack: true));
+            extra.Add((ClosedAt, writer.ToArray()));
+            extra.Add((ClosedAt, Events(writer, ReplicatedEvent.OfScreen(1, (int)InteractionKind.Chest, false).At(ClosedAt))));
+            yield return Join(Recording(extra));
+            ScriptedCommandSource hands = TakeTheGuestsHands();
+            yield return AdvanceUntil(() => _driver.TryGetOpenScreen(1, out _), "The guest's chest never opened.");
+            yield return AdvanceSteps(3);
+
+            hands.Set(Vector2.zero, CommandButtons.Back);
+            yield return AdvanceSteps(2);
+            hands.Release();
+            yield return AdvanceSteps(1);
+            Assert.That(_driver.TryGetOpenScreen(1, out _), Is.False, "Back did not close the guest's chest.");
+            Assert.That(_store.TryRead("guest-menu", out string early), Is.True, "Closing its own chest did not save the guest.");
+            Assert.That(SaveCodec.Decode(early).Save.Coins, Is.EqualTo(100),
+                "The host's last copy had already arrived, so the case proves nothing.");
+
+            yield return AdvanceUntil(() => _driver.InventoryOf(1).Wallet.Balance == 160, "The host's last copy never arrived.");
+            yield return AdvanceSteps(2);
+            _store.TryRead("guest-menu", out string text);
+            Assert.That(SaveCodec.Decode(text).Save.Coins, Is.EqualTo(160),
+                "The guest's save is of the bag from before the host answered it.");
         }
 
         private IEnumerator Join(List<(int Frame, byte[] Payload)> recording)

@@ -20,5 +20,6 @@ namespace BattleBomb.Core.Net
         RequestResult = 15,
         Participant = 16,
         Moment = 17,
+        LobbyPick = 18,
     }
 }

@@ -69,11 +69,12 @@ namespace BattleBomb.Gameplay.Session
                 return;
             }
 
-            // The guest writes its own save only when the host says a D52 moment happened (Plan 2,
-            // D61). Its own copy of the session is a picture of the host's run, and saving a picture
-            // over a real file is how a guest loses their gear. Read from what this scene was built
-            // as, not from the connection: a guest who leaves mid-match still stands in a picture.
-            if (_driver != null && _driver.IsReplica)
+            // A guest writes its own save from its copy of itself, which the host keeps current (D61): at the host's
+            // D52 moments, when its own chest closes, and at its own clean exits. Never before the host's first copy
+            // has arrived — until then this machine holds nothing of the player's, and writing it would put an empty
+            // stash over their real file. Read from what this scene was built as, not from the connection: a guest
+            // who leaves mid-match still stands in a picture.
+            if (_driver != null && _driver.IsReplica && !GuestCopyArrived())
             {
                 return;
             }
@@ -93,6 +94,13 @@ namespace BattleBomb.Gameplay.Session
             IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
             for (int i = 0; i < actors.Count; i++)
             {
+                // Each machine saves only its own players (planning decision 14): online, the partner's are saved on
+                // their own machine, into their own file. On the couch both are this machine's.
+                if (!_driver.Players.IsLocal(actors[i].PlayerId))
+                {
+                    continue;
+                }
+
                 PlayerInventory bag = actors[i].GetComponent<PlayerInventory>();
                 if (bag != null)
                 {
@@ -109,6 +117,22 @@ namespace BattleBomb.Gameplay.Session
             // to be the file as it stands now, not as it stood when the scene booted.
             _session.LoadedSave = save;
             Writes++;
+        }
+
+        /// <summary>A guest's own player has had its copy from the host at least once.</summary>
+        private bool GuestCopyArrived()
+        {
+            IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                PlayerInventory bag = actors[i].GetComponent<PlayerInventory>();
+                if (bag != null && bag.MirroredFromHost && _driver.Players.IsLocal(actors[i].PlayerId))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>Once per run, not once per autosave moment — five identical errors between
@@ -173,7 +197,16 @@ namespace BattleBomb.Gameplay.Session
             bool nextChapterWasOpen = ProgressGate.IsUnlocked(
                 _session.Progress, specs, chapterIndex + 1, 0, tierCount);
 
-            _session.Progress.RecordCompletion(chapterId, _runner.TierIndex);
+            // A guest's resume point is its own run's (D61): the host's run it just finished credits the tier and
+            // leaves that where it was.
+            if (_driver != null && _driver.IsReplica)
+            {
+                _session.Progress.RecordCredit(chapterId, _runner.TierIndex);
+            }
+            else
+            {
+                _session.Progress.RecordCompletion(chapterId, _runner.TierIndex);
+            }
 
             if (_session.Progress.HighestTierBeaten(chapterId) > tiersBefore
                 && _runner.TierIndex + 1 < tierCount)

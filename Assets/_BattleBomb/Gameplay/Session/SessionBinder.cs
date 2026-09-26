@@ -80,12 +80,12 @@ namespace BattleBomb.Gameplay.Session
                     continue;
                 }
 
-                // Plan 1's stand-in until the lobby (HANDOFF-M8 Task 102): a connected guest takes the
-                // second seat as the host's own hero — over a local Player 2, because D59 lets a couch
-                // pair and an online guest never both be here. Chosen here and never written into the
-                // session, which outlives the match and would seat the stand-in back at the front door.
-                int seat = hosting && i == net.GuestPlayerId.Value ? 0 : i;
-                CharacterDefinition definition = seat < _session.Characters.Length ? _session.Characters[seat] : null;
+                // A connected guest's seat is the hero they picked from their own save (D59, Task 101) — over a
+                // local Player 2, because a couch pair and an online guest are never both here. Chosen here and never
+                // written into the session, which outlives the match and would seat it back at the front door.
+                CharacterDefinition definition = hosting && i == net.GuestPlayerId.Value
+                    ? GuestDefinition(net)
+                    : i < _session.Characters.Length ? _session.Characters[i] : null;
                 if (definition == null)
                 {
                     // Nobody sits here: the object never wakes, so the driver sees one player.
@@ -109,7 +109,7 @@ namespace BattleBomb.Gameplay.Session
 
         private void Start()
         {
-            if (_session == null || _session.LoadedSave == null)
+            if (_session == null)
             {
                 return;
             }
@@ -129,6 +129,18 @@ namespace BattleBomb.Gameplay.Session
             if (_stash == null)
             {
                 _stash = FindAnyObjectByType<SharedStash>();
+            }
+
+            // The guest's own save — what they brought in the lobby — into their stash and body (D61). Before the
+            // host's: a host with no save yet still plays with a guest who has one.
+            if (_remoteSeat >= 0 && _driver != null)
+            {
+                RestoreGuest(_players[_remoteSeat], _session.Net);
+            }
+
+            if (_session.LoadedSave == null)
+            {
+                return;
             }
 
             if (_driver == null || _stash == null)
@@ -153,8 +165,7 @@ namespace BattleBomb.Gameplay.Session
 
             for (int i = 0; i < _players.Length; i++)
             {
-                // The guest's stand-in wears none of the host's saved gear: a copy of it could reach
-                // the shared sack and be saved back as a second of each item.
+                // The guest's seat wears the guest's own gear (RestoreGuest), never the host's.
                 if (_players[i] == null || !_players[i].gameObject.activeSelf || i == _remoteSeat)
                 {
                     continue;
@@ -185,6 +196,30 @@ namespace BattleBomb.Gameplay.Session
             // Without this, a couch Player 2 who joined at character select keeps their pad from Player 1.
             _session.Seats.Follow(FrontendScreen.Title, false, SeatAssignment.NoDevice, SeatAssignment.NoDevice);
             _remoteSeat = slot;
+
+            // The guest plays from their own save (D61, planning decision 13): a stash of their own, beside the
+            // couch's one — which is the host's alone now, so it is pinned to the host's seats first: once a
+            // second stash exists, a bag's own lookup could find either.
+            if (_stash == null)
+            {
+                _stash = FindAnyObjectByType<SharedStash>();
+            }
+
+            for (int i = 0; i < _players.Length; i++)
+            {
+                PlayerInventory own = i != slot && _players[i] != null ? _players[i].GetComponent<PlayerInventory>() : null;
+                if (own != null)
+                {
+                    own.UseStash(_stash);
+                }
+            }
+
+            PlayerInventory guestBag = _players[slot].GetComponent<PlayerInventory>();
+            if (guestBag != null)
+            {
+                guestBag.UseStash(new GameObject("Guest Stash").AddComponent<SharedStash>());
+            }
+
             RemoteCommandSource remote = NetSeats.MakeRemote(_players[slot], net.GuestPlayerId);
             gameObject.AddComponent<NetHost>().Begin(
                 net, _session, _driver, FindAnyObjectByType<World.StageRunner>(), remote);
@@ -216,6 +251,40 @@ namespace BattleBomb.Gameplay.Session
 
             _driver.EnterReplicaMode();
             gameObject.AddComponent<NetGuest>().Begin(net, _driver, net.GuestPlayerId);
+        }
+
+        /// <summary>The hero the guest picked, or — before the pick has arrived, which only a hand-driven development
+        /// launch can race — the host's own (Plan 1's stand-in).</summary>
+        private CharacterDefinition GuestDefinition(NetSession net)
+        {
+            int pick = net.GuestPick;
+            if (pick >= 0 && pick < _session.Roster.Length && _session.Roster[pick] != null)
+            {
+                return _session.Roster[pick];
+            }
+
+            return _session.Characters.Length > 0 ? _session.Characters[0] : null;
+        }
+
+        /// <summary>The guest's own save, brought in the lobby, laid into the stash and body the binder gave them
+        /// (D61). A hero never played starts fresh; a guest who brought nothing starts with nothing.</summary>
+        private void RestoreGuest(CharacterActor actor, NetSession net)
+        {
+            PlayerInventory bag = actor != null ? actor.GetComponent<PlayerInventory>() : null;
+            SaveGame brought = net != null ? net.GuestBrought : null;
+            if (bag == null || brought == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<ItemSpec> catalog = _driver.ItemSpecs;
+            SaveMapper.RestoreSack(brought, bag.Stash.Sack, catalog);
+            bag.Stash.Restore(bag.Stash.Sack, SaveMapper.RestoreWallet(brought));
+            CharacterSave saved = FindCharacter(brought, actor.Element.Value);
+            if (saved != null)
+            {
+                bag.SetLedger(SaveMapper.RestoreCharacter(saved, bag.Inventory, catalog));
+            }
         }
 
         private static CharacterSave FindCharacter(SaveGame save, int elementId)

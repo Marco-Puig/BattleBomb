@@ -92,6 +92,12 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     draws 4); refused buys all say "Not enough coin" unless the sack is full (with the flash item).
   - **100 (from 98):** D43's Clean ceiling on the junk sweep lives only in ChestScreen — clamp it in
     the runner (a modified guest could sweep its own Legendaries).
+  - **101a (inserted, Netcode's scope answer, accepted):** from 99 the guest's inventory copy re-sends
+    the whole sack on any change, XP included — every kill, up to ~68 KB/s on the reliable channel,
+    which stalls hits and menu answers at Bad (105's D6). Send the whole sack only when its revision,
+    coin or auto flags changed since the last whole copy; otherwise the character alone; always
+    whole after a bind or rejoin. No wire change. Rapid selling still sends one whole copy per sale —
+    a sack delta joins M11's parked deltas if D6 shows sluggish menus.
   - **103/104:** the host's request queue outlives the guest who filled it (clear on leave/unbind);
     NetGuest clears `RequestRoute` without checking it's its own; a close is refused when the body
     is gone.
@@ -269,6 +275,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — Inserted 101a (Netcode → Builder, accepted): the guest's sack travels whole only when it
+  changed, not on every kill's XP.
 - 2026-09-26 — Michael: he and Marco (the collaborator) run the tests together when Plan 2 is built.
   The 96a/96b check and Groundwork items 7/12 fold into that sitting.
 - 2026-09-26 — Task 98 committed: the shop's rack lives in the simulation; a purchase names a slot and

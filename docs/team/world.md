@@ -116,30 +116,72 @@ them as amendments to those D entries.
 
 ## Waiting on
 
-- Nothing blocking. The session runs as far as Michael can take it; the collaborator's calls may
-  come relayed.
+- **Michael + collaborator:** Q1's answer (they talk each question over, so it comes relayed).
+- **Orchestrator:** the outcome of the prelude-presentation question (how story beats are shown
+  under D56) — goes into the bible when it lands. Not blocking.
 
 ## Current state
 
-Session opened 2026-09-24. **At Q1 (the goal)** — asked, awaiting answer.
+Session opened 2026-09-24. On 2026-09-26 Michael supplied the **prelude** (their opening, saved
+verbatim in `docs/world/PRELUDE_NOTES.md` — "none of this is final"). It covers most of Q2a
+(setting) and frames Q1 without answering it. **At Q1, re-asked narrowly:** when the heroes leave
+the castle, what are they setting out to do? Michael takes each question to the collaborator, so
+answers come back relayed.
 
 ## Next steps
 
-1. Record Q1's answer, read it back, move to Q2.
-2. Carry on down the list; update this file after every answered question.
+1. Record Q1's answer, read it back, move to Q2 (2a is mostly answered — confirm only what's
+   missing, then 2b tone).
+2. Carry on down the list, folding in the carry-forward questions below where they belong;
+   update this file after every answered question.
 3. When the list is done (or a sitting ends), write `docs/world/STORY_BIBLE.md` from what was
    decided, open items marked open.
 
+## Carry-forward questions (raised by the prelude — ask at the point shown)
+
+- **Q1 follow-ups:** who is the big fight at the end against? Does it answer "who won"?
+- **Q2a:** does the whole game stay in this fantasy land, or does it go elsewhere? (There is now a
+  spaceship; the 2019 build had space scenes — theirs to keep or drop, don't lead.)
+- **Q2b:** tone — the Shrek reference and the buff-king reveal point somewhere, but confirm, don't
+  assume.
+- **Q3:** are the four heroes members of the Knight Squad? Is the tutorial played as the chosen
+  hero(es)?
+- **Q4c:** do the mutated slimes' glowing colours (red, purple, blue) mean elements? Are slimes
+  Chapter 1's family, one type in it, or a thread through the whole game? (The gray tutorial enemy
+  "doesn't have to be slime".)
+- **Characters beyond D56's list:** the king (name? look beyond "super buff, gold legendary
+  sword"?), the alien (name? one or many? a boss?), the Knight Squad, villagers.
+- **The prelude's shape:** is it its own chapter / tutorial stage(s) before Chapter 1 — village,
+  castle, minion fight, outside?
+
 ## Answers and decisions
+
+- 2026-09-26 — **Michael + collaborator (tentative, "none of this is final"):** the prelude —
+  fantasy kingdom ringed by villages; the Knight Squad helps villagers; tutorial vs gray slimes;
+  celebration at the castle; something falls from the sky; an alien breaks in; the king (secretly
+  super buff, gold legendary sword) fights it outside; heroes clear the alien's minions; king and
+  alien gone, crashed spaceship left, slimes now mutated (bigger, glowing red/purple/blue) → into
+  Chapter 1. "Who won?" is the question carried through the game; the game is an explore-gear-level
+  grind toward a big final fight. Full text: `docs/world/PRELUDE_NOTES.md`.
+- 2026-09-26 — **Scope flag sent to the orchestrator:** the prelude implies story sequences
+  (D56 rules out a cutscene system), an opening crawl, tutorial tooltips, and characters beyond
+  D56's list (king, alien, Knight Squad, villagers) for Art.
+- 2026-09-26 — **Orchestrator ACK:** it has taken the five points to Michael with a
+  recommendation. World keeps recording the story only — **do not design the presentation**; the
+  orchestrator will send the outcome so the bible can say how the beats are shown. Send lane file
+  + `docs/world/` as DONE at stopping points.
 
 - 2026-09-24 — **Orchestrator:** question list approved; the three tail names become optional Q9.
 - 2026-09-24 — **Orchestrator:** session names are unreliable (Michael renames them). Message it
   at the `from=` address of its last message, not by name — PROTOCOL rule 6 (853ad08). Last known
-  address: `uds:\\.\pipe\LOCAL\cc-msg-a5467c87452d77bccc60c704d3ef83a9` (session shown as
-  "Battlebomb"). If that fails, ListAgents and look for the row that "says it was" the orchestrator.
+  address went stale when it restarted (2026-09-26); reached it by name as **"Battlebomb"**. If
+  that fails, ListAgents and look for the row that "says it was" the orchestrator.
 
 ## Log
 
+- 2026-09-26 — Orchestrator ACK on the scope flag; DONE sent for the lane file + prelude notes.
+- 2026-09-26 — Michael gave the prelude; saved to `docs/world/PRELUDE_NOTES.md`; read back; Q1
+  re-asked narrowly; scope flag sent to the orchestrator.
 - 2026-09-24 — Orchestrator ANSWER: go ahead; tail names added as Q9.
 - 2026-09-24 — ONLINE. "BattleBomb Planning" no longer resolves; orchestrator is "BattleBomb
   Orchestrator" in ListAgents (told it). Question list drafted. Session opened at Q1.

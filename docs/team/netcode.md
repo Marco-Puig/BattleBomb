@@ -42,57 +42,131 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-Nothing. **Plan 2 COMMITTED 5bba6ed** (plan, pass sheet, this file; pushed). The orchestrator has
-woken the Builder on Plan 2 (starting at 97, without 96) and given it this lane's address.
-PREPARE TO COMPACT received 2026-09-25; READY TO COMPACT sent after this update.
+**COMMITTED for the Plan 3 DONE** (sent 2026-09-26): paths
+`docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md`, `docs/team/m8-plan3-pass.md`,
+`docs/team/netcode/collaborator-how-to-run.md`, `docs/team/netcode.md`. Do not touch them until COMMITTED.
 
 **Orchestrator's reply address:** `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095`
-(name "Battlebomb"). Always reply to the `from=` on its latest message.
+(name "Battlebomb"). **Builder:** `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d`.
+Always reply to the `from=` on the latest message.
 
-## Current state (2026-09-25)
+## The Plan 3 brief (2026-09-26) — done; kept for the record
 
-All written lane work is done and committed: readiness (bdc1f58), options, D58–D62, HANDOFF-M8
-(524042f), Plan 1 (1a7fdac + D57 alignment), pre-M8 fixes plan, **Plan 2 (5bba6ed)**, and
-`docs/team/m8-plan2-pass.md` (the orchestrator changed D1 to "pick a hero with the **A** and **D**
-keys"). Plan 1 is built (86–95, f393d98); Task 96 = Michael's Plan 1 pass + lag table, **not done
-yet**.
+**Orchestrator CONTINUE (2026-09-26):** lag table in — Michael, driving P2 from its own window:
+None: moving fine / attacking fine; Normal (100 ms): noticeable but OK / noticeable but OK; **Bad
+(200 ms, 2 % loss): too late / too late** → prediction for the guest's own hero is **required**
+(unplayable at Bad without it). Stages A and B pass (B2, B6 at Bad too). Plan 3 opens: F4 first,
+then the board's Plan 3 list, then 96's feel items. **Bandwidth:** the Builder re-measures the paper
+case (drop ids gone) in 96's close-out and sends the number — write around it; settle delta
+snapshots when it lands. **Two pass bugs being root-caused by the Builder as inserted tasks:**
+96a — Host/Join local clicked before the title's Continue starts the game with the wrong players or
+controls (Continue first works); Plan 2's D1 hosts at the title — tell the Builder (copy the
+orchestrator) if 102's design removes the cause. 96b — in the two-window test the arrow keys in one
+window moved the other window's player (probably the rig: one keyboard, runInBackground, default
+InputSystem focus settings) — note it if Plan 3's feel pass (108) runs in two windows. Constraints
+as before: docs only, anchored edits, clone-side checks harnessed or in
+`docs/team/m8-plan3-pass.md`, QUIET marked per task, DONE with the plan path. The Builder is
+building Plan 2 now, so Plan 3 is written against Plan 2's planned shapes (premise-checked per task).
+**Bandwidth (Builder, 2026-09-26, at f6fb6b0):** header 33 B, player 186, enemy 86, bolt 40, dummy
+50, status 24 each; paper case 2,925 B/86 KB/s (no statuses), 3,453/101 (one each), 3,981/117 (two);
+worst 56 KB real (4-status ceiling), 129 KB at MaxStatuses 16. **Decided (me): no delta snapshots in
+M8**; Task 110 sets Steam's send-rate limits explicitly above it; lever parked for M11 (enemies 60 %,
+statuses 24 B). Told the Builder; tell the orchestrator in the Plan 3 DONE. 96a: sent the Builder the
+split (102 removes a guest-side cause; host side unchanged; suspect = IMGUI dev panel overlapping the
+uGUI Choose/Ready button in the small clone window → click advances the title by mouse); Builder will
+check `FrontendState.Screen` after the click.
+**Plan 3 task shape (decided):** F4 (presses latched between samples) → 106 predict + reconcile/replay
+(PredictionLog, PredictStep) → 107 smoothing + the picture (correction offset decay; 96's items:
+render clock held through a host pause, teleport threshold by snapshot gap, let-go/drain tuned;
+skipped-frame Jump documented, built only if 108 shows it) → 108 Michael's feel pass (QUIET; note
+96b) → 109 Steamworks.NET + Platform.Steam → 110 Steam P2P transport (+ Listen failure through
+INetTransport; send-rate config) → 111 lobbies/invites/rich presence (fills FriendsTransport) → 112
+Steam Cloud save store → 113 collaborator build + sheet → 114 close-out.
 
-**On call now:** answer the Builder's questions about Plan 2 as they come (it messages this lane
-directly). Nothing else runs until the orchestrator wakes this lane for Plan 3.
+## Current state (2026-09-26) — Plan 3 written; DONE sent
+
+**M8 Plan 3 is written** — `docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md` (5,275
+lines; Tasks F4, 106–114), assembled from `<scratchpad>/plan3/part0–8.md` by
+`<scratchpad>/plan3/assemble_check.py --write`, which also checks every anchor (replace blocks and
+inline "after the line" anchors) against the working tree, Plan 2's plan text, and earlier Plan 3
+text: **0 missing** (checked with the Builder's uncommitted Task 97 in the tree). Michael's sheet
+`docs/team/m8-plan3-pass.md` (Parts E feel / F first two-home game / G close-out + couch) and the
+collaborator's one-page sheet `docs/team/netcode/collaborator-how-to-run.md` (shipped in the zip as
+HOW-TO-RUN.txt) are written. QUIET: 108, 113 (build + game), 114.
+Counts (baseline + N, EditMode/PlayMode): F4 2/0, 106 7/4, 107 11/4, 109 20/4, 110 25/4, 111 31/6,
+112 34/6; up to 4 EditMode Steam tests Ignored without the Steam client.
+**On call:** Builder questions on Plan 2 (and later Plan 3).
+
+**Plan 3 design, settled (keep if a reset hits mid-write):**
+- **F4:** SeatInput subscribes `performed` on each button action; `_tapped` mask + `_tappedOn`
+  device; in Sample `tapped = _tapped & ~before; held |= tapped` (a tap = a one-step hold; a
+  re-performed held button is ignored); the tapped device names a fresh press when no active
+  control is left. Tests in SeatInputTests (press+release between samples; device of a tap).
+- **106 prediction:** Core `PredictionLog` (ring of 128: frame, quantized command, `PredictedBody`
+  {Motor, Combat, Mana, Leap, LungePerStep, LungeStepsLeft, AttackRooted}); `CharacterActor.
+  PredictStep(frame, command, bounds, dt, lightContextual)` = combat machine + vitals (condition
+  and mana only, never the bag) + cast/attack + movement; no revive/grab/interact/quick-use/hit
+  windows; strips Light when the driver says it is contextual (`SimulationDriver.LightIsContextual`:
+  revive target, grab target, interactable), strips attacks while the snapshot's revive is active.
+  `CaptureBody/RestoreBody` for the hidden lunge fields. Gameplay/Net `LocalPrediction`: Heard(newest
+  snapshot: ack, own PlayerSnapshot, bounds) and Step(frame, command): reconcile (host state at ack +
+  logged hidden fields, replay ack+1..now), offset += before - after, then predict; inactive while
+  hidden (drop-in), before the first ack, or when unacked > `NetProtocol.PredictionMaxAheadSteps` 45
+  (falls back to the picture). ReplicaWorld skips the predicted player's body (side state still).
+  `NetSession.PredictOwnPlayer` (default true; dev panel toggle "Prediction: on/off" for 108's A/B);
+  PlaybackTransport.Connect switches it off (a recording cannot answer). CharacterActor
+  `CorrectionOffset` (public), decays x0.8 per step, zero past the teleport distance;
+  InterpolatedVisual adds it. PlayMode: an `AnsweringHost` harness (launch as GuestReplica's
+  recording, then snapshots acking the guest's frames 12 steps late) — perfect host: no corrections;
+  +1 x in the answer: body shifts, visual eases; own input moves the body the same step.
+- **107:** RenderClock stall hold (once the clock reaches newest it waits until newest - delay >=
+  frame); ReplicaWorld.Blend threshold x max(1, gap / SnapshotEverySteps); let-go/drain unchanged
+  (no data says otherwise; 108 re-checks); skipped-frame Jump documented, not built.
+- **108:** Michael's feel pass (QUIET), `docs/team/m8-plan3-pass.md` part E; A/B with the prediction
+  toggle; 96b note (arrow keys cross windows: use WASD / follow 96b's workaround).
+- **109:** Steamworks.NET UPM `...#2025.164.1`; asmdef `BattleBomb.Platform.Steam` (defineConstraints
+  `STEAMWORKS_NET`, versionDefines on `com.rlabrecque.steamworks.net`); Platform `PlatformRegistry`
+  (factory slot + current instance, Null fallback when Initialise fails), `ILobbyService` (Platform,
+  platform-neutral: `CanHost`, `CreateTransport()`, `HasJoinRequest`, `TryTakeJoinRequest(out
+  address)`); NullPlatformServices gets a null lobby; SteamPlatformServices (InitEx, a
+  `[DefaultExecutionOrder(-400)]` callback pump, InitRelayNetworkAccess, identity = SteamID64 +
+  persona); GameSession uses PlatformRegistry + one-time adoption of the "local" save under the Steam
+  id; `steam_appid.txt` = 480 at the project root; fitness test: nothing but Platform.Steam names
+  Steamworks.
+- **110:** INetTransport.Listen returns a failure string (null = ok): LocalSocket "Port N is
+  busy", Loopback/Lag/Playback updated; NetSession drops `using System.Net.Sockets`.
+  `SteamP2PTransport` (ISteamNetworkingSockets: CreateListenSocketP2P/ConnectP2P with SendRateMin
+  256 KB/s, SendRateMax 1 MB/s, TimeoutConnected 15 s; ReliableNoNagle / UnreliableNoNagle;
+  receive flag bit 8 = reliable; GCHandle pinning; one peer; presence "connect" set while listening
+  with a free slot, cleared otherwise). Test asmdef `BattleBomb.Tests.Steam` (same constraint):
+  CreateSocketPair round trip when Steam runs (Ignore otherwise), address parse tests.
+- **111:** **no Steam lobby object**: rich presence "connect" = `+battlebomb_join <steamid64>`
+  (friends list "Join Game" / overlay "Invite to Game"), GameRichPresenceJoinRequested_t and the
+  `+battlebomb_join` command line feed the lobby service's pending join; NetSession
+  `JoinFriend(address)`; `FriendsTransport` defaults to the platform's (UseLocalFriends(false)
+  restores it); FrontendFlow takes a pending join at the front door; NetBanner line while in a game.
+  Departure from HANDOFF (lobbies): flag in DONE.
+- **112:** `SteamCloudSaveStore` (FileWrite/FileRead/FileExists/FileDelete, names mangled like
+  FileSaveStore), used only when the app id is not 480 (Spacewar's cloud is not ours) and cloud is
+  enabled; else FileSaveStore.
+- **113:** Editor menu `BattleBomb/Build/Collaborator build` (Win64, copies steam_appid.txt, zips);
+  one-page how-to-run sheet under `docs/team/netcode/`.
+- **114:** close-out: Michael's app id (steam_appid.txt + SteamPlatformServices.AppId), two-home
+  pass (sheet part F), couch replayed, gates, HANDOFF build log draft.
 
 ## Next steps
 
-1. **Builder questions on Plan 2** — answer from the plan file
-   (`docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md`) and the quick reference
-   below. Re-read the relevant task and the real file before answering; the Builder premise-checks
-   every task, so expect "the plan says X, the code says Y" — keep their change, apply the plan's
-   intent. Anything touching another lane, scope or a locked decision goes to the orchestrator.
-2. **Plan 3 (Tasks 106–114)** when the orchestrator says Michael's Plan 1 lag table (Task 96) is in.
-   Write it against the code **as built after Plan 2** (read builder.md's Plan 2 build log first),
-   anchored edits only, in parts under the scratchpad, like Plan 2. It opens with:
-   - **F4 first** (before 106): a tap shorter than one sample is lost — `SeatInput.Sample` reads
-     `IsPressed()` at the step. Fix: latch press edges from the action callbacks between samples.
-     (It jumps the queue as a `96x` fix if Michael's pass reports lost presses.)
-   - **The board's Plan 3 list:** `catch (SocketException)` sits in Gameplay (`NetSession.Host`) and
-     always names port 7777 — `Listen` should report failure through `INetTransport` when the Steam
-     transport arrives; **decide whether delta snapshots are needed** from 96's bandwidth re-measure
-     (~3.5 KB/snapshot, about 105 KB/s, measured at 91 before DropIds left the snapshot); **Task
-     107:** a Jump landing in a skipped frame is registered by the host at N+1 while the guest's
-     prediction log has it at the skipped frame — if the feel pass shows it, snapshots carry the
-     host's held baseline.
-   - **Task 96's feel items (builder.md close-out, "Deferred"):** scale the teleport threshold by
-     the gap between the snapshots around the render frame; hold the render clock at newest − delay
-     while the newest isn't advancing (a host pause); tune let-go and drain (`StarvedRepeatSteps`,
-     `InputBufferDrainSteps`; a Heavy charged through a stall fires on let-go, by design).
-   - **Then HANDOFF-M8 Stages E+F and the close-out:** 106 PredictionLog +
-     `CharacterActor.PredictStep`; 107 reconcile/replay/smoothing; 108 Michael's feel pass; 109
-     Steamworks.NET + `Platform.Steam` (app 480; research notes further down); 110 Steam P2P
-     transport; 111 lobbies/invites/rich presence — **fills `NetSession.FriendsTransport`**, Plan 2's
-     open-by-default slot; 112 Steam Cloud save store; 113 the collaborator's build + how-to-run
-     sheet; 114 close-out (Michael's app ID, the two-home pass).
-   - **Left by Plan 2 for Plan 3 to know:** a guest waiting to appear can't open its settings;
-     `PlayerSnapshot.OpenScreen` is still on the wire, unread by the guest (prediction may want it);
-     the banner and lobby text are placeholder (M9 restyles).
+1. **Wait for COMMITTED** on the Plan 3 DONE; then PREPARE TO COMPACT likely (nothing else queued
+   for this lane until the Builder reaches Plan 3).
+2. **Builder questions** on Plan 2 now, Plan 3 later: answer from the plan files; the Builder
+   premise-checks every task, so expect "the plan says X, the code says Y" — keep their change,
+   apply the plan's intent; scope changes → copy the orchestrator. Plan 3's riskiest spots to
+   expect questions on: 106's AnsweringHost harness and the "perfect host" tests (they depend on
+   Plan 2's guest launch flow as built); 109's `versionDefines`/`defineConstraints` pair and the
+   UPM git install (needs git on PATH); 110's socket-pair flags (fallback: network loopback);
+   111's HeadlessGuest teardown; 113's `ZipFile` in the Editor assembly (fallback: zip by hand).
+3. **Michael's feel pass (108)** verdicts may need a `108x` fix designed — the skipped-frame Jump
+   (snapshots carry the host's held baseline) is the one pre-thought.
 
 ## Plan 2 quick reference (final names — the plan file is the authority)
 
@@ -250,6 +324,13 @@ versions with Context7 before writing Plan 3.
 
 ## Log
 
+- 2026-09-26 — **M8 Plan 3 written** (F4, 106–114) with the pass sheet and the how-to-run sheet;
+  anchors checked by script (0 missing); DONE sent to the orchestrator. Departures listed in the plan header
+  (no delta snapshots; rich presence, not Steam lobbies; registry holds the live platform; prediction steps
+  aside after 45 unanswered steps; cloud only on the real app; no RestartAppIfNecessary; Listen returns why;
+  Steam assembly at Platform/Steam/).
+- 2026-09-26 — Compacted and resumed; re-read protocol/board/lane. Plan 3 reads done and design
+  settled (Current state); writing the plan in parts.
 - 2026-09-25 — Plan 2 COMMITTED 5bba6ed. PREPARE TO COMPACT: lane file brought current (on call for
   the Builder's Plan 2 questions; Plan 3 opens with F4, then the board's Plan 3 list, 96's feel items
   and the bandwidth re-measure). READY TO COMPACT sent.

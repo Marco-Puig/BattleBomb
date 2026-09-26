@@ -33,9 +33,9 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | idle — READY TO COMPACT (924c362); wake with Michael's pass (fill the close-out draft, send 96's DONE) or Plan 2 |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | building M8 Plan 2 from 97 (woken 2026-09-25); 96 open — on Michael's pass, fill the close-out draft and send 96's DONE; findings become inserted 96a… tasks |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
-| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | writing M8 Plan 2 (97–105) → `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md`; reopened 2026-09-25 |
+| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | Plan 2 committed (5bba6ed); PREPARE TO COMPACT sent; the Builder's reference; wake for Plan 3 on the lag table |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)
@@ -50,8 +50,9 @@ address (the address changes when this app restarts).
   drafts the build log and close-out notes in builder.md, then compacts; on Michael's verdicts
   and lag table, wake the Builder, apply the draft to HANDOFF-M8 (Build log section after "The
   build — stages and tasks"), add ROADMAP §4 M8's line, commit 96. Plan 2 needs Netcode reopened
-  (reopened 2026-09-25 — writing it; Michael said carry on before his pass); Plan 3 waits on the
-  lag table. On Plan 2's DONE: review, commit, wake the Builder with it.
+  (committed 5bba6ed; the Builder is on 97). Plan 3 waits on the lag table. HANDOFF-M8's
+  departures (the plan's "Where this plan departs" section): fold in as each task lands — protocol
+  versions 97→3 … 103→8 — and in full at 105.
 - **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's
   music tool (GPT steps 26–32), a pet direction, and the World bible.
 - **Michael's queue:** see the board — top items are the World session, the same-hero save call,
@@ -73,6 +74,8 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-25 — Plan 2 committed (5bba6ed). Builder woken on 97 (start without 96). Netcode told
+  PREPARE TO COMPACT.
 - 2026-09-25 — Netcode reopened; writing Plan 2. Sent it the board's Plan 2 carry-forward, the shop
   rack, F4 and G8's catch-up pause (reassess apart), the TargetRegistry watch, and the same-hero
   save question (ask, don't pick).

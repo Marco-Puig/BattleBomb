@@ -11,8 +11,8 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | idle — ready to compact (close-out drafted) | M8 Plan 1 built (86–95) | Michael's pass (96); Plan 2 from Netcode |
-| Netcode | Netcode | working | M8 Plan 2 (97–105): `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md` | — |
+| Builder | Builder | working | M8 Plan 2 from Task 97 (96 open: close-out drafted in builder.md) | Michael's Plan 1 pass (96) |
+| Netcode | Netcode | preparing to compact — the Builder's reference for Plan 2 | Plan 3 (106–114) next | Michael's lag table (96) |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -62,7 +62,7 @@ What is waiting on Michael, in priority order:
 11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
-## M8 — Plan 1 underway
+## M8 — Plan 2 underway
 
 Spec approved by Michael: `docs/HANDOFF-M8.md`. Built in three plans, each written while the one
 before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F and the close-out.
@@ -72,8 +72,14 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   Tasks 90, 93, 94, 95, 96 need **quiet** (two-editor Multiplayer Play Mode runs). Task 90 adds the
   `com.unity.multiplayer.playmode` package and sets `runInBackground = true`. Task 96 ends with
   Michael's lag table, which Plan 3 is written from.
-- **Plan 2** (97–105) — Netcode writing it (reopened 2026-09-25; Michael: go ahead before his pass).
-  **Plan 3** (106–114) after Task 96's lag table.
+- **Plan 2 is written** (5bba6ed) — `docs/superpowers/plans/2026-09-25-m8-plan2-menus-saves-joining.md`,
+  Tasks 97–105; started before Task 96 (Michael's word). Only 105 needs **quiet** (Michael's pass,
+  `docs/team/m8-plan2-pass.md`). A Plan 1 pass finding lands as an inserted `96a`, `96b`… before the
+  first Plan 2 task touching the same file. **The couch changes once** (orchestrator's call): from
+  99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
+  F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
+  re-check rides 100.
+- **Plan 3** (106–114) after Task 96's lag table.
 - **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98). **96 is Michael's pass + the close-out.**
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
@@ -228,6 +234,8 @@ None.
 
 ## Log
 
+- 2026-09-25 — **M8 Plan 2 committed** (5bba6ed): Tasks 97–105, anchored edits only, every carried item
+  placed; Michael's Plan 2 sheet for Task 105. The Builder starts 97; Netcode prepares to compact.
 - 2026-09-25 — Netcode reopened; writing M8 Plan 2 (97–105) against f393d98. Michael's pass can come
   later; a finding from it lands in Plan 2 as a small inserted fix.
 - 2026-09-25 — Task 96 Step 1: EditMode 791, PlayMode 65 at f393d98. The Builder drafted Plan 1's

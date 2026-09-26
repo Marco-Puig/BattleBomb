@@ -76,13 +76,18 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab).
+- **Plan 2 done:** 97 (03c6bab), 98 (see Log).
 - **Carried from 97 (Builder's review):**
   - **99:** a guest's press can land blind — the answer and bag copy apply at the top of a frame, so
     a press later that frame acts on a cursor never drawn (a mashed X sells what slid under it, with
     the new revision). Fix red-first: wait one tick after an answer, or carry the revision as last
     drawn (the couch keeps the current one). Also: StaleSack/Busy/NoScreen get one flash and skip
     the verb's own callback; an upgrade that succeeded while the bag shrank reports "capacity spent".
+  - **99 (from 98):** OpenScreen on a replica still runs ClearRack (latent — fix red-first once
+    ApplyReplicaRack exists); clamp the guest's rack to RackSize (the wire allows 16, the screen
+    draws 4); refused buys all say "Not enough coin" unless the sack is full (with the flash item).
+  - **100 (from 98):** D43's Clean ceiling on the junk sweep lives only in ChestScreen — clamp it in
+    the runner (a modified guest could sweep its own Legendaries).
   - **103/104:** the host's request queue outlives the guest who filled it (clear on leave/unbind);
     NetGuest clears `RequestRoute` without checking it's its own; a close is refused when the body
     is gone.
@@ -260,6 +265,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 98 committed: the shop's rack lives in the simulation; a purchase names a slot and
+  the buyer's price book prices it (the audit's rule 2 finding closed). EditMode 810, PlayMode 74.
 - 2026-09-26 — Task 97 committed (03c6bab): every menu action is a request; the couch unchanged
   (LootLoopSmokeTests untouched), a guest's action runs on the host and is answered. Protocol 3.
   EditMode 808, PlayMode 70. The 96a/96b five-minute check is ready for Michael (needs quiet).

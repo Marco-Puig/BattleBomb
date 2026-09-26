@@ -58,6 +58,14 @@ namespace BattleBomb.Gameplay.Items
                     int coins = bag.RequestSell(request.A);
                     return coins > 0 ? RequestOutcome.Done(coins) : RequestOutcome.No(RequestRefusal.Refused);
 
+                case PlayerRequestKind.SellJunk when screen != InteractionKind.Shopkeeper:
+                case PlayerRequestKind.Buy when screen != InteractionKind.Shopkeeper:
+                    // The sweep and the rack live on the shopkeeper's counter, never at a chest (D43).
+                    return RequestOutcome.No(RequestRefusal.NoScreen);
+
+                case PlayerRequestKind.Buy:
+                    return driver.BuyFromRack(request.PlayerId, request.A, bag);
+
                 case PlayerRequestKind.SellJunk:
                     JunkSale sale = bag.RequestSellJunk((QualityRank)request.A);
                     return sale.IsEmpty
@@ -95,8 +103,7 @@ namespace BattleBomb.Gameplay.Items
                         : RequestOutcome.No(RequestRefusal.NoScreen);
 
                 default:
-                    // Buy arrives with the rack in the simulation (Task 98), DebugGrant with the settings
-                    // online (Task 100). Until then, asked for either, the host does nothing.
+                    // DebugGrant arrives with the settings online (Task 100). Until then the host does nothing.
                     return RequestOutcome.No(RequestRefusal.Refused);
             }
         }

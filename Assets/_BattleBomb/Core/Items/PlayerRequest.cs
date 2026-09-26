@@ -122,8 +122,9 @@ namespace BattleBomb.Core.Items
         public PlayerRequest WithRevision(int revision) => new PlayerRequest(Kind, PlayerId, Sequence, revision, A, B, C, D);
 
         /// <summary>The verbs that name a place in the sack by its index — the ones a stale view could aim at
-        /// the wrong item, and so the ones the revision guards. A worn slot, a definition id, a stat, a rack
-        /// slot or a setting cannot move under the player's cursor.</summary>
+        /// the wrong item, and so the ones the revision guards. A worn slot, a definition id, a stat or a
+        /// setting cannot move under the player's cursor; a rack slot moves only when its own player buys,
+        /// and a guest's next action waits for that answer.</summary>
         public bool NamesASackPlace =>
             Kind == PlayerRequestKind.Equip || Kind == PlayerRequestKind.Sell || Kind == PlayerRequestKind.Lock
             || Kind == PlayerRequestKind.Upgrade || Kind == PlayerRequestKind.Combine || Kind == PlayerRequestKind.CombineAll;

@@ -192,6 +192,154 @@ namespace BattleBomb.Tests.PlayMode
                 "A player browsing a chest walked away while their hands were on the menu (D42).");
         }
 
+        [UnityTest]
+        public IEnumerator The_shopkeepers_rack_is_the_simulations_and_a_purchase_names_its_slot()
+        {
+            // Standing at the chest keeps any screen open (the driver closes one with nothing in reach),
+            // so the shop is opened there by hand: this is about the rack, not the counter's placement.
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            int id = _player.PlayerId.Value;
+            int changes = 0;
+            void Counted(int player)
+            {
+                if (player == id)
+                {
+                    changes++;
+                }
+            }
+
+            _driver.RackChanged += Counted;
+            try
+            {
+                _driver.OpenScreen(id, InteractionKind.Shopkeeper);
+                Assert.That(changes, Is.GreaterThan(0), "Opening the shop never told anyone its rack was rolled.");
+                yield return SimulationFrames(2);
+
+                // The last slot, so a purchase that took slot 0 whatever it was asked for shows.
+                IReadOnlyList<ItemInstance> rack = _driver.RackFor(id);
+                Assert.That(rack.Count, Is.GreaterThan(1), "Opening the shop rolled too small a rack to tell one slot from another.");
+                int slot = rack.Count - 1;
+                ItemInstance wanted = rack[slot];
+                var rest = new List<ItemInstance>(rack);
+                rest.RemoveAt(slot);
+                int price = _bag.Inventory.Prices.BuyPrice(wanted);
+                _bag.GrantCoins(price + 10);
+                int coins = _bag.Wallet.Balance;
+                int items = _bag.Inventory.Items.Count;
+                changes = 0;
+
+                RequestOutcome outcome = default;
+                _driver.RequestsFor(id).Send(PlayerRequest.Buy(slot), answer => outcome = answer);
+
+                Assert.That(outcome.Ok, Is.True, $"The purchase was refused: {outcome.Refusal}.");
+                Assert.That(outcome.A, Is.EqualTo(price), "The simulation charged something other than its own price book's price.");
+                Assert.That(_bag.Wallet.Balance, Is.EqualTo(coins - price));
+                Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(items + 1), "The bought piece never reached the sack.");
+                Assert.That(_bag.Inventory.Items[_bag.Inventory.Items.Count - 1].Item, Is.EqualTo(wanted),
+                    "The sack took a piece other than the one in the slot the purchase named.");
+                Assert.That(_driver.RackFor(id), Is.EqualTo(rest), "The purchase emptied a slot other than the one it named.");
+                Assert.That(changes, Is.EqualTo(1), "The purchase never told anyone the rack moved.");
+            }
+            finally
+            {
+                _driver.RackChanged -= Counted;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator The_rack_lasts_the_visit_and_goes_with_it()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            int id = _player.PlayerId.Value;
+            _driver.OpenScreen(id, InteractionKind.Shopkeeper);
+            yield return SimulationFrames(2);
+
+            var before = new List<ItemInstance>(_driver.RackFor(id));
+            Assert.That(before, Is.Not.Empty, "Opening the shop rolled no rack.");
+
+            yield return SimulationFrames(30);
+            Assert.That(_driver.TryGetOpenScreen(id, out InteractionKind kind) && kind == InteractionKind.Shopkeeper, Is.True,
+                "The shop closed by itself, so the visit proves nothing.");
+            Assert.That(_driver.RackFor(id), Is.EqualTo(before), "The rack changed in the middle of one visit.");
+
+            int changes = 0;
+            void Counted(int player)
+            {
+                if (player == id)
+                {
+                    changes++;
+                }
+            }
+
+            _driver.RackChanged += Counted;
+            _driver.CloseScreen(id);
+            _driver.RackChanged -= Counted;
+            Assert.That(_driver.RackFor(id), Is.Empty, "The rack outlived the visit.");
+            Assert.That(changes, Is.EqualTo(1), "Closing the shop never told anyone its rack went.");
+        }
+
+        [UnityTest]
+        public IEnumerator Each_player_has_their_own_rack()
+        {
+            // Everything after the walk runs inside one frame: Player 2 is out of any chest's reach, so a
+            // single step would close their shop.
+            yield return WalkTo(FindChest().Position, "the chest");
+            int one = _player.PlayerId.Value;
+            CharacterActor partner = null;
+            foreach (CharacterActor actor in _driver.Characters.Ordered)
+            {
+                if (actor.PlayerId.Value != one)
+                {
+                    partner = actor;
+                }
+            }
+
+            Assert.That(partner, Is.Not.Null, "This needs the partner.");
+            int two = partner.PlayerId.Value;
+            _driver.OpenScreen(one, InteractionKind.Shopkeeper);
+            _driver.OpenScreen(two, InteractionKind.Shopkeeper);
+            var twos = new List<ItemInstance>(_driver.RackFor(two));
+            Assert.That(twos, Is.Not.Empty, "Player 2's shop rolled no rack.");
+
+            _bag.GrantCoins(_bag.Inventory.Prices.BuyPrice(_driver.RackFor(one)[0]) + 10);
+            RequestOutcome outcome = default;
+            _driver.RequestsFor(one).Send(PlayerRequest.Buy(0), answer => outcome = answer);
+            Assert.That(outcome.Ok, Is.True, $"Player 1's purchase was refused: {outcome.Refusal}.");
+            Assert.That(_driver.RackFor(two), Is.EqualTo(twos), "Player 1's purchase moved Player 2's rack.");
+
+            _driver.CloseScreen(one);
+            Assert.That(_driver.RackFor(two), Is.EqualTo(twos), "Player 1 leaving the shop took Player 2's rack.");
+            _driver.CloseScreen(two);
+        }
+
+        [UnityTest]
+        public IEnumerator A_refused_purchase_takes_nothing_and_empties_no_slot()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            int id = _player.PlayerId.Value;
+            _driver.OpenScreen(id, InteractionKind.Shopkeeper);
+            yield return SimulationFrames(2);
+
+            var rack = new List<ItemInstance>(_driver.RackFor(id));
+            Assert.That(rack, Is.Not.Empty, "Opening the shop rolled no rack.");
+            _bag.Stash.TrySpend(_bag.Wallet.Balance);
+            int items = _bag.Inventory.Items.Count;
+
+            foreach (int slot in new[] { 0, rack.Count, -1 })
+            {
+                RequestOutcome outcome = default;
+                _driver.RequestsFor(id).Send(PlayerRequest.Buy(slot), answer => outcome = answer);
+
+                Assert.That(outcome.Refusal, Is.EqualTo(RequestRefusal.Refused), $"Slot {slot}: a purchase with no coin, or no piece, went through.");
+                Assert.That(_driver.RackFor(id), Is.EqualTo(rack), $"Slot {slot}: a refused purchase emptied a slot.");
+                Assert.That(_bag.Wallet.Balance, Is.Zero, $"Slot {slot}: a refused purchase moved the wallet.");
+                Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(items), $"Slot {slot}: a refused purchase reached the sack.");
+            }
+        }
+
         /// <summary>
         /// Every route out of the chest screen, because M6's pass found a screen a player could
         /// not leave: the logic was fine and nothing had ever exercised it. A menu you can enter

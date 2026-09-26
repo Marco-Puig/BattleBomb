@@ -135,5 +135,28 @@ namespace BattleBomb.Tests.EditMode
             Assert.That(outcome.Ok, Is.True, $"Locking a worn piece was refused: {outcome.Refusal}.");
             Assert.That(_bag.Inventory.Loadout.Worn(ItemSlot.Helmet, 0).Locked, Is.True);
         }
+
+        [Test]
+        public void Buying_and_the_junk_sweep_need_the_shopkeeper()
+        {
+            _driver.OpenScreen(PlayerId, InteractionKind.Chest);
+
+            Assert.That(Run(PlayerRequest.Buy(0)).Refusal, Is.EqualTo(RequestRefusal.NoScreen), "A chest bought from a rack.");
+            Assert.That(Run(PlayerRequest.SellJunk(QualityRank.Legendary)).Refusal, Is.EqualTo(RequestRefusal.NoScreen),
+                "The junk sweep ran at a chest; it lives on the shopkeeper's counter.");
+            Assert.That(_bag.Inventory.Items.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void At_the_shopkeeper_the_sweep_runs_and_a_slot_that_is_not_there_is_refused()
+        {
+            // The bare driver here has no catalog, so the rack it rolls is empty.
+            _driver.OpenScreen(PlayerId, InteractionKind.Shopkeeper);
+
+            Assert.That(Run(PlayerRequest.Buy(0)).Refusal, Is.EqualTo(RequestRefusal.Refused));
+            Assert.That(Run(PlayerRequest.Buy(-1)).Refusal, Is.EqualTo(RequestRefusal.Refused));
+            Assert.That(Run(PlayerRequest.SellJunk(QualityRank.Legendary)).Ok, Is.True, "The sweep no longer runs at the shopkeeper.");
+            Assert.That(_bag.Inventory.Items.Count, Is.Zero, "The sweep left the junk behind.");
+        }
     }
 }

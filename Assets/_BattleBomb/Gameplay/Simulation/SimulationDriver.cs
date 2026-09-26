@@ -402,15 +402,65 @@ namespace BattleBomb.Gameplay.Simulation
             _lootRng = inventory.CombineAll(_lootRng, anchorIndex, context, out run);
         }
 
+        /// <summary>Pieces the shopkeeper offers per visit (D43's "3–4 rolled gear pieces").</summary>
+        public const int RackSize = 4;
+
         /// <summary>
-        /// The shopkeeper's rack (D43): a handful of generator-rolled pieces at current progress
-        /// quality, plus the potions always in stock. Rolled fresh per visit from the loot
-        /// stream, which is exactly what makes a shop worth walking back to.
+        /// Each player's shopkeeper rack while their shop is open (D43, HANDOFF-M8 planning decision 12):
+        /// rolled from the loot stream when the visit opens, emptied slot by slot as it is bought from, gone
+        /// when the visit ends. The simulation's, not the screen's — a screen may be rebuilt, and online the
+        /// screen is on another machine.
         /// </summary>
-        public void RollShopStock(List<ItemInstance> stock, int count)
+        private readonly Dictionary<int, List<ItemInstance>> _racks = new Dictionary<int, List<ItemInstance>>();
+
+        private static readonly List<ItemInstance> NoRack = new List<ItemInstance>();
+
+        /// <summary>A player's rack was rolled, bought from, or cleared.</summary>
+        public event Action<int> RackChanged;
+
+        /// <summary>This player's rack for the visit, or empty when no shop is open for them.</summary>
+        public IReadOnlyList<ItemInstance> RackFor(int playerIdValue) =>
+            _racks.TryGetValue(playerIdValue, out List<ItemInstance> rack) ? rack : NoRack;
+
+        /// <summary>
+        /// Buying from the rack (D43): the piece in that slot, at the buyer's own price for it. The sack's
+        /// refusal refunds nothing because nothing was taken; the slot empties only once the piece is in.
+        /// </summary>
+        internal RequestOutcome BuyFromRack(int playerIdValue, int slot, PlayerInventory bag)
         {
-            stock.Clear();
-            for (int i = 0; i < count; i++)
+            if (bag == null || !_racks.TryGetValue(playerIdValue, out List<ItemInstance> rack)
+                || slot < 0 || slot >= rack.Count)
+            {
+                return RequestOutcome.No(RequestRefusal.Refused);
+            }
+
+            ItemInstance piece = rack[slot];
+            int price = bag.Inventory.Prices.BuyPrice(piece);
+            if (!bag.RequestBuy(piece, price))
+            {
+                return RequestOutcome.No(RequestRefusal.Refused);
+            }
+
+            rack.RemoveAt(slot);
+            RackChanged?.Invoke(playerIdValue);
+            return RequestOutcome.Done(price);
+        }
+
+        /// <summary>
+        /// A visit's rack: a handful of generator-rolled pieces at current progress quality, rolled fresh
+        /// per visit from the loot stream — exactly the draws the chest screen made before the rack moved
+        /// here, at the same moment, which is what keeps the couch's loot sequence unchanged.
+        /// </summary>
+        private void RollRack(int playerIdValue)
+        {
+            if (!_racks.TryGetValue(playerIdValue, out List<ItemInstance> rack))
+            {
+                rack = new List<ItemInstance>(RackSize);
+                _racks[playerIdValue] = rack;
+            }
+
+            rack.Clear();
+            for (int i = 0; i < RackSize; i++)
             {
                 _lootRng = _lootRng.NextFloat(out float spread);
                 var context = new GenerationContext(
@@ -419,8 +469,18 @@ namespace BattleBomb.Gameplay.Simulation
                 _lootRng = ItemGenerator.Roll(_lootRng, context, out ItemInstance rolled);
                 if (!rolled.IsEmpty)
                 {
-                    stock.Add(rolled);
+                    rack.Add(rolled);
                 }
+            }
+
+            RackChanged?.Invoke(playerIdValue);
+        }
+
+        private void ClearRack(int playerIdValue)
+        {
+            if (_racks.Remove(playerIdValue))
+            {
+                RackChanged?.Invoke(playerIdValue);
             }
         }
 
@@ -594,6 +654,17 @@ namespace BattleBomb.Gameplay.Simulation
                 _openSources.Remove(playerIdValue);
             }
 
+            // Rolled before anyone hears of the screen, so the screen that answers finds its rack waiting.
+            // Never on a guest: a replica rolls nothing (D58).
+            if (kind == InteractionKind.Shopkeeper && !_replica)
+            {
+                RollRack(playerIdValue);
+            }
+            else
+            {
+                ClearRack(playerIdValue);
+            }
+
             ScreenChanged?.Invoke(playerIdValue, kind, true);
         }
 
@@ -612,6 +683,7 @@ namespace BattleBomb.Gameplay.Simulation
 
             _openScreens.Remove(playerIdValue);
             _openSources.Remove(playerIdValue);
+            ClearRack(playerIdValue);
             ScreenChanged?.Invoke(playerIdValue, kind, false);
         }
 

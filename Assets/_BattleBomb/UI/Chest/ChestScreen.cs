@@ -39,8 +39,8 @@ namespace BattleBomb.UI.Chest
         private const int GridColumnsSplit = 4;
         private const int GridRows = 5;
 
-        /// <summary>Pieces the shopkeeper offers per visit (D43's "3–4 rolled gear pieces").</summary>
-        private const int ShopStockCount = 4;
+        /// <summary>The rack's rows — the simulation's rack size (D43), which the layout is drawn for.</summary>
+        private const int ShopStockCount = Gameplay.Simulation.SimulationDriver.RackSize;
 
         /// <summary>
         /// The highest rung the junk sweep's threshold may be pushed to, so the sweep can clear
@@ -91,7 +91,8 @@ namespace BattleBomb.UI.Chest
         /// <summary>The dropdown's rows for the selected item, rebuilt whenever it changes.</summary>
         private readonly List<ItemAction> _menu = new List<ItemAction>();
 
-        /// <summary>The shopkeeper's rack for this visit (D43) — empty at a chest.</summary>
+        /// <summary>A copy of the simulation's rack for this visit (D43, HANDOFF-M8 planning decision 12),
+        /// taken by <see cref="CollectVisible"/> — empty at a chest.</summary>
         private readonly List<ItemInstance> _stock = new List<ItemInstance>();
 
         private Text _sackTitle;
@@ -166,8 +167,7 @@ namespace BattleBomb.UI.Chest
             _requests = Host != null ? Host.RequestsFor(playerId) : null;
             if (kind == InteractionKind.Shopkeeper)
             {
-                // Rolled once per visit, so coming back later is worth doing (D43).
-                Host?.RollStock(_stock, ShopStockCount);
+                // The simulation rolled this visit's rack as the shop opened (D43); CollectVisible copies it.
                 CollectVisible();
                 _nav.SetMode(ShopMode.Buy, Layout());
             }
@@ -382,6 +382,9 @@ namespace BattleBomb.UI.Chest
 
             Refresh();
         }
+
+        /// <summary>The rack moved — a purchase, or on a guest the host's rack arriving.</summary>
+        internal void OnRackChanged() => Refresh();
 
         // ── Actions ──────────────────────────────────────────────────────────────────
 
@@ -643,8 +646,8 @@ namespace BattleBomb.UI.Chest
             _nav.FinishMenuAction(_visible.Count);
         }
 
-        /// <summary>Buying from the rack (D43): the money leaves, the piece joins the sack, and
-        /// the slot on the rack empties so the same item cannot be bought twice.</summary>
+        /// <summary>Buying from the rack (D43): the screen names the slot and the simulation does the rest —
+        /// the piece, its price, the money and the room (HANDOFF-M8 planning decision 12).</summary>
         private void RunBuy()
         {
             if (_nav.StockCursor < 0 || _nav.StockCursor >= _stock.Count)
@@ -652,18 +655,19 @@ namespace BattleBomb.UI.Chest
                 return;
             }
 
-            ItemInstance item = _stock[_nav.StockCursor];
-            int price = _bag.Inventory.Prices.BuyPrice(item);
-            if (!Host.Buy(_bag, item, price))
+            int price = _bag.Inventory.Prices.BuyPrice(_stock[_nav.StockCursor]);
+            Send(PlayerRequest.Buy(_nav.StockCursor), outcome =>
             {
-                Flash(_bag.Inventory.IsFull ? "The sack is full." : $"Not enough coin ({price}).");
-                return;
-            }
+                if (!outcome.Ok)
+                {
+                    Flash(_bag.Inventory.IsFull ? "The sack is full." : $"Not enough coin ({price}).");
+                    return;
+                }
 
-            _stock.RemoveAt(_nav.StockCursor);
-            _nav.FinishBuy(_stock.Count);
-
-            Flash($"Bought for {price}.");
+                CollectVisible();
+                _nav.FinishBuy(_stock.Count);
+                Flash($"Bought for {outcome.A}.");
+            });
         }
 
         /// <summary>
@@ -837,6 +841,7 @@ namespace BattleBomb.UI.Chest
 
         private void CollectVisible()
         {
+            CollectRack();
             IReadOnlyList<ItemStack> items = _bag.Inventory.Items;
             if (_nav.PendingCombine >= 0 && _nav.PendingCombine < items.Count)
             {
@@ -857,6 +862,23 @@ namespace BattleBomb.UI.Chest
             }
 
             _nav.ClampCursor(_visible.Count);
+        }
+
+        /// <summary>The rack as the simulation holds it — copied every time, never kept, so a screen rebuilt
+        /// mid-visit, or a guest's screen after the host's rack arrives, draws the one rack there is.</summary>
+        private void CollectRack()
+        {
+            _stock.Clear();
+            if (!IsShop || Host == null)
+            {
+                return;
+            }
+
+            IReadOnlyList<ItemInstance> rack = Host.RackFor(_playerId);
+            for (int i = 0; i < rack.Count; i++)
+            {
+                _stock.Add(rack[i]);
+            }
         }
 
         private bool MatchesFilter(in ItemInstance item)

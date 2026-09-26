@@ -402,8 +402,9 @@ namespace BattleBomb.Gameplay.Items
 
         /// <summary>Buying from the shopkeeper (D43): the price leaves the wallet, the item
         /// lands in the sack — and a sack that refuses it refunds nothing, so the check comes
-        /// first.</summary>
-        public bool RequestBuy(in ItemInstance item, int price)
+        /// first. Internal since the rack moved into the simulation (HANDOFF-M8 planning decision
+        /// 12): only the driver, which holds the rack and prices it, may name an item and a price.</summary>
+        internal bool RequestBuy(in ItemInstance item, int price)
         {
             if (item.IsEmpty || price < 0 || !Stash.CanAfford(price) || Inventory.IsFull)
             {

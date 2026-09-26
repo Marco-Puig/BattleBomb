@@ -49,13 +49,9 @@ namespace BattleBomb.UI.Chest
         internal InputFamily FamilyFor(int playerId) =>
             _driver != null ? _driver.Players.FamilyOf(new PlayerId(playerId)) : InputFamily.Keyboard;
 
-        /// <summary>The shopkeeper's rack for one visit (D43) — the driver owns the generator.</summary>
-        internal void RollStock(List<Core.Items.ItemInstance> stock, int count) =>
-            _driver?.RollShopStock(stock, count);
-
-        /// <summary>One purchase. The bag checks the money and the room; the UI only asks.</summary>
-        internal bool Buy(PlayerInventory bag, in Core.Items.ItemInstance item, int price) =>
-            bag != null && bag.RequestBuy(item, price);
+        /// <summary>The shopkeeper's rack for this player's visit (D43) — the simulation's; the screen draws a copy.</summary>
+        internal IReadOnlyList<Core.Items.ItemInstance> RackFor(int playerId) =>
+            _driver != null ? _driver.RackFor(playerId) : (IReadOnlyList<Core.Items.ItemInstance>)System.Array.Empty<Core.Items.ItemInstance>();
 
         /// <summary>
         /// The item's face, or null when it has none authored yet — which is the common case, and
@@ -85,6 +81,7 @@ namespace BattleBomb.UI.Chest
             _driver.ScreenChanged += OnScreenChanged;
             _driver.Stepped += OnStepped;
             _driver.MenuStepped += OnMenuStepped;
+            _driver.RackChanged += OnRackChanged;
         }
 
         private void OnDisable()
@@ -94,6 +91,7 @@ namespace BattleBomb.UI.Chest
                 _driver.ScreenChanged -= OnScreenChanged;
                 _driver.Stepped -= OnStepped;
                 _driver.MenuStepped -= OnMenuStepped;
+                _driver.RackChanged -= OnRackChanged;
             }
 
             CloseAll();
@@ -165,6 +163,15 @@ namespace BattleBomb.UI.Chest
             }
 
             Open(playerId, kind);
+        }
+
+        /// <summary>A purchase emptied a slot, or — on a guest — the host's rack arrived.</summary>
+        private void OnRackChanged(int playerId)
+        {
+            if (_screens.TryGetValue(playerId, out ChestScreen screen) && screen != null)
+            {
+                screen.OnRackChanged();
+            }
         }
 
         private void Open(int playerId, InteractionKind kind)

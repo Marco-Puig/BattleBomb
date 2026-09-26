@@ -49,9 +49,11 @@ committed; 96 stays open for Michael's pass.
 
 ## Waiting on
 
-`COMMITTED` for Task 97 (`DONE` sent 2026-09-26). Then Michael's five-minute sitting for 96a/96b,
-which the orchestrator schedules with QUIET: the steps are in `<scratchpad>/t96ab_steps.md`, sent as
-a QUESTION. Task 96 committed `b87a21d` (M8 Plan 1 closed).
+`COMMITTED` for Task 98 (`DONE` sent 2026-09-26). Then Michael's five-minute sitting for 96a/96b,
+which the orchestrator runs with QUIET ON (sent as a QUESTION; the steps are in
+`<scratchpad>/t96ab_steps.md`). **On QUIET ON:** stop at a clean point and reply ready. At his ✋
+"in game", enter play mode and run `eval_file t96b_record.cs`; at "done", run `eval_file
+t96b_read.cs`. Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`.
 
 ## Current state
 
@@ -97,6 +99,24 @@ inserted bugs, 96a and 96b, get their root causes read between 97's stages.**
   - His sitting is drafted in `<scratchpad>/t96ab_steps.md`, to send after 97's `DONE`. The logger
     is `t96b_record.cs` and its reader `t96b_read.cs`; both compile-checked, run with `eval_file`.
   - Correction: runInBackground has been 1 since the first commit, not since Task 90.
+
+**Task 98 (2026-09-26):**
+- **Staging:** T1 is the runner test, red on behaviour ("Expected NoScreen but was Refused"). T2 is the
+  rest; it can't compile in parts, because `RequestBuy` goes internal.
+- **Build:** byte-identical to the plan.
+- **Live check** in the Gameplay scene, by eval:
+  - A rack of 4 is drawn with its prices.
+  - Buying through `RunBuy` took 200 → 163 coins; the helmet went into the sack; the rack went 4 → 3;
+    the screen flashed "Bought for 37."
+  - Closing cleared the rack.
+- **Review "Yes with fixes":** the tests had holes. Spec: `<scratchpad>/tasks/task98_fixes.md`.
+  - The purchase test now buys the last slot and checks which piece moved.
+  - New tests: each player has their own rack; a refused purchase takes nothing; the sweep runs at
+    the shop.
+  - The rack-lasts test asserts the screen stayed open, and `RackChanged` is counted.
+  - A comment in PlayerRequest was corrected.
+  - Six mutations were run; each is caught by its own test.
+- **Gates:** EditMode 810; PlayMode 74.
 
 **Earlier (2026-09-25): M8 Plan 2 started — Task 97 prepped while Unity was closed.**
 - The plan is split into `<scratchpad>/tasks/p2_preamble.md`, `task97.md`…`task105.md` and
@@ -1180,8 +1200,16 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Next steps
 
-1. **Task 97 — done; `DONE` sent. Task 98 next**, on `COMMITTED`: run `anchors.py 98`, then the
-   staging (tests red, then the rack), then the live check (Step 6). Task 97's notes:
+1. **Tasks 97 and 98 — done. Task 99 next**, on 98's `COMMITTED`. 99 is 1,890 lines: the guest's
+   screens and bag.
+   - Before starting: run `anchors.py 99` and a premise check.
+   - Fold in, red first:
+     - the blind press on the answer frame;
+     - one flash for StaleSack, Busy and NoScreen that skips the verb's callback;
+     - "capacity spent" after a shrunk bag;
+     - the replica branch of OpenScreen must not call ClearRack (98 review, Minor 7);
+     - clamp the guest's rack to `RackSize` (98 Nit 3).
+   Task 97's notes:
    - Take the baseline: EditMode 791, PlayMode 65, async.
    - The premise check is done and clean, so there is no extra spec.
    - Stage it from `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\tasks\task97_stages.md`.
@@ -1276,6 +1304,8 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Log
 
+- 2026-09-26 — **Task 98 complete** (the rack in the simulation, plus the review's test fixes):
+  EditMode 810, PlayMode 74. `DONE` sent.
 - 2026-09-26 — **Task 97 complete:** requests seam plus review fixes; EditMode 808, PlayMode 70. `DONE`
   sent, and 96a/96b's sitting steps sent as a QUESTION. Next: Task 98 on `COMMITTED`.
 - 2026-09-26 — Unity open; Michael's Plan 1 pass in. Bandwidth re-measured; 96's close-out final and

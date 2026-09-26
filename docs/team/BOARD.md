@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | working | Task 96's close-out (Michael passed Plan 1), then Plan 2 from 97; root-causes 96a/96b | — |
-| Netcode | Netcode | working | M8 Plan 3 (106–114) from the lag table; the Builder's reference for Plan 2 | 96's bandwidth re-measure (Builder) |
+| Netcode | Netcode | preparing to compact — all three M8 plans written; the Builder's reference | — | — |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -40,10 +40,10 @@ What is waiting on Michael, in priority order:
 4. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+5. *(Before M8's end — Task 113)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
    The same sitting can cover Groundwork item 7 (two controllers), untested for want of a second pad.
-6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+6. *(At M8's close-out — Task 114)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
 7. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
@@ -76,7 +76,12 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 3** (106–114) — Netcode writing it from the lag table.
+- **Plan 3 is written** (5db14e6) — `docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md`,
+  Tasks F4, 106–114; Michael's sheet `docs/team/m8-plan3-pass.md`; the collaborator's one-pager
+  `docs/team/netcode/collaborator-how-to-run.md`. **Quiet:** 108, 113 (Steps 3–4), 114. No delta
+  snapshots in M8 (parked for M11); friends join by Steam rich presence, not lobby objects;
+  `steam_appid.txt` (480) at the repo root from 109 (approved in principle). The couch changes
+  once more: F4 (a tap between two steps counts).
 - **Michael's Plan 1 pass (2026-09-26): Stages A and B pass**, B2/B6 at Bad too. Lag table — None:
   fine; Normal: noticeable but OK; Bad: too late (moving and attacking alike) — so Plan 3's
   prediction is required. Two bugs, inserted as tasks (the Builder root-causes each first):
@@ -245,6 +250,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — **M8 Plan 3 committed** (5db14e6): F4, prediction (106–108), Steam (109–113), close-out
+  (114). All three M8 plans written. Netcode prepares to compact.
 - 2026-09-26 — **Task 96 committed (b87a21d): M8 Plan 1 closed.** HANDOFF-M8 has its build log; ROADMAP §4
   its progress line. Bandwidth re-measured (paper case 2.9–3.9 KB). The Builder is on 97.
 - 2026-09-26 — **Groundwork complete** (Michael's pass; item 7 carried, one pad on hand). **M8 Plan 1

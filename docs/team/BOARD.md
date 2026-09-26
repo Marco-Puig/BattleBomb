@@ -40,7 +40,7 @@ What is waiting on Michael, in priority order:
 4. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-5. *(Before M8's end — Task 113)* **The collaborator's availability** for the two-PC pass — they are the remote
+5. *(Before M8's end — Task 113)* **The collaborator's (Marco's) availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
    The same sitting can cover Groundwork item 7 (two controllers), untested for want of a second pad.
 6. *(At M8's close-out — Task 114)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
@@ -77,6 +77,10 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
 - **Plan 2 done:** 97 (03c6bab), 98 (see Log).
+- **Michael and Marco run Plan 2's pass together (Task 105)** once 97–104 are built — with the
+  96a/96b check and Groundwork items 7 and 12 folded into the same sitting (`m8-plan2-pass.md`,
+  "Also in this sitting"). So the 96a/96b sitting is not held separately: 102 goes ahead (the
+  Builder's evidence says it closes 96a's likely cause), and the sitting confirms it.
 - **Carried from 97 (Builder's review):**
   - **99:** a guest's press can land blind — the answer and bag copy apply at the top of a frame, so
     a press later that frame acts on a cursor never drawn (a mashed X sells what slid under it, with
@@ -265,6 +269,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — Michael: he and Marco (the collaborator) run the tests together when Plan 2 is built.
+  The 96a/96b check and Groundwork items 7/12 fold into that sitting.
 - 2026-09-26 — Task 98 committed: the shop's rack lives in the simulation; a purchase names a slot and
   the buyer's price book prices it (the audit's rule 2 finding closed). EditMode 810, PlayMode 74.
 - 2026-09-26 — Task 97 committed (03c6bab): every menu action is a request; the couch unchanged

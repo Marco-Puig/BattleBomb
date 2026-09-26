@@ -100,6 +100,19 @@ launch from the main window. Walk both heroes to the first checkpoint room.
       menus take a little longer to answer but never do something twice or lose a press; dropping
       in still lands in the room.
 
+## Also in this sitting (with Marco)
+
+- **96a / 96b — the two bugs from Plan 1's pass.** The Builder adds its short check here before
+  the sitting (hosting at the title; the arrow keys crossing windows) and reads its logger at the
+  ✋ points, so tell the orchestrator when you reach them.
+- **Groundwork item 7 — two controllers** (`groundwork-pass.md`), if Marco brings a second pad:
+  one window, no Multiplayer Play Mode. Start the title with pad 1; at character select press A on
+  pad 2 and Player 2 joins; in game each pad moves only its own hero; B on pad 2 at character
+  select leaves.
+- **Groundwork item 12 — the shared sack**, your judgement with a real partner: while one of you
+  browses the chest, the other sells. If an item sliding under your cursor just before X bothers
+  you, say so. The fix is the cursor following its item, with X ignoring presses for a moment.
+
 **Known and expected — don't report these:**
 - The guest's own running and jumping still show a moment late in the guest window — Plan 3's
   prediction removes that (you judged how much in Plan 1's lag table).

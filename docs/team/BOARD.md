@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | working | M8 Plan 2 from Task 97 (96 open: close-out drafted in builder.md) | Michael's Plan 1 pass (96) |
-| Netcode | Netcode | preparing to compact — the Builder's reference for Plan 2 | Plan 3 (106–114) next | Michael's lag table (96) |
+| Netcode | Netcode | idle — ready to compact; the Builder's reference for Plan 2 | Plan 3 (106–114) next | Michael's lag table (96) |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -234,6 +234,7 @@ None.
 
 ## Log
 
+- 2026-09-25 — Netcode `READY TO COMPACT` (lane file committed); wakes for Plan 3 on the lag table.
 - 2026-09-25 — **M8 Plan 2 committed** (5bba6ed): Tasks 97–105, anchored edits only, every carried item
   placed; Michael's Plan 2 sheet for Task 105. The Builder starts 97; Netcode prepares to compact.
 - 2026-09-25 — Netcode reopened; writing M8 Plan 2 (97–105) against f393d98. Michael's pass can come

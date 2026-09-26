@@ -35,7 +35,7 @@ address (the address changes when this app restarts).
 |---|---|---|
 | Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | building M8 Plan 2 from 97 (woken 2026-09-25); 96 open — on Michael's pass, fill the close-out draft and send 96's DONE; findings become inserted 96a… tasks |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
-| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | Plan 2 committed (5bba6ed); PREPARE TO COMPACT sent; the Builder's reference; wake for Plan 3 on the lag table |
+| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | idle — READY TO COMPACT (Plan 2 5bba6ed); answers the Builder's Plan 2 questions; wake for Plan 3 with the lag table |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)

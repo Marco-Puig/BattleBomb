@@ -219,14 +219,21 @@ archetypes, couch and online; §2.5's targets written down.
 - **The reaction pairs** authored and seen working at runtime for the first time (D41, D46).
 - **An item content pass:** boss signature items, the weapon roster, equipment actives beyond the
   Ember Stone.
-- **A tutorial** folded into the first stage: the five verbs, contextual Light, the chest loop. No
-  walls of text.
+- **The prelude, as the game's opening and its tutorial** (D56, amended 2026-09-26). It runs the
+  village's tutorial fight, the castle and its minion fight, then outside into Chapter 1. It
+  teaches the five verbs, contextual Light and the chest loop through prompts, not walls of
+  text, and it opens with a text crawl.
+  - Its story beats are **scripted stage events the player plays through**: a shake, a wall
+    breaking, characters who walk in, act and leave. They are owned by the simulation, and the
+    host drives them online.
+  - Its extra characters are the king, the alien, the Knight Squad, villagers and a carriage.
 - **Balance:** the economy spreadsheet M6 asked for, the XP curve, the tier numbers, difficulty by
   player count (§7).
 - **A demo build** of Chapter 1 for Steam Next Fest.
 
-**Needs from Michael:** the World session; stage designs; the boss session; AI drafts for the
-remaining heroes, region 1, its environment kit, and the boss.
+**Needs from Michael:** the World session; stage designs, the prelude's included; the boss session;
+AI drafts for the remaining heroes, region 1, its environment kit, the boss, and the prelude's
+village, castle and characters.
 
 **Done when:** someone who has never seen the game plays Chapter 1 solo, on a couch, and online,
 from the title to the boss kill, without help; a Steam Playtest wave with outside players; Michael's

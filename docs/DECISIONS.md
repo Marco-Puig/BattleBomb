@@ -1329,6 +1329,23 @@ Michael (2026-09-24), with the story stalled: keep it Castle Crashers-thin.
 genre's reference point proves the loop does not need more. Writing it outside the repo with no
 structure is the pattern that stalled.
 
+**Amended 2026-09-26 (Michael, in the World session with his collaborator):** their prelude
+(`docs/world/PRELUDE_NOTES.md`, tentative) has story moments: a carriage arrives, the castle
+celebrates, an earthquake hits, an alien bursts in, the king reveals himself and leaves to fight
+it. They are shown **mostly through gameplay**; Michael chose this over storybook pages and over
+animated scenes.
+- **The player keeps control.** A beat is a scripted stage event: the camera shakes, a wall
+  breaks, characters walk in, act and leave. There is still no cutscene system and no dialogue
+  system.
+- **Scripted events belong to the simulation**, like everything else (rule 2), and the host drives
+  them online (D60).
+- **The prelude is built in M10 as the game's opening.** It runs the village (the tutorial fight),
+  the castle (the minion fight), then outside into Chapter 1. It is the tutorial M10 already
+  planned, and it is the start of the Next Fest demo. An opening text crawl and tutorial prompts
+  come with it.
+- **Characters beyond the bible's list**: the king, the alien, the Knight Squad, villagers and a
+  carriage. They appear as stage characters and props, so Art drafts them for the rig or as props.
+
 ---
 
 ## D57 — The menu layer and the seats · **Locked** *(amends D17; retires PlayerInput)* — built by Groundwork

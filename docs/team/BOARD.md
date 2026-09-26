@@ -13,7 +13,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 |---|---|---|---|---|
 | Builder | Builder | working | Task 96's close-out (Michael passed Plan 1), then Plan 2 from 97; root-causes 96a/96b | — |
 | Netcode | Netcode | idle — ready to compact; all three M8 plans written; on call for the Builder | — | — |
-| World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
+| World | World | in session with Michael and Marco | The story session: prelude recorded; at Q1 (the goal) | Michael and Marco |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
 
@@ -32,7 +32,8 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-1. **The World session** — open in the World lane's session, at question 1 (the goal).
+1. **The World session** — under way with Marco (2026-09-26): the prelude is recorded, and D56 is
+   amended (story beats play out in gameplay; the prelude is M10's opening). Next: question 1, the goal.
 2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
 3. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
@@ -286,6 +287,10 @@ None.
 
 ## Log
 
+- 2026-09-26 — World session under way with Michael and Marco: prelude recorded (3bbdcd7). **D56 amended**
+  (Michael): the prelude's story beats are scripted stage events played through, not cutscenes or
+  storybook pages; the prelude is built in M10 as the opening and tutorial; new characters (king,
+  alien, Knight Squad, villagers, carriage) for Art once the bible lands.
 - 2026-09-26 — Task 99 committed: the guest's own screens and bag; the host sends screen and rack events
   and a deflated copy of the guest's bag; B never reaches the host as Magic; a drink repaints a
   partner's chest (an old couch gap). Protocol 4. EditMode 820, PlayMode 88.

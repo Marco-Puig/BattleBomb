@@ -61,3 +61,12 @@ Tick what works; for anything that doesn't, a sentence on what you saw is enough
 ## Verdict
 
 *(The orchestrator records it here, in ROADMAP §4, CLAUDE.md's progress table, and memory.)*
+
+**Michael, 2026-09-26 — pass.** Everything checked works.
+- **Item 7 (two controllers) is untested.** There is one controller here. It carries to the
+  collaborator's pass, or whenever a second pad is to hand; PlayMode already covers the
+  two-seat logic.
+- **Item 12 wasn't judged** (it needs a partner selling). It stays as it is, and Michael can
+  raise it after couch play with the collaborator.
+- **The keyboard has no visual indication, where the controllers get their badges.** This goes
+  to M9's HUD work: keyboard key art on a par with the pad badges, plus a way to see the controls.

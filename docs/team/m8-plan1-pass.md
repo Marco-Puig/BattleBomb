@@ -73,3 +73,23 @@ At **Bad**, repeat B2 and B6 once too: smooth, and the stage hand-over still cle
 ## Verdicts
 
 *(The orchestrator records them here, in HANDOFF-M8's build log, and on the board.)*
+
+**Michael, 2026-09-26 — Stages A and B pass**, A1–A4 and B1–B6, including B2 and B6 at Bad.
+
+| Lag | Moving feels | Attacking feels |
+|---|---|---|
+| None | fine | fine |
+| Normal (100 ms) | noticeable but OK | noticeable but OK |
+| Bad (200 ms, 2 % loss) | too late | too late |
+
+So Plan 3's prediction is a must for the guest's own hero, not a nicety. At 200 ms, without it,
+the game doesn't feel playable.
+
+**Two bugs found:**
+- **96a — hosting at the title.** Host local / Join local clicked *before* Continue on the title
+  screen: the game starts with the wrong players or controls. Continue first in both windows, then
+  host and join: fine. (The dev panel is meant to be used at the title, and Plan 2's pass D1 does
+  exactly that.)
+- **96b — the arrow keys cross windows.** In the two-window test, the arrow keys in one window
+  moved the other window's player. It can't happen between two real PCs, but it can spoil any
+  two-window check, so its cause gets found (the test rig, or the game).

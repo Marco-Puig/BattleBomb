@@ -95,7 +95,7 @@ players) → **Michael's checklist pass** for anything fast-moving → close-out
 
 ## 4. Milestones
 
-### Groundwork — before M8 — built (2026-09-25, 56e4be5..527df2b); Michael's pass pending
+### Groundwork — before M8 — complete (built 2026-09-25, 56e4be5..527df2b; Michael's pass 2026-09-26)
 
 Small, mostly designed, and blocking nothing but itself.
 
@@ -395,7 +395,7 @@ consoles and mobile (D5) · localisation.
 
 1. ~~**Reopen Unity with the MCP bridge** so the test gate is back.~~ Done.
 2. ~~**Groundwork** — confirm the three proposed menu buttons, then it gets built.~~ Built
-   2026-09-25 (D57); Michael's pass pending.
+   2026-09-25 (D57); Michael's pass 2026-09-26 (two-controller check carried — one pad on hand).
 3. **Book the World session** with the collaborator — it gates the art.
 4. **Pick an AI image tool** for the drafts, and start thinking about the art bible.
 5. **At M8's close-out:** create the Steamworks account (start the paperwork a few days ahead).

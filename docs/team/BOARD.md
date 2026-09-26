@@ -11,8 +11,8 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | idle — ready to compact; blocked on Unity (97 fully prepped, 98 pre-checked) | M8 Plan 2 from Task 97 (96 open: close-out drafted in builder.md) | Michael: open BattleBomb in Unity; his Plan 1 pass (96) |
-| Netcode | Netcode | idle — ready to compact; the Builder's reference for Plan 2 | Plan 3 (106–114) next | Michael's lag table (96) |
+| Builder | Builder | working | Task 96's close-out (Michael passed Plan 1), then Plan 2 from 97; root-causes 96a/96b | — |
+| Netcode | Netcode | working | M8 Plan 3 (106–114) from the lag table; the Builder's reference for Plan 2 | 96's bandwidth re-measure (Builder) |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -32,36 +32,31 @@ go to the address a message came from.
 
 What is waiting on Michael, in priority order:
 
-0. **Open BattleBomb in Unity** (6000.5.8f1, from the Hub) — the Builder is blocked on Plan 2 until
-   the editor's bridge answers.
-1. **Groundwork pass + M8 online checks and the lag table** (~35 min; can be two sittings) — the
-   16 controller checks in `docs/team/groundwork-pass.md`, then `docs/team/m8-plan1-pass.md`
-   (Stages A and B plus Task 96's lag table, which Plan 3 is written from). Item 12 in the
-   Groundwork list is his judgement call.
-2. **The World session** — open in the World lane's session, at question 1 (the goal).
-3. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
+1. **The World session** — open in the World lane's session, at question 1 (the goal).
+2. *(Small decision)* **Two couch players on the same hero** share one character save (audit §7.2)
    — the second overwrites the first. Stop equal picks at character select, or save per seat?
-4. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
+3. **The ChatGPT image prompts** — steps 1–25 done. What's left is the music (steps 26–32), which
    waits on the music tool below.
-5. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
+4. *(Small decisions)* **The HUD additions, yes or no to each** — separate pause and settings menus;
    volume, damage-number and controls-view settings; "sack full" on the loot card; white-hot crit
    numbers; Settings and Quit on the title screen.
-6. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
+5. *(Before M8's end)* **The collaborator's availability** for the two-PC pass — they are the remote
    tester; there is no second PC (D59, ROADMAP §4 M8).
-7. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
+   The same sitting can cover Groundwork item 7 (two controllers), untested for want of a second pad.
+6. *(At M8's close-out)* **Create the Steamworks account and app ID** — start Valve's paperwork a few
    days ahead; it can take that long.
-8. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
+7. *(Before M9's first licensed sound — with the collaborator, who owns the repo)* **Licensed audio
    vs the public repo** (`docs/art/AUDIO.md` §1). Most sound-effect licences forbid redistributing the
    raw files, and a public GitHub repo does exactly that. Options: make the repo private
    *(orchestrator's recommendation: it also covers unreleased source and third-party art, and a
    two-person team cannot live with clones that build silent)*; git-ignore licensed audio and back it
    up privately; or CC0 sounds only.
-9. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
+8. *(Whenever there is a gap)* **Pick the music tool** (placeholders now: AIVA free or Suno Pro — ChatGPT cannot make audio; **blocks GPT steps 26–32**) — Art's research (`AUDIO.md`): AIVA Pro grants
    ownership plus MIDI; Udio no longer allows downloads; ElevenLabs' self-serve plans exclude games.
-10. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
+9. *(Whenever there is a gap)* **Review the art bible v0** — `docs/art/ART_BIBLE.md`, in the Art
    lane's session. Two proposals ride with it: Fire's colour `#FF7326` → `#FF4A1C` (it nearly matches
    Legendary's loot orange), and unlit painted-cel sprites instead of normal maps for M9.
-11. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
+10. *(No date)* **A new pet art direction** — the simple-chunky direction is provisional; the terrier stays
    at its v1 draft until then.
 
 ## M8 — Plan 2 underway
@@ -81,7 +76,16 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 3** (106–114) after Task 96's lag table.
+- **Plan 3** (106–114) — Netcode writing it from the lag table.
+- **Michael's Plan 1 pass (2026-09-26): Stages A and B pass**, B2/B6 at Bad too. Lag table — None:
+  fine; Normal: noticeable but OK; Bad: too late (moving and attacking alike) — so Plan 3's
+  prediction is required. Two bugs, inserted as tasks (the Builder root-causes each first):
+  - **96a — hosting at the title.** Host/Join local clicked before the title's Continue starts the
+    game with the wrong players or controls; Continue first in both windows works. Plan 2's D1
+    hosts at the title, so this is fixed before 102 (or 102 provably removes the cause).
+  - **96b — the arrow keys cross windows.** In the two-window test, the arrow keys in one window
+    moved the other window's player. Likely the test rig (two editors, one keyboard), but find it:
+    Plan 2's pass is keyboard-only in both windows. Fixed or explained before 105.
 - **Done:** 86 (5e586a4), 87 (4f42e0c), 88 (5fd0920), 89 (fd33bea), 90 (d00c552), 91 (5be281c), 92 (07a8c64), 93 (c8744bc), 94 (3d567b1), 95 (f393d98). **96 is Michael's pass + the close-out.**
 - **Michael's clone-side checks** collect in `docs/team/m8-plan1-pass.md` (the bridge can't click in
   Player 2's window; he declined screen control). Stage A is ready.
@@ -180,6 +184,9 @@ From the Art lane's bible (`docs/art/ART_BIBLE.md` §§3, 5) — both wait on Mi
   Legendary); Settings and Quit on the title screen.
 - **M9's lighting session starts from:** unlit sprites with painted cel shading, an engine climate
   tint, and a rim light — not normal maps, which AI drafts cannot produce consistently.
+- **Keyboard players get no visual indication** (Michael's Groundwork pass, 2026-09-26): the pads
+  get button badges, the keyboard doesn't feel the same. Keyboard key art on a par with the pad
+  badges, and a way to see the controls (the HUD additions' controls view).
 - **The chest has no approved mockup** — `design/hud-menus/` covers everything else. When the HUD
   plan reaches it, settle where the close ✕ lives: in couch co-op the Hero tab hides it with the
   sack half, so a mouse or touch player has no visible way out (B, Esc and Start still work).
@@ -236,6 +243,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — **Groundwork complete** (Michael's pass; item 7 carried, one pad on hand). **M8 Plan 1
+  passed**: lag table in, bugs 96a (hosting at the title) and 96b (arrow keys cross windows). The
+  Builder closes 96 then builds Plan 2; Netcode writes Plan 3.
 - 2026-09-25 — Builder `READY TO COMPACT` (acf3c65): Task 97 prepped (anchors, premise, staging), 98
   pre-checked. Resumes on Unity opening. Every lane is now idle.
 - 2026-09-25 — Builder `BLOCKED`: Unity is closed. Anchors for 97 checked (40, verbatim); read-only prep

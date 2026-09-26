@@ -121,8 +121,8 @@ let him confirm what he saw. Spawning subagents is fine when a task genuinely be
 | **M5B** | Element rework — D46 signature casts, D47 billboards | **complete** |
 | **M6** | Loot loop — D42–D45, the chest, the economy, elites | **complete** |
 | **M7** | Chapters — the machine (D48–D52): stages streamed through checkpoint airlocks, the save, tiers, the front door | **machine complete**; authored chapters wait on story |
-| — | Groundwork — input switching, button icons, the menu map (D57), two known bugs | **built**; Michael's pass pending |
-| M8 | Online co-op (D54) — designed D58–D62 | **in progress** — Plan 1, the wire and the mirror (Tasks 86–96) |
+| — | Groundwork — input switching, button icons, the menu map (D57), two known bugs | **complete** |
+| M8 | Online co-op (D54) — designed D58–D62 | **in progress** — Plan 1 (86–96) passed; Plan 2, menus, saves, joining (97–105) |
 | M9 | Look & sound — the art pipeline (D55), animation, effects, audio, the HUD | |
 | M10 | **Vertical slice** — the real target | |
 | M11 | Endless | |

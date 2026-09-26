@@ -35,7 +35,7 @@ address (the address changes when this app restarts).
 |---|---|---|
 | Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | working (woken 2026-09-26): 96's close-out (verdicts, bandwidth re-measure) → 97 → Plan 2; root-causes 96a/96b |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
-| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | Plan 3 committed (5db14e6); PREPARE TO COMPACT sent; on call for the Builder. At 114: apply Plan 2's and Plan 3's HANDOFF-M8 departures, CLAUDE.md layout line, ARCHITECTURE (Platform/Steam, PlatformRegistry, ILobbyService) |
+| Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | idle — READY TO COMPACT (Plan 3 5db14e6); on call for the Builder. At 114: apply Plan 2's and Plan 3's HANDOFF-M8 departures, CLAUDE.md layout line, ARCHITECTURE (Platform/Steam, PlatformRegistry, ILobbyService) |
 | World | `uds:\\.\pipe\LOCAL\cc-msg-a778851d8c98083210e64c174195c04c` | closed — at Q1, waits on Michael |
 
 ## Current state (2026-09-25)

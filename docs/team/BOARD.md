@@ -12,7 +12,7 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
 | Builder | Builder | working | Task 96's close-out (Michael passed Plan 1), then Plan 2 from 97; root-causes 96a/96b | — |
-| Netcode | Netcode | preparing to compact — all three M8 plans written; the Builder's reference | — | — |
+| Netcode | Netcode | idle — ready to compact; all three M8 plans written; on call for the Builder | — | — |
 | World | — | not running (session closed) | The story session, at Q1 (the goal) | Michael |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
@@ -250,6 +250,7 @@ None.
 
 ## Log
 
+- 2026-09-26 — Netcode `READY TO COMPACT`; on call for the Builder's Plan 2 and 3 questions.
 - 2026-09-26 — **M8 Plan 3 committed** (5db14e6): F4, prediction (106–108), Steam (109–113), close-out
   (114). All three M8 plans written. Netcode prepares to compact.
 - 2026-09-26 — **Task 96 committed (b87a21d): M8 Plan 1 closed.** HANDOFF-M8 has its build log; ROADMAP §4

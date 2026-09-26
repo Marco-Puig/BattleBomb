@@ -42,9 +42,9 @@ with the reason and a time estimate. Draft spike code under `docs/team/netcode/s
 
 ## Waiting on
 
-**COMMITTED for the Plan 3 DONE** (sent 2026-09-26): paths
-`docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md`, `docs/team/m8-plan3-pass.md`,
-`docs/team/netcode/collaborator-how-to-run.md`, `docs/team/netcode.md`. Do not touch them until COMMITTED.
+Nothing. **Plan 3 COMMITTED 5db14e6** (plan, pass sheet, how-to-run sheet, this file; pushed).
+PREPARE TO COMPACT received 2026-09-26; READY TO COMPACT sent after this update. All three M8 plans
+are written; this lane is on call for the Builder's questions.
 
 **Orchestrator's reply address:** `uds:\\.\pipe\LOCAL\cc-msg-e4fdbd589a82ce7d4a7fdf41546e0095`
 (name "Battlebomb"). **Builder:** `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d`.
@@ -83,19 +83,21 @@ skipped-frame Jump documented, built only if 108 shows it) → 108 Michael's fee
 INetTransport; send-rate config) → 111 lobbies/invites/rich presence (fills FriendsTransport) → 112
 Steam Cloud save store → 113 collaborator build + sheet → 114 close-out.
 
-## Current state (2026-09-26) — Plan 3 written; DONE sent
+## Current state (2026-09-26) — all three M8 plans written and committed
 
-**M8 Plan 3 is written** — `docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md` (5,275
-lines; Tasks F4, 106–114), assembled from `<scratchpad>/plan3/part0–8.md` by
-`<scratchpad>/plan3/assemble_check.py --write`, which also checks every anchor (replace blocks and
-inline "after the line" anchors) against the working tree, Plan 2's plan text, and earlier Plan 3
-text: **0 missing** (checked with the Builder's uncommitted Task 97 in the tree). Michael's sheet
-`docs/team/m8-plan3-pass.md` (Parts E feel / F first two-home game / G close-out + couch) and the
-collaborator's one-page sheet `docs/team/netcode/collaborator-how-to-run.md` (shipped in the zip as
-HOW-TO-RUN.txt) are written. QUIET: 108, 113 (build + game), 114.
-Counts (baseline + N, EditMode/PlayMode): F4 2/0, 106 7/4, 107 11/4, 109 20/4, 110 25/4, 111 31/6,
-112 34/6; up to 4 EditMode Steam tests Ignored without the Steam client.
-**On call:** Builder questions on Plan 2 (and later Plan 3).
+- Plan 1 (86–96) built and passed; Plan 2 (97–105, `5bba6ed`) being built by the Builder (on 97 at
+  the time of writing); **Plan 3 (F4, 106–114) committed `5db14e6`**:
+  `docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md` (5,275 lines), Michael's sheet
+  `docs/team/m8-plan3-pass.md` (E feel / F two homes / G close-out + couch), the collaborator's
+  `docs/team/netcode/collaborator-how-to-run.md` (zipped as HOW-TO-RUN.txt by 113's build).
+- The plan was assembled from `<scratchpad>/plan3/part0–8.md` by `<scratchpad>/plan3/assemble_check.py`
+  (`--write` writes; without it, re-checks every anchor against the tree + Plan 2 + earlier Plan 3 —
+  useful when the Builder asks whether an anchor still holds). The scratchpad is session-local; the
+  committed plan file is the authority.
+- QUIET: 108, 113 (build + game), 114. Counts (baseline + N, EditMode/PlayMode): F4 2/0, 106 7/4,
+  107 11/4, 109 20/4, 110 25/4, 111 31/6, 112 34/6; up to 4 EditMode Steam tests Ignored without
+  the Steam client.
+**On call:** Builder questions on Plan 2 now, Plan 3 later.
 
 **Plan 3 design, settled (keep if a reset hits mid-write):**
 - **F4:** SeatInput subscribes `performed` on each button action; `_tapped` mask + `_tappedOn`
@@ -156,17 +158,21 @@ Counts (baseline + N, EditMode/PlayMode): F4 2/0, 106 7/4, 107 11/4, 109 20/4, 1
 
 ## Next steps
 
-1. **Wait for COMMITTED** on the Plan 3 DONE; then PREPARE TO COMPACT likely (nothing else queued
-   for this lane until the Builder reaches Plan 3).
+1. **After the compact:** re-read PROTOCOL, BOARD, this file; then wait (on call). Nothing is queued
+   for this lane until the Builder asks or reaches Plan 3.
 2. **Builder questions** on Plan 2 now, Plan 3 later: answer from the plan files; the Builder
    premise-checks every task, so expect "the plan says X, the code says Y" — keep their change,
-   apply the plan's intent; scope changes → copy the orchestrator. Plan 3's riskiest spots to
-   expect questions on: 106's AnsweringHost harness and the "perfect host" tests (they depend on
-   Plan 2's guest launch flow as built); 109's `versionDefines`/`defineConstraints` pair and the
-   UPM git install (needs git on PATH); 110's socket-pair flags (fallback: network loopback);
-   111's HeadlessGuest teardown; 113's `ZipFile` in the Editor assembly (fallback: zip by hand).
-3. **Michael's feel pass (108)** verdicts may need a `108x` fix designed — the skipped-frame Jump
-   (snapshots carry the host's held baseline) is the one pre-thought.
+   apply the plan's intent; scope changes → copy the orchestrator. Plan 3's riskiest spots:
+   106's AnsweringHost harness and the "perfect host" tests (depend on Plan 2's guest launch flow as
+   built; the host keeps disagreeing until `LastCorrection > 0.5` so a render frame with two snapshots
+   cannot lose the +1); 109's `versionDefines`/`defineConstraints` pair (`STEAMWORKS_NET`) and the UPM
+   git install (git is on PATH — orchestrator checked); 109's edit-mode Steam test (pump uses
+   DestroyImmediate / no DontDestroyOnLoad outside play); 110's socket-pair reliable bit (fallback:
+   `bUseNetworkLoopback: true`); 111's HeadlessGuest teardown; 111's drawing code must use
+   `PlatformRegistry.Started`, never `Current` (a banner would start Steam under a test before
+   OfflinePlatform pins it); 113's `ZipFile` in the Editor assembly (fallback: zip by hand).
+3. **Michael's feel pass (108)** may need a `108x` designed — the skipped-frame Jump (snapshots carry
+   the host's held baseline) is the one pre-thought.
 
 ## Plan 2 quick reference (final names — the plan file is the authority)
 
@@ -237,6 +243,14 @@ versions with Context7 before writing Plan 3.
 
 ## Answers and decisions
 
+- 2026-09-26 (orchestrator, COMMITTED 5db14e6): Plan 3, the pass sheet, the how-to-run sheet and this
+  file, pushed. **Accepted:** no delta snapshots in M8 (parked for M11); rich presence instead of lobby
+  objects; the other departures as listed — the orchestrator applies them to HANDOFF-M8 at 114.
+  `steam_appid.txt` (480) at the repo root approved in principle (confirmed again on 109's and 114's
+  DONEs). Git is on PATH (`C:\Program Files\Git\cmd`) — 109 needs nothing from Michael. The how-to-run
+  controls match the Gameplay map (checked). Michael's queue: the collaborator for 113, the Steamworks
+  app for 114; the orchestrator tells Michael before 109 that Steam in the editor signs in as Spacewar
+  and opens solo games to friends. PREPARE TO COMPACT.
 - 2026-09-25 (orchestrator, COMMITTED 5bba6ed): Plan 2, the pass sheet and this file, pushed. One edit
   to the pass sheet (D1: "the **A** and **D** keys"). Placements accepted as written: F4 = Plan 3's
   first task (or 96x), G8's pause re-check in 100, TargetRegistry untouched, same-hero save outside
@@ -324,6 +338,8 @@ versions with Context7 before writing Plan 3.
 
 ## Log
 
+- 2026-09-26 — Plan 3 COMMITTED 5db14e6 (departures accepted). PREPARE TO COMPACT: lane file brought
+  current; READY TO COMPACT sent. All three M8 plans written; on call for the Builder.
 - 2026-09-26 — **M8 Plan 3 written** (F4, 106–114) with the pass sheet and the how-to-run sheet;
   anchors checked by script (0 missing); DONE sent to the orchestrator. Departures listed in the plan header
   (no delta snapshots; rich presence, not Steam lobbies; registry holds the live platform; prediction steps

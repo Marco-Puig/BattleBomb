@@ -435,6 +435,24 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(answered, Is.EqualTo(1), "An answer reached a screen that had closed.");
         }
 
+        [UnityTest]
+        public IEnumerator An_answer_holds_the_screen_through_the_frame_it_lands_in()
+        {
+            // The host's bag copy and its answer arrive together at the top of a frame; a press later in that
+            // frame would act on a sack the player has not yet seen drawn.
+            yield return AdvanceUntil(() => _guest.RenderFrame >= Start, "The guest never started drawing.");
+            IPlayerRequests requests = _driver.RequestsFor(GuestOwnPlayerId);
+            requests.Send(PlayerRequest.Sell(0), _ => { });
+            int sequence = SentRequests()[SentRequests().Count - 1].Sequence;
+
+            Answer(sequence, RequestOutcome.Done(5));
+            yield return null;
+            Assert.That(requests.Pending, Is.True, "In the frame its answer landed, the screen was free to act on a sack not yet drawn.");
+
+            yield return null;
+            Assert.That(requests.Pending, Is.False, "The screen still waits a frame after the answer was drawn.");
+        }
+
         private IEnumerator AdvanceSteps(int steps)
         {
             int target = _driver.Frame + steps;

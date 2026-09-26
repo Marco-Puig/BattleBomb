@@ -96,6 +96,23 @@ namespace BattleBomb.Core.Net
             return count;
         }
 
+        /// <summary>Raw bytes behind a 32-bit length, refused before a byte is copied if longer than
+        /// <paramref name="maxBytes"/>.</summary>
+        public byte[] ReadBlob(int maxBytes)
+        {
+            int length = ReadInt();
+            if (length < 0 || length > maxBytes)
+            {
+                throw new NetFormatException($"A {length}-byte blob where at most {maxBytes} is allowed.");
+            }
+
+            Need(length);
+            var value = new byte[length];
+            Array.Copy(_data, Position, value, 0, length);
+            Position += length;
+            return value;
+        }
+
         private void Need(int bytes)
         {
             if (bytes < 0 || Position + bytes > _end)

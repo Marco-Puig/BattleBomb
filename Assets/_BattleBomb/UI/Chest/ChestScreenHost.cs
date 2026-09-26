@@ -193,7 +193,9 @@ namespace BattleBomb.UI.Chest
                 break;
             }
 
-            if (bag == null)
+            // A remote player's screen is on their own machine (HANDOFF-M8 planning decision 15): the host holds
+            // it open — that is what keeps their body standing idle — and draws nothing here.
+            if (bag == null || !_driver.Players.IsLocal(new PlayerId(playerId)))
             {
                 return;
             }
@@ -203,13 +205,13 @@ namespace BattleBomb.UI.Chest
             // right. Two players sharing a display means the camera belongs to both, so the screen
             // takes that player's half and tabs instead. CameraRig reads the same condition off
             // the driver rather than being told: UI does not reach into Presentation.
-            bool split = actors.Count > 1;
+            bool split = _driver.Players.LocalCount > 1;
 
             var go = new GameObject($"Chest Screen P{playerId + 1}", typeof(RectTransform));
             go.transform.SetParent(_canvas.transform, false);
             var screen = go.AddComponent<ChestScreen>();
             screen.Host = this;
-            LayOut((RectTransform)go.transform, playerId, split, actors.Count);
+            LayOut((RectTransform)go.transform, playerId, split, _driver.Players.LocalCount);
             screen.Bind(bag, actor, playerId, kind, split);
             _screens[playerId] = screen;
 

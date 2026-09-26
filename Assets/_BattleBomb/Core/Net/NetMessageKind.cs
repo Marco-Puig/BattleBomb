@@ -18,5 +18,6 @@ namespace BattleBomb.Core.Net
         Bye = 13,
         Request = 14,
         RequestResult = 15,
+        Participant = 16,
     }
 }

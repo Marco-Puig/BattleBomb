@@ -158,7 +158,12 @@ namespace BattleBomb.Core.Saves
 
         // ── Restore ──────────────────────────────────────────────────────────────────
 
-        public static void RestoreSack(SaveGame save, Sack sack, IReadOnlyList<ItemSpec> catalog)
+        public static void RestoreSack(SaveGame save, Sack sack, IReadOnlyList<ItemSpec> catalog) =>
+            RestoreSack(save, sack, catalog, -1);
+
+        /// <summary>As above; <paramref name="revision"/> is the host's number for a guest's copy of its sack
+        /// (HANDOFF-M8 Task 99), and -1 moves the revision on as any other change to the sack does.</summary>
+        public static void RestoreSack(SaveGame save, Sack sack, IReadOnlyList<ItemSpec> catalog, int revision)
         {
             sack.Entries.Clear();
             sack.AutoEquip = save.AutoEquip;
@@ -174,7 +179,14 @@ namespace BattleBomb.Core.Saves
                 sack.Entries.Add(new ItemStack(ToInstance(stacks[i].Item, catalog), stacks[i].Count));
             }
 
-            sack.Touch();
+            if (revision >= 0)
+            {
+                sack.AdoptRevision(revision);
+            }
+            else
+            {
+                sack.Touch();
+            }
         }
 
         public static Wallet RestoreWallet(SaveGame save) => new Wallet(save.Coins);
@@ -183,6 +195,7 @@ namespace BattleBomb.Core.Saves
         /// ledger. The inventory must already sit over the restored sack.</summary>
         public static XpLedger RestoreCharacter(CharacterSave character, Inventory inventory, IReadOnlyList<ItemSpec> catalog)
         {
+            ClearLoadout(inventory.Loadout);
             WornSave[] worn = character.Worn;
             for (int i = 0; i < worn.Length; i++)
             {
@@ -202,6 +215,35 @@ namespace BattleBomb.Core.Saves
                 character.Level, character.XpIntoLevel, character.UnspentPoints,
                 new BaseStats(character.Strength, character.Hp, character.Mana, character.Speed),
                 character.PrestigeCount);
+        }
+
+        /// <summary>Everything worn comes off first, so a restore replaces a loadout rather than adding to it:
+        /// a guest's copy of a player is restored again every time it changes (HANDOFF-M8 Task 99). At a boot
+        /// the loadout is empty, so nothing changes there.</summary>
+        private static void ClearLoadout(Loadout loadout)
+        {
+            for (int i = 0; i < WornSlots.Length; i++)
+            {
+                loadout.Swap(WornSlots[i], 0, default);
+            }
+
+            for (int i = 0; i < Loadout.EquipmentSlots; i++)
+            {
+                loadout.Swap(ItemSlot.Equipment, i, default);
+            }
+        }
+
+        /// <summary>
+        /// One player as a save of their own (HANDOFF-M8 Task 99): that character and — when
+        /// <paramref name="withSack"/> — the sack, wallet and auto flags they play from. What crosses the wire
+        /// for a player online, in the save's own format.
+        /// </summary>
+        public static SaveGame Participant(Sack sack, in Wallet wallet, in CharacterState character, bool withSack)
+        {
+            var roster = new[] { character };
+            return withSack
+                ? Capture(sack, wallet, roster, new StoryProgress())
+                : Capture(new Sack(), Wallet.Empty, roster, new StoryProgress());
         }
 
         public static StoryProgress RestoreProgress(SaveGame save)

@@ -76,7 +76,10 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (see Log).
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (see Log).
+- **Rule until 101 lands: no online play on a real save.** Since 99 a guest can equip from the shared
+  sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
+  Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
 - **Michael and Marco run Plan 2's pass together (Task 105)** once 97–104 are built — with the
   96a/96b check and Groundwork items 7 and 12 folded into the same sitting (`m8-plan2-pass.md`,
   "Also in this sitting"). So the 96a/96b sitting is not held separately: 102 goes ahead (the
@@ -98,6 +101,14 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     coin or auto flags changed since the last whole copy; otherwise the character alone; always
     whole after a bind or rejoin. No wire change. Rapid selling still sends one whole copy per sale —
     a sack delta joins M11's parked deltas if D6 shows sluggish menus.
+  - **99's carried items, closed or declined with evidence (99):** the blind press and the replica's
+    ClearRack fixed red-first; one flash on refusals, "capacity spent" and the rack clamp declined
+    (the Builder's evidence: last flash wins, the ordered channel, a hostile host only).
+  - **101 (from 99):** tie `SaveCodec.CurrentVersion` to `NetProtocol.Version` (a save-format bump
+    without a protocol bump drops an older guest as "malformed"). `ParticipantMinSteps`' doc claims
+    an autosave forces a send — true only once 100/101's SendMoment exists.
+  - **100 (from 99):** transitional — an online host's chest is wide ("local players > 1") until
+    CameraRig makes room. Cosmetic.
   - **103/104:** the host's request queue outlives the guest who filled it (clear on leave/unbind);
     NetGuest clears `RequestRoute` without checking it's its own; a close is refused when the body
     is gone.
@@ -275,6 +286,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 99 committed: the guest's own screens and bag; the host sends screen and rack events
+  and a deflated copy of the guest's bag; B never reaches the host as Magic; a drink repaints a
+  partner's chest (an old couch gap). Protocol 4. EditMode 820, PlayMode 88.
 - 2026-09-26 — Inserted 101a (Netcode → Builder, accepted): the guest's sack travels whole only when it
   changed, not on every kill's XP.
 - 2026-09-26 — Michael: he and Marco (the collaborator) run the tests together when Plan 2 is built.

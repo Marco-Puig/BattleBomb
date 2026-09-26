@@ -78,6 +78,10 @@ namespace BattleBomb.UI.Chest
         /// calls the bag itself.</summary>
         private IPlayerRequests _requests;
 
+        /// <summary>The sack's revision when the pending combine's pick was made — the pick is a bag index,
+        /// and only a change to the sack can move it (Task 99).</summary>
+        private int _combineRevision;
+
         /// <summary>Ignore input until every menu button has been let go at least once.</summary>
         private bool _swallowUntilRelease = true;
         private string _flash = string.Empty;
@@ -366,14 +370,15 @@ namespace BattleBomb.UI.Chest
         }
 
         /// <summary>
-        /// The bag moved — possibly under the partner's hand (D51). Repaint from the new truth,
-        /// and drop any combine in progress: the pick is a bag index, and selling or equipping
-        /// anything above it slides every index below down one. Holding the number through that
-        /// would gamble away an item the player never pointed at.
+        /// The bag moved — possibly under the partner's hand (D51), or with the host's copy of it arriving on a
+        /// guest. Repaint from the new truth, and drop a combine in progress only if the sack itself moved: the
+        /// pick is a bag index, and selling or equipping anything above it slides every index below down one.
+        /// XP from a kill changes the bag's owner, not the sack, and used to cancel the pick for nothing — online
+        /// the host's every kill would have done it to the guest.
         /// </summary>
         internal void OnBagChanged()
         {
-            if (_nav.PendingCombine >= 0)
+            if (_nav.PendingCombine >= 0 && _bag.Inventory.Sack.Revision != _combineRevision)
             {
                 _nav.CancelCombine();
                 Flash("Combine cancelled — the sack moved.");
@@ -383,8 +388,14 @@ namespace BattleBomb.UI.Chest
             Refresh();
         }
 
-        /// <summary>The rack moved — a purchase, or on a guest the host's rack arriving.</summary>
-        internal void OnRackChanged() => Refresh();
+        /// <summary>The rack moved — a purchase, or on a guest the host's rack arriving after the answer. The
+        /// cursor may have been on the slot that emptied.</summary>
+        internal void OnRackChanged()
+        {
+            CollectVisible();
+            _nav.FinishBuy(_stock.Count);
+            Refresh();
+        }
 
         // ── Actions ──────────────────────────────────────────────────────────────────
 
@@ -709,6 +720,7 @@ namespace BattleBomb.UI.Chest
             if (_nav.PendingCombine < 0)
             {
                 _nav.BeginCombine(bagIndex);
+                _combineRevision = _bag.Inventory.Sack.Revision;
 
                 // The grid has just collapsed to this item and its duplicates; put the cursor on
                 // the first duplicate rather than back on the pick, so the answer is one press away.

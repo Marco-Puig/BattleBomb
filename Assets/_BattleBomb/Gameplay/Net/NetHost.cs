@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
+using BattleBomb.Core.Saves;
 using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Loot;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
@@ -19,8 +21,9 @@ namespace BattleBomb.Gameplay.Net
     /// guest's commands into their <see cref="RemoteCommandSource"/>, and sends the world back — a
     /// snapshot every second step and the step's events on the reliable channel (D58). Added by the
     /// binder when the machine boots as a host with a guest connected. It reads the simulation after
-    /// each step and never writes to it, apart from the Plan 1 screen guard and, while a guest is
-    /// connected, the launch hold and the airlock's wait for the guest (Task 94).
+    /// each step and never writes to it, apart from queueing the guest's menu requests for the step's
+    /// first phase (Task 97) and, while a guest is connected, the launch hold and the airlock's wait for
+    /// the guest (Task 94).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NetHost : MonoBehaviour
@@ -28,6 +31,21 @@ namespace BattleBomb.Gameplay.Net
         private readonly NetWriter _writer = new NetWriter(4096);
         private readonly NetWriter _scratch = new NetWriter(4096);
         private readonly NetWriter _answer = new NetWriter(64);
+        private readonly NetWriter _participant = new NetWriter(16 * 1024);
+        private readonly List<(int Sequence, RequestOutcome Outcome)> _answers = new List<(int Sequence, RequestOutcome Outcome)>();
+        private readonly Dictionary<int, Watched> _watched = new Dictionary<int, Watched>();
+        private readonly List<int> _unwatch = new List<int>();
+
+        /// <summary>A player whose inventory the guest keeps a copy of (Task 99).</summary>
+        private sealed class Watched
+        {
+            internal CharacterActor Actor;
+            internal PlayerInventory Bag;
+            internal Action Handler;
+            internal bool Dirty;
+            internal bool Forced;
+            internal int SentAt;
+        }
         private readonly List<WireCommand> _commands = new List<WireCommand>(NetProtocol.CommandRedundancy);
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
         private readonly List<ReplicatedEvent> _stamped = new List<ReplicatedEvent>();
@@ -56,7 +74,8 @@ namespace BattleBomb.Gameplay.Net
             _driver.PickupSpawned += OnPickup;
             _driver.PickupRemoved += OnPickupRemoved;
             _driver.RemoteRequestAnswered += OnRequestAnswered;
-            _driver.MayOpenScreen = id => id != _net.GuestPlayerId.Value;
+            _driver.ScreenChanged += OnScreenChanged;
+            _driver.RackChanged += OnRackChanged;
             if (_runner != null)
             {
                 _runner.StageLoadRequested += OnStageLoadRequested;
@@ -150,6 +169,8 @@ namespace BattleBomb.Gameplay.Net
             }
         }
 
+        /// <summary>The answer waits for the end of the step: the guest must have the bag the request changed —
+        /// and the rack it bought from — before it hears the answer (all three on the one ordered channel).</summary>
         private void OnRequestAnswered(PlayerRequest request, RequestOutcome outcome)
         {
             if (!_net.IsConnected || request.PlayerId != _net.GuestPlayerId.Value)
@@ -157,9 +178,136 @@ namespace BattleBomb.Gameplay.Net
                 return;
             }
 
-            _answer.Reset();
-            RequestCodec.WriteResult(_answer, request.Sequence, outcome);
-            _net.Send(NetChannel.Reliable, _answer);
+            _answers.Add((request.Sequence, outcome));
+            Force(request.PlayerId);
+        }
+
+        private void OnScreenChanged(int playerId, InteractionKind kind, bool opened)
+        {
+            _pending.Add(ReplicatedEvent.OfScreen(playerId, (int)kind, opened));
+            if (opened && playerId == _net.GuestPlayerId.Value)
+            {
+                // The guest's chest opens over the bag as it is now, not as it was a quarter-second ago.
+                Force(playerId);
+            }
+        }
+
+        private void OnRackChanged(int playerId)
+        {
+            IReadOnlyList<Core.Items.ItemInstance> rack = _driver.RackFor(playerId);
+            var pieces = new Core.Items.ItemInstance[rack.Count];
+            for (int i = 0; i < pieces.Length; i++)
+            {
+                pieces[i] = rack[i];
+            }
+
+            _pending.Add(ReplicatedEvent.OfRack(playerId, pieces));
+        }
+
+        private void Force(int playerId)
+        {
+            if (_watched.TryGetValue(playerId, out Watched watched))
+            {
+                watched.Forced = true;
+            }
+        }
+
+        /// <summary>Every player in the world gets a watcher the first step they are there — the binder brings the
+        /// host up before any player object has enabled — and loses it when they leave.</summary>
+        private void WatchParticipants()
+        {
+            IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                int id = actors[i].PlayerId.Value;
+                if (_watched.ContainsKey(id))
+                {
+                    continue;
+                }
+
+                PlayerInventory bag = actors[i].GetComponent<PlayerInventory>();
+                if (bag == null)
+                {
+                    continue;
+                }
+
+                var watched = new Watched { Actor = actors[i], Bag = bag, Dirty = true, Forced = true };
+                watched.Handler = () => watched.Dirty = true;
+                bag.Changed += watched.Handler;
+                _watched[id] = watched;
+            }
+
+            _unwatch.Clear();
+            foreach (KeyValuePair<int, Watched> entry in _watched)
+            {
+                if (entry.Value.Actor == null || !entry.Value.Actor.isActiveAndEnabled)
+                {
+                    _unwatch.Add(entry.Key);
+                }
+            }
+
+            for (int i = 0; i < _unwatch.Count; i++)
+            {
+                Unwatch(_unwatch[i]);
+            }
+        }
+
+        private void Unwatch(int playerId)
+        {
+            if (!_watched.TryGetValue(playerId, out Watched watched))
+            {
+                return;
+            }
+
+            if (watched.Bag != null)
+            {
+                watched.Bag.Changed -= watched.Handler;
+            }
+
+            _watched.Remove(playerId);
+        }
+
+        /// <summary>The guest's whole bag; the partner's worn gear only. Sent when forced, or when changed and not
+        /// sent for <see cref="NetProtocol.ParticipantMinSteps"/>.</summary>
+        private void FlushParticipants(int frame)
+        {
+            foreach (KeyValuePair<int, Watched> entry in _watched)
+            {
+                Watched watched = entry.Value;
+                bool due = watched.Forced || (watched.Dirty && frame - watched.SentAt >= NetProtocol.ParticipantMinSteps);
+                if (!due)
+                {
+                    continue;
+                }
+
+                SendParticipant(entry.Key, watched);
+                watched.Dirty = false;
+                watched.Forced = false;
+                watched.SentAt = frame;
+            }
+        }
+
+        private void SendParticipant(int playerId, Watched watched)
+        {
+            bool full = playerId == _net.GuestPlayerId.Value;
+            PlayerInventory bag = watched.Bag;
+            var character = new CharacterState(watched.Actor.Element, bag.Ledger, bag.Inventory);
+            SaveGame state = SaveMapper.Participant(bag.Stash.Sack, bag.Wallet, character, full);
+            _participant.Reset();
+            ParticipantCodec.Write(_participant, playerId, bag.Inventory.Sack.Revision, full, state);
+            _net.Send(NetChannel.Reliable, _participant);
+        }
+
+        private void SendAnswers()
+        {
+            for (int i = 0; i < _answers.Count; i++)
+            {
+                _answer.Reset();
+                RequestCodec.WriteResult(_answer, _answers[i].Sequence, _answers[i].Outcome);
+                _net.Send(NetChannel.Reliable, _answer);
+            }
+
+            _answers.Clear();
         }
 
         /// <summary>After every host step: this step's events, then — every second step — the world.</summary>
@@ -168,8 +316,13 @@ namespace BattleBomb.Gameplay.Net
             if (!_net.IsConnected)
             {
                 _pending.Clear();
+                _answers.Clear();
                 return;
             }
+
+            // Bag first, then what happened, then the answers that read them: one ordered channel (Task 99).
+            WatchParticipants();
+            FlushParticipants(frame);
 
             if (_pending.Count > 0)
             {
@@ -182,6 +335,8 @@ namespace BattleBomb.Gameplay.Net
                 _pending.Clear();
                 EventCodec.WriteBatches(_stamped, _writer, _scratch, _sendReliable);
             }
+
+            SendAnswers();
 
             if (frame % NetProtocol.SnapshotEverySteps != 0)
             {
@@ -320,7 +475,8 @@ namespace BattleBomb.Gameplay.Net
                 _driver.PickupSpawned -= OnPickup;
                 _driver.PickupRemoved -= OnPickupRemoved;
                 _driver.RemoteRequestAnswered -= OnRequestAnswered;
-                _driver.MayOpenScreen = null;
+                _driver.ScreenChanged -= OnScreenChanged;
+                _driver.RackChanged -= OnRackChanged;
                 _driver.HoldForPeer = false;
             }
 
@@ -329,6 +485,11 @@ namespace BattleBomb.Gameplay.Net
                 _runner.StageLoadRequested -= OnStageLoadRequested;
                 _runner.StageHandedOver -= OnStageHandedOver;
                 _runner.RemoteStageReady = null;
+            }
+
+            foreach (int id in new List<int>(_watched.Keys))
+            {
+                Unwatch(id);
             }
 
             if (_net == null)

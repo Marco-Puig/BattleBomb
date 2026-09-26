@@ -560,13 +560,6 @@ namespace BattleBomb.Gameplay.Simulation
 
         internal int AttemptStepsAllDown => _attempt.StepsAllDown;
 
-        /// <summary>
-        /// Plan 1 only (HANDOFF-M8 Task 99 retires it): until the guest's screens are online, the host
-        /// declines to open a chest or shop for a player whose screen would be on another machine. The
-        /// press is still the chest's, so nothing else happens either. Null lets everyone open.
-        /// </summary>
-        internal Func<int, bool> MayOpenScreen { get; set; }
-
         /// <summary>Drops waiting on the ground, for the inspect panel to read (D30).</summary>
         public IReadOnlyList<DropPickup> Pickups => _pickups;
 
@@ -655,14 +648,17 @@ namespace BattleBomb.Gameplay.Simulation
             }
 
             // Rolled before anyone hears of the screen, so the screen that answers finds its rack waiting.
-            // Never on a guest: a replica rolls nothing (D58).
-            if (kind == InteractionKind.Shopkeeper && !_replica)
+            // Never on a guest: a replica's racks are the host's (D58), and only the host's events change them.
+            if (!_replica)
             {
-                RollRack(playerIdValue);
-            }
-            else
-            {
-                ClearRack(playerIdValue);
+                if (kind == InteractionKind.Shopkeeper)
+                {
+                    RollRack(playerIdValue);
+                }
+                else
+                {
+                    ClearRack(playerIdValue);
+                }
             }
 
             ScreenChanged?.Invoke(playerIdValue, kind, true);
@@ -958,8 +954,7 @@ namespace BattleBomb.Gameplay.Simulation
                     FindReviveTarget(actors, i), grabTarget >= 0,
                     !screenOpen && interactable >= 0);
 
-                if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count
-                    && (MayOpenScreen == null || MayOpenScreen(playerId)))
+                if (result.OpenedInteractable && interactable >= 0 && interactable < _interactables.Count)
                 {
                     OpenScreen(
                         playerId, _interactables[interactable].Kind, _interactables[interactable]);
@@ -1933,17 +1928,10 @@ namespace BattleBomb.Gameplay.Simulation
 
         // ── Replica (the guest's driver, D58): state set from the host's snapshots ──────────
 
-        internal void ApplyReplicaPlayerSide(int playerIdValue, int openScreen, int grabCount, int refusedSteps)
+        /// <summary>The snapshot's per-player numbers. Screens are not among them: they follow the host's
+        /// events (<see cref="ApplyReplicaScreen"/>), which are told, never guessed from a snapshot.</summary>
+        internal void ApplyReplicaPlayerSide(int playerIdValue, int grabCount, int refusedSteps)
         {
-            if (openScreen >= 0)
-            {
-                _openScreens[playerIdValue] = (InteractionKind)openScreen;
-            }
-            else
-            {
-                _openScreens.Remove(playerIdValue);
-            }
-
             _grabCounts[playerIdValue] = grabCount;
             _refusedGrabs[playerIdValue] = refusedSteps;
         }
@@ -1952,6 +1940,95 @@ namespace BattleBomb.Gameplay.Simulation
         {
             SetArena(bounds);
             _attempt = new AttemptCountdown(attemptStepsAllDown);
+        }
+
+        /// <summary>
+        /// A screen the host opened or closed (D42, HANDOFF-M8 Task 99), taken as it arrives. The guest's own
+        /// chest then opens on the guest's display — the screens listen to <see cref="ScreenChanged"/> — and
+        /// what it was opened on is the nearest thing of that kind to the player, which is what the host opened.
+        /// </summary>
+        internal void ApplyReplicaScreen(int playerIdValue, InteractionKind kind, bool opened)
+        {
+            if (!opened)
+            {
+                CloseScreen(playerIdValue);
+                return;
+            }
+
+            if (_openScreens.TryGetValue(playerIdValue, out InteractionKind current) && current == kind)
+            {
+                return;
+            }
+
+            _openScreens[playerIdValue] = kind;
+            WorldInteractable source = NearestInteractable(playerIdValue, kind);
+            if (source != null)
+            {
+                _openSources[playerIdValue] = source;
+            }
+            else
+            {
+                _openSources.Remove(playerIdValue);
+            }
+
+            ScreenChanged?.Invoke(playerIdValue, kind, true);
+        }
+
+        /// <summary>The host's rack for a player, as it now stands (D43). A guest rolls nothing.</summary>
+        internal void ApplyReplicaRack(int playerIdValue, ItemInstance[] pieces)
+        {
+            if (!_racks.TryGetValue(playerIdValue, out List<ItemInstance> rack))
+            {
+                rack = new List<ItemInstance>(RackSize);
+                _racks[playerIdValue] = rack;
+            }
+
+            rack.Clear();
+            if (pieces != null)
+            {
+                rack.AddRange(pieces);
+            }
+
+            RackChanged?.Invoke(playerIdValue);
+        }
+
+        private WorldInteractable NearestInteractable(int playerIdValue, InteractionKind kind)
+        {
+            CharacterActor player = null;
+            IReadOnlyList<CharacterActor> actors = Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                if (actors[i].PlayerId.Value == playerIdValue)
+                {
+                    player = actors[i];
+                }
+            }
+
+            if (player == null)
+            {
+                return null;
+            }
+
+            WorldInteractable best = null;
+            float bestSq = float.MaxValue;
+            for (int i = 0; i < _interactables.Count; i++)
+            {
+                WorldInteractable candidate = _interactables[i];
+                if (candidate == null || candidate.Kind != kind)
+                {
+                    continue;
+                }
+
+                Vector3 to = candidate.Position - player.Position;
+                to.y = 0f;
+                if (to.sqrMagnitude < bestSq)
+                {
+                    best = candidate;
+                    bestSq = to.sqrMagnitude;
+                }
+            }
+
+            return best;
         }
 
         /// <summary>Bolts are drawn from the snapshot nearest the picture, carried forward along their

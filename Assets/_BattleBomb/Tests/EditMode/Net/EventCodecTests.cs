@@ -166,5 +166,39 @@ namespace BattleBomb.Tests.EditMode.Net
             Assert.That(host.IsConnected, Is.True);
             return received;
         }
+
+        [Test]
+        public void Screens_and_racks_round_trip_with_their_steps()
+        {
+            var knife = new ItemInstance(
+                new ItemIdentity(7, "Knife", ItemSlot.Weapon, default, default), QualityRank.Shiny,
+                new GearContribution(weaponDamage: 9f), new AffixRoll[0], 2);
+            var sent = new List<ReplicatedEvent>
+            {
+                ReplicatedEvent.OfRack(1, new[] { knife, knife }).At(40),
+                ReplicatedEvent.OfScreen(1, 1, true).At(40),
+                ReplicatedEvent.OfScreen(0, 0, false).At(41),
+                ReplicatedEvent.OfRack(1, new ItemInstance[0]).At(42),
+            };
+
+            var writer = new NetWriter();
+            EventCodec.Write(writer, sent);
+            var reader = new NetReader(writer.ToArray());
+            reader.ReadByte();
+            var received = new List<ReplicatedEvent>();
+            EventCodec.Read(reader, null, received);
+
+            Assert.That(received.Count, Is.EqualTo(4));
+            Assert.That(received[0].Kind, Is.EqualTo(ReplicatedEventKind.RackChanged));
+            Assert.That(received[0].Rack.PlayerId, Is.EqualTo(1));
+            Assert.That(received[0].Rack.Pieces.Length, Is.EqualTo(2));
+            Assert.That(received[0].Rack.Pieces[1].DefinitionId, Is.EqualTo(7));
+            Assert.That(received[1].Kind, Is.EqualTo(ReplicatedEventKind.ScreenOpened));
+            Assert.That(received[1].Screen.PlayerId, Is.EqualTo(1));
+            Assert.That(received[1].Screen.Kind, Is.EqualTo(1));
+            Assert.That(received[2].Kind, Is.EqualTo(ReplicatedEventKind.ScreenClosed));
+            Assert.That(received[2].HostFrame, Is.EqualTo(41));
+            Assert.That(received[3].Rack.Pieces, Is.Empty);
+        }
     }
 }

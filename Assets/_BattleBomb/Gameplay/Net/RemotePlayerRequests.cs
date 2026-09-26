@@ -3,6 +3,7 @@ using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Gameplay.Items;
 using BattleBomb.Platform.Net;
+using UnityEngine;
 
 namespace BattleBomb.Gameplay.Net
 {
@@ -21,13 +22,17 @@ namespace BattleBomb.Gameplay.Net
         private int _waitingFor = -1;
         private Action<RequestOutcome> _answered;
 
+        /// <summary>The frame an answer landed in. The host's copy of the bag came with it, and the screen is
+        /// drawn from that copy only at the frame's end, so the screen's hands stay held until then.</summary>
+        private int _answeredFrame = -1;
+
         internal RemotePlayerRequests(NetSession net, Func<PlayerInventory> bag)
         {
             _net = net;
             _bag = bag;
         }
 
-        public bool Pending => _waitingFor >= 0;
+        public bool Pending => _waitingFor >= 0 || _answeredFrame == Time.frameCount;
 
         public void Send(PlayerRequest request, Action<RequestOutcome> answered)
         {
@@ -74,6 +79,7 @@ namespace BattleBomb.Gameplay.Net
             Action<RequestOutcome> answered = _answered;
             _waitingFor = -1;
             _answered = null;
+            _answeredFrame = Time.frameCount;
             answered?.Invoke(outcome);
         }
 
@@ -82,6 +88,7 @@ namespace BattleBomb.Gameplay.Net
         {
             _waitingFor = -1;
             _answered = null;
+            _answeredFrame = -1;
         }
     }
 }

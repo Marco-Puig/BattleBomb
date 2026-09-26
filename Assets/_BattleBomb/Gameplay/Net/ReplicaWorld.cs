@@ -89,7 +89,8 @@ namespace BattleBomb.Gameplay.Net
                 }
 
                 actor.ApplyReplica(player.WithMotor(motor));
-                _driver.ApplyReplicaPlayerSide(player.PlayerId, player.OpenScreen, player.GrabCount, player.RefusedSteps);
+                // The snapshot still carries each player's open screen; the guest follows the host's screen events.
+                _driver.ApplyReplicaPlayerSide(player.PlayerId, player.GrabCount, player.RefusedSteps);
             }
         }
 

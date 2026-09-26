@@ -314,6 +314,13 @@ namespace BattleBomb.Gameplay.Characters
             }
 
             QuickUseResult quick = _bag.Inventory.UseQuickSlot(_quickUseCooldownSteps);
+            if (quick.Used)
+            {
+                // The draught left the sack: whoever watches the bag — a partner's open chest, the host's copy for
+                // a guest (Task 99) — hears it, as every other change to the sack is heard.
+                _bag.Stash.NotifyChanged();
+            }
+
             if (quick.Used && quick.RestoreFraction > 0f)
             {
                 if (quick.Restores == RestoreKind.Mana)

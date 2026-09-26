@@ -36,6 +36,29 @@ namespace BattleBomb.Gameplay.Players
 
         public bool IsRegistered(PlayerId playerId) => _sources.ContainsKey(playerId.Value);
 
+        /// <summary>This player's hands are on this machine — a device, a script, a replay — so their menus open
+        /// on this display (HANDOFF-M8 planning decision 15). False for a remote player, and for nobody.</summary>
+        public bool IsLocal(PlayerId playerId) =>
+            _sources.TryGetValue(playerId.Value, out IPlayerCommandSource source) && !(source is IRemotePlayerSource);
+
+        /// <summary>How many players this display is for: two on the couch; one alone, or online.</summary>
+        public int LocalCount
+        {
+            get
+            {
+                int count = 0;
+                foreach (IPlayerCommandSource source in _sources.Values)
+                {
+                    if (!(source is IRemotePlayerSource))
+                    {
+                        count++;
+                    }
+                }
+
+                return count;
+            }
+        }
+
         /// <summary>Which button pictures this player's prompts show. Keyboard for a source that
         /// is not a device — a test script, a replay, later a remote peer.</summary>
         public InputFamily FamilyOf(PlayerId playerId) =>

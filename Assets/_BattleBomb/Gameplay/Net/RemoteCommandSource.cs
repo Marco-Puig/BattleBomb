@@ -13,7 +13,7 @@ namespace BattleBomb.Gameplay.Net
     /// component to an active object runs <c>OnEnable</c> immediately, before any id is known.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class RemoteCommandSource : MonoBehaviour, IPlayerCommandSource
+    public sealed class RemoteCommandSource : MonoBehaviour, IPlayerCommandSource, IRemotePlayerSource
     {
         private IPlayerRegistryHost _host;
         private PlayerId _id;

@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Loot;
 using BattleBomb.Core.Progression;
+using BattleBomb.Core.Saves;
 using BattleBomb.Core.Stats;
 using BattleBomb.Gameplay.Simulation;
 using UnityEngine;
@@ -384,6 +386,33 @@ namespace BattleBomb.Gameplay.Items
         internal void SetLedger(in XpLedger ledger)
         {
             _ledger = ledger;
+            Changed?.Invoke();
+        }
+
+        /// <summary>
+        /// The guest's copy of this player (D61, HANDOFF-M8 Task 99): what the host holds for them, laid over
+        /// this machine's copy in one go — worn gear, quick slot and ledger always; the sack, wallet and auto
+        /// flags too when <paramref name="full"/> (the guest's own player). The sack takes the host's revision,
+        /// so a request sent from it names the sack the host holds. One arrival, one <see cref="Changed"/>.
+        /// </summary>
+        internal void ApplyMirror(SaveGame state, int revision, bool full, IReadOnlyList<ItemSpec> catalog)
+        {
+            CharacterSave character = state != null && state.Characters.Length > 0 ? state.Characters[0] : null;
+            if (character == null)
+            {
+                return;
+            }
+
+            _ledger = SaveMapper.RestoreCharacter(character, Inventory, catalog);
+            if (full)
+            {
+                SaveMapper.RestoreSack(state, Stash.Sack, catalog, revision);
+
+                // Raises the stash's Changed, which this bag passes on as its own.
+                Stash.Restore(Stash.Sack, SaveMapper.RestoreWallet(state));
+                return;
+            }
+
             Changed?.Invoke();
         }
 

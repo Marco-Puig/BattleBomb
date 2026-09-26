@@ -66,6 +66,22 @@ namespace BattleBomb.Core.Net
                         into.Add(ReplicatedEvent.OfDropRemoved(r.ReadInt()).At(frame));
                         break;
 
+                    case ReplicatedEventKind.ScreenOpened:
+                    case ReplicatedEventKind.ScreenClosed:
+                        into.Add(ReplicatedEvent.OfScreen(r.ReadInt(), r.ReadByte(), kind == ReplicatedEventKind.ScreenOpened).At(frame));
+                        break;
+
+                    case ReplicatedEventKind.RackChanged:
+                        int player = r.ReadInt();
+                        var pieces = new ItemInstance[r.ReadCount(NetProtocol.MaxRack)];
+                        for (int p = 0; p < pieces.Length; p++)
+                        {
+                            pieces[p] = ItemWire.Read(r, catalog);
+                        }
+
+                        into.Add(ReplicatedEvent.OfRack(player, pieces).At(frame));
+                        break;
+
                     default:
                         throw new NetFormatException($"An event of kind {(byte)kind}.");
                 }
@@ -121,6 +137,22 @@ namespace BattleBomb.Core.Net
 
                 case ReplicatedEventKind.DropRemoved:
                     w.WriteInt(e.Drop.NetId);
+                    break;
+
+                case ReplicatedEventKind.ScreenOpened:
+                case ReplicatedEventKind.ScreenClosed:
+                    w.WriteInt(e.Screen.PlayerId);
+                    w.WriteByte((byte)e.Screen.Kind);
+                    break;
+
+                case ReplicatedEventKind.RackChanged:
+                    w.WriteInt(e.Rack.PlayerId);
+                    w.WriteCount(e.Rack.Pieces.Length, NetProtocol.MaxRack);
+                    for (int p = 0; p < e.Rack.Pieces.Length; p++)
+                    {
+                        ItemWire.Write(w, e.Rack.Pieces[p]);
+                    }
+
                     break;
             }
         }

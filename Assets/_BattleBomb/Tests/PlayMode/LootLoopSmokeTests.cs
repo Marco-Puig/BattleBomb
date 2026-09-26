@@ -340,6 +340,34 @@ namespace BattleBomb.Tests.PlayMode
             }
         }
 
+        [UnityTest]
+        public IEnumerator A_combine_pick_outlives_a_kills_xp_but_not_a_moved_sack()
+        {
+            WorldInteractable chest = FindChest();
+            yield return WalkTo(chest.Position, "the chest");
+            ItemInstance knife = _driver.RollDebugItem(KnifeDefinitionId, 2.2f);
+            _bag.Take(knife);
+            _bag.Take(knife);
+            int id = _player.PlayerId.Value;
+            _driver.OpenScreen(id, InteractionKind.Chest, chest);
+            yield return SimulationFrames(2);
+
+            // ChestScreen is internal to the UI assembly; the pick is begun the way A on the menu's Combine does.
+            var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+            System.Type screenType = System.Type.GetType("BattleBomb.UI.Chest.ChestScreen, BattleBomb.UI");
+            Component screen = GameObject.Find($"Chest Screen P{id + 1}").GetComponent(screenType);
+            var nav = (ChestNavigation)screenType.GetField("_nav", flags).GetValue(screen);
+            int pick = _bag.Inventory.Items.Count - 2;
+            screenType.GetMethod("RunCombine", flags).Invoke(screen, new object[] { pick });
+            Assert.That(nav.PendingCombine, Is.EqualTo(pick), "The combine pick never began, so the case proves nothing.");
+
+            _bag.Earn(500f);
+            Assert.That(nav.PendingCombine, Is.EqualTo(pick), "A kill's XP cancelled the combine pick; the sack never moved.");
+
+            _bag.Take(_driver.RollDebugItem(KnifeDefinitionId, 2.2f));
+            Assert.That(nav.PendingCombine, Is.LessThan(0), "The sack moved under the pick and the pick still stands.");
+        }
+
         /// <summary>
         /// Every route out of the chest screen, because M6's pass found a screen a player could
         /// not leave: the logic was fine and nothing had ever exercised it. A menu you can enter

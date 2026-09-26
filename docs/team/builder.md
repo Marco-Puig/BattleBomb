@@ -49,11 +49,21 @@ committed; 96 stays open for Michael's pass.
 
 ## Waiting on
 
-`COMMITTED` for Task 98 (`DONE` sent 2026-09-26). Then Michael's five-minute sitting for 96a/96b,
-which the orchestrator runs with QUIET ON (sent as a QUESTION; the steps are in
-`<scratchpad>/t96ab_steps.md`). **On QUIET ON:** stop at a clean point and reply ready. At his ✋
-"in game", enter play mode and run `eval_file t96b_record.cs`; at "done", run `eval_file
-t96b_read.cs`. Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`.
+Nothing blocks the work. Build straight through 99–104, with no QUIET until 105 (orchestrator,
+2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`.
+
+**96a/96b — no separate sitting** (orchestrator, 2026-09-26). Michael and Marco (his collaborator)
+test together at 105.
+- **96a:** Task 102 is the fix. Its `DONE` says why I'm confident: the seats are identical at
+  launch, and the Player 2 window's live front door is the likely cause, which 102 closes. The 105
+  sitting confirms it: host at the title, Join local, then press Enter in the Player 2 window.
+- **96b, before 105:** send the orchestrator the logger check as text for `docs/team/m8-plan2-pass.md`,
+  section "Also in this sitting (with Marco)". The sheet is theirs, so I send the text and don't edit
+  it. Include:
+  - the four holds, each in a different direction;
+  - the ✋ points where I read the log (`eval_file t96b_record.cs` / `t96b_read.cs`);
+  - a one-line workaround in the sheet's keyboard note: "use WASD".
+  If the log shows the game is at fault, the fix becomes an inserted task before 105 closes.
 
 ## Current state
 
@@ -99,6 +109,67 @@ inserted bugs, 96a and 96b, get their root causes read between 97's stages.**
   - His sitting is drafted in `<scratchpad>/t96ab_steps.md`, to send after 97's `DONE`. The logger
     is `t96b_record.cs` and its reader `t96b_read.cs`; both compile-checked, run with `eval_file`.
   - Correction: runInBackground has been 1 since the first commit, not since Task 90.
+
+**Task 99 (2026-09-26), started:**
+- **Premise check:** anchors all hold; Core's asmdef allows `System.IO.Compression` (.NET Standard 2.1).
+  It found:
+  - Mono throws `IOException` for corrupt deflate data, not the `InvalidDataException` the plan
+    catches (X1).
+  - A racy Find in the plan's close test (X2).
+  - The plan cites LootLoop combine tests, but none exist; X3 adds one.
+  - The split rule (`LocalCount`) makes the LootLoop fixture's P1 screen wide, and CameraRig catches up
+    only at 100.
+  - A transitional save risk: a guest equips gear onto the stand-in body, and the host's save
+    deduplicates by element. 101 closes it (local players only).
+- **Extra spec:** `<scratchpad>/tasks/task99_extra.md`.
+  - X4 is the blind press: `RemotePlayerRequests.Pending` holds through the frame an answer lands.
+  - X5 guards the replica's ClearRack. X6 fixes NetHost's summary.
+- **Declined, with evidence:**
+  - One flash on refusals: the last Flash wins before the screen draws; NoScreen can't reach a live
+    screen, because ScreenClosed comes before the answer; Busy is gated by Waiting.
+  - "Capacity spent": the guest's sack moves only through its own requests while a screen is open,
+    since grabs and quick-use need orders.
+  - The rack clamp: only a hostile host sends more than 4 pieces, and the version handshake rules out
+    a mismatched one.
+- **Stages S1–S6.** Expected totals: EditMode 820, PlayMode 86.
+- **Built:** S1–S6, all byte-checked.
+- **Reds, as predicted:**
+  - X1: the plan's own not-a-save test failed with "IOException: Corrupted data ReadInternal".
+  - X3: the combine pick was cancelled by XP.
+  - X4: the answer frame left the screen free.
+  - X5: the replica's local OpenScreen wiped the rack.
+  - All green after their fixes.
+- **Full sack on the wire:** ~172 KB of JSON; 1.5 KB deflated when identical, 17 KB when varied (the
+  realistic worst).
+- **Gates:** EditMode 820/820; PlayMode 86/86.
+- **Review "Yes with fixes"** (spec: `<scratchpad>/tasks/task99_fixes.md`):
+  - **R1:** B that closes the guest's chest reached the host as Magic. MenuGate now also counts the
+    guest's own open screen. Red at "Frame 133 … as Magic".
+  - **R2:** a potion drink raised no `Changed`, so the guest's copy went stale.
+    `CharacterActor.PhaseQuickUse` now calls `Stash.NotifyChanged`, which also fixes the couch repaint.
+    Red at "The drink never reached…".
+  - **R3–R5 tighten tests:** the full-sack test uses varied pieces; the partner test checks for the
+    knife; the guest test opens the host's own chest (mutation: without `IsLocal` the guest draws
+    "Chest Screen P1").
+- **Carried from the review:**
+  - The save risk before 101 needs a board rule: no online sitting on a real save until 101.
+  - Findings 5 and 6 (the combine result assumed last; the one-frame hold covers only answers) are
+    moot once 101 splits the stashes.
+  - Nit: tie `SaveCodec.CurrentVersion` to `NetProtocol.Version`.
+- **Bandwidth (review 4): Netcode's call is 101a**, an inserted task after 101, before 102.
+  - Send the full copy only when the fingerprint moves: sack revision, `Wallet.Balance`,
+    `Sack.AutoEquip`, `Sack.AutoSell`.
+  - `Watched` keeps the last full print and a has-sent-full flag, so the first copy is always full.
+  - A screen opening still Forces a send, but sends a partial when the print hasn't moved. `SendMoment`
+    follows the same rule. No protocol bump.
+  - Tests: the chest-open test accepts either form, and the newest full copy must carry the current
+    revision (the same change goes into 101's moment test). New: an XP-only change sends a partial; a
+    sale sends a full copy with the new revision. Mutation: always-full turns the XP test red.
+  - **For 105's close-out (plan header item 6):** each guest sale still sends the whole sack once
+    (≤ ~17 KB). This is accepted for M8, and it's the first suspect if D6 at Bad lag finds the menus
+    sluggish.
+- **For 101's premise check:** the `ParticipantMinSteps` doc says an autosave forces a bag send, but
+  nothing calls Force at a moment. The guest's copy may lag up to 15 steps when it saves.
 
 **Task 98 (2026-09-26):**
 - **Staging:** T1 is the runner test, red on behaviour ("Expected NoScreen but was Refused"). T2 is the
@@ -1304,6 +1375,8 @@ ROADMAP §4 M8 line, for the orchestrator: *Stages A–B (the remote controller,
 
 ## Log
 
+- 2026-09-26 — Orchestrator: no 96a/96b sitting; build 99–104 straight through. 96a → 102;
+  96b's logger steps go to the orchestrator for the Plan 2 pass sheet before 105.
 - 2026-09-26 — **Task 98 complete** (the rack in the simulation, plus the review's test fixes):
   EditMode 810, PlayMode 74. `DONE` sent.
 - 2026-09-26 — **Task 97 complete:** requests seam plus review fixes; EditMode 808, PlayMode 70. `DONE`

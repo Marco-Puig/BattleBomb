@@ -6,11 +6,12 @@ namespace BattleBomb.Core.Net
     /// The protocol version and HANDOFF-M8's paper numbers, in one place. Tuned live; a change to
     /// anything that alters the bytes on the wire bumps <see cref="Version"/>.
     /// 3: menu requests (Plan 2, Task 97).
+    /// 4: the guest's screens, racks and inventory (Task 99).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 3;
+        public const int Version = 4;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>
@@ -50,6 +51,22 @@ namespace BattleBomb.Core.Net
         public const int MaxStatuses = 16;
         public const int MaxEvents = 512;
         public const int MaxItemJsonBytes = 8192;
+
+        /// <summary>A player's inventory, deflated. A full 200-stack sack of four-affix gear is ~15 KB.</summary>
+        public const int MaxParticipantBytes = 192 * 1024;
+
+        /// <summary>What a participant may inflate to — a decompression bomb stops here, not at memory's end.</summary>
+        public const int MaxParticipantJsonBytes = 4 * 1024 * 1024;
+
+        /// <summary>Pieces a rack may carry on the wire; the simulation rolls four (D43).</summary>
+        public const int MaxRack = 16;
+
+        /// <summary>
+        /// Steps between two sends of one player's inventory when nothing forces it: a kill's XP changes the
+        /// bag's owner every few seconds in a fight, and a quarter of a second is quick enough for an XP bar.
+        /// A request's answer, a screen opening and an autosave send it at once.
+        /// </summary>
+        public const int ParticipantMinSteps = 15;
 
         /// <summary>The local socket transport's port for two editors on one machine.</summary>
         public const int DevPort = 7777;

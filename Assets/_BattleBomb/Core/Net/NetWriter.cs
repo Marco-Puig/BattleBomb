@@ -100,6 +100,21 @@ namespace BattleBomb.Core.Net
             WriteUShort((ushort)count);
         }
 
+        /// <summary>Raw bytes behind a 32-bit length — a deflated payload (HANDOFF-M8 Task 99).</summary>
+        public void WriteBlob(byte[] bytes)
+        {
+            byte[] value = bytes ?? Array.Empty<byte>();
+            if (value.Length > NetProtocol.MaxMessageBytes)
+            {
+                throw new NetFormatException($"A {value.Length}-byte blob does not fit a message.");
+            }
+
+            WriteInt(value.Length);
+            Ensure(value.Length);
+            Array.Copy(value, 0, _buffer, Length, value.Length);
+            Length += value.Length;
+        }
+
         private void Ensure(int extra)
         {
             int needed = Length + extra;

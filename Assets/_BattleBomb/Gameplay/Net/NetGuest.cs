@@ -3,6 +3,7 @@ using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Combat;
+using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.Gameplay.Simulation;
 using BattleBomb.Gameplay.World;
@@ -61,7 +62,10 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnLocalStep(int frame)
         {
-            PlayerCommand command = CommandCodec.Quantized(_menu.Filter(_driver.CommandFor(_local.Value), _driver.MenuPauseHeld));
+            // The guest's own chest is a menu too: its buttons are the fight's buttons as well (a pad's B is Magic),
+            // and the host frees the body only when the close arrives — after the press.
+            bool menuOpen = _driver.MenuPauseHeld || _driver.TryGetOpenScreen(_local.Value, out _);
+            PlayerCommand command = CommandCodec.Quantized(_menu.Filter(_driver.CommandFor(_local.Value), menuOpen));
             _recent.Add(WireCommand.From(command));
             if (_recent.Count > NetProtocol.CommandRedundancy)
             {
@@ -105,7 +109,28 @@ namespace BattleBomb.Gameplay.Net
 
                 case NetMessageKind.Events:
                     EventCodec.Read(reader, _driver.ItemSpecs, _incoming);
-                    _pending.AddRange(_incoming);
+                    for (int i = 0; i < _incoming.Count; i++)
+                    {
+                        if (_incoming[i].IsMenuState)
+                        {
+                            ApplyMenuState(_incoming[i]);
+                        }
+                        else
+                        {
+                            _pending.Add(_incoming[i]);
+                        }
+                    }
+
+                    break;
+
+                case NetMessageKind.Participant:
+                    ParticipantMessage participant = ParticipantCodec.Read(reader);
+                    PlayerInventory bag = _driver.InventoryOf(participant.PlayerId);
+                    if (bag != null)
+                    {
+                        bag.ApplyMirror(participant.State, participant.Revision, participant.Full, _driver.ItemSpecs);
+                    }
+
                     break;
 
                 case NetMessageKind.RequestResult:
@@ -143,6 +168,25 @@ namespace BattleBomb.Gameplay.Net
             _writer.Reset();
             StageCodec.WriteReady(_writer, stage);
             _net.Send(NetChannel.Reliable, _writer);
+        }
+
+        /// <summary>A screen or a rack, taken as it arrives (Task 99): menu state, not picture.</summary>
+        private void ApplyMenuState(in ReplicatedEvent e)
+        {
+            switch (e.Kind)
+            {
+                case ReplicatedEventKind.ScreenOpened:
+                    _driver.ApplyReplicaScreen(e.Screen.PlayerId, (InteractionKind)e.Screen.Kind, true);
+                    break;
+
+                case ReplicatedEventKind.ScreenClosed:
+                    _driver.ApplyReplicaScreen(e.Screen.PlayerId, (InteractionKind)e.Screen.Kind, false);
+                    break;
+
+                case ReplicatedEventKind.RackChanged:
+                    _driver.ApplyReplicaRack(e.Rack.PlayerId, e.Rack.Pieces);
+                    break;
+            }
         }
 
         /// <summary>Raises every event whose step the picture has reached, in the order they happened.</summary>

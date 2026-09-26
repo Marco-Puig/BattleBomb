@@ -189,6 +189,177 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(bag.Inventory.Items.Count, Is.EqualTo(items));
         }
 
+        [UnityTest]
+        public IEnumerator The_guests_press_at_the_chest_opens_it_and_the_guest_is_told()
+        {
+            int before = _guest.Received.Count;
+            _guest.Held = CommandButtons.Light;
+            yield return Steps(3);
+            _guest.Held = CommandButtons.None;
+            yield return Until(() => _driver.TryGetOpenScreen(PlayerId.Two.Value, out InteractionKind kind) && kind == InteractionKind.Chest,
+                "Player 2's Light beside the chest never opened it on the host");
+            yield return Steps(4);
+
+            int opened = IndexOf(before, m => IsEvent(m, ReplicatedEventKind.ScreenOpened, PlayerId.Two.Value));
+            int bag = IndexOf(before, m => IsParticipant(m, PlayerId.Two.Value, full: true));
+            Assert.That(opened, Is.GreaterThanOrEqualTo(0), "The guest was never told its chest opened.");
+            Assert.That(bag, Is.GreaterThanOrEqualTo(0), "The guest's bag never reached it.");
+            Assert.That(bag, Is.LessThan(opened), "The chest opened on the guest before its bag arrived.");
+        }
+
+        [UnityTest]
+        public IEnumerator No_screen_is_drawn_on_the_host_for_a_remote_players_chest()
+        {
+            _driver.OpenScreen(PlayerId.Two.Value, InteractionKind.Chest);
+            yield return Steps(3);
+
+            Assert.That(_driver.TryGetOpenScreen(PlayerId.Two.Value, out _), Is.True);
+            Assert.That(GameObject.Find("Chest Screen P2"), Is.Null,
+                "The host drew the guest's chest on the host's display.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_guests_bag_reaches_it_before_the_answer_that_reads_it()
+        {
+            PlayerInventory bag = _guestBody.GetComponent<PlayerInventory>();
+            bag.Take(_driver.RollDebugItem(KnifeDefinitionId, 2.2f));
+            _driver.OpenScreen(PlayerId.Two.Value, InteractionKind.Chest);
+            yield return Steps(4);
+            int items = bag.Inventory.Items.Count;
+            int before = _guest.Received.Count;
+
+            _guest.SendRequest(PlayerRequest.Sell(items - 1).WithSequence(9).WithRevision(bag.Inventory.Sack.Revision));
+            yield return Until(() => _guest.Results.Count > 0, "the host never answered");
+
+            int answer = IndexOf(before, m => (NetMessageKind)m[0] == NetMessageKind.RequestResult);
+            Assert.That(answer, Is.GreaterThanOrEqualTo(0));
+            int copy = LastIndexOf(before, answer, m => IsParticipant(m, PlayerId.Two.Value, full: true));
+            Assert.That(copy, Is.GreaterThanOrEqualTo(0), "The answer arrived before the bag it describes.");
+
+            var reader = new NetReader(_guest.Received[copy]);
+            reader.ReadByte();
+            ParticipantMessage sent = ParticipantCodec.Read(reader);
+            Assert.That(sent.State.Sack.Length, Is.EqualTo(items - 1), "The copy the guest got still has the sold item.");
+            Assert.That(sent.Revision, Is.EqualTo(bag.Inventory.Sack.Revision));
+        }
+
+        [UnityTest]
+        public IEnumerator The_guest_is_told_what_its_partner_wears()
+        {
+            PlayerInventory hostBag = _host.GetComponent<PlayerInventory>();
+            hostBag.Earn(5000f);
+            Assert.That(hostBag.Inventory.Loadout.Weapon.IsEmpty || hostBag.Inventory.Loadout.Weapon.DefinitionId != KnifeDefinitionId,
+                Is.True, "The host already wore a knife, so the case proves nothing.");
+            hostBag.Take(_driver.RollDebugItem(KnifeDefinitionId, 2.2f));
+            Assert.That(hostBag.RequestEquip(hostBag.Inventory.Items.Count - 1), Is.True, "The host could not wear the knife.");
+            int before = _guest.Received.Count;
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+
+            int copy = LastIndexOf(before, _guest.Received.Count, m => IsParticipant(m, 0, full: false));
+            Assert.That(copy, Is.GreaterThanOrEqualTo(0), "The partner's new gear never reached the guest.");
+            var reader = new NetReader(_guest.Received[copy]);
+            reader.ReadByte();
+            ParticipantMessage sent = ParticipantCodec.Read(reader);
+            Assert.That(sent.State.Sack, Is.Empty, "The host's whole sack crossed the wire; only its gear should.");
+            bool knife = false;
+            foreach (var worn in sent.State.Characters[0].Worn)
+            {
+                knife |= worn.Item.DefinitionId == KnifeDefinitionId;
+            }
+
+            Assert.That(knife, Is.True, "The partner's copy does not wear the knife the host just put on.");
+        }
+
+        [UnityTest]
+        public IEnumerator A_draught_the_guest_drinks_reaches_its_copy_of_the_bag()
+        {
+            const int PotionDefinitionId = 9;
+            PlayerInventory bag = _guestBody.GetComponent<PlayerInventory>();
+            bag.Take(_driver.RollDebugItem(PotionDefinitionId, 2.2f));
+            Assert.That(bag.Inventory.AssignQuickConsumable(PotionDefinitionId), Is.True, "The draught would not go in the quick slot.");
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+            int revision = bag.Inventory.Sack.Revision;
+            int before = _guest.Received.Count;
+
+            _guest.Held = CommandButtons.Equipment;
+            yield return Steps(3);
+            _guest.Held = CommandButtons.None;
+            yield return Until(() => bag.Inventory.Sack.Revision != revision, "the guest's quick-use never drank on the host");
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+
+            int copy = LastIndexOf(before, _guest.Received.Count, m => IsParticipant(m, PlayerId.Two.Value, full: true));
+            Assert.That(copy, Is.GreaterThanOrEqualTo(0), "The drink never reached the guest's copy of its bag.");
+            var reader = new NetReader(_guest.Received[copy]);
+            reader.ReadByte();
+            Assert.That(ParticipantCodec.Read(reader).Revision, Is.EqualTo(bag.Inventory.Sack.Revision),
+                "The guest's copy is of the bag from before the drink.");
+        }
+
+        private int IndexOf(int from, System.Func<byte[], bool> match)
+        {
+            for (int i = from; i < _guest.Received.Count; i++)
+            {
+                if (match(_guest.Received[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>The last match in [<paramref name="from"/>, <paramref name="end"/>), or -1.</summary>
+        private int LastIndexOf(int from, int end, System.Func<byte[], bool> match)
+        {
+            for (int i = end - 1; i >= from; i--)
+            {
+                if (match(_guest.Received[i]))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private static bool IsParticipant(byte[] message, int playerId, bool full)
+        {
+            var reader = new NetReader(message);
+            if ((NetMessageKind)reader.ReadByte() != NetMessageKind.Participant)
+            {
+                return false;
+            }
+
+            return reader.ReadInt() == playerId && ReadFull(reader) == full;
+        }
+
+        private static bool ReadFull(NetReader reader)
+        {
+            reader.ReadInt();
+            return reader.ReadBool();
+        }
+
+        private static bool IsEvent(byte[] message, ReplicatedEventKind kind, int playerId)
+        {
+            var reader = new NetReader(message);
+            if ((NetMessageKind)reader.ReadByte() != NetMessageKind.Events)
+            {
+                return false;
+            }
+
+            var batch = new List<ReplicatedEvent>();
+            EventCodec.Read(reader, null, batch);
+            foreach (ReplicatedEvent e in batch)
+            {
+                if (e.Kind == kind && e.Screen.PlayerId == playerId)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private WorldInteractable FirstChest()
         {
             WorldInteractable first = null;

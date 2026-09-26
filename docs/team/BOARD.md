@@ -76,6 +76,16 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
+- **Plan 2 done:** 97 (03c6bab).
+- **Carried from 97 (Builder's review):**
+  - **99:** a guest's press can land blind — the answer and bag copy apply at the top of a frame, so
+    a press later that frame acts on a cursor never drawn (a mashed X sells what slid under it, with
+    the new revision). Fix red-first: wait one tick after an answer, or carry the revision as last
+    drawn (the couch keeps the current one). Also: StaleSack/Busy/NoScreen get one flash and skip
+    the verb's own callback; an upgrade that succeeded while the bag shrank reports "capacity spent".
+  - **103/104:** the host's request queue outlives the guest who filled it (clear on leave/unbind);
+    NetGuest clears `RequestRoute` without checking it's its own; a close is refused when the body
+    is gone.
 - **Plan 3 is written** (5db14e6) — `docs/superpowers/plans/2026-09-26-m8-plan3-feel-and-steam.md`,
   Tasks F4, 106–114; Michael's sheet `docs/team/m8-plan3-pass.md`; the collaborator's one-pager
   `docs/team/netcode/collaborator-how-to-run.md`. **Quiet:** 108, 113 (Steps 3–4), 114. No delta
@@ -250,6 +260,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 97 committed (03c6bab): every menu action is a request; the couch unchanged
+  (LootLoopSmokeTests untouched), a guest's action runs on the host and is answered. Protocol 3.
+  EditMode 808, PlayMode 70. The 96a/96b five-minute check is ready for Michael (needs quiet).
 - 2026-09-26 — Netcode `READY TO COMPACT`; on call for the Builder's Plan 2 and 3 questions.
 - 2026-09-26 — **M8 Plan 3 committed** (5db14e6): F4, prediction (106–108), Steam (109–113), close-out
   (114). All three M8 plans written. Netcode prepares to compact.

@@ -116,32 +116,70 @@ them as amendments to those D entries.
 
 ## Waiting on
 
-- **Michael + collaborator:** Q1's answer (they talk each question over, so it comes relayed).
-- **Orchestrator:** the outcome of the prelude-presentation question (how story beats are shown
-  under D56) — goes into the bible when it lands. Not blocking.
+- **Michael + Marco (the collaborator):** Q2b — tone — asked 2026-09-26, unanswered. They are
+  now working on the story outside this session (the drafts below), so the next thing may be a
+  chosen draft rather than a Q2b answer.
+
+## Story drafts — candidates, NOT decisions
+
+`docs/world/drafts/` appeared 2026-09-26, **not written by this lane**:
+- `00-README.md` + `01`–`05`: five full-story drafts written by another session at Michael's
+  request; the README says Michael relaxed D56's no-lore rule **for that drafting task**. It does
+  **not** relax it for the World lane — this lane still invents nothing.
+- `06`–`10` (`06_THE_STOLEN_SUN.md` … `10_THE_DRAGON_IN_THE_TREASURE_CHEST.md`): a different
+  format ("Candidate 6" …), not covered by the README; an empty `docs/world/story_candidates_openai/`
+  sits beside them, so they likely came from another tool. Provenance unconfirmed.
+- **How they enter the bible:** only what Michael and Marco say they adopt ("draft 3, but …"). Record
+  their choice verbatim in `SESSION_NOTES.md`, then treat the adopted parts as their answers. Never
+  fill a gap from a draft on my own; anything they haven't adopted stays open.
+- The README reads the knights as lowest-rank Knight Squad, the slime colours as alien aura (not
+  elements), "mini bosses" as chapter bosses and aura monsters as elites — those are the drafts'
+  **assumptions**, not answers. The carry-forward questions below still stand until Michael/Marco
+  settle them.
 
 ## Current state
 
 Session opened 2026-09-24. On 2026-09-26 Michael supplied the **prelude** (their opening, saved
 verbatim in `docs/world/PRELUDE_NOTES.md` — "none of this is final"). It covers most of Q2a
-(setting) and frames Q1 without answering it. **At Q1, re-asked narrowly:** when the heroes leave
-the castle, what are they setting out to do? Michael takes each question to the collaborator, so
-answers come back relayed.
+(setting) and frames Q1 without answering it. Q1 answered 2026-09-26 (verbatim in
+`docs/world/SESSION_NOTES.md`; summary under Answers). Artifact: **open**. Q2a taken as answered
+by the prelude (the "does it ever leave this land?" question folds into the chapter regions).
+**At Q2b — tone**, asked, unanswered. Michael takes each question to Marco, so
+answers come back relayed. Every answer is saved verbatim to `SESSION_NOTES.md` as well as
+summarised here. 2026-09-26 evening: Michael wrapping up; he and Marco working on the story
+elsewhere (drafts). Everything on disk handed in as DONE; READY TO COMPACT sent.
+
+**On resume:** re-read PROTOCOL, BOARD, this file. Wait for `COMMITTED` before touching the DONE
+paths. Then, when Michael returns: if they picked or blended a draft, record it (see "Story
+drafts" above) and re-ask only what the choice leaves open, one question at a time; otherwise
+re-ask Q2b.
 
 ## Next steps
 
-1. Record Q1's answer, read it back, move to Q2 (2a is mostly answered — confirm only what's
-   missing, then 2b tone).
-2. Carry on down the list, folding in the carry-forward questions below where they belong;
-   update this file after every answered question.
+1. Get Q2b (tone) — or record the draft Michael and Marco choose, and what it settles.
+2. Q3, the four heroes, one at a time (Fire → Ice → Earth → Air); then the prelude characters'
+   one-line looks. Fold in the carry-forward questions below where they belong; update this file
+   and `SESSION_NOTES.md` after every answered question.
 3. When the list is done (or a sitting ends), write `docs/world/STORY_BIBLE.md` from what was
    decided, open items marked open.
 
 ## Carry-forward questions (raised by the prelude — ask at the point shown)
 
-- **Q1 follow-ups:** who is the big fight at the end against? Does it answer "who won"?
-- **Q2a:** does the whole game stay in this fantasy land, or does it go elsewhere? (There is now a
-  spaceship; the 2019 build had space scenes — theirs to keep or drop, don't lead.)
+- **Q1 follow-ups:** the artifact — **open** (Michael, 2026-09-26). Also open: who the final fight is against; is "the big alien boss" the alien that broke into
+  the castle; what happens after the artifact and the injured king are found ("we continue on some
+  more" — nothing planned). Don't push these; the bible lists them open.
+- **Q3:** the heroes are "low level knights" (Q1) — confirm whether that makes them Knight Squad
+  members.
+- **Q4/Q5 — progression Michael described (Q1):** amped-up enemies around the crash site and
+  village; venturing out, mostly *regular* unbuffed monsters (learning how they fight); nearer
+  "mini bosses", monsters with a **glowing alien aura**. Ask: are "mini bosses" the chapter bosses
+  or something smaller? Are glowing-aura monsters the same thing as elites (D22 — today "visibly
+  armoured") or separate? If separate, that's a design call → orchestrator, don't design it.
+- **Where the artifact and the injured king are found** — which chapter, or beyond Chapter 2?
+  Ask during the chapter questions; open is fine.
+- **Q2a leftover → ask with the chapter regions (Q4a/Q5a):** does the story stay in this fantasy
+  land, or go elsewhere? (There is now a spaceship; the 2019 build had space scenes — theirs to
+  keep or drop, don't lead.)
 - **Q2b:** tone — the Shrek reference and the buff-king reveal point somewhere, but confirm, don't
   assume.
 - **Q3:** are the four heroes members of the Knight Squad? Is the tutorial played as the chosen
@@ -149,10 +187,12 @@ answers come back relayed.
 - **Q4c:** do the mutated slimes' glowing colours (red, purple, blue) mean elements? Are slimes
   Chapter 1's family, one type in it, or a thread through the whole game? (The gray tutorial enemy
   "doesn't have to be slime".)
-- **Characters beyond D56's list:** the king (name? look beyond "super buff, gold legendary
-  sword"?), the alien (name? one or many? a boss?), the Knight Squad, villagers.
-- **The prelude's shape:** is it its own chapter / tutorial stage(s) before Chapter 1 — village,
-  castle, minion fight, outside?
+- **Prelude characters (D56 amendment — the bible lists each with a one-line look, as far as
+  Michael and Marco give them):** the king (name? look beyond "super buff, gold legendary sword"?),
+  the alien (name? one or many? a boss?), the Knight Squad, villagers, the carriage. Ask after the
+  heroes (Q3), before Chapter 1.
+- ~~The prelude's shape~~ — settled by the D56 amendment: village (tutorial) → castle (minion
+  fight) → outside into Chapter 1, built in M10.
 
 ## Answers and decisions
 
@@ -170,6 +210,29 @@ answers come back relayed.
   recommendation. World keeps recording the story only — **do not design the presentation**; the
   orchestrator will send the outcome so the bible can say how the beats are shown. Send lane file
   + `docs/world/` as DONE at stopping points.
+- 2026-09-26 — **Michael, via the orchestrator — D56 amended (4d1a6de):** story beats are shown
+  **mostly through gameplay** — the player keeps control; a beat is a scripted stage event (shake,
+  wall breaks, characters walk in, act, leave). Still no cutscene or dialogue system. Opening crawl
+  + tutorial prompts come with the prelude. The prelude is built in **M10** as the game's opening
+  and starts the Next Fest demo. New characters (king, alien, Knight Squad, villagers, carriage)
+  appear as stage characters/props. **For the bible:** list the prelude's characters with a
+  one-line look each (as far as Michael and Marco give them); note beats as things that happen on
+  stage; design no mechanics (M10's job).
+- 2026-09-26 — The collaborator is **Marco** (per the orchestrator).
+- 2026-09-26 — **Q1, Michael + Marco:** the heroes are **low-level knights** whose everyday duty
+  is protecting the castle and nearby village from ordinary, not-a-big-deal monsters. After the
+  prelude they go out on that duty; passing the alien ship they learn **the aliens are after some
+  sort of artifact**. Clearing the amped-up enemies in the village, they learn **the aliens buff
+  ordinary monsters**. So they venture out **to figure out what the aliens want**. Along the way:
+  ordinary unbuffed monsters first (learning how they fight), glowing-alien-aura monsters nearer
+  the mini bosses. Eventually they **find the artifact, and the king badly injured by the big
+  alien boss** — and "continue on some more". Beyond that: nothing planned (open). Recorded
+  reading: "defend" is the knights' duty in the story, not a gameplay mode — play still moves
+  forward (D48); Michael to correct if wrong.
+- 2026-09-26 — **Q1 follow-up, Michael:** what the artifact is and why the aliens want it —
+  **open**.
+- 2026-09-26 — **Q2a:** taken as answered by the prelude — a Shrek "far, far away" fantasy land;
+  mythical creatures, vibrant forests, varied biomes; a central kingdom ringed by villages.
 
 - 2026-09-24 — **Orchestrator:** question list approved; the three tail names become optional Q9.
 - 2026-09-24 — **Orchestrator:** session names are unreliable (Michael renames them). Message it
@@ -179,6 +242,14 @@ answers come back relayed.
 
 ## Log
 
+- 2026-09-26 — Orchestrator asked for a DONE of everything on disk (Michael wrapping up; Marco to
+  read the drafts on GitHub). Found `docs/world/drafts/` (not mine), recorded its provenance
+  above; DONE sent, then READY TO COMPACT.
+- 2026-09-26 — Artifact: open. Q2a taken from the prelude. Asked Q2b (tone).
+- 2026-09-26 — Q1 answered; saved verbatim to `docs/world/SESSION_NOTES.md`; read back; asked
+  the artifact follow-up.
+- 2026-09-26 — COMMITTED 3bbdcd7 (lane file + prelude notes). D56 amended (4d1a6de) with
+  Michael's presentation answers; recorded above.
 - 2026-09-26 — Orchestrator ACK on the scope flag; DONE sent for the lane file + prelude notes.
 - 2026-09-26 — Michael gave the prelude; saved to `docs/world/PRELUDE_NOTES.md`; read back; Q1
   re-asked narrowly; scope flag sent to the orchestrator.

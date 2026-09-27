@@ -33,30 +33,26 @@ address (the address changes when this app restarts).
 
 | Lane | Last `from=` address | State |
 |---|---|---|
-| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | working (woken 2026-09-26): 96's close-out (verdicts, bandwidth re-measure) → 97 → Plan 2; root-causes 96a/96b |
+| Builder | `uds:\\.\pipe\LOCAL\cc-msg-43864ba16405a9d03037d6ccae21ba0d` | idle — READY TO COMPACT; **104 parked** in stash "104 WIP (Builder)". On resume: `git stash pop` (check the list first), then wake it — recompile, EditMode 847, PlayMode 134, mutations, review, live check, DONE |
 | Art | `uds:\\.\pipe\LOCAL\cc-msg-d1e3f618d64192f7034adc4fa072bc9d` | idle — READY TO COMPACT (9902064); send `CONTINUE` when the music tool, a pet direction, or the World bible lands |
 | Netcode | `uds:\\.\pipe\LOCAL\cc-msg-ca83eb67f92347f8af2eeeade5ea5050` | idle — READY TO COMPACT (Plan 3 5db14e6); on call for the Builder. At 114: apply Plan 2's and Plan 3's HANDOFF-M8 departures, CLAUDE.md layout line, ARCHITECTURE (Platform/Steam, PlatformRegistry, ILobbyService) |
-| World | `uds:\\.\pipe\LOCAL\cc-msg-727b6d4358334e882020a4df8ee0cfb5` | in session with Michael and Marco (2026-09-26): prelude recorded (3bbdcd7); D56 amended (gameplay beats, prelude in M10); at Q1 |
+| World | `uds:\\.\pipe\LOCAL\cc-msg-727b6d4358334e882020a4df8ee0cfb5` | idle — READY TO COMPACT (e016a6f); at Q2b (tone); drafts 1–5 (a Claude session, at Michael's request) and 6–10 (Michael's own) pushed for him and Marco to choose from |
 
-## Current state (2026-09-25)
+## Current state (2026-09-26, end of day)
 
-- **Groundwork:** built — G1–G13b (56e4be5..527df2b); G14's docs 5f3799a. **Michael's pass pending**
-  (16 items, `docs/team/groundwork-pass.md`). On his go: QUIET ON to the
-  Builder (clean point, hands off Unity), he plays, QUIET OFF. Record his verdict in ROADMAP §4
-  (heading → complete), CLAUDE.md's progress row, and memory. Item 12 is his judgement; if he
-  wants the fix, it rides F5.
-- **Now:** M8 Plan 1's code is complete (86–95; 95 = f393d98). Task 96 = Michael's pass
-  (`docs/team/m8-plan1-pass.md`, one sitting with the Groundwork list) + close-out: the Builder
-  drafts the build log and close-out notes in builder.md, then compacts; on Michael's verdicts
-  and lag table, wake the Builder, apply the draft to HANDOFF-M8 (Build log section after "The
-  build — stages and tasks"), add ROADMAP §4 M8's line, commit 96. Plan 2 needs Netcode reopened
-  (committed 5bba6ed; the Builder is on 97). Plan 3 waits on the lag table. HANDOFF-M8's
-  departures (the plan's "Where this plan departs" section): fold in as each task lands — protocol
-  versions 97→3 … 103→8 — and in full at 105.
-- **Art:** rounds 1–2 done (knight rig, effects, fixture v2, icons, weapons). Waiting on Michael's
-  music tool (GPT steps 26–32), a pet direction, and the World bible.
-- **Michael's queue:** see the board — top items are the World session, the same-hero save call,
-  the HUD additions yes/no, the music tool.
+- **Groundwork complete.** M8 Plan 1 closed (96, b87a21d; HANDOFF-M8 has its build log). Plans 2
+  and 3 written and committed.
+- **M8 Plan 2:** 97–103 committed (2209aa3 = 103, EditMode 844, PlayMode 121). **104 parked** in
+  `git stash` "104 WIP (Builder)" (24 files). Resume: pop it, wake the Builder. Then 105 = Michael
+  and Marco's sitting (`m8-plan2-pass.md`, with 96a/96b and Groundwork items 7 and 12); QUIET for it.
+- **At 105's DONE:** apply Plan 2's HANDOFF-M8 departures and build log, and the ROADMAP line.
+  **At 114:** Plan 3's departures, CLAUDE.md layout line, ARCHITECTURE (Platform/Steam,
+  PlatformRegistry, ILobbyService).
+- **Before 109 lands, tell Michael:** Steam in the editor signs in as Spacewar and opens his solo
+  games to friends; his save is copied under his Steam ID.
+- **World:** D56 amended (beats in gameplay; the prelude is M10's opening). Michael and Marco are
+  choosing among drafts 1–10; the session stands at Q2b (tone).
+- **Michael's queue:** see the board.
 
 ## Traps learned
 
@@ -74,6 +70,8 @@ address (the address changes when this app restarts).
 
 ## Log
 
+- 2026-09-26 — End of day: 104 stashed, GitHub at e016a6f (103's code, compiles clean). All lanes ready
+  to compact, the orchestrator too.
 - 2026-09-26 — Plan 3 committed (5db14e6). Before 109 lands, tell Michael: Steam in the editor signs in as
   Spacewar and opens his solo games to friends; the save's name becomes his Steam ID (copied).
 - 2026-09-26 — 96 committed (b87a21d); HANDOFF-M8 Plan 1 build log applied.

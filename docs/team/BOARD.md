@@ -3,7 +3,7 @@
 Kept by the orchestrator (currently named "Battlebomb"). The live state of the team: who is doing what,
 who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
-**Updated:** 2026-09-25
+**Updated:** 2026-09-26
 
 ---
 
@@ -11,9 +11,9 @@ who holds the sim, what is waiting on whom. Rules: `docs/team/PROTOCOL.md`.
 
 | Lane | Session | Status | Working on | Waiting on |
 |---|---|---|---|---|
-| Builder | Builder | working | Task 96's close-out (Michael passed Plan 1), then Plan 2 from 97; root-causes 96a/96b | — |
-| Netcode | Netcode | idle — ready to compact; all three M8 plans written; on call for the Builder | — | — |
-| World | World | in session with Michael and Marco | The story session: prelude recorded; at Q1 (the goal) | Michael and Marco |
+| Builder | Builder | idle — ready to compact; **104 parked** in `git stash` "104 WIP (Builder)" | M8 Plan 2: 97–103 done; 104 built (S1–S4), gates/review/live check left | the orchestrator popping the stash |
+| Netcode | Netcode | idle — ready to compact; on call for the Builder | — | — |
+| World | World | idle — ready to compact | The story session: Q1 answered (artifact open); at Q2b (tone); 10 drafts to choose from | Michael and Marco |
 | Art | Art | idle — ready to compact | GPT steps 1–25 done; 26–32 (music) blocked | Michael: music tool, pet direction, bible review; the World bible |
 | Producer | — | starts at M9 | — | — |
 
@@ -77,7 +77,11 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (29e79af), 102 (39746c9), 103 (see Log).
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (29e79af), 102 (39746c9), 103 (2209aa3).
+- **104 parked (2026-09-26, end of day):** S1–S4 built and red-first green (OnlineJoinSmokeTests 27/27);
+  full gates (847/134), mutation proofs (Q10, W3), the Opus review and Step 11's live check are
+  left. Its work sits in `git stash` "104 WIP (Builder)" (24 files); the tree and GitHub are at 103's
+  code, which compiles clean. **Resume:** `git stash pop`, then the Builder's step 1.
 - ~~Rule until 102 lands: no online play on a real save~~ — lifted at 102 (the relaunch race closed). Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
   Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
@@ -334,6 +338,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — **End of day** (Michael). 104 parked in a stash; GitHub at e016a6f with 103's code (green,
+  compiles clean). World: Q1 answered, drafts 1–10 pushed for Michael and Marco. Every lane ready
+  to compact.
 - 2026-09-26 — Task 103 committed: drop-in at checkpoint rooms — a mid-run guest waits in its lobby, is
   sent the run in a checkpoint room, and stands up there once loaded. Protocol 8. EditMode 844,
   PlayMode 121.

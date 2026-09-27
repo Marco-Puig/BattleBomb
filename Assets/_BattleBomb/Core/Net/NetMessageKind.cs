@@ -21,5 +21,6 @@ namespace BattleBomb.Core.Net
         Participant = 16,
         Moment = 17,
         LobbyPick = 18,
+        LobbyState = 19,
     }
 }

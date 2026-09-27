@@ -10,11 +10,12 @@ namespace BattleBomb.Core.Net
     /// 4: the guest's screens, racks and inventory (Task 99).
     /// 5: the host's session moments (Task 100).
     /// 6: the guest's pick and what it brings (Task 101).
+    /// 7: the host's lobby (Task 102).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 6;
+        public const int Version = 7;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>
@@ -48,6 +49,10 @@ namespace BattleBomb.Core.Net
 
         /// <summary>Michael's call (design §1): about ten seconds of silence is a drop.</summary>
         public const float DropAfterSeconds = 10f;
+
+        /// <summary>How long a refused guest has to read the reason and close before the host drops them. The guest
+        /// closing is what keeps the reason on both screens; dropping at once raced it (Plan 1's lost refusal).</summary>
+        public const float RefusalGraceSeconds = 2f;
 
         public const int MaxMessageBytes = 256 * 1024;
         public const int MaxEntities = 256;

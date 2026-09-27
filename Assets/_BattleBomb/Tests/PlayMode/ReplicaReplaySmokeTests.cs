@@ -166,6 +166,11 @@ namespace BattleBomb.Tests.PlayMode
             guest.Clock = () => driver != null ? driver.Frame : 0;
 
             FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+            for (int i = 0; i < 300 && !flow.State.IsReady(1); i++)
+            {
+                yield return null;
+            }
+
             flow.State.Confirm(0);
             flow.State.Confirm(0);
             flow.State.Launch(flow.Selection.CanLaunch);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BattleBomb.Core.Chapters;
 using BattleBomb.Core.Combat;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
@@ -91,6 +92,9 @@ namespace BattleBomb.Gameplay.Net
             }
 
             SendLaunch();
+
+            // The guest's lobby shows a host at play — which is what a guest who joins mid-run sees too (Task 103).
+            _net.PublishLobby(new LobbyState(FrontendScreen.Launching, IndexInRoster(_session.Characters[0]), true, true));
         }
 
         private void SendLaunch()
@@ -567,6 +571,10 @@ namespace BattleBomb.Gameplay.Net
                 _writer.Reset();
                 HandshakeCodec.WriteBare(_writer, NetMessageKind.SessionEnd);
                 _net.Send(NetChannel.Reliable, _writer);
+
+                // What the guest brought is spent: the next launch waits for the pick its front door sends again,
+                // re-read from the save this match just wrote (D61) — never the one it brought into this match.
+                _net.UnreadyGuest();
             }
         }
     }

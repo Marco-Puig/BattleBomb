@@ -39,6 +39,17 @@ namespace BattleBomb.Gameplay.Net
         /// otherwise seat the host's heroes here as local players.</summary>
         private CharacterDefinition[] _couch;
 
+        /// <summary>Where this machine's own front door stood before the host's launch filled the session — put back
+        /// with the couch, so a guest who leaves lands where they came from, not at the host's chapter.</summary>
+        private ChapterDefinition _couchChapter;
+        private int _couchStage;
+        private int _couchTier;
+        private int _couchResume = -1;
+
+        private double _refusedAt = -1.0;
+        private bool _lobbyPublished;
+        private LobbyState _lastLobby;
+
         public NetRole Role { get; private set; }
 
         public NetPeer Peer { get; private set; }
@@ -66,6 +77,36 @@ namespace BattleBomb.Gameplay.Net
 
         /// <summary>Host: the guest's pick or readiness changed.</summary>
         public event Action GuestLobbyChanged;
+
+        /// <summary>Host: this game takes no guest — a couch pair is playing, or about to (D59). A guest who asks is
+        /// turned away with the reason on both screens.</summary>
+        public bool IsFull { get; private set; }
+
+        public void SetFull(bool full) => IsFull = full;
+
+        /// <summary>Guest: the host's front door as it last said (D59), for the lobby to show.</summary>
+        public LobbyState HostLobby { get; private set; }
+
+        /// <summary>Guest: this machine's lobby pick and readiness, kept across the host's matches so the lobby comes
+        /// back as it was left. -1 before a pick.</summary>
+        public int LobbyPick { get; set; } = -1;
+
+        public bool LobbyReady { get; set; }
+
+        /// <summary>Host: tells the guest where this machine's front door is, when it changed.</summary>
+        public void PublishLobby(in LobbyState state)
+        {
+            if (Role != NetRole.Host || !IsConnected || (_lobbyPublished && _lastLobby.Same(state)))
+            {
+                return;
+            }
+
+            _lastLobby = state;
+            _lobbyPublished = true;
+            _writer.Reset();
+            LobbyCodec.WriteLobby(_writer, state);
+            Send(NetChannel.Reliable, _writer);
+        }
 
         /// <summary>Nothing heard for a second — the "connection problem" banner's condition.</summary>
         public bool HasProblem => IsConnected && Now - _lastReceived > NetProtocol.ProblemAfterSeconds;
@@ -161,26 +202,6 @@ namespace BattleBomb.Gameplay.Net
             Send(NetChannel.Reliable, _writer);
         }
 
-        /// <summary>The hero this machine's own couch last sat Player 1 as, or the roster's first.</summary>
-        private int StandInPick()
-        {
-            GameSession session = GetComponent<GameSession>();
-            if (session == null || session.Characters.Length == 0 || session.Characters[0] == null)
-            {
-                return 0;
-            }
-
-            for (int i = 0; i < session.Roster.Length; i++)
-            {
-                if (session.Roster[i] == session.Characters[0])
-                {
-                    return i;
-                }
-            }
-
-            return 0;
-        }
-
         private static INetTransport WrapLocal(INetTransport transport, int lagIndex)
         {
             LagProfile profile = lagIndex == 1 ? LagProfile.Normal : lagIndex == 2 ? LagProfile.Bad : LagProfile.None;
@@ -226,6 +247,14 @@ namespace BattleBomb.Gameplay.Net
 
             if (_transport == null || Peer.IsNone)
             {
+                return;
+            }
+
+            if (_refusedAt >= 0.0 && Now - _refusedAt > NetProtocol.RefusalGraceSeconds)
+            {
+                // The refused guest had its reason and did not close: drop it now.
+                _refusedAt = -1.0;
+                _transport.Disconnect(Peer);
                 return;
             }
 
@@ -306,10 +335,6 @@ namespace BattleBomb.Gameplay.Net
                         _welcomed = true;
                         Status = "Joined — waiting for the host to launch";
                         PeerJoined?.Invoke();
-
-                        // Until the lobby's screens (Task 102), the guest's machine picks for its player: the hero
-                        // they last sat as on their own couch, ready at once.
-                        SendLobbyPick(StandInPick(), true);
                         return;
 
                     case NetMessageKind.Refuse when Role == NetRole.Guest:
@@ -326,6 +351,10 @@ namespace BattleBomb.Gameplay.Net
                         GuestLobbyChanged?.Invoke();
                         return;
 
+                    case NetMessageKind.LobbyState when Role == NetRole.Guest && _welcomed:
+                        HostLobby = LobbyCodec.ReadLobby(reader);
+                        return;
+
                     case NetMessageKind.KeepAlive:
                         return;
 
@@ -338,8 +367,18 @@ namespace BattleBomb.Gameplay.Net
                         return;
 
                     case NetMessageKind.SessionEnd when Role == NetRole.Guest && _welcomed:
+                    {
+                        // The host ended the match cleanly: its D52 clean exit, so the guest's moment too (D61). The
+                        // save's own gate writes nothing if the host's first copy never arrived.
+                        SaveService saves = FindAnyObjectByType<SaveService>();
+                        if (saves != null)
+                        {
+                            saves.SaveNow();
+                        }
+
                         ReturnToFrontend();
                         return;
+                    }
                 }
 
                 if (!_welcomed)
@@ -364,18 +403,23 @@ namespace BattleBomb.Gameplay.Net
 
         private void Greet(in HelloMessage hello)
         {
-            string refusal = HandshakeCodec.CheckHello(hello, Application.version);
+            string refusal = HandshakeCodec.CheckHello(hello, Application.version)
+                ?? (IsFull ? "The game is full." : null);
             if (refusal != null)
             {
                 _writer.Reset();
                 HandshakeCodec.WriteRefuse(_writer, refusal);
                 Send(NetChannel.Reliable, _writer);
                 Status = $"Refused a guest: {refusal}";
-                _transport.Disconnect(Peer);
+
+                // Not dropped here: the guest closes once it has read the reason, and a drop racing the message was how
+                // a lagged guest came to read "The host left" instead. The grace ends it if the guest never does.
+                _refusedAt = Now;
                 return;
             }
 
             _welcomed = true;
+            _lobbyPublished = false;
             _writer.Reset();
             HandshakeCodec.WriteWelcome(_writer, new WelcomeMessage(GuestPlayerId.Value));
             Send(NetChannel.Reliable, _writer);
@@ -407,6 +451,10 @@ namespace BattleBomb.Gameplay.Net
             if (_couch == null)
             {
                 _couch = (CharacterDefinition[])session.Characters.Clone();
+                _couchChapter = session.Chapter;
+                _couchStage = session.StageIndex;
+                _couchTier = session.TierIndex;
+                _couchResume = session.ResumeCheckpointArena;
             }
 
             session.Chapter = chapter;
@@ -435,7 +483,12 @@ namespace BattleBomb.Gameplay.Net
 
             GameSession session = GetComponent<GameSession>();
             Array.Copy(_couch, session.Characters, Math.Min(_couch.Length, session.Characters.Length));
+            session.Chapter = _couchChapter;
+            session.StageIndex = _couchStage;
+            session.TierIndex = _couchTier;
+            session.ResumeCheckpointArena = _couchResume;
             _couch = null;
+            _couchChapter = null;
         }
 
         /// <summary>
@@ -490,7 +543,14 @@ namespace BattleBomb.Gameplay.Net
             }
 
             ForgetGuest();
-            Status = $"Hosting — the guest {why}; waiting for another";
+            _refusedAt = -1.0;
+            _lobbyPublished = false;
+
+            // A guest who was never welcomed — refused, or gone before the handshake — changes nothing the panel said.
+            if (wasJoined)
+            {
+                Status = $"Hosting — the guest {why}; waiting for another";
+            }
             if (wasJoined)
             {
                 PeerLeft?.Invoke();
@@ -507,12 +567,26 @@ namespace BattleBomb.Gameplay.Net
             Peer = NetPeer.None;
             _welcomed = false;
             ForgetGuest();
+            _refusedAt = -1.0;
+            _lobbyPublished = false;
+            HostLobby = default;
+            LobbyPick = -1;
+            LobbyReady = false;
             Status = "Offline";
         }
 
         private void ForgetGuest()
         {
             GuestPick = -1;
+            GuestReady = false;
+            GuestBrought = null;
+        }
+
+        /// <summary>Host: the match ended, so the guest's readiness and what they brought are spent (D61). The next
+        /// launch waits for the pick their front door sends again, from the save the match just wrote; the pick itself
+        /// stays, so their slot still shows their hero.</summary>
+        internal void UnreadyGuest()
+        {
             GuestReady = false;
             GuestBrought = null;
         }

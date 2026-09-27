@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Text;
 using BattleBomb.Core.Chapters;
+using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
 using BattleBomb.Gameplay.Data;
+using BattleBomb.Gameplay.Net;
 using BattleBomb.Gameplay.Players;
 using BattleBomb.Gameplay.Session;
 using BattleBomb.UI.Chest;
@@ -58,9 +60,18 @@ namespace BattleBomb.UI.Frontend
         private Button _back;
         private bool _launched;
 
+        /// <summary>This machine is a guest: its front door is a lobby (D59), null otherwise.</summary>
+        private GuestLobby _lobby;
+        private bool _sentAny;
+        private int _sentPick;
+        private bool _sentReady;
+
         public FrontendState State => _state;
 
         public StageSelection Selection => _selection;
+
+        /// <summary>The lobby while this machine is a guest, or null — read by the smoke suite.</summary>
+        public GuestLobby Lobby => _lobby;
 
         private void OnEnable()
         {
@@ -176,13 +187,29 @@ namespace BattleBomb.UI.Frontend
 
         private void Update()
         {
-            if (_input == null || _state == null || _launched)
+            if (_input == null || _state == null || _launched || _session == null)
             {
                 return;
             }
 
+            NetSession net = _session.Net;
+            if (net != null && net.Role == NetRole.Guest)
+            {
+                UpdateAsGuest(net);
+                return;
+            }
+
+            _lobby = null;
+            SyncRemote(net);
+
             for (int slot = 0; slot < FrontendState.Slots; slot++)
             {
+                if (_state.IsRemote(slot))
+                {
+                    // The online guest's seat is driven from their own machine (D59).
+                    continue;
+                }
+
                 PlayerCommand command = _input.CommandFor(slot);
                 MenuPress press = MenuPress.From(command);
                 Steer(slot, command);
@@ -201,7 +228,7 @@ namespace BattleBomb.UI.Frontend
 
             _session.Seats.Follow(
                 _state.Screen,
-                _state.IsJoined(1),
+                _state.IsJoined(1) && !_state.IsRemote(1),
                 _input.Players.LastDeviceOf(new PlayerId(0)),
                 _input.Players.LastDeviceOf(new PlayerId(1)));
 
@@ -213,6 +240,82 @@ namespace BattleBomb.UI.Frontend
 
             Repaint();
         }
+
+        /// <summary>
+        /// The host's side of the lobby (D59): a connected guest sits in Player 2's slot with their own pick; a couch
+        /// Player 2 makes the game full; and the guest is told where this front door is.
+        /// </summary>
+        private void SyncRemote(NetSession net)
+        {
+            bool guest = net != null && net.Role == NetRole.Host && net.IsConnected;
+            _state.SetRemote(1, guest, guest ? Mathf.Max(0, net.GuestPick) : 0, guest && net.GuestReady);
+            if (net == null || net.Role != NetRole.Host)
+            {
+                return;
+            }
+
+            net.SetFull(!guest && _state.IsJoined(1));
+            net.PublishLobby(new LobbyState(_state.Screen, _state.PickOf(0), _state.IsReady(0), false));
+        }
+
+        /// <summary>
+        /// The front door while this machine is a guest (D59): pick a hero from this machine's own save, ready, and
+        /// wait for the host, who chooses the chapter and launches both. Nothing of this machine's own can launch while
+        /// connected. Back un-readies, then leaves the game.
+        /// </summary>
+        private void UpdateAsGuest(NetSession net)
+        {
+            if (_lobby == null)
+            {
+                int start = net.LobbyPick >= 0 ? net.LobbyPick : IndexInRoster(_session.Characters[0]);
+                _lobby = new GuestLobby(_roster.Length, start, net.LobbyReady);
+                _sentAny = false;
+            }
+
+            PlayerCommand command = _input.CommandFor(0);
+            MenuPress press = MenuPress.From(command);
+            Vector2 move = command.Move;
+            bool freshX = Mathf.Abs(move.x) > 0.5f && Mathf.Abs(_lastMove[0].x) <= 0.5f;
+            _lastMove[0] = move;
+            if (freshX)
+            {
+                _lobby.MovePick(move.x > 0f ? 1 : -1);
+            }
+
+            if (press.Confirm)
+            {
+                _lobby.Confirm();
+            }
+            else if (press.Back)
+            {
+                _lobby.Back();
+            }
+
+            if (_lobby.LeaveRequested)
+            {
+                net.Leave();
+                _lobby = null;
+                Repaint();
+                return;
+            }
+
+            net.LobbyPick = _lobby.Pick;
+            net.LobbyReady = _lobby.Ready;
+            if (net.IsConnected && (!_sentAny || _lobby.Pick != _sentPick || _lobby.Ready != _sentReady))
+            {
+                // Ready, it brings this machine's own save cut down to the hero (D61), re-read whenever this front
+                // door comes up — so after a match it brings what the last autosave wrote.
+                net.SendLobbyPick(_lobby.Pick, _lobby.Ready);
+                _sentAny = true;
+                _sentPick = _lobby.Pick;
+                _sentReady = _lobby.Ready;
+            }
+
+            Repaint();
+        }
+
+        /// <summary>This machine is a guest: its front door is the lobby from the moment it joins (D59).</summary>
+        private bool IsGuest() => _session.Net != null && _session.Net.Role == NetRole.Guest;
 
         private void Steer(int slot, in PlayerCommand command)
         {
@@ -279,7 +382,8 @@ namespace BattleBomb.UI.Frontend
             _session.TierIndex = _selection.TierIndex;
             for (int i = 0; i < FrontendState.Slots; i++)
             {
-                _session.Characters[i] = _state.IsJoined(i) && _roster.Length > 0
+                // An online guest's hero is theirs, and never enters this machine's session (the binder seats it).
+                _session.Characters[i] = _state.IsJoined(i) && !_state.IsRemote(i) && _roster.Length > 0
                     ? _roster[Mathf.Clamp(_state.PickOf(i), 0, _roster.Length - 1)]
                     : null;
             }
@@ -327,8 +431,28 @@ namespace BattleBomb.UI.Frontend
             _promptRow = new PromptRow(pad);
             _promptRow.Place(0f, 1f, 0f, 0f, 0f);
 
-            _primary = MakeButton(panel, "Primary", 0.55f, 0.02f, 0.95f, 0.1f, () => Confirm(0));
-            _back = MakeButton(panel, "Back", 0.05f, 0.02f, 0.45f, 0.1f, () => _state.Back(0));
+            _primary = MakeButton(panel, "Primary", 0.55f, 0.02f, 0.95f, 0.1f, () =>
+            {
+                if (IsGuest())
+                {
+                    _lobby?.Confirm();
+                }
+                else
+                {
+                    Confirm(0);
+                }
+            });
+            _back = MakeButton(panel, "Back", 0.05f, 0.02f, 0.45f, 0.1f, () =>
+            {
+                if (IsGuest())
+                {
+                    _lobby?.Back();
+                }
+                else
+                {
+                    _state.Back(0);
+                }
+            });
 
             if (UnityEngine.EventSystems.EventSystem.current == null)
             {
@@ -367,6 +491,12 @@ namespace BattleBomb.UI.Frontend
             }
 
             _text.Clear();
+            if (_lobby != null)
+            {
+                RepaintLobby();
+                return;
+            }
+
             switch (_state.Screen)
             {
                 case FrontendScreen.Title:
@@ -386,7 +516,18 @@ namespace BattleBomb.UI.Frontend
                     _text.Append("CHOOSE YOUR CHARACTER\n\n");
                     for (int slot = 0; slot < FrontendState.Slots; slot++)
                     {
-                        _text.Append("Player ").Append(slot + 1).Append(":  ");
+                        _text.Append("Player ").Append(slot + 1).Append(_state.IsRemote(slot) ? " (online):  " : ":  ");
+                        if (_state.IsRemote(slot))
+                        {
+                            string guestHero = _roster.Length > 0 && _roster[_state.PickOf(slot)] != null
+                                ? _roster[_state.PickOf(slot)].DisplayName
+                                : "?";
+                            _text.Append(UiBuild.Tint(guestHero, UiBuild.Focus))
+                                .Append(_state.IsReady(slot) ? "   READY" : "   choosing")
+                                .Append('\n');
+                            continue;
+                        }
+
                         if (!_state.IsJoined(slot))
                         {
                             // Player 1 keeps the device they came in on (D57): with Player 1 on the
@@ -441,6 +582,11 @@ namespace BattleBomb.UI.Frontend
                         _text.Append("\n\nContinue from stage ").Append(_selection.LaunchStageIndex + 1);
                     }
 
+                    if (_state.IsRemote(1) && !_state.IsReady(1))
+                    {
+                        _text.Append("\n\n").Append(UiBuild.Tint("Waiting for Player 2 to be ready.", UiBuild.InkDim));
+                    }
+
                     SetButtonLabel(_primary, _selection.CanLaunch ? "Launch" : "Locked");
                     SetButtonLabel(_back, "Back");
                     break;
@@ -474,6 +620,55 @@ namespace BattleBomb.UI.Frontend
             }
 
             _promptRow.Show(_prompts, FamilyOf(0));
+        }
+
+        private void RepaintLobby()
+        {
+            NetSession net = _session.Net;
+            _text.Append("ONLINE — PLAYER 2\n\n");
+            if (net == null || !net.IsConnected)
+            {
+                _text.Append(net != null ? net.Status : "Offline");
+            }
+            else
+            {
+                string hero = _roster.Length > 0 && _roster[_lobby.Pick] != null ? _roster[_lobby.Pick].DisplayName : "?";
+                _text.Append("Your hero:  <  ").Append(UiBuild.Tint(hero, UiBuild.Focus)).Append("  >")
+                    .Append(_lobby.Ready ? "   READY" : $"   ({PromptRow.Inline(FamilyOf(0), PromptKey.Confirm)}: ready)")
+                    .Append("\n\n").Append(HostLine(net.HostLobby));
+            }
+
+            _body.text = _text.ToString();
+            SetButtonLabel(_primary, _lobby.Ready ? string.Empty : "Ready");
+            SetButtonLabel(_back, _lobby.Ready ? "Not ready" : "Leave");
+
+            _prompts.Clear();
+            if (!_lobby.Ready)
+            {
+                _prompts.Add(new Prompt(PromptKey.Move, "Pick"));
+                _prompts.Add(new Prompt(PromptKey.Confirm, "Ready"));
+            }
+
+            _prompts.Add(new Prompt(PromptKey.Back, _lobby.Ready ? "Not ready" : "Leave"));
+            _promptRow.Show(_prompts, FamilyOf(0));
+        }
+
+        private string HostLine(in LobbyState host)
+        {
+            if (host.InMatch)
+            {
+                return "The host is playing. You will join at the next checkpoint room.";
+            }
+
+            switch (host.HostScreen)
+            {
+                case FrontendScreen.Chapters:
+                    return "The host is choosing a chapter.";
+                case FrontendScreen.Launching:
+                    return "Starting…";
+                default:
+                    return "The host is choosing a hero.";
+            }
         }
 
         private void AppendRow(int row, string label, int cursor)

@@ -77,9 +77,8 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (see Log).
-- **Rule until 102 lands: no online play on a real save** (extended at 101 — a second match on one
-  connection can launch from match 1's starting save and overwrite what the guest earned). Since 99 a guest can equip from the shared
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (29e79af), 102 (see Log).
+- ~~Rule until 102 lands: no online play on a real save~~ — lifted at 102 (the relaunch race closed). Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
   Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
 - **Michael and Marco run Plan 2's pass together (Task 105)** once 97–104 are built — with the
@@ -127,6 +126,19 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     partial, so the guest shows an empty bag and never saves (`MirroredFromHost` false). Fix: the
     Participant case falls back to the hidden actor's `PlayerInventory`. Test: a drop-in guest who
     picks nothing up still holds what they brought, and a checkpoint writes their save.
+  - **Closed at 102:** 101's (a) and (b); the refusal reason and the guest's live front door (Plan 1's
+    items); the guest saves on the host's clean end. **96a:** the likely trigger found and removed —
+    the dev Net panel sat over the front door's Choose/Ready/Launch button in the small P2 window
+    (IMGUI clicks reach uGUI beneath), and Plan 1's sheet cycled Lag there; the panel is now
+    top-left. Not observed directly: the 105 sitting confirms (Join then Enter in P2 stays in the
+    lobby; Leave lands on the title; cycling Lag in P2 at the title doesn't move its front door).
+  - **103 (from 102):** a mid-run joiner reads "choosing" (the lobby isn't republished during a
+    match; `NetHost.cs:96`'s comment is wrong); a guest already at its front door when SessionEnd
+    arrives isn't re-sent its pick; `SetFull` is a frame late and `IsFull` stale mid-match.
+  - **104 (from 102):** a second Hello inside the refusal window keeps `_refusedAt` armed.
+  - **105 close-out (from 102):** the SessionEnd save can be ≤15 steps behind; the guest's lobby
+    follows only seat 0's device; a host mashing A launches the default chapter the frame the guest
+    readies; the couch-pair test runs unlagged.
   - Watch (101): SaveService's `_stash` fallback lookup has Z3's shape; safe while Gameplay.unity
     wires it.
   - **103 (from 100):** `IsOnline` is set only in `NetHost.Begin`; a late bind or rejoin must set it.
@@ -311,6 +323,10 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 102 committed: the lobby at character select — the guest picks from its own save and
+  readies, the host launches once they're ready; the guest's own front door can't launch; the dev
+  Net panel moves top-left (96a's likely trigger). Protocol 7. EditMode 842, PlayMode 111. The
+  no-online-play rule is lifted.
 - 2026-09-26 — Task 101a committed: the guest's whole bag travels only when its sack, coins or flags moved
   (a kill's XP sends the character alone). PlayMode 106.
 - 2026-09-26 — Task 101 committed: two stashes, two saves — the guest brings its own hero and save,

@@ -84,5 +84,37 @@ namespace BattleBomb.Tests.EditMode.Net
             Assert.That(back.Ready, Is.False);
             Assert.That(back.Brought, Is.Null);
         }
+
+        [Test]
+        public void A_pick_that_brings_nothing_is_not_ready()
+        {
+            // Ready off the wire with no save behind it: the host would restore the guest from nothing (D61).
+            var writer = new NetWriter();
+            writer.WriteByte((byte)NetMessageKind.LobbyPick);
+            writer.WriteInt(0);
+            writer.WriteBool(true);
+            writer.WriteBool(false);
+            var reader = new NetReader(writer.ToArray());
+            reader.ReadByte();
+
+            Assert.That(LobbyCodec.ReadPick(reader).Ready, Is.False,
+                "A ready pick that brought nothing would seat the guest over an empty stash.");
+        }
+
+        [Test]
+        public void The_hosts_lobby_travels_whole()
+        {
+            var writer = new NetWriter();
+            LobbyCodec.WriteLobby(writer, new LobbyState(Core.Chapters.FrontendScreen.Chapters, 2, true, false));
+            var reader = new NetReader(writer.ToArray());
+            Assert.That((NetMessageKind)reader.ReadByte(), Is.EqualTo(NetMessageKind.LobbyState));
+            LobbyState back = LobbyCodec.ReadLobby(reader);
+
+            Assert.That(back.HostScreen, Is.EqualTo(Core.Chapters.FrontendScreen.Chapters));
+            Assert.That(back.HostPick, Is.EqualTo(2));
+            Assert.That(back.HostReady, Is.True);
+            Assert.That(back.InMatch, Is.False);
+            Assert.That(reader.Remaining, Is.Zero);
+        }
     }
 }

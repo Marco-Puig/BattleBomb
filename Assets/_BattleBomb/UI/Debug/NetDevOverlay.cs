@@ -36,7 +36,9 @@ namespace BattleBomb.UI.Debug
 
             float width = fontSize * 22f;
             float row = fontSize + 10f;
-            var area = new Rect(Screen.width - width - 8f, Screen.height - row * 5f - 8f, width, row * 5f);
+            // Top-left, clear of every pointer button: an IMGUI click does not stop the same click reaching a uGUI button
+            // underneath, and the front door's and the results' buttons sit along the bottom, the chest's close at its top-right.
+            var area = new Rect(8f, 8f, width, row * 5f);
             GUILayout.BeginArea(area, GUI.skin.box);
 
             if (_session == null)

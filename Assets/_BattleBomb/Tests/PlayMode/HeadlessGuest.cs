@@ -52,6 +52,12 @@ namespace BattleBomb.Tests.PlayMode
         /// <summary>False: welcomed, it sends no pick at all (a test that picks by hand).</summary>
         internal bool AutoPick { get; set; } = true;
 
+        /// <summary>The host's front door as it last said, or null before it has.</summary>
+        internal LobbyState? HostLobby { get; private set; }
+
+        /// <summary>Why the host turned this guest away, or null.</summary>
+        internal string Refusal { get; private set; }
+
         internal void SendPick(int rosterIndex, bool ready, SaveGame brought)
         {
             _writer.Reset();
@@ -182,6 +188,16 @@ namespace BattleBomb.Tests.PlayMode
                         {
                             SendPick(Pick, true, Bring);
                         }
+                    }
+                    else if (kind == NetMessageKind.LobbyState)
+                    {
+                        HostLobby = LobbyCodec.ReadLobby(reader);
+                    }
+                    else if (kind == NetMessageKind.Refuse)
+                    {
+                        // A real guest closes once it has read the reason (Task 102).
+                        Refusal = HandshakeCodec.ReadRefuse(reader);
+                        _transport.Disconnect(_host);
                     }
                     else if (kind == NetMessageKind.Launch)
                     {

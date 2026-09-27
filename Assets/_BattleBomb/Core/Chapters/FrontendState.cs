@@ -25,6 +25,7 @@ namespace BattleBomb.Core.Chapters
         private readonly bool[] _joined = new bool[Slots];
         private readonly bool[] _ready = new bool[Slots];
         private readonly int[] _pick = new int[Slots];
+        private readonly bool[] _remote = new bool[Slots];
 
         /// <summary>Both slots start on the first character. Seeding slot 1 elsewhere so the
         /// couch does not open on two of the same face is tempting, but nothing stops the two
@@ -52,11 +53,55 @@ namespace BattleBomb.Core.Chapters
 
         public int PickOf(int slot) => slot >= 0 && slot < Slots ? _pick[slot] : 0;
 
+        /// <summary>This slot is an online guest's (D59): driven from their machine, never by a pad here.</summary>
+        public bool IsRemote(int slot) => slot >= 0 && slot < Slots && _remote[slot];
+
+        /// <summary>
+        /// Seats an online guest in <paramref name="slot"/> with the pick and readiness their own machine sent, or
+        /// unseats one (D59). Unseating clears only a remote slot: a couch Player 2 is never unseated by it. A guest
+        /// readying while the host already is moves both on to the chapters, as a couch Player 2 readying would.
+        /// Slot 0 is always this machine's own.
+        /// </summary>
+        public void SetRemote(int slot, bool present, int pick, bool ready)
+        {
+            if (slot <= 0 || slot >= Slots)
+            {
+                return;
+            }
+
+            if (!present)
+            {
+                if (_remote[slot])
+                {
+                    _remote[slot] = false;
+                    _joined[slot] = false;
+                    _ready[slot] = false;
+                }
+
+                return;
+            }
+
+            _remote[slot] = true;
+            _joined[slot] = true;
+            _pick[slot] = ((pick % _rosterCount) + _rosterCount) % _rosterCount;
+            _ready[slot] = ready;
+            if (Screen == FrontendScreen.Characters && EveryonePresentIsReady())
+            {
+                Screen = FrontendScreen.Chapters;
+            }
+            else if (Screen == FrontendScreen.Launching && !ready)
+            {
+                // A pointer's Launch can land between two looks at the guest: finding them unready now, the front door
+                // goes back to the chapters before anything loads, and the guest is never restored from a pick taken back.
+                Screen = FrontendScreen.Chapters;
+            }
+        }
+
         public void MoveTitle(int delta) => TitleCursor = Mathf.Clamp(TitleCursor + delta, 0, TitleOptions - 1);
 
         public void MovePick(int slot, int delta)
         {
-            if (Screen != FrontendScreen.Characters || !IsJoined(slot) || IsReady(slot))
+            if (Screen != FrontendScreen.Characters || !IsJoined(slot) || IsReady(slot) || IsRemote(slot))
             {
                 return;
             }
@@ -68,6 +113,11 @@ namespace BattleBomb.Core.Chapters
         /// ready; at chapters, nothing — launching is the picker's call (<see cref="Launch"/>).</summary>
         public void Confirm(int slot)
         {
+            if (IsRemote(slot))
+            {
+                return;
+            }
+
             switch (Screen)
             {
                 case FrontendScreen.Title:
@@ -108,7 +158,7 @@ namespace BattleBomb.Core.Chapters
             switch (Screen)
             {
                 case FrontendScreen.Characters:
-                    if (slot < 0 || slot >= Slots || !_joined[slot])
+                    if (slot < 0 || slot >= Slots || !_joined[slot] || _remote[slot])
                     {
                         return;
                     }
@@ -119,9 +169,14 @@ namespace BattleBomb.Core.Chapters
                     }
                     else if (slot == 0)
                     {
-                        // The title forgets both seats (D57), so the couch re-forms from scratch.
-                        _joined[1] = false;
-                        _ready[1] = false;
+                        // The title forgets both seats (D57), so the couch re-forms from scratch — but a guest who is
+                        // still connected keeps theirs: they are not on this couch to forget.
+                        if (!_remote[1])
+                        {
+                            _joined[1] = false;
+                            _ready[1] = false;
+                        }
+
                         Screen = FrontendScreen.Title;
                     }
                     else
@@ -148,7 +203,8 @@ namespace BattleBomb.Core.Chapters
 
         public void Launch(bool canLaunch)
         {
-            if (Screen == FrontendScreen.Chapters && canLaunch)
+            // Everyone present, not only the couch: an online guest who un-readied at chapter select is still here.
+            if (Screen == FrontendScreen.Chapters && canLaunch && EveryonePresentIsReady())
             {
                 Screen = FrontendScreen.Launching;
             }

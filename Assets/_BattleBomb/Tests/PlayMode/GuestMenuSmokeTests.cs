@@ -486,6 +486,50 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(bag.Inventory.Sack.Revision, Is.EqualTo(GuestRevision), "A copy of the character alone moved the sack's revision.");
         }
 
+        [UnityTest]
+        public IEnumerator When_the_host_ends_the_match_cleanly_the_guest_saves_first()
+        {
+            // The host's "Return to chapters" is D52's clean exit, and so the guest's moment too (D61).
+            var extra = new List<(int, byte[])>();
+            var bag = new Inventory();
+            bag.Add(Knife(), 99);
+            var writer = new NetWriter();
+            ParticipantCodec.Write(writer, 1, GuestRevision, true, SaveMapper.Participant(
+                bag.Sack, new Wallet(100), new CharacterState(ElementId.None, XpLedger.Fresh, bag), withSack: true));
+            extra.Add((Start + 10, writer.ToArray()));
+            writer.Reset();
+            HandshakeCodec.WriteBare(writer, NetMessageKind.SessionEnd);
+            extra.Add((Start + 40, writer.ToArray()));
+            yield return Join(Recording(extra));
+            yield return AdvanceUntil(() => SceneManager.GetActiveScene().name == NetSession.FrontendScene,
+                "The host's end of the match never took the guest back to its front door.");
+
+            Assert.That(_store.TryRead("guest-menu", out string text), Is.True,
+                "The host ended the match cleanly and the guest saved nothing (D61).");
+            Assert.That(SaveCodec.Decode(text).Save.Coins, Is.EqualTo(100));
+
+            // The next match's pick brings what was just saved, re-read by the front door (D61).
+            FrontendFlow flow = null;
+            yield return AdvanceUntil(() => (flow = Object.FindAnyObjectByType<FrontendFlow>()) != null && flow.Lobby != null,
+                "The guest's front door never became its lobby again.");
+            int sentBefore = _playback.Sent.Count;
+            flow.Lobby.Confirm();
+            yield return null;
+            yield return null;
+            LobbyPick pick = default;
+            for (int i = sentBefore; i < _playback.Sent.Count; i++)
+            {
+                var reader = new NetReader(_playback.Sent[i]);
+                if ((NetMessageKind)reader.ReadByte() == NetMessageKind.LobbyPick)
+                {
+                    pick = LobbyCodec.ReadPick(reader);
+                }
+            }
+
+            Assert.That(pick.Ready, Is.True, "The guest's lobby never sent its ready pick.");
+            Assert.That(pick.Brought.Coins, Is.EqualTo(100), "The next match would bring an older save than the one just written.");
+        }
+
         private IEnumerator Join(List<(int Frame, byte[] Payload)> recording)
         {
             _playback = new PlaybackTransport(recording);

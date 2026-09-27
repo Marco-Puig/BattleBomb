@@ -73,6 +73,7 @@ namespace BattleBomb.Tests.PlayMode
             yield return UntilFrames(() => net.GuestBrought != null, "the guest's pick never reached the host");
 
             FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+            yield return UntilFrames(() => flow.State.IsReady(1), "the guest never readied in the lobby");
             flow.State.Confirm(0);
             flow.State.Confirm(0);
             flow.State.Launch(flow.Selection.CanLaunch);

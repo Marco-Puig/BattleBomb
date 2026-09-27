@@ -74,6 +74,7 @@ namespace BattleBomb.Tests.PlayMode
             yield return UntilFrames(() => net.IsConnected && _guest.IsWelcomed, "the handshake never finished");
 
             FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+            yield return UntilFrames(() => flow.State.IsReady(1), "the guest never readied in the lobby");
             flow.State.Confirm(0);
             flow.State.Confirm(0);
             flow.State.Launch(flow.Selection.CanLaunch);
@@ -641,6 +642,11 @@ namespace BattleBomb.Tests.PlayMode
                 }
 
                 FrontendFlow flow = Object.FindAnyObjectByType<FrontendFlow>();
+                for (int i = 0; i < 300 && !flow.State.IsReady(1); i++)
+                {
+                    yield return null;
+                }
+
                 flow.State.Confirm(0);
                 flow.State.Confirm(0);
                 flow.State.Launch(flow.Selection.CanLaunch);

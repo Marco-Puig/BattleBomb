@@ -51,11 +51,46 @@ committed; 96 stays open for Michael's pass.
 
 Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
 (orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
-99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`. Board rule: no online play on a real save until 101 lands.
+99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`, 101a `29e79af`. Board rule: no online play on a real save until 101 lands.
 **Task 101: COMMITTED `691ecac` (2026-09-26).** Final gates: EditMode 831/831, PlayMode 103/103. Board: no online
-play on a real save until 102. **Now building 101a** (the participant fingerprint), then 102.
+play on a real save until 102. **102: DONE sent (2026-09-27), waiting for COMMITTED.** Final gates: EditMode 842/842, PlayMode 111/111. The premise check is in and every anchor holds. The extra spec is
+`scratchpad/tasks/task102_extra.md`:
+- **Y1:** the relaunch un-ready (carried b).
+- **Y2:** a ready pick must bring a save (carried a, by construction).
+- **Y3:** the front door's buttons follow the role, not the lobby object.
+- **Y4:** the launch test waits for the launch to reach the guest.
+- **Y5:** the guest saves on a clean SessionEnd (Netcode's answer (a), 2026-09-26).
 
-**101a: DONE sent (2026-09-26), waiting for COMMITTED.** Gates: EditMode 831/831, PlayMode 106/106. Spec
+Targets: EditMode 841, PlayMode 111.
+
+**102 stages built (2026-09-27):** EditMode 841/841, PlayMode 111/111.
+- Y1, Y2, Y3 and Y5 each failed before their fix and passed after.
+- **Y6, found at S3:** the plan's `FrontendFlow.Update` reads `_session.Net` (a `GetComponent`) every frame, so it
+  threw on a torn-down session. That failed every test that ended on the front door. It now returns early.
+- **Opus review: approve after one fix.** Fixes are in `task102_fixes.md`:
+  - **H1:** a pointer Launch in the frame the guest un-readies could still load the match. `SetRemote` now takes
+    a Launching front door back to Chapters. The test goes red first.
+  - **H2:** the dev Net panel moves to the top-left. An IMGUI click reaches the uGUI button beneath it, and in a
+    small window the panel's Lag row sits over the front door's Primary button. Plan 1's sheet had Lag cycled at the
+    title in both windows. **This is a concrete candidate for 96a.** The pass sheet's "bottom-right Net panel" text
+    must change (the orchestrator's doc).
+  - **H3:** the pin now checks that the next match's pick brings the save just written.
+- **Carried from the 102 review:**
+  - **103:**
+    - Mid-run joiner: the host's lobby isn't republished during a match. `NetHost.cs:96`'s comment is wrong;
+      the guest reads "choosing".
+    - A guest already on its front door when SessionEnd arrives isn't re-sent its pick, so the un-ready strands
+      it. Fix: re-send `LobbyPick`/`LobbyReady`.
+    - `SetFull` is computed a frame late, so a Hello in the next frame can seat over a couch P2 who just joined.
+      `IsFull` is also stale mid-match.
+  - **104:** a second Hello inside the refusal window keeps `_refusedAt` armed, so that guest is dropped.
+  - **105 close-out:**
+    - The SessionEnd save can be up to 15 steps behind: no copy is sent before SessionEnd.
+    - The guest's lobby only follows seat 0's device.
+    - A host mashing A launches the default chapter the frame the guest readies.
+    - The couch-pair test runs unlagged, so the refusal grace is never exercised.
+
+**101a: COMMITTED `29e79af` (2026-09-26).** Gates: EditMode 831/831, PlayMode 106/106. Spec
 `scratchpad/tasks/task101a.md`, from Netcode's rule. The XP test was red before the
 rule and green after. Review: approve, with G1 (tests for the coins and the flags in the print) and G2 (one sack
 path).
@@ -120,6 +155,9 @@ test together at 105.
   - the ✋ points where I read the log (`eval_file t96b_record.cs` / `t96b_read.cs`);
   - a one-line workaround in the sheet's keyboard note: "use WASD".
   If the log shows the game is at fault, the fix becomes an inserted task before 105 closes.
+  **Sent (2026-09-27):** the text went to the orchestrator after 102's DONE. The guest's front door is a lobby now,
+  so the old Part 3 folds into Part 1, and there is a new Lag-cycling check for the panel fall-through (H2). Both
+  logger scripts compile and run against 102's tree. Scratchpad copy: `t96b_sheet.md`.
 
 ## Current state
 

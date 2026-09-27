@@ -242,6 +242,9 @@ re-ask Q2b.
 
 ## Log
 
+- 2026-09-26 — COMMITTED d8fae91 (world.md, SESSION_NOTES.md, drafts 00–05; pushed). Drafts
+  06–10 held back (uncommitted, still on disk) until Michael confirms their provenance. Cleared to
+  compact.
 - 2026-09-26 — Orchestrator asked for a DONE of everything on disk (Michael wrapping up; Marco to
   read the drafts on GitHub). Found `docs/world/drafts/` (not mine), recorded its provenance
   above; DONE sent, then READY TO COMPACT.

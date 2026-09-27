@@ -51,10 +51,59 @@ committed; 96 stays open for Michael's pass.
 
 Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
 (orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
-99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`, 101a `29e79af`, 102 `39746c9`. Board rule: no online play on a real save until 101 lands.
+99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`, 101a `29e79af`, 102 `39746c9`, 103 `2209aa3`. Board rule: no online play on a real save until 101 lands.
 **Task 101: COMMITTED `691ecac` (2026-09-26).** Final gates: EditMode 831/831, PlayMode 103/103. Board: no online
 play on a real save until 102. **102: COMMITTED `39746c9` (2026-09-27).** Final gates: EditMode 842/842, PlayMode 111/111. The no-online-play rule is lifted.
-**103: DONE sent (2026-09-27), waiting for COMMITTED.** Final gates: EditMode 844/844, PlayMode 121/121.
+**103: COMMITTED `2209aa3` (2026-09-27).** Final gates: EditMode 844/844, PlayMode 121/121.
+**104 is PARKED in a stash (see "104 PARKED" below).** 104 (leaving, drops, open by default) is the last build task
+before the 105 sitting. The premise
+check found one broken anchor (102 moved the Net panel), duplicate usings, unmarked CRLF files and stale counts.
+The extra spec is `scratchpad/tasks/task104_extra.md`. It fixes the defects the sitting walks (C8, D2–D5) and the
+data-safety ones, each red first:
+- **Q1:** no stale "The host left" for a guest dropped at its lobby.
+- **Q2:** hosting by hand reopens a game that "closed" left behind.
+- **Q3:** a second friend never inherits the first one's level.
+- **Q4:** a leaving guest's queued requests go with them.
+- **Q5:** "Go quiet" really goes quiet, because `Send` is gated. D4 depends on it.
+- **Q6:** a game launched closed takes a friend once reopened.
+- **Q7:** protocol 9.
+- **Q9:** a host who stops hosting lets its guest's body go (D5).
+- **Q10:** the dev panel's Leave takes a guest home. The sheet's "Leave is the way out" wasn't true: a guest's
+  `net.Leave()` stays in the dead picture by design.
+
+Real in-game ways out go to Plan 3/M9. Targets: EditMode 847, PlayMode 134.
+
+**104 PARKED (2026-09-27, Michael's end of day).** The work in progress sits in the orchestrator's git stash
+**"104 WIP (Builder)"**, on top of `2209aa3`. On resuming, ask the orchestrator to pop it; never run git myself.
+
+**Built, all four stages:**
+- **S1:** Steps 1 and 3. SeatSourceTests failed with "its controls were not rebuilt", as the plan intends.
+- **S1b:** Step 4. SeatSourceTests passes. Full EditMode 847/847.
+- **S2:** Steps 6, 7 and 8, plus X1 (the Net panel rect, now top-left, `row * 7f`) and Q7 (protocol 9).
+  - **X3, found here:** the plan's UI code read `NetSession.FriendsTransport`, a `Func<INetTransport>`, and UI doesn't
+    reference Platform (CS0012). I added `NetSession.CanOpenToFriends` (a bool) and FrontendFlow and SettingsMenu read
+    that. EditMode 847/847, fitness tests included.
+- **S3:** Step 9 (X2 usings), the Q tests, Q3's extension and the OnlineHost pin. The plan's six tests and the pin
+  passed. Seven failed first with their messages: Q1, Q2, Q3, Q4, Q5, Q6, Q9.
+- **S4:** the fixes for Q1–Q6, Q9 and Q10, plus Q10's test. **OnlineJoinSmokeTests 27/27** (the last run before
+  parking).
+
+**Still to do, in order:**
+1. After the stash is popped: `recompile`, then full EditMode (847) and full PlayMode (target 134). This covers
+   GuestReplica, OnlineHost, SeatJoin, LootLoop and ChapterLoop, none of which have been run since S2.
+2. Mutation proofs:
+   - Q10: drop the `LoadScene` in `LeaveToFrontDoor`, and its test should go red.
+   - W3's seat guard: after Q6 the couch test takes the binder branch offline. Drop `seatTaken`, and it should go red.
+3. The Opus review of the whole 104 diff, then its fixes, red first.
+4. **Step 11's live check**, by `eval` in one editor, no screen control. The scripts are in the scratchpad:
+   - `t104_live_a.cs`: friends on, then launch solo from the front door;
+   - `t104_live_b.cs`: read the role, status, `sessionClosed` and whether the host's half exists;
+   - `t104_live_c.cs`: SettingsMenu's `ToggleOpenToFriends` by reflection.
+
+   Steps: `open_scene` Frontend (Gameplay is clean), `editor_play`, run `a`, wait, run `b` (expect Host, "Hosting —
+   waiting for a guest"), run `c` (Offline), run `c` again (hosting), `editor_stop`, `open_scene` Gameplay. Port 7777
+   must be free.
+5. The DONE, carrying the deferred list from `task104_extra.md` (105 close-out and Plan 3/M9).
 **103, as built** (drop-in). The premise check found every anchor holding. The extra spec is
 `scratchpad/tasks/task103_extra.md`:
 - **W1:** the drop-in guest's baseline bag lands in its hidden bag (the 101a-review item).

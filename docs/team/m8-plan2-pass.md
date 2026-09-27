@@ -11,6 +11,8 @@ Tick what works; for anything that doesn't, a sentence on what you saw is enough
 **Keyboard only** throughout — a controller drives both windows at once. Click into the window you
 want to drive. The keys: **WASD** move, **Space** jump and confirm, **J** attack / open a chest /
 sell in a menu, **K** heavy / lock in a menu, **Esc** settings and back, **Q** and **E** switch tabs.
+*If an arrow key moves a hero in the other window, use WASD for the rest of the sitting — that is
+96b, and the check under "Also in this sitting" is looking at it.*
 
 "The main window" is the host. "The guest window" is Player 2's.
 
@@ -19,7 +21,7 @@ sell in a menu, **K** heavy / lock in a menu, **Esc** settings and back, **Q** a
 1. Unity open with the project. **Window → Multiplayer → Multiplayer Play Mode**, tick
    **Player 2**. A second Unity window appears (about half a minute the first time).
 2. Open the **Frontend** scene and press **Play**. Both windows start the game.
-3. Pick the **Lag** setting in both windows' bottom-right **Net** panel (start with **None**).
+3. Pick the **Lag** setting in both windows' top-left **Net** panel (start with **None**).
 4. For the lobby checks (C and D1): main window's Net panel **Host local**; guest window's
    **Join local**. The guest window plays from a save of its own, so its autosaves never land in
    yours.
@@ -102,9 +104,36 @@ launch from the main window. Walk both heroes to the first checkpoint room.
 
 ## Also in this sitting (with Marco)
 
-- **96a / 96b — the two bugs from Plan 1's pass.** The Builder adds its short check here before
-  the sitting (hosting at the title; the arrow keys crossing windows) and reads its logger at the
-  ✋ points, so tell the orchestrator when you reach them.
+- **96a / 96b — the two bugs from Plan 1's pass** (about five minutes; keyboard only). Two windows as
+  in steps 1–2 of the setup. At the two ✋ points, tell the orchestrator; the Builder works in the
+  main editor there.
+
+  **Part 1 — hosting at the title (96a)**
+  1. In the **Player 2 window**, at the title, press the Net panel's **Lag** button three or four
+     times. Its front door must **stay on the title**. Say if it moved.
+  2. Main window: **Host local**. Player 2 window: **Join local**. The Player 2 window now shows
+     the **lobby**: pick a hero, ready, wait.
+  3. In the Player 2 window, press **Enter** once. It should show **READY** in the lobby, not move
+     on to chapters or start a game of its own.
+  4. Main window: through character select and chapter select as usual, and launch.
+  5. ✋ When both windows show the game, say **"in game"** and wait about ten seconds while the
+     Builder starts its logger.
+  6. Look at both windows. Is anything wrong: a hero missing, in the wrong place, or not yours?
+     Say which window.
+
+  **Part 2 — the arrow keys (96b)**, in the same match. The directions differ on purpose, so the
+  log can tell the four holds apart:
+  7. Click once inside the **Player 2 window's picture**. Hold **→** about 3 seconds and let go.
+     Wait 2 seconds. Hold **A** about 3 seconds and let go.
+  8. Click once inside the **main window's picture**. Hold **←** about 3 seconds and let go. Wait
+     2 seconds. Hold **D** about 3 seconds and let go.
+  9. ✋ Say **"done"**. For each of the four holds, say what moved, e.g. "Player 2 window, →: the
+     right-hand hero, in both windows". Wait for the Builder before stopping Play; reading the log
+     takes seconds.
+
+  *What the Builder reads:* for each hold, which player's command moved, and whether the main
+  window's game heard the key while it wasn't focused (the rig's leak). If the log shows the game
+  is at fault, the fix becomes an inserted task before 105 closes.
 - **Groundwork item 7 — two controllers** (`groundwork-pass.md`), if Marco brings a second pad:
   one window, no Multiplayer Play Mode. Start the title with pad 1; at character select press A on
   pad 2 and Player 2 joins; in game each pad moves only its own hero; B on pad 2 at character

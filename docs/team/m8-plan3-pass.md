@@ -23,7 +23,7 @@ Tell the orchestrator before each one, so it calls quiet on the other sessions. 
 **Setting up** (as in Plan 1 and Plan 2):
 1. Unity open. **Window → Multiplayer → Multiplayer Play Mode**, tick **Player 2**.
 2. Open the **Frontend** scene and press **Play**.
-3. In both windows' bottom-right **Net** panel, pick the **Lag**. Start with **Normal**.
+3. In both windows' top-left **Net** panel, pick the **Lag**. Start with **Normal**.
 4. Main window: **Host local**. Guest window: **Join local**.
 5. Both pick a hero and ready at character select, then launch from the main window.
 

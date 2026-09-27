@@ -15,7 +15,7 @@ want to drive.
 1. Unity open with the project. **Window → Multiplayer → Multiplayer Play Mode**, tick
    **Player 2**. The first time, a second Unity window takes about half a minute to appear.
 2. Open the **Frontend** scene and press **Play**. Both windows start the game.
-3. Pick the **Lag** setting in both windows' bottom-right **Net** panel (start with **None**).
+3. Pick the **Lag** setting in both windows' top-left **Net** panel (start with **None**).
 4. Main window's Net panel: **Host local** — it reads "Hosting — waiting for a guest".
    Player 2 window's Net panel: **Join local** — the main window reads "A guest joined", Player 2's
    reads "Joined — waiting for the host to launch".

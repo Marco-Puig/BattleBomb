@@ -33,7 +33,7 @@ HOSTING (Michael)
 Start a solo game as usual: pick your hero, then the chapter. A solo game
 is open to your Steam friends automatically.
 
-In the bottom-right corner there is a small "Net" panel. Its Steam line
+In the top-left corner there is a small "Net" panel. Its Steam line
 shows your name and a long number: your Steam ID. Read it out to your
 friend if they need it (see "If Join Game doesn't appear" below).
 
@@ -50,7 +50,7 @@ JOINING (the collaborator)
    Until then, you'll see "Waiting for the host to reach a checkpoint room".
 
 If "Join Game" doesn't appear:
-- In your game's Net panel (bottom-right), type Michael's Steam ID (the
+- In your game's Net panel (top-left), type Michael's Steam ID (the
   long number from his Net panel) into the box, and press "Join".
 
 If Michael sends you an invite in Steam chat instead:

@@ -467,6 +467,25 @@ namespace BattleBomb.Tests.PlayMode
                 "The guest's save is of the bag from before the host answered it.");
         }
 
+        [UnityTest]
+        public IEnumerator A_copy_of_the_guests_character_alone_leaves_its_bag_as_it_was()
+        {
+            // Task 101a: a kill's XP sends the guest its own character without the sack.
+            List<(int, byte[])> extra = ChestOpens();
+            var writer = new NetWriter();
+            ParticipantCodec.Write(writer, 1, GuestRevision + 5, false, SaveMapper.Participant(
+                new Inventory().Sack, Wallet.Empty,
+                new CharacterState(ElementId.None, new XpLedger(7, 0f, 0, BaseStats.Zero, 0), new Inventory()), withSack: false));
+            extra.Add((Start + 40, writer.ToArray()));
+            yield return Join(Recording(extra));
+            yield return AdvanceUntil(() => _driver.InventoryOf(1).Level == 7, "The guest's character never arrived.");
+
+            PlayerInventory bag = _driver.InventoryOf(1);
+            Assert.That(bag.Inventory.Items.Count, Is.EqualTo(2), "A copy of the character alone emptied the guest's sack.");
+            Assert.That(bag.Wallet.Balance, Is.EqualTo(100));
+            Assert.That(bag.Inventory.Sack.Revision, Is.EqualTo(GuestRevision), "A copy of the character alone moved the sack's revision.");
+        }
+
         private IEnumerator Join(List<(int Frame, byte[] Payload)> recording)
         {
             _playback = new PlaybackTransport(recording);

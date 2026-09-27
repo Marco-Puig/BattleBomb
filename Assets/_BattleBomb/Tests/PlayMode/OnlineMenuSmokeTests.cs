@@ -207,10 +207,13 @@ namespace BattleBomb.Tests.PlayMode
             yield return Steps(4);
 
             int opened = IndexOf(before, m => IsEvent(m, ReplicatedEventKind.ScreenOpened, PlayerId.Two.Value));
-            int bag = IndexOf(before, m => IsParticipant(m, PlayerId.Two.Value, full: true));
+            int bag = IndexOf(before, m => IsCopy(m, PlayerId.Two.Value));
             Assert.That(opened, Is.GreaterThanOrEqualTo(0), "The guest was never told its chest opened.");
             Assert.That(bag, Is.GreaterThanOrEqualTo(0), "The guest's bag never reached it.");
             Assert.That(bag, Is.LessThan(opened), "The chest opened on the guest before its bag arrived.");
+            Assert.That(NewestWhole(opened).Revision, Is.EqualTo(_guestBody.GetComponent<PlayerInventory>().Inventory.Sack.Revision),
+                "The guest's chest opened over a whole copy of an older sack.");
+            Assert.That(NewestWhole(opened).State.Coins, Is.EqualTo(_guestBody.GetComponent<PlayerInventory>().Wallet.Balance));
         }
 
         [UnityTest]
@@ -424,6 +427,66 @@ namespace BattleBomb.Tests.PlayMode
             Assert.That(done(), Is.True, $"Pushing right never reached {what}.");
         }
 
+        [UnityTest]
+        public IEnumerator A_kills_xp_sends_the_guest_its_character_alone_and_a_sale_its_whole_bag()
+        {
+            PlayerInventory bag = _guestBody.GetComponent<PlayerInventory>();
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+            int before = _guest.Received.Count;
+
+            bag.Earn(500f);
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+            Assert.That(LastIndexOf(before, _guest.Received.Count, m => IsParticipant(m, PlayerId.Two.Value, full: true)),
+                Is.LessThan(0), "A kill's XP sent the guest its whole sack again, with nothing in it changed (Task 101a).");
+            Assert.That(LastIndexOf(before, _guest.Received.Count, m => IsParticipant(m, PlayerId.Two.Value, full: false)),
+                Is.GreaterThanOrEqualTo(0), "The XP never reached the guest.");
+
+            int sale = _guest.Received.Count;
+            _driver.OpenScreen(PlayerId.Two.Value, InteractionKind.Chest);
+            yield return Steps(4);
+            _guest.SendRequest(PlayerRequest.Sell(bag.Inventory.Items.Count - 1).WithSequence(9).WithRevision(bag.Inventory.Sack.Revision));
+            yield return Until(() => _guest.Results.Count > 0, "the host never answered");
+
+            Assert.That(LastIndexOf(sale, _guest.Received.Count, m => IsParticipant(m, PlayerId.Two.Value, full: true)),
+                Is.GreaterThanOrEqualTo(0), "A sale never sent the guest its whole bag.");
+            Assert.That(NewestWhole(_guest.Received.Count).Revision, Is.EqualTo(bag.Inventory.Sack.Revision),
+                "The guest's whole copy is of the sack from before the sale.");
+        }
+
+        [UnityTest]
+        public IEnumerator Coins_or_a_flag_that_moved_alone_send_the_guest_its_whole_bag()
+        {
+            // A worn piece's upgrade spends coins without the sack moving, and a flag is only a flag (Task 101a).
+            PlayerInventory bag = _guestBody.GetComponent<PlayerInventory>();
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+
+            bag.GrantCoins(50);
+            yield return Steps(NetProtocol.ParticipantMinSteps + 4);
+            Assert.That(NewestWhole(_guest.Received.Count).State.Coins, Is.EqualTo(bag.Wallet.Balance),
+                "Coins that moved alone never reached the guest's whole copy.");
+
+            int revision = bag.Inventory.Sack.Revision;
+            _guest.SendRequest(PlayerRequest.SetAutoSell(true).WithSequence(9).WithRevision(revision));
+            yield return Until(() => _guest.Results.Count > 0, "the host never answered");
+            Assert.That(bag.Inventory.Sack.Revision, Is.EqualTo(revision), "The flag moved the sack too, so the case proves nothing.");
+            Assert.That(NewestWhole(_guest.Received.Count).State.AutoSell, Is.True,
+                "An auto flag that moved alone never reached the guest's whole copy.");
+        }
+
+        /// <summary>A copy of the player's bag, whole or of the character alone (Task 101a).</summary>
+        private static bool IsCopy(byte[] message, int playerId) =>
+            IsParticipant(message, playerId, full: true) || IsParticipant(message, playerId, full: false);
+
+        /// <summary>The newest whole copy of the guest's bag before <paramref name="end"/>.</summary>
+        private ParticipantMessage NewestWhole(int end)
+        {
+            int at = LastIndexOf(0, end, m => IsParticipant(m, PlayerId.Two.Value, full: true));
+            Assert.That(at, Is.GreaterThanOrEqualTo(0), "The guest never had a whole copy of its bag.");
+            var reader = new NetReader(_guest.Received[at]);
+            reader.ReadByte();
+            return ParticipantCodec.Read(reader);
+        }
+
         private int IndexOf(int from, System.Func<byte[], bool> match)
         {
             for (int i = from; i < _guest.Received.Count; i++)
@@ -538,8 +601,11 @@ namespace BattleBomb.Tests.PlayMode
             int moment = IndexOf(0, m => (NetMessageKind)m[0] == NetMessageKind.Moment
                 && SessionCodec.ReadMoment(Skip(m)) == MomentKind.CheckpointReached);
             Assert.That(moment, Is.GreaterThanOrEqualTo(0), "The run reached a checkpoint and the guest was never told.");
-            Assert.That(IsParticipant(_guest.Received[moment - 1], PlayerId.Two.Value, full: true), Is.True,
+            Assert.That(IsCopy(_guest.Received[moment - 1], PlayerId.Two.Value), Is.True,
                 "The moment did not come right behind the guest's latest copy of itself, which its save is taken from.");
+            Assert.That(NewestWhole(moment).Revision, Is.EqualTo(_guestBody.GetComponent<PlayerInventory>().Inventory.Sack.Revision),
+                "The guest saves from a whole copy of an older sack.");
+            Assert.That(NewestWhole(moment).State.Coins, Is.EqualTo(_guestBody.GetComponent<PlayerInventory>().Wallet.Balance));
         }
 
         private static NetReader Skip(byte[] message)

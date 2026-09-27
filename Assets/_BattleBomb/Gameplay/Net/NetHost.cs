@@ -46,6 +46,8 @@ namespace BattleBomb.Gameplay.Net
             internal bool Dirty;
             internal bool Forced;
             internal int SentAt;
+            internal bool HasWhole;
+            internal (int Revision, int Coins, bool AutoEquip, bool AutoSell) WholePrint;
         }
         private readonly List<WireCommand> _commands = new List<WireCommand>(NetProtocol.CommandRedundancy);
         private readonly List<ReplicatedEvent> _pending = new List<ReplicatedEvent>();
@@ -277,8 +279,9 @@ namespace BattleBomb.Gameplay.Net
             _watched.Remove(playerId);
         }
 
-        /// <summary>The guest's whole bag; the partner's worn gear only. Sent when forced, or when changed and not
-        /// sent for <see cref="NetProtocol.ParticipantMinSteps"/>.</summary>
+        /// <summary>The guest's whole bag when its sack, coin or auto flags moved since the last whole one, its
+        /// character alone otherwise (Task 101a); the partner's worn gear only. Sent when forced, or when changed and
+        /// not sent for <see cref="NetProtocol.ParticipantMinSteps"/>.</summary>
         private void FlushParticipants(int frame)
         {
             foreach (KeyValuePair<int, Watched> entry in _watched)
@@ -299,12 +302,23 @@ namespace BattleBomb.Gameplay.Net
 
         private void SendParticipant(int playerId, Watched watched)
         {
-            bool full = playerId == _net.GuestPlayerId.Value;
             PlayerInventory bag = watched.Bag;
+            Sack sack = bag.Inventory.Sack;
+            (int, int, bool, bool) print = (sack.Revision, bag.Wallet.Balance, sack.AutoEquip, sack.AutoSell);
+
+            // The whole sack travels only when it moved since the last whole copy (Task 101a): a kill's XP sends the
+            // character alone. A new watcher's first copy is always whole.
+            bool full = playerId == _net.GuestPlayerId.Value && (!watched.HasWhole || watched.WholePrint != print);
+            if (full)
+            {
+                watched.HasWhole = true;
+                watched.WholePrint = print;
+            }
+
             var character = new CharacterState(watched.Actor.Element, bag.Ledger, bag.Inventory);
-            SaveGame state = SaveMapper.Participant(bag.Stash.Sack, bag.Wallet, character, full);
+            SaveGame state = SaveMapper.Participant(sack, bag.Wallet, character, full);
             _participant.Reset();
-            ParticipantCodec.Write(_participant, playerId, bag.Inventory.Sack.Revision, full, state);
+            ParticipantCodec.Write(_participant, playerId, sack.Revision, full, state);
             _net.Send(NetChannel.Reliable, _participant);
         }
 

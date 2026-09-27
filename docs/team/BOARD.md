@@ -77,7 +77,7 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (see Log).
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (see Log).
 - **Rule until 102 lands: no online play on a real save** (extended at 101 — a second match on one
   connection can launch from match 1's starting save and overwrite what the guest earned). Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
@@ -122,6 +122,11 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
     (b) a second match on one connection — un-ready the guest (clear `GuestReady`/`GuestBrought`,
     keep the pick) when the host's match ends, beside the SessionEnd send, and re-send the pick
     when the front door returns. 96a's fix is 102's lobby.
+  - **103 (from 101a, red first):** a drop-in guest's own body is hidden, so NetGuest's
+    `InventoryOf` is null and the host's baseline whole copy is dropped; since 101a later copies are
+    partial, so the guest shows an empty bag and never saves (`MirroredFromHost` false). Fix: the
+    Participant case falls back to the hidden actor's `PlayerInventory`. Test: a drop-in guest who
+    picks nothing up still holds what they brought, and a checkpoint writes their save.
   - Watch (101): SaveService's `_stash` fallback lookup has Z3's shape; safe while Gameplay.unity
     wires it.
   - **103 (from 100):** `IsOnline` is set only in `NetHost.Begin`; a late bind or rejoin must set it.
@@ -306,6 +311,8 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 101a committed: the guest's whole bag travels only when its sack, coins or flags moved
+  (a kill's XP sends the character alone). PlayMode 106.
 - 2026-09-26 — Task 101 committed: two stashes, two saves — the guest brings its own hero and save,
   keeps what it earns, saves at the host's moments and its own exits; the chapter credit lands
   without touching its resume. Protocol 6. EditMode 831, PlayMode 103. No online play until 102.

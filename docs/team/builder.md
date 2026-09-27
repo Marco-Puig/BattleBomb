@@ -51,9 +51,22 @@ committed; 96 stays open for Michael's pass.
 
 Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
 (orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
-99 `9cc67b8`, 100 `9dafe93`. Board rule: no online play on a real save until 101 lands.
-**Task 101: DONE sent (2026-09-26), waiting for COMMITTED.** Final gates: EditMode 831/831, PlayMode 103/103.
-Next is 101a (the participant fingerprint), then 102.
+99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`. Board rule: no online play on a real save until 101 lands.
+**Task 101: COMMITTED `691ecac` (2026-09-26).** Final gates: EditMode 831/831, PlayMode 103/103. Board: no online
+play on a real save until 102. **Now building 101a** (the participant fingerprint), then 102.
+
+**101a: DONE sent (2026-09-26), waiting for COMMITTED.** Gates: EditMode 831/831, PlayMode 106/106. Spec
+`scratchpad/tasks/task101a.md`, from Netcode's rule. The XP test was red before the
+rule and green after. Review: approve, with G1 (tests for the coins and the flags in the print) and G2 (one sack
+path).
+
+**Carried to 103, red first, from the 101a review:** a drop-in guest's own body is hidden, so `InventoryOf` is
+null and NetGuest drops its baseline whole copy.
+- Since 101a, every later copy is partial until the sack, coins or flags move.
+- The guest then shows an empty bag and never saves (`MirroredFromHost` stays false).
+- Fix at the root: NetGuest's Participant case falls back to the hidden actor's `PlayerInventory`.
+- Test: after the drop-in guest appears, with no pickup, its bag holds what it brought and a checkpoint writes
+  its save.
 
 **Task 101, as built:** every anchor holds, and the premise check is in. The extra spec is
 `scratchpad/tasks/task101_extra.md`, in four stages. It folds in:

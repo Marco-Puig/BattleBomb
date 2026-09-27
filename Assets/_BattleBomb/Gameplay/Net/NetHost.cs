@@ -21,10 +21,10 @@ namespace BattleBomb.Gameplay.Net
     /// The host's half of a match, in the Gameplay scene: tells the guest which run to load, feeds the
     /// guest's commands into their <see cref="RemoteCommandSource"/>, and sends the world back — a
     /// snapshot every second step and the step's events on the reliable channel (D58). Added by the
-    /// binder when the machine boots as a host with a guest connected. It reads the simulation after
-    /// each step and never writes to it, apart from queueing the guest's menu requests for the step's
-    /// first phase (Task 97) and, while a guest is connected, the launch hold and the airlock's wait for
-    /// the guest (Task 94).
+    /// binder whenever the machine boots as a host — with a guest connected, or open to one who drops in
+    /// later (Task 103). It reads the simulation after each step and never writes to it, apart from
+    /// queueing the guest's menu requests for the step's first phase (Task 97), binding a late guest
+    /// (Task 103) and, while a guest is in the world, the launch hold and the airlock's wait for them (Task 94).
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class NetHost : MonoBehaviour
@@ -60,16 +60,26 @@ namespace BattleBomb.Gameplay.Net
         private SimulationDriver _driver;
         private StageRunner _runner;
         private RemoteCommandSource _remote;
+        private SessionBinder _binder;
+
+        /// <summary>A guest is in the world — bound at the launch, or late at a checkpoint room (Task 103).</summary>
+        private bool _bound;
+
+        /// <summary>The guest has been sent a run to load. Until then it hears only the lobby.</summary>
+        private bool _launchSent;
         private Action<NetWriter> _sendReliable;
 
         internal void Begin(
-            NetSession net, GameSession session, SimulationDriver driver, StageRunner runner, RemoteCommandSource remote)
+            NetSession net, GameSession session, SimulationDriver driver, StageRunner runner, RemoteCommandSource remote,
+            SessionBinder binder)
         {
             _net = net;
             _session = session;
             _driver = driver;
             _runner = runner;
             _remote = remote;
+            _binder = binder;
+            _bound = remote != null;
             _sendReliable = w => _net.Send(NetChannel.Reliable, w);
             _net.MessageReceived += OnMessage;
             _net.PeerLeft += OnPeerLeft;
@@ -80,24 +90,32 @@ namespace BattleBomb.Gameplay.Net
             _driver.RemoteRequestAnswered += OnRequestAnswered;
             _driver.ScreenChanged += OnScreenChanged;
             _driver.RackChanged += OnRackChanged;
-            _driver.IsOnline = _net.IsConnected;
+            _driver.IsOnline = _bound;
+            _driver.MenuStepped += OnMenuStepped;
+            _net.PeerJoined += OnPeerJoined;
             if (_runner != null)
             {
                 _runner.StageLoadRequested += OnStageLoadRequested;
                 _runner.StageHandedOver += OnStageHandedOver;
-                _runner.RemoteStageReady = stage => !_net.IsConnected || _guestReady.Contains(stage);
+                // Only a guest who is in the world holds the airlock shut: one still in their lobby, or loading to drop
+                // in, has no body at the exit line (the board's "rejoin deadlocks the airlock" item).
+                _runner.RemoteStageReady = stage => !_bound || _guestReady.Contains(stage);
                 _runner.ChapterCompleted += OnChapterCompleted;
                 _runner.CheckpointReached += OnCheckpointReached;
                 _runner.StageCompleted += OnStageCompleted;
             }
 
-            SendLaunch();
+            if (_bound)
+            {
+                SendLaunch(_session.Chapter != null ? _session.Chapter.Id : string.Empty,
+                    _session.StageIndex, _session.TierIndex, _session.ResumeCheckpointArena, false);
+            }
 
-            // The guest's lobby shows a host at play — which is what a guest who joins mid-run sees too (Task 103).
-            _net.PublishLobby(new LobbyState(FrontendScreen.Launching, IndexInRoster(_session.Characters[0]), true, true));
+            // The guest's lobby shows a host at play — which is what a guest who joins mid-run sees too.
+            OnPeerJoined();
         }
 
-        private void SendLaunch()
+        private void SendLaunch(string chapterId, int stage, int tier, int resume, bool dropIn)
         {
             var picks = new int[_session.Characters.Length];
             for (int i = 0; i < picks.Length; i++)
@@ -107,10 +125,126 @@ namespace BattleBomb.Gameplay.Net
 
             _writer.Reset();
             HandshakeCodec.WriteLaunch(_writer, new LaunchMessage(
-                _session.Chapter != null ? _session.Chapter.Id : string.Empty,
-                _session.StageIndex, _session.TierIndex, _session.ResumeCheckpointArena,
-                picks, _net.GuestPlayerId.Value));
+                chapterId, stage, tier, resume, picks, _net.GuestPlayerId.Value, dropIn));
             _net.Send(NetChannel.Reliable, _writer);
+            _launchSent = true;
+        }
+
+        private void OnPeerJoined() =>
+            _net.PublishLobby(new LobbyState(FrontendScreen.Launching, IndexInRoster(_session.Characters[0]), true, true));
+
+        private void OnMenuStepped()
+        {
+            if (_net.IsConnected)
+            {
+                Admit();
+            }
+        }
+
+        /// <summary>
+        /// A guest dropping in (D59, planning decision 17). Once they are ready, the first checkpoint room the run
+        /// stands in sends them the run to load — the stage under the players and the one behind the airlock. Once
+        /// they have loaded both, and the run is still in a checkpoint room, they stand up there; if the run walked
+        /// on meanwhile, the stages it streams reach them as they would a bound guest, and the next room binds them.
+        /// Runs after a step or on a paused frame, never inside one.
+        /// </summary>
+        private void Admit()
+        {
+            if (!_bound && _launchSent && !_net.GuestReady)
+            {
+                // The guest took their ready back as the run went out to them (D59), and with it what they brought: they
+                // cannot be bound, so they go back to their lobby to ready again rather than wait unseen for the whole run.
+                _writer.Reset();
+                HandshakeCodec.WriteBare(_writer, NetMessageKind.SessionEnd);
+                _net.Send(NetChannel.Reliable, _writer);
+                _launchSent = false;
+                _guestReady.Clear();
+                return;
+            }
+
+            if (_bound || !_net.GuestReady || _runner == null
+                || !_runner.TryDescribeForDropIn(
+                    _net.GuestPlayerId.Value, out LoadStageMessage current, out LoadStageMessage? next, out Vector3 respawn))
+            {
+                return;
+            }
+
+            if (!_launchSent)
+            {
+                SendLaunch(_runner.Chapter != null ? _runner.Chapter.Id : string.Empty,
+                    current.StageIndex, _runner.TierIndex, current.ResumeCheckpointArena, true);
+                _guestReady.Clear();
+                SendLoad(current);
+                if (next.HasValue)
+                {
+                    SendLoad(next.Value);
+                }
+
+                return;
+            }
+
+            if (!_guestReady.Contains(current.StageIndex) || (next.HasValue && !_guestReady.Contains(next.Value.StageIndex)))
+            {
+                return;
+            }
+
+            Bind(respawn);
+        }
+
+        private void SendLoad(in LoadStageMessage load)
+        {
+            _writer.Reset();
+            StageCodec.WriteLoad(_writer, load);
+            _net.Send(NetChannel.Reliable, _writer);
+        }
+
+        /// <summary>
+        /// The guest stands up in the room (Task 103), and is told everything a snapshot never carries before the first
+        /// snapshot with them in it: every drop on the ground, every open screen and its rack, and — forced — both
+        /// players' inventories (the board's baseline item).
+        /// </summary>
+        private void Bind(Vector3 respawn)
+        {
+            _remote = _binder != null ? _binder.BindLate(_net, respawn) : null;
+            if (_remote == null)
+            {
+                return;
+            }
+
+            _bound = true;
+            _driver.IsOnline = true;
+            _remote.Stream.Release();
+
+            IReadOnlyList<DropPickup> pickups = _driver.Pickups;
+            for (int i = 0; i < pickups.Count; i++)
+            {
+                if (pickups[i] != null)
+                {
+                    _pending.Add(ReplicatedEvent.OfDrop(new DropRecord(pickups[i].NetId, pickups[i].Position, pickups[i].Item)));
+                }
+            }
+
+            IReadOnlyList<CharacterActor> actors = _driver.Characters.Ordered;
+            for (int i = 0; i < actors.Count; i++)
+            {
+                int id = actors[i].PlayerId.Value;
+                if (_driver.TryGetOpenScreen(id, out InteractionKind kind))
+                {
+                    if (kind == InteractionKind.Shopkeeper)
+                    {
+                        OnRackChanged(id);
+                    }
+
+                    _pending.Add(ReplicatedEvent.OfScreen(id, (int)kind, true));
+                }
+            }
+
+            foreach (KeyValuePair<int, Watched> entry in _watched)
+            {
+                entry.Value.Forced = true;
+            }
+
+            _runner?.RefreshBounds();
         }
 
         private int IndexInRoster(CharacterDefinition definition)
@@ -351,7 +485,9 @@ namespace BattleBomb.Gameplay.Net
         /// </summary>
         private void SendMoment(MomentKind moment)
         {
-            if (!_net.IsConnected)
+            // Only a guest in the world is in the run's moments (D61): one still in their lobby, or loading to drop in, is
+            // not in the chapter this host finishes and takes no credit for it.
+            if (!_net.IsConnected || !_bound)
             {
                 return;
             }
@@ -376,6 +512,14 @@ namespace BattleBomb.Gameplay.Net
             {
                 _pending.Clear();
                 _answers.Clear();
+                return;
+            }
+
+            Admit();
+            if (!_launchSent)
+            {
+                // A guest still in their lobby hears only the lobby — nothing of a world they are not yet loading.
+                _pending.Clear();
                 return;
             }
 
@@ -469,10 +613,15 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnStageLoadRequested(int stage, bool isLaunch, float firstArenaMinX, int resumeCheckpointArena)
         {
+            if (!_launchSent)
+            {
+                return;
+            }
+
             if (isLaunch)
             {
                 _guestReady.Clear();
-                _driver.HoldForPeer = _net.IsConnected;
+                _driver.HoldForPeer = _bound;
             }
             else
             {
@@ -487,6 +636,11 @@ namespace BattleBomb.Gameplay.Net
 
         private void OnStageHandedOver(int stage)
         {
+            if (!_launchSent)
+            {
+                return;
+            }
+
             _writer.Reset();
 
             // Raised inside the step that crossed, and the clock has already counted past it.
@@ -539,6 +693,7 @@ namespace BattleBomb.Gameplay.Net
                 _driver.RackChanged -= OnRackChanged;
                 _driver.HoldForPeer = false;
                 _driver.IsOnline = false;
+                _driver.MenuStepped -= OnMenuStepped;
             }
 
             if (_runner != null)
@@ -563,6 +718,7 @@ namespace BattleBomb.Gameplay.Net
 
             _net.MessageReceived -= OnMessage;
             _net.PeerLeft -= OnPeerLeft;
+            _net.PeerJoined -= OnPeerJoined;
 
             // The machine is being torn down — results, or return to chapter select. The guest's copy
             // goes back to the front door with it and stays connected for the next launch.
@@ -572,9 +728,12 @@ namespace BattleBomb.Gameplay.Net
                 HandshakeCodec.WriteBare(_writer, NetMessageKind.SessionEnd);
                 _net.Send(NetChannel.Reliable, _writer);
 
-                // What the guest brought is spent: the next launch waits for the pick its front door sends again,
-                // re-read from the save this match just wrote (D61) — never the one it brought into this match.
-                _net.UnreadyGuest();
+                // What a guest who played brought is spent: the next launch waits for the pick its front door sends
+                // again, re-read from the save this match just wrote (D61). One still in their lobby spent nothing.
+                if (_bound)
+                {
+                    _net.UnreadyGuest();
+                }
             }
         }
     }

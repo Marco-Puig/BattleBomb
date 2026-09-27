@@ -250,10 +250,11 @@ namespace BattleBomb.Gameplay.World
                     return;
                 }
 
-                if (stage.Generation != _generation)
+                if (stage.Generation != _generation || (stage != _current && stage != _next))
                 {
-                    // The launch this belonged to was abandoned while the scene was in flight.
-                    // Nothing else knows this scene exists, so it has to clean up after itself.
+                    // The launch this belonged to was abandoned while the scene was in flight — or, on a
+                    // guest, the same stage was asked for again and a newer plan took its place (the board's
+                    // stale-load item). Nothing else knows this scene exists, so it has to clean up after itself.
                     if (scene.IsValid() && scene.isLoaded)
                     {
                         SceneManager.UnloadSceneAsync(scene);
@@ -782,7 +783,9 @@ namespace BattleBomb.Gameplay.World
                 UnloadEverything();
                 _current = new LoadedStage(
                     definition, new StageRun(definition.ToRuntime(), load.ResumeCheckpointArena), load.StageIndex, _generation);
-                BeginLoad(_current, null);
+
+                // A late guest's launch stage stands where the host's airlocks slid it (Task 103).
+                BeginLoad(_current, load.Placed ? load.FirstArenaMinX : (float?)null);
                 return;
             }
 
@@ -792,12 +795,19 @@ namespace BattleBomb.Gameplay.World
         }
 
         /// <summary>The host walked through the airlock: the stage behind it becomes the guest's too.</summary>
-        internal void ReplicaHandOver(int stageIndex)
+        /// <returns>False while that stage is still loading here: a guest dropping in can be handed over before its load
+        /// lands (Task 103), and the hand-over waits for it rather than being lost.</returns>
+        internal bool ReplicaHandOver(int stageIndex)
         {
-            if (_next == null || _next.StageIndex != stageIndex || !_next.IsReady)
+            if (_next != null && _next.StageIndex == stageIndex && !_next.IsReady)
+            {
+                return false;
+            }
+
+            if (_next == null || _next.StageIndex != stageIndex)
             {
                 Debug.LogWarning($"{name}: the host handed over to stage {stageIndex}, which is not loaded here.", this);
-                return;
+                return true;
             }
 
             LoadedStage previous = _current;
@@ -806,6 +816,7 @@ namespace BattleBomb.Gameplay.World
             _current.SpawnProps(_chestPrefab, _dummyPrefab, _shopkeeperPrefab);
             _driver.SetEncounter(EncounterInputs.From(_tier, _current.Run.Spec));
             previous?.Unload();
+            return true;
         }
 
         /// <summary>The host's chapter ended (HANDOFF-M8 Task 100): the guest's results — and its own save's credit for
@@ -816,6 +827,41 @@ namespace BattleBomb.Gameplay.World
             {
                 ChapterCompleted?.Invoke();
             }
+        }
+
+        /// <summary>
+        /// Where a late guest starts (D59, HANDOFF-M8 Task 103): the stage under the players as a launch — placed where
+        /// this machine put it, resuming at the room the run is standing in — the stage behind the airlock if one is on
+        /// its way, and the room's respawn point for <paramref name="slot"/>. False unless the run is standing in a
+        /// checkpoint room: a guest only ever arrives in one.
+        /// </summary>
+        internal bool TryDescribeForDropIn(
+            int slot, out LoadStageMessage current, out LoadStageMessage? next, out Vector3 respawn)
+        {
+            current = default;
+            next = null;
+            respawn = default;
+            if (_replica || _current == null || !_current.IsReady || _current.Run.Phase != StagePhase.AtCheckpoint)
+            {
+                return false;
+            }
+
+            StageRun run = _current.Run;
+            CheckpointRoomMarker room = _current.RoomAfter(run.ArenaIndex);
+            ArenaMarker first = _current.Arena(0);
+            if (room == null || first == null)
+            {
+                return false;
+            }
+
+            current = new LoadStageMessage(_current.StageIndex, true, first.MinX, run.ArenaIndex, placed: true);
+            if (_next != null && _current.Exit != null)
+            {
+                next = new LoadStageMessage(_next.StageIndex, false, _current.Exit.X, -1);
+            }
+
+            respawn = room.RespawnPosition + PartnerOffset(slot);
+            return true;
         }
 
         // ── Wipes ────────────────────────────────────────────────────────────────────

@@ -77,7 +77,7 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   99 a combine in progress cancels only when the sack itself moves, not on a partner's XP.
   F4 opens Plan 3 (or jumps in as `96x` if Michael's pass shows lost presses); G8's pause
   re-check rides 100.
-- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (29e79af), 102 (see Log).
+- **Plan 2 done:** 97 (03c6bab), 98 (548cc97), 99 (9cc67b8), 100 (9dafe93), 101 (691ecac), 101a (29e79af), 102 (39746c9), 103 (see Log).
 - ~~Rule until 102 lands: no online play on a real save~~ — lifted at 102 (the relaunch race closed). Since 99 a guest can equip from the shared
   sack onto the stand-in body, and the host's save dedupes by element on load, so the item is lost.
   Michael's sitting is after 104, so it only bites if someone plays online in the editor before then.
@@ -139,6 +139,17 @@ before is underway: **Plan 1** = stages A+B, **Plan 2** = C+D, **Plan 3** = E+F 
   - **105 close-out (from 102):** the SessionEnd save can be ≤15 steps behind; the guest's lobby
     follows only seat 0's device; a host mashing A launches the default chapter the frame the guest
     readies; the couch-pair test runs unlagged.
+  - **Closed at 103:** the drop-in baseline (every drop, screen and rack), the stale-load generation,
+    `IsOnline` on a late bind, a hidden guest's bag copy (W1), a mid-run joiner's lobby, a guest at
+    its front door on SessionEnd (W4), drop-in over a couch Player 2 (W3).
+  - **104 (from 103):** reset the per-guest state (`_bound`, `_launchSent`, `_guestReady`) in
+    `OnPeerLeft` — a rejoin is fully clean only then; clear the request queue; a waiting guest can
+    leave only by the dev panel; the LoadStage case still drops a hand-over that isn't ready.
+  - **105 close-out (from 103):** "Host local" started mid-match is never admitted (dev-only); the
+    banner overlaps the top-left Net panel in windows ≤ ~960 px wide; `BindLate` uses the current
+    pick while the guest loads the Launch's; **Michael's wording call:** the banner reads "waiting for
+    the host to reach a checkpoint room" while the host is in one; a refused `BindLate` logs every
+    step (mis-wired scene only); the playback tests' lead-in margins.
   - Watch (101): SaveService's `_stash` fallback lookup has Z3's shape; safe while Gameplay.unity
     wires it.
   - **103 (from 100):** `IsOnline` is set only in `NetHost.Begin`; a late bind or rejoin must set it.
@@ -323,6 +334,9 @@ None.
 
 ## Log
 
+- 2026-09-26 — Task 103 committed: drop-in at checkpoint rooms — a mid-run guest waits in its lobby, is
+  sent the run in a checkpoint room, and stands up there once loaded. Protocol 8. EditMode 844,
+  PlayMode 121.
 - 2026-09-26 — Task 102 committed: the lobby at character select — the guest picks from its own save and
   readies, the host launches once they're ready; the guest's own front door can't launch; the dev
   Net panel moves top-left (96a's likely trigger). Protocol 7. EditMode 842, PlayMode 111. The

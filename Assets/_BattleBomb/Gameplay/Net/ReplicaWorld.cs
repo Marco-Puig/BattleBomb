@@ -30,6 +30,10 @@ namespace BattleBomb.Gameplay.Net
         private readonly List<int> _gone = new List<int>();
         private readonly HashSet<int> _unspawnable = new HashSet<int>();
 
+        /// <summary>This machine's own player while it drops in (D59), unseen until the host's world has them.</summary>
+        private CharacterActor _hidden;
+        private int _hiddenId = -1;
+
         internal ReplicaWorld(SimulationDriver driver, StageRunner runner, EnemySpawner spawner, GameSession session)
         {
             _driver = driver;
@@ -37,6 +41,15 @@ namespace BattleBomb.Gameplay.Net
             _spawner = spawner;
             _session = session;
         }
+
+        internal void HideUntilSeen(CharacterActor actor, int playerId)
+        {
+            _hidden = actor;
+            _hiddenId = actor != null ? playerId : -1;
+        }
+
+        /// <summary>This machine's own player is still waiting to appear.</summary>
+        internal bool IsHidingLocal => _hidden != null;
 
         internal void Apply(WorldSnapshot from, WorldSnapshot to, float t, float renderFrame)
         {
@@ -77,6 +90,15 @@ namespace BattleBomb.Gameplay.Net
             {
                 PlayerSnapshot player = near.Players[i];
                 CharacterActor actor = PlayerById(player.PlayerId);
+                if (actor == null && _hidden != null && player.PlayerId == _hiddenId)
+                {
+                    // Dropping in (D59): the first snapshot with this machine's own player in it is when they appear —
+                    // standing where the host put them, never anywhere first.
+                    _hidden.gameObject.SetActive(true);
+                    actor = _hidden;
+                    _hidden = null;
+                }
+
                 if (actor == null)
                 {
                     continue;

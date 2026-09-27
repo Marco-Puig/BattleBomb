@@ -64,5 +64,20 @@ namespace BattleBomb.Tests.EditMode.Net
             Assert.That((NetMessageKind)reader.ReadByte(), Is.EqualTo(expected));
             return reader;
         }
+
+        [Test]
+        public void A_launch_says_whether_the_guest_drops_into_a_run_already_going()
+        {
+            var writer = new NetWriter();
+            HandshakeCodec.WriteLaunch(writer, new LaunchMessage("fixture", 1, 0, 2, new[] { 0, 0 }, 1, dropIn: true));
+            var reader = new NetReader(writer.ToArray());
+            reader.ReadByte();
+            LaunchMessage back = HandshakeCodec.ReadLaunch(reader);
+
+            Assert.That(back.DropIn, Is.True);
+            Assert.That(back.StageIndex, Is.EqualTo(1));
+            Assert.That(back.ResumeCheckpointArena, Is.EqualTo(2));
+            Assert.That(new LaunchMessage("fixture", 0, 0, -1, new[] { 0, 0 }, 1).DropIn, Is.False);
+        }
     }
 }

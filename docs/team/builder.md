@@ -51,9 +51,43 @@ committed; 96 stays open for Michael's pass.
 
 Nothing blocks the work. Build straight through 100–104, with 101a after 101, and no QUIET until 105
 (orchestrator, 2026-09-26). Commits so far: 96 `b87a21d` (M8 Plan 1 closed), 97 `03c6bab`, 98 `548cc97`,
-99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`, 101a `29e79af`. Board rule: no online play on a real save until 101 lands.
+99 `9cc67b8`, 100 `9dafe93`, 101 `691ecac`, 101a `29e79af`, 102 `39746c9`. Board rule: no online play on a real save until 101 lands.
 **Task 101: COMMITTED `691ecac` (2026-09-26).** Final gates: EditMode 831/831, PlayMode 103/103. Board: no online
-play on a real save until 102. **102: DONE sent (2026-09-27), waiting for COMMITTED.** Final gates: EditMode 842/842, PlayMode 111/111. The premise check is in and every anchor holds. The extra spec is
+play on a real save until 102. **102: COMMITTED `39746c9` (2026-09-27).** Final gates: EditMode 842/842, PlayMode 111/111. The no-online-play rule is lifted.
+**103: DONE sent (2026-09-27), waiting for COMMITTED.** Final gates: EditMode 844/844, PlayMode 121/121.
+**103, as built** (drop-in). The premise check found every anchor holding. The extra spec is
+`scratchpad/tasks/task103_extra.md`:
+- **W1:** the drop-in guest's baseline bag lands in its hidden bag (the 101a-review item).
+- **W2:** a hand-over that lands before its stage does waits for it.
+- **W3:** no drop-in over a couch Player 2: the binder sets `SetFull` from the seat, and `BindLate` refuses a taken
+  seat.
+- **W4:** 102's un-ready only for a guest who was `_bound`.
+
+Deferred:
+- **104:** the leave state, the request queue, and the waiting guest's way out.
+- **105:** Host local mid-match, the front door's `SetFull`, the banner overlapping the Net panel, and the pick race.
+
+Targets: EditMode 844, PlayMode 119.
+
+**103 stages built (2026-09-27):** EditMode 844/844, PlayMode 119/119, OnlineJoinSmokeTests 12/12. W1–W4 each
+failed with its message before its fix and passed after.
+
+**Opus review: fix V1 before commit, and V2 is worth doing now.** Fixes are in `task103_fixes.md`, red first:
+- **V1:** `SendMoment` only to a `_bound` guest. Before this, a guest who was sent the run but never appeared heard the
+  chapter's end and kept its credit.
+- **V2:** a guest whose un-ready crosses the Launch is sent SessionEnd back to their lobby. Before this, they waited
+  hidden for the whole run.
+- **V3:** NetHost's class summary.
+
+**Carried from the 103 review:**
+- **104 or later:** the LoadStage case still drops a hand-over that isn't ready (W2's other entry point). It needs a load
+  that outlasts a whole stage and a third fixture stage to test.
+- **105 close-out:**
+  - the banner reads "waiting for the host to reach a checkpoint room" while the host is in one (Michael's wording
+    call);
+  - a refused `BindLate` retries and logs every step (only in a mis-wired scene);
+  - the playback tests' lead-in margins (about 2–4 s);
+  - W3's `IsFull` assert is also satisfied by the front door; the `NetHost == null` assert is the real proof. The premise check is in and every anchor holds. The extra spec is
 `scratchpad/tasks/task102_extra.md`:
 - **Y1:** the relaunch un-ready (carried b).
 - **Y2:** a ready pick must bring a save (carried a, by construction).
@@ -158,6 +192,12 @@ test together at 105.
   **Sent (2026-09-27):** the text went to the orchestrator after 102's DONE. The guest's front door is a lobby now,
   so the old Part 3 folds into Part 1, and there is a new Lag-cycling check for the panel fall-through (H2). Both
   logger scripts compile and run against 102's tree. Scratchpad copy: `t96b_sheet.md`.
+  The orchestrator placed it in m8-plan2-pass.md (`432f66e`). **The logger scripts for the ✋ points** (use `eval_file`
+  with these full paths):
+  - `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\t96b_record.cs`
+    (at "in game": it hooks the driver's steps and logs both players' commands, the host's keys and focus, and the positions);
+  - `C:\Users\Michael\AppData\Local\Temp\claude\C--Users-Michael-Documents-BattleBomb\ade5bb1a-f547-4910-97c8-60399f402c06\scratchpad\t96b_read.cs`
+    (at "done": it prints the log).
 
 ## Current state
 

@@ -11,11 +11,12 @@ namespace BattleBomb.Core.Net
     /// 5: the host's session moments (Task 100).
     /// 6: the guest's pick and what it brings (Task 101).
     /// 7: the host's lobby (Task 102).
+    /// 8: dropping in at a checkpoint room (Task 103).
     /// </summary>
     public static class NetProtocol
     {
         /// <summary>A mismatch refuses the join with a readable reason (planning decision 20).</summary>
-        public const int Version = 7;
+        public const int Version = 8;
 
         /// <summary>Each command packet carries this many of the newest commands, so one lost
         /// packet costs nothing.</summary>

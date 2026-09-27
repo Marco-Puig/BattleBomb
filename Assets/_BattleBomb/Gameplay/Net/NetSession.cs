@@ -93,6 +93,9 @@ namespace BattleBomb.Gameplay.Net
 
         public bool LobbyReady { get; set; }
 
+        /// <summary>Guest: the run this machine loaded was already going (D59) — it arrives at a checkpoint room.</summary>
+        public bool JoinedMidRun { get; private set; }
+
         /// <summary>Host: tells the guest where this machine's front door is, when it changed.</summary>
         public void PublishLobby(in LobbyState state)
         {
@@ -461,6 +464,7 @@ namespace BattleBomb.Gameplay.Net
             session.StageIndex = launch.StageIndex;
             session.TierIndex = launch.TierIndex;
             session.ResumeCheckpointArena = launch.ResumeCheckpointArena;
+            JoinedMidRun = launch.DropIn;
             for (int i = 0; i < session.Characters.Length; i++)
             {
                 int pick = i < launch.RosterPicks.Length ? launch.RosterPicks[i] : -1;

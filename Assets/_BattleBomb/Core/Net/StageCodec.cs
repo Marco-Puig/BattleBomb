@@ -2,7 +2,8 @@ namespace BattleBomb.Core.Net
 {
     /// <summary>A stage the guest must load: the launch stage (unload everything first, then load
     /// with its resume point) or the next stage behind the airlock (load beside the current one,
-    /// shifted so its first arena begins at the host's exit line).</summary>
+    /// shifted so its first arena begins at the host's exit line). A late guest's launch stage is
+    /// <see cref="Placed"/> too — wherever the host's airlocks slid it (HANDOFF-M8 Task 103).</summary>
     public readonly struct LoadStageMessage
     {
         public readonly int StageIndex;
@@ -10,12 +11,22 @@ namespace BattleBomb.Core.Net
         public readonly float FirstArenaMinX;
         public readonly int ResumeCheckpointArena;
 
+        /// <summary>Slide the scene so its first arena begins at <see cref="FirstArenaMinX"/>; otherwise it stands as
+        /// authored. A preload always is; a launch is only when the guest drops into a run already past its first stage.</summary>
+        public readonly bool Placed;
+
         public LoadStageMessage(int stageIndex, bool isLaunch, float firstArenaMinX, int resumeCheckpointArena)
+            : this(stageIndex, isLaunch, firstArenaMinX, resumeCheckpointArena, !isLaunch)
+        {
+        }
+
+        public LoadStageMessage(int stageIndex, bool isLaunch, float firstArenaMinX, int resumeCheckpointArena, bool placed)
         {
             StageIndex = stageIndex;
             IsLaunch = isLaunch;
             FirstArenaMinX = firstArenaMinX;
             ResumeCheckpointArena = resumeCheckpointArena;
+            Placed = placed;
         }
     }
 
@@ -28,10 +39,11 @@ namespace BattleBomb.Core.Net
             w.WriteBool(load.IsLaunch);
             w.WriteFloat(load.FirstArenaMinX);
             w.WriteInt(load.ResumeCheckpointArena);
+            w.WriteBool(load.Placed);
         }
 
         public static LoadStageMessage ReadLoad(NetReader r) =>
-            new LoadStageMessage(r.ReadInt(), r.ReadBool(), r.ReadFloat(), r.ReadInt());
+            new LoadStageMessage(r.ReadInt(), r.ReadBool(), r.ReadFloat(), r.ReadInt(), r.ReadBool());
 
         public static void WriteReady(NetWriter w, int stageIndex)
         {

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using BattleBomb.Core.Items;
 using BattleBomb.Core.Net;
 using BattleBomb.Core.Players;
+using BattleBomb.Gameplay.Characters;
 using BattleBomb.Gameplay.Combat;
 using BattleBomb.Gameplay.Items;
 using BattleBomb.Gameplay.Session;
@@ -29,6 +30,9 @@ namespace BattleBomb.Gameplay.Net
         private readonly MenuGate _menu = new MenuGate();
         private RemotePlayerRequests _requests;
         private SaveService _saves;
+
+        /// <summary>This machine's own player's bag while it waits to appear (D59): the host's copy of it lands here.</summary>
+        private PlayerInventory _hiddenBag;
         private NetSession _net;
         private SimulationDriver _driver;
         private StageRunner _runner;
@@ -42,7 +46,11 @@ namespace BattleBomb.Gameplay.Net
 
         public int NewestHostFrame => _buffer.NewestFrame;
 
-        internal void Begin(NetSession net, SimulationDriver driver, PlayerId local)
+        /// <summary>This machine's player has not appeared in the host's world yet — dropping in, waiting for a
+        /// checkpoint room (D59). The banner says so.</summary>
+        public bool WaitingToAppear => _world != null && _world.IsHidingLocal;
+
+        internal void Begin(NetSession net, SimulationDriver driver, PlayerId local, CharacterActor hidden = null)
         {
             _net = net;
             _driver = driver;
@@ -50,6 +58,8 @@ namespace BattleBomb.Gameplay.Net
             _runner = FindAnyObjectByType<StageRunner>();
             _saves = FindAnyObjectByType<SaveService>();
             _world = new ReplicaWorld(_driver, _runner, FindAnyObjectByType<EnemySpawner>(), GameSession.Find());
+            _world.HideUntilSeen(hidden, local.Value);
+            _hiddenBag = hidden != null ? hidden.GetComponent<PlayerInventory>() : null;
             _requests = new RemotePlayerRequests(_net, () => _driver.InventoryOf(_local.Value));
             _driver.RequestRoute = id => id == _local.Value ? _requests : null;
             _driver.IsOnline = true;
@@ -91,9 +101,8 @@ namespace BattleBomb.Gameplay.Net
             }
 
             RaiseDue(render);
-            if (_handOverStage >= 0 && render >= _handOverAt)
+            if (_handOverStage >= 0 && render >= _handOverAt && (_runner == null || _runner.ReplicaHandOver(_handOverStage)))
             {
-                _runner?.ReplicaHandOver(_handOverStage);
                 _handOverStage = -1;
             }
 
@@ -128,7 +137,14 @@ namespace BattleBomb.Gameplay.Net
 
                 case NetMessageKind.Participant:
                     ParticipantMessage participant = ParticipantCodec.Read(reader);
+                    // A guest dropping in has no body in the world yet (D59): the host's copy of it lands in the bag it
+                    // waits with, or the one whole copy the host sends as it binds them is lost (Task 101a).
                     PlayerInventory bag = _driver.InventoryOf(participant.PlayerId);
+                    if (bag == null && participant.PlayerId == _local.Value)
+                    {
+                        bag = _hiddenBag;
+                    }
+
                     if (bag != null)
                     {
                         bag.ApplyMirror(participant.State, participant.Revision, participant.Full, _driver.ItemSpecs);

@@ -101,6 +101,20 @@ namespace BattleBomb.Gameplay.Session
             {
                 BindHost(net);
             }
+            else if (net != null && net.Role == NetRole.Host)
+            {
+                // Hosting with nobody in yet — open to a friend, or one waiting in their lobby: the host's half comes up
+                // now and binds them late, at a checkpoint room (D59, planning decision 17). Not over a couch Player 2,
+                // who has the seat for the whole run: then the game is full, whatever the front door last said.
+                int seat = net.GuestPlayerId.Value;
+                bool seatTaken = seat < _players.Length && _players[seat] != null && _players[seat].gameObject.activeSelf;
+                net.SetFull(seatTaken);
+                if (!seatTaken)
+                {
+                    gameObject.AddComponent<NetHost>().Begin(
+                        net, _session, _driver, FindAnyObjectByType<World.StageRunner>(), null, this);
+                }
+            }
             else if (guesting)
             {
                 BindGuest(net);
@@ -222,7 +236,7 @@ namespace BattleBomb.Gameplay.Session
 
             RemoteCommandSource remote = NetSeats.MakeRemote(_players[slot], net.GuestPlayerId);
             gameObject.AddComponent<NetHost>().Begin(
-                net, _session, _driver, FindAnyObjectByType<World.StageRunner>(), remote);
+                net, _session, _driver, FindAnyObjectByType<World.StageRunner>(), remote, this);
         }
 
         private void BindGuest(NetSession net)
@@ -249,8 +263,19 @@ namespace BattleBomb.Gameplay.Session
                 }
             }
 
+            // Dropping into a run already going (D59): this machine's own player waits unseen — never standing in the
+            // world defenceless — until the host's world has them. Deactivated before its components wake, as an empty
+            // slot is, so nothing registers.
+            CharacterActor hidden = null;
+            int own = net.GuestPlayerId.Value;
+            if (net.JoinedMidRun && own < _players.Length && _players[own] != null)
+            {
+                hidden = _players[own];
+                hidden.gameObject.SetActive(false);
+            }
+
             _driver.EnterReplicaMode();
-            gameObject.AddComponent<NetGuest>().Begin(net, _driver, net.GuestPlayerId);
+            gameObject.AddComponent<NetGuest>().Begin(net, _driver, net.GuestPlayerId, hidden);
         }
 
         /// <summary>The hero the guest picked, or — before the pick has arrived, which only a hand-driven development
@@ -285,6 +310,41 @@ namespace BattleBomb.Gameplay.Session
             {
                 bag.SetLedger(SaveMapper.RestoreCharacter(saved, bag.Inventory, catalog));
             }
+        }
+
+        /// <summary>
+        /// A guest dropping in at a checkpoint room (D59, planning decision 17): the second player object wakes as the
+        /// guest's hero, takes orders from the wire, gets a stash of its own and the guest's own save, and stands up at
+        /// <paramref name="respawn"/> — at full health, with the room as home. Runs from the host's half in <c>Stepped</c>,
+        /// after every phase of the step, or on a paused frame — never while a phase walks a registry (the TargetRegistry
+        /// watch).
+        /// </summary>
+        internal RemoteCommandSource BindLate(NetSession net, Vector3 respawn)
+        {
+            int slot = net.GuestPlayerId.Value;
+            if (slot >= _players.Length || _players[slot] == null || _players[slot].gameObject.activeSelf)
+            {
+                Debug.LogError($"{name}: a guest is dropping in but seat {slot} is missing or already taken.", this);
+                return null;
+            }
+
+            CharacterActor actor = _players[slot];
+            actor.SetDefinition(GuestDefinition(net));
+            PlayerInventory bag = actor.GetComponent<PlayerInventory>();
+            if (bag != null)
+            {
+                bag.UseStash(new GameObject("Guest Stash").AddComponent<SharedStash>());
+            }
+
+            // The wire's source is named before the object wakes, so the actor binds it and no device ever registers.
+            RemoteCommandSource remote = NetSeats.MakeRemote(actor, net.GuestPlayerId);
+            _remoteSeat = slot;
+            actor.gameObject.SetActive(true);
+
+            RestoreGuest(actor, net);
+            actor.SetSpawnPoint(respawn);
+            actor.ResetForAttempt();
+            return remote;
         }
 
         private static CharacterSave FindCharacter(SaveGame save, int elementId)

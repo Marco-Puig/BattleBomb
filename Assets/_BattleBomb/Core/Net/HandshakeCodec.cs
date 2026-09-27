@@ -38,10 +38,15 @@ namespace BattleBomb.Core.Net
         public readonly int[] RosterPicks;
         public readonly int GuestPlayerId;
 
+        /// <summary>The guest joins a run already going (D59): it arrives at a checkpoint room, hidden until the host's
+        /// world has it, rather than standing at the stage's spawn with the host.</summary>
+        public readonly bool DropIn;
+
         public LaunchMessage(
             string chapterId, int stageIndex, int tierIndex, int resumeCheckpointArena,
-            int[] rosterPicks, int guestPlayerId)
+            int[] rosterPicks, int guestPlayerId, bool dropIn = false)
         {
+            DropIn = dropIn;
             ChapterId = chapterId ?? string.Empty;
             StageIndex = stageIndex;
             TierIndex = tierIndex;
@@ -95,6 +100,7 @@ namespace BattleBomb.Core.Net
             }
 
             writer.WriteInt(launch.GuestPlayerId);
+            writer.WriteBool(launch.DropIn);
         }
 
         public static LaunchMessage ReadLaunch(NetReader reader)
@@ -109,7 +115,8 @@ namespace BattleBomb.Core.Net
                 picks[i] = reader.ReadInt();
             }
 
-            return new LaunchMessage(chapter, stage, tier, resume, picks, reader.ReadInt());
+            int guest = reader.ReadInt();
+            return new LaunchMessage(chapter, stage, tier, resume, picks, guest, reader.ReadBool());
         }
 
         /// <summary>A bare message: its kind is its whole content.</summary>

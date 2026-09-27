@@ -60,9 +60,12 @@ If Michael sends you an invite in Steam chat instead:
 
 LEAVING
 -------
-Guest: Esc, then "Leave the game". You can join again the same way.
-Host: leaving ends the game for both of you. Your friend's progress is kept
-up to the last checkpoint room they reached.
+Guest: Esc, then "Leave the game". Your progress is saved on your own PC,
+and you can join again the same way.
+Host: returning to chapter select (or quitting from the menu) ends the game
+for both of you. Your friend's progress is saved in full on their PC.
+If the connection drops instead (a crash, the internet going), the guest
+keeps everything up to the last checkpoint room they reached.
 
 
 IF SOMETHING GOES WRONG

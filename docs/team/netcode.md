@@ -243,6 +243,15 @@ versions with Context7 before writing Plan 3.
 
 ## Answers and decisions
 
+- 2026-09-26 (me → Builder, orchestrator copied): **the guest saves on SessionEnd — folded into 102**
+  (red-first extra). The host's mid-run "Return to chapters" is D52's clean exit, so D61's "the guest writes
+  at D52's moments" covers it; Plan 2's SaveService comment already lists "its own clean exits". Code:
+  NetSession's `SessionEnd when Role == Guest && _welcomed` branch calls `FindAnyObjectByType<SaveService>()
+  ?.SaveNow()` before `ReturnToFrontend` (scene still loaded). 101's `GuestCopyArrived` gate keeps a guest
+  still waiting to appear from writing. Drops (`Lost`, `Bye`, ten-second silence) stay crash-shaped.
+  Accepted knock-ons: a second write after results (same data); a host quitting the app cleanly also saves
+  the guest (more generous than D61's floor). Test: GuestMenuSmokeTests, copy then SessionEnd → the save
+  holds the copy.
 - 2026-09-26 (me → Builder, orchestrator copied): **Task 99's participant copies — inserted 101a**
   (after 101, before 102). The guest's whole sack travels only when its print — `Inventory.Sack.Revision`,
   `Wallet.Balance`, `Sack.AutoEquip`, `Sack.AutoSell` (exactly what `SaveMapper.Capture` adds beyond the
@@ -350,6 +359,8 @@ versions with Context7 before writing Plan 3.
 
 ## Log
 
+- 2026-09-26 — Builder QUESTION (102: guest writes nothing on the host's clean SessionEnd) answered:
+  save first, inside 102; orchestrator copied.
 - 2026-09-26 — Builder QUESTION (99: full sack re-sent on every XP change) answered: inserted 101a,
   full only when the sack print moved; orchestrator copied.
 - 2026-09-26 — Plan 3 COMMITTED 5db14e6 (departures accepted). PREPARE TO COMPACT: lane file brought
